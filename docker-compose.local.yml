@@ -1,0 +1,79 @@
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: preflightapi-db
+    environment:
+      - POSTGRES_USER=preflightapi_development_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=preflightapi_development_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U preflightapi_development_user -d preflightapi_development_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: preflightapi-web-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      # Database Settings
+      - Database__Host=db
+      - Database__Database=preflightapi_development_database
+      - Database__Username=preflightapi_development_user
+      - Database__Password=${DB_PASSWORD}
+      - Database__Port=5432
+      # Azure Blob Storage Settings
+      - CloudStorage__ConnectionString=${CLOUD_STORAGE_CONNECTION_STRING}
+      - CloudStorage__ChartSupplementsContainerName=preflightapi-chart-supplements-centralus-test
+      - CloudStorage__AirportDiagramsContainerName=preflightapi-airport-diagrams-centralus-test
+      - CloudStorage__UseManagedIdentity=false
+      # Stripe Settings
+      - StripeSettings__StripeSecretKey=${STRIPE_SECRET_KEY}
+      - StripeSettings__StripeMonthlySubscriptionPriceId=price_1PpMqiDdx3lXaRF7yPMTYOMW
+      - StripeSettings__Domain=https://localhost:7014
+      # NOAA API Settings
+      - NOAASettings__NOAAApiKey=zNEw7
+      # Auth0 Settings
+      - Auth0Settings__Auth0ApiIdentifier=testAuth0ApiIdentifier
+      - Auth0Settings__Auth0Domain=testAuth0Domain
+      - Auth0Settings__RequireAuthenticationInDevelopment=false
+      # NMS API Settings
+      - NmsSettings__BaseUrl=https://api-staging.cgifederal-aim.com/nmsapi
+      - NmsSettings__AuthBaseUrl=https://api-staging.cgifederal-aim.com
+      - NmsSettings__ClientId=${NMS_CLIENT_ID}
+      - NmsSettings__ClientSecret=${NMS_CLIENT_SECRET}
+      - NmsSettings__CacheDurationMinutes=5
+      - NmsSettings__DefaultRouteCorridorRadiusNm=25
+      - NmsSettings__RequestTimeoutSeconds=30
+    ports:
+      - "7014:80"
+    volumes:
+      - .:/app
+      - /app/PreflightApi.Domain/bin
+      - /app/PreflightApi.Domain/obj
+      - /app/PreflightApi.Infrastructure/bin
+      - /app/PreflightApi.Infrastructure/obj
+      - /app/PreflightApi.API/bin
+      - /app/PreflightApi.API/obj
+      - /app/PreflightApi.Tests/bin
+      - /app/PreflightApi.Tests/obj
+      - /app/PreflightApi.Azure.Functions/bin
+      - /app/PreflightApi.Azure.Functions/obj
+    command: >
+      sh -c "find . -type d -name 'obj' -exec rm -rf {} + 2>/dev/null || true &&
+             dotnet restore &&
+             dotnet ef database update --project PreflightApi.Infrastructure --startup-project PreflightApi.API --connection 'Host=db;Database=preflightapi_development_database;Username=preflightapi_development_user;Password=${DB_PASSWORD};Port=5432' &&
+             dotnet watch --project PreflightApi.API run --urls=http://0.0.0.0:80"
+volumes:
+  postgres_data:

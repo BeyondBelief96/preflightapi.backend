@@ -1,0 +1,39 @@
+using PreflightApi.Domain.ValueObjects.Flights;
+using PreflightApi.Infrastructure.Dtos.Navlog;
+
+namespace PreflightApi.Infrastructure.Dtos.Mappers;
+
+public static class WaypointMapper
+{
+    public static Waypoint MapToEntity(WaypointDto dto)
+    {
+        return new Waypoint
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude,
+            Altitude = dto.Altitude,
+            WaypointType = dto.WaypointType,
+            RefuelGallons = dto.RefuelGallons,
+            RefuelToFull = dto.RefuelToFull,
+            IsRefuelingStop = dto.IsRefuelingStop
+        };
+    }
+
+    public static WaypointDto MapToDto(Waypoint entity)
+    {
+        return new WaypointDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude,
+            Altitude = entity.Altitude,
+            WaypointType = entity.WaypointType,
+            RefuelGallons = entity.RefuelGallons,
+            RefuelToFull = entity.RefuelToFull,
+            IsRefuelingStop = entity.IsRefuelingStop
+        };
+    }
+}

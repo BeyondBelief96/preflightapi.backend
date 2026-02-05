@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Copy csproj files and restore dependencies
+COPY *.sln .
+COPY PreflightApi.Domain/*.csproj ./PreflightApi.Domain/
+COPY PreflightApi.Infrastructure/*.csproj ./PreflightApi.Infrastructure/
+COPY PreflightApi.API/*.csproj ./PreflightApi.API/
+COPY PreflightApi.Tests/*.csproj ./PreflightApi.Tests/
+COPY PreflightApi.Azure.Functions/*.csproj ./PreflightApi.Azure.Functions/
+RUN dotnet restore
+
+# Copy the rest of the code
+COPY . .
+
+# Install EF Core tools for migrations
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+EXPOSE 3001
