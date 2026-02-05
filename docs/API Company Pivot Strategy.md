@@ -14,92 +14,97 @@ This document outlines the strategy for pivoting PreflightApi from a frontend-se
 
 ### What We Have (Core Asset)
 
-The data ingestion pipeline and normalized data layer is the most valuable and hardest-to-replicate component. This is approximately 60-70% of what's needed for an API company.
+The data ingestion pipeline and normalized data layer is the most valuable and hardest-to-replicate component. After removing user-specific features, this is now a lean, focused data API.
 
 | Category | Count | Details |
 |----------|-------|---------|
-| Controllers | 20 | Airport, Metar, Taf, Pirep, Airspace, Obstacle, Notam, Flight, Aircraft, etc. |
-| Domain Entities | 22 | Airport, Flight, Aircraft, Metar, Airspace, Obstacle, etc. |
-| External Data Sources | 6 | NOAA, FAA NMS, FAA NASR, ArcGIS, Azure Blob, Auth0 |
-| API Endpoints | ~100+ | Across all controllers (GET, POST, PATCH, DELETE) |
+| Controllers | 14 | Airport, Metar, Taf, Pirep, Airspace, Obstacle, Notam, Navlog, Performance, etc. |
+| Domain Entities | 16 | Airport, Metar, Taf, Airspace, Obstacle, etc. |
+| External Data Sources | 5 | NOAA, FAA NMS, FAA NASR, ArcGIS, Azure Blob |
+| API Endpoints | ~50+ | Data-focused GET endpoints |
 | Database | PostgreSQL + PostGIS | Full spatial data support |
+| Tests | 143 | All passing |
 
-### Data Endpoints (Keep As-Is for API Product)
+### Data Endpoints (Revenue-Generating)
 
-These are the revenue-generating endpoints — normalized aviation data:
+These are the core API product — normalized aviation data:
 
 - **Weather:** METAR, TAF, PIREP, AIRMET/SIGMET, G-AIRMET
 - **Airports:** FAA NASR airport data, runways, runway ends, communication frequencies
 - **Airspace:** Controlled airspace boundaries (PostGIS polygons), special use airspace
 - **Obstacles:** Searchable by radius, bounding box, state, OAS number
 - **NOTAMs:** By airport, radius, and flight route corridor
-- **Navigation:** Bearing/distance calculations, magnetic variation, winds aloft
+- **Navigation:** Navlog calculation (accepts inline performance data), magnetic variation, winds aloft
+- **Performance:** Crosswind component, density altitude calculations
 - **Charts:** Airport diagrams, chart supplements (PDF via Azure Blob SAS URLs)
 
-### User-Scoped Endpoints (Restructure or Separate)
+### User-Scoped Endpoints (REMOVED)
 
-These are features built for the PreflightApi frontend app and are user-specific:
+As of 2026-02-05, all user-specific features have been removed to focus on a pure data API:
 
-- **Flight planning:** Flight CRUD, navlog calculation/regeneration
-- **Aircraft management:** Aircraft CRUD, performance profiles, documents
-- **Weight & balance:** Profiles and calculations
+- ~~Aircraft management~~ — Removed
+- ~~Aircraft documents~~ — Removed
+- ~~Performance profiles~~ — Removed (NavlogService now accepts inline performance data)
+- ~~Flights~~ — Removed
+- ~~Weight & balance~~ — Removed
+- ~~Stripe billing~~ — Removed (will use APIM subscriptions instead)
+- ~~Auth0 JWT auth~~ — Removed from API (APIM handles authentication)
 
-**Options:**
-1. Drop them entirely (pure data API)
-2. Keep as a premium "Flight Planning API" tier
-3. Separate into a different API product or microservice
+### Current Gaps (Addressed by APIM)
 
-### Current Gaps
-
-| Gap | Current State | Impact |
-|-----|--------------|--------|
-| No API key auth | Auth0 JWT only (end-user auth) | Can't onboard API customers |
-| No rate limiting | Zero throttling | Single bad actor can take down the service |
-| No caching layer | Every request hits PostgreSQL | Can't scale beyond a few hundred concurrent users |
-| No pagination | Full result sets returned | Large queries will timeout or OOM |
-| No usage tracking | No request logging per customer | Can't bill usage-based plans |
-| No API versioning | Unversioned routes | Breaking changes break all customers |
-| No developer portal | N/A | No self-service onboarding |
+| Gap | Current State | Solution |
+|-----|--------------|----------|
+| No API key auth | No auth on data endpoints | **APIM subscription keys** |
+| No rate limiting | Zero throttling | **APIM rate limit policies** |
+| No caching layer | Every request hits PostgreSQL | **APIM response caching** + Redis for hot data |
+| No pagination | Full result sets returned | Code change needed (not APIM) |
+| No usage tracking | No request logging per customer | **APIM built-in analytics** |
+| No API versioning | Unversioned routes | **APIM versioning** |
+| No developer portal | N/A | **Custom website** (not APIM developer portal) |
+| CORS configuration | Handled in API code | **APIM CORS policies** |
 
 ---
 
 ## What Goes Into an API Company
 
-### 1. API Key Management & Tiered Access
+### 1. API Key Management & Tiered Access (via APIM)
 
-Replace Auth0 JWT (end-user auth) with API key authentication for data endpoints:
+Azure API Management handles API key authentication out of the box:
 
 ```
-Current:  Client -> Auth0 JWT -> Your API
-New:      Client -> API Key (X-Api-Key header) -> Your API
+Architecture:  Client -> APIM (subscription key validation) -> Your API
 ```
 
-**Required components:**
-- `ApiKey` entity (key hash, customer ID, plan tier, created/expires dates, active flag)
-- `Customer` entity (company name, email, billing info, Stripe customer ID)
-- `ApiKeyAuthenticationHandler` middleware that resolves key to customer/plan
-- Key generation, rotation, and revocation endpoints (management API)
+**APIM provides:**
+- Subscription keys (primary + secondary per subscription)
+- Products (group APIs into tiers)
+- Rate limits and quotas per product/subscription
+- Key regeneration and revocation
+- No custom auth middleware needed in API code
 
-**Tiered plans example:**
+**Tiered plans (APIM Products):**
 
-| Tier | Rate Limit | Endpoints | Price |
-|------|-----------|-----------|-------|
+| Product | Rate Limit | APIs Included | Price |
+|---------|-----------|---------------|-------|
 | Free | 100 req/day | Weather, Airports only | $0 |
 | Developer | 10,000 req/day | All data endpoints | $49/mo |
-| Professional | 100,000 req/day | All endpoints + Flight Planning API | $199/mo |
+| Professional | 100,000 req/day | All endpoints + Navlog | $199/mo |
 | Enterprise | Custom | All + SLA + support | Custom |
 
-### 2. Rate Limiting & Throttling
+### 2. Rate Limiting & Throttling (via APIM)
 
-**Implementation options:**
-- `AspNetCoreRateLimit` NuGet package (simple, config-driven)
-- Custom Redis-backed sliding window (more control)
-- Azure API Management policies (if using APIM gateway)
+APIM policies handle all rate limiting — no custom middleware needed:
 
-**Rate limiting dimensions:**
-- Per API key (overall daily/monthly quota)
-- Per endpoint (expensive endpoints like `/navlog/calculate` cost more)
-- Burst protection (sliding window or token bucket)
+```xml
+<rate-limit-by-key calls="100" renewal-period="86400"
+                   counter-key="@(context.Subscription.Id)" />
+```
+
+**APIM rate limiting dimensions:**
+- Per subscription (overall daily/monthly quota)
+- Per product (different limits for different tiers)
+- Per operation (expensive endpoints like `/navlog/calculate` cost more)
+- Burst protection via `rate-limit` and `quota` policies
 
 ### 3. Documentation
 
@@ -129,32 +134,19 @@ Reactivate existing Stripe integration with:
 
 ## Required Code Changes
 
-### Phase 1: API Key Authentication
+### What APIM Handles (No Code Needed)
 
-Create new entities:
+With APIM as the gateway, these concerns are handled via APIM policies:
 
-```
-Domain/Entities/Customer.cs
-Domain/Entities/ApiKey.cs
-Domain/Entities/ApiUsageRecord.cs
-Domain/Enums/SubscriptionTier.cs
-```
+- **API key authentication** — APIM subscription key validation
+- **Rate limiting** — `rate-limit-by-key` and `quota-by-key` policies
+- **Usage tracking** — APIM built-in analytics and reporting
+- **CORS** — APIM CORS policies
+- **Response caching** — APIM cache policies for static data
 
-Create new auth handler:
+### What Still Needs Code Changes
 
-```
-API/Authentication/ApiKeyAuthenticationHandler.cs
-API/Authentication/ApiKeyAuthenticationOptions.cs
-```
-
-Add middleware:
-
-```
-API/Middleware/UsageTrackingMiddleware.cs
-API/Middleware/RateLimitingMiddleware.cs
-```
-
-### Phase 2: API Versioning
+#### 1. API Versioning
 
 Prefix all data routes with `/v1/`:
 
@@ -166,7 +158,7 @@ Prefix all data routes with `/v1/`:
 
 Use `Asp.Versioning.Mvc` NuGet package for proper API versioning support.
 
-### Phase 3: Response Standardization
+#### 2. Response Standardization
 
 Wrap all responses in a consistent envelope:
 
@@ -182,15 +174,13 @@ Wrap all responses in a consistent envelope:
       "hasMore": true,
       "limit": 50
     }
-  },
-  "usage": {
-    "requestsRemaining": 9842,
-    "resetAt": "ISO 8601"
   }
 }
 ```
 
-### Phase 4: Pagination
+Note: Usage info (`requestsRemaining`, `resetAt`) can be added by APIM as response headers.
+
+#### 3. Pagination
 
 Add cursor-based pagination to all list endpoints. Priority endpoints:
 
@@ -200,9 +190,9 @@ Add cursor-based pagination to all list endpoints. Priority endpoints:
 4. `GET /api/v1/pirep` (returns all PIREPs)
 5. `GET /api/v1/metar/state/{stateCode}` (hundreds per state)
 
-### Phase 5: Caching Layer
+#### 4. Caching Layer
 
-Add Redis caching for hot data:
+Add Redis caching for hot data (in addition to APIM response caching):
 
 | Data Type | Cache TTL | Rationale |
 |-----------|----------|-----------|
@@ -286,41 +276,153 @@ This could be a quick-win approach: put APIM in front of your existing API and g
 
 ---
 
+## Custom Website + APIM Architecture
+
+### Why Not Use APIM's Built-in Developer Portal?
+
+APIM includes a developer portal for self-service signup, but it has limitations:
+- Generic look and feel (hard to customize branding)
+- Separate domain from your marketing site
+- Limited control over user experience
+- Doesn't integrate with your marketing/landing page
+
+**Our approach:** Build a custom website for marketing, signup, and key management, using the APIM Management REST API behind the scenes.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Custom Website                            │
+│  (Marketing, Pricing, Docs, Signup, Dashboard, Key Management)  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Website Backend                             │
+│    (Handles user auth, calls APIM Management API, Stripe)       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+        ┌──────────┐    ┌──────────┐    ┌──────────┐
+        │  APIM    │    │  Stripe  │    │ Database │
+        │  Mgmt    │    │  (billing)│    │ (users)  │
+        │  API     │    │          │    │          │
+        └──────────┘    └──────────┘    └──────────┘
+```
+
+### Customer Signup Flow
+
+1. Customer visits your marketing website
+2. Customer signs up (creates account in your database)
+3. Customer selects a pricing tier
+4. Website backend calls Stripe to set up subscription
+5. Website backend calls APIM Management API to create:
+   - APIM User (linked to your customer)
+   - APIM Subscription to the appropriate Product
+6. Customer receives their API keys (primary + secondary)
+7. Customer uses keys to call your API through APIM
+
+### APIM Management REST API
+
+The APIM Management API lets you programmatically manage everything:
+
+```
+Base URL: https://management.azure.com/subscriptions/{subscriptionId}/
+          resourceGroups/{resourceGroup}/providers/Microsoft.ApiManagement/
+          service/{serviceName}/...
+
+Key operations:
+- POST /users                    → Create APIM user
+- POST /subscriptions            → Create subscription (generates keys)
+- GET  /subscriptions/{id}/keys  → Retrieve subscription keys
+- POST /subscriptions/{id}/regenerateKey → Rotate keys
+- DELETE /subscriptions/{id}     → Revoke access
+```
+
+Authentication: Azure AD with appropriate RBAC roles (API Management Service Contributor).
+
+### What the Website Builds
+
+**Website includes:**
+- Landing page and marketing content
+- Pricing page with tier comparison
+- User signup/login (your own auth, not APIM)
+- Dashboard showing usage (pulls from APIM analytics API)
+- API key management (view, regenerate, revoke)
+- Stripe integration for billing
+- API documentation (can import from APIM OpenAPI spec)
+
+**Website does NOT build:**
+- Custom auth middleware (APIM handles key validation)
+- Rate limiting middleware (APIM policies)
+- Usage tracking (APIM analytics)
+- API gateway functionality (APIM)
+
+### API Simplification
+
+With APIM handling gateway concerns, the API codebase becomes simpler:
+
+**Remove from API:**
+- Auth0 JWT authentication (APIM validates keys)
+- CORS configuration (APIM CORS policies)
+- Rate limiting middleware (APIM policies)
+- Usage tracking middleware (APIM analytics)
+
+**Keep in API:**
+- Core business logic
+- Data access layer
+- External service integrations (NOAA, FAA, etc.)
+- Caching (Redis) for hot data
+
+---
+
 ## Implementation Roadmap
 
-### Milestone 1: Foundation (Weeks 1-3)
+### Milestone 1: API Cleanup & APIM Setup (Weeks 1-2)
 
+- [x] Remove user-specific features (Aircraft, Flight, WeightBalance, Stripe)
+- [x] Refactor NavlogService to accept inline performance data
+- [x] Remove Auth0 JWT authentication from API
+- [ ] Remove CORS configuration from API (APIM will handle)
 - [ ] API versioning — prefix all data routes with `/v1/`
-- [ ] Create `Customer` and `ApiKey` domain entities
-- [ ] Implement `ApiKeyAuthenticationHandler`
-- [ ] Add rate limiting middleware (per-key, per-endpoint)
-- [ ] Add usage tracking middleware (log requests to database)
 - [ ] Add cursor-based pagination to all list endpoints
+- [ ] Deploy APIM instance (Developer tier for testing)
+- [ ] Import API into APIM from OpenAPI spec
+- [ ] Configure APIM Products (Free, Developer, Professional, Enterprise)
+- [ ] Set up APIM rate limit and quota policies per product
 
-### Milestone 2: Infrastructure (Weeks 4-5)
+### Milestone 2: Infrastructure (Weeks 3-4)
 
 - [ ] Add Redis caching layer with appropriate TTLs
 - [ ] Standardize response envelope format
 - [ ] Add proper error response format with error codes
-- [ ] Configure Azure App Service auto-scaling
-- [ ] Set up PostgreSQL read replica
+- [ ] Configure APIM caching policies for static/semi-static data
+- [ ] Configure APIM CORS policies
+- [ ] Set up APIM to call backend API
+- [ ] Test end-to-end: Client → APIM → API → Database
 
-### Milestone 3: Developer Experience (Weeks 6-8)
+### Milestone 3: Custom Website (Weeks 5-7)
 
-- [ ] Generate and polish OpenAPI spec
-- [ ] Build developer portal (docs, key management, usage dashboard)
+- [ ] Set up website project (Next.js or similar)
+- [ ] Build landing page and marketing content
+- [ ] Build pricing page with tier comparison
+- [ ] Implement user signup/login (own auth system)
+- [ ] Integrate Stripe for billing
+- [ ] Integrate APIM Management API for subscription creation
+- [ ] Build dashboard showing API keys and usage
+- [ ] Build API key management (view, regenerate, revoke)
+- [ ] Import and display API documentation
+
+### Milestone 4: Launch Prep (Weeks 8-9)
+
+- [ ] Terms of Service and legal docs
+- [ ] Set up status page (e.g., Atlassian Statuspage)
 - [ ] Write code examples in Python, JavaScript, cURL
 - [ ] Create getting-started guides for common use cases
-- [ ] Set up status page (e.g., Atlassian Statuspage or similar)
-
-### Milestone 4: Billing & Launch (Weeks 9-10)
-
-- [ ] Reactivate and configure Stripe integration
-- [ ] Implement tiered subscription plans
-- [ ] Add usage-based billing or quota enforcement
-- [ ] Terms of Service and legal docs
+- [ ] Upgrade APIM to Standard tier (production SLA)
+- [ ] Configure Azure App Service auto-scaling
 - [ ] Beta launch with select customers
-- [ ] Public launch
 
 ### Milestone 5: Growth (Ongoing)
 
@@ -329,6 +431,7 @@ This could be a quick-win approach: put APIM in front of your existing API and g
 - [ ] Batch/bulk endpoints for high-volume customers
 - [ ] SDKs in popular languages (Python, JavaScript, Go)
 - [ ] Geographic expansion (international aviation data)
+- [ ] Set up PostgreSQL read replica (when scale demands)
 
 ---
 
@@ -362,4 +465,8 @@ Infrastructure costs at 500 customers would be roughly $2,000-5,000/mo depending
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-02-05 | Document pivot strategy | Evaluate feasibility of API company model |
-| | | |
+| 2026-02-05 | Remove user-specific features | Focus on pure data API; removed Aircraft, Flight, WeightBalance, Stripe, Auth0 to simplify codebase (~90+ files deleted) |
+| 2026-02-05 | Refactor NavlogService | Accept inline `NavlogPerformanceDataDto` instead of fetching from DB; no user profiles needed |
+| 2026-02-05 | Use Azure API Management | APIM handles API keys, rate limiting, caching, CORS, analytics out of the box; avoids building custom middleware |
+| 2026-02-05 | Custom website over APIM developer portal | APIM's built-in portal is generic; custom website allows full branding, marketing integration, and better UX |
+| 2026-02-05 | Use APIM Management REST API | Programmatically create subscriptions and keys from custom website backend; customer never sees APIM directly |
