@@ -31,10 +31,10 @@ namespace PreflightApi.Infrastructure.Services
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    search = search.ToUpper();
+                    search = search.ToUpperInvariant();
                     query = query.Where(a => 
-                        (a.IcaoId != null && a.IcaoId.ToUpper().Contains(search)) ||
-                        (a.ArptId != null && a.ArptId.ToUpper().Contains(search))
+                        (a.IcaoId != null && a.IcaoId.ToUpperInvariant().Contains(search)) ||
+                        (a.ArptId != null && a.ArptId.ToUpperInvariant().Contains(search))
                     );
                 }
 
@@ -56,8 +56,8 @@ namespace PreflightApi.Infrastructure.Services
 
                 var airport = await _context.Airports
                     .FirstOrDefaultAsync(a => 
-                        a.IcaoId == icaoCodeOrIdent.ToUpper() || 
-                        a.ArptId == icaoCodeOrIdent.ToUpper());
+                        a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() || 
+                        a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
 
                 if (airport == null)
                 {
@@ -66,7 +66,7 @@ namespace PreflightApi.Infrastructure.Services
 
                 return AirportMapper.ToDto(airport);
             }
-            catch (Exception ex) when (ex is not ResourceNotFoundException)
+            catch (Exception ex) when (ex is not AirportNotFoundException)
             {
                 _logger.LogError(ex, "Error getting airport by ICAO code or ident: {IcaoCodeOrIdent}", icaoCodeOrIdent);
                 throw;
@@ -80,7 +80,7 @@ namespace PreflightApi.Infrastructure.Services
                 _logger.LogInformation("Getting airports by state: {StateCode}", stateCode);
 
                 var airports = await _context.Airports
-                    .Where(a => a.StateCode == stateCode.ToUpper())
+                    .Where(a => a.StateCode == stateCode.ToUpperInvariant())
                     .ToListAsync();
 
                 return airports.Select(AirportMapper.ToDto);
@@ -98,7 +98,7 @@ namespace PreflightApi.Infrastructure.Services
             {
                 _logger.LogInformation("Getting airports by states: {StateCodes}", string.Join(", ", stateCodes));
 
-                var upperStateCodes = stateCodes.Select(s => s.ToUpper()).ToArray();
+                var upperStateCodes = stateCodes.Select(s => s.ToUpperInvariant()).ToArray();
                 var airports = await _context.Airports
                     .Where(a => a.StateCode != null && upperStateCodes.Contains(a.StateCode))
                     .ToListAsync();
@@ -119,7 +119,7 @@ namespace PreflightApi.Infrastructure.Services
                 _logger.LogInformation("Getting airports by ICAO codes or idents: {CodesOrIdents}", 
                     string.Join(", ", codesOrIdents));
 
-                var upperCodes = codesOrIdents.Select(c => c.ToUpper()).ToArray();
+                var upperCodes = codesOrIdents.Select(c => c.ToUpperInvariant()).ToArray();
                 var airports = await _context.Airports
                     .Where(a => 
                         (a.IcaoId != null && upperCodes.Contains(a.IcaoId)) || 
@@ -147,11 +147,11 @@ namespace PreflightApi.Infrastructure.Services
                     return Enumerable.Empty<AirportDto>();
                 }
 
-                var upperPrefix = prefix.ToUpper();
+                var upperPrefix = prefix.ToUpperInvariant();
                 var airports = await _context.Airports
                     .Where(a =>
-                        (a.IcaoId != null && a.IcaoId.ToUpper().StartsWith(upperPrefix)) ||
-                        (a.ArptId != null && a.ArptId.ToUpper().StartsWith(upperPrefix)))
+                        (a.IcaoId != null && a.IcaoId.ToUpperInvariant().StartsWith(upperPrefix)) ||
+                        (a.ArptId != null && a.ArptId.ToUpperInvariant().StartsWith(upperPrefix)))
                     .ToListAsync();
 
                 return airports.Select(AirportMapper.ToDto);

@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/tafs")]
 [ConditionalAuth]
 public class TafController(ITafService tafService) : ControllerBase
 {
@@ -23,7 +23,7 @@ public class TafController(ITafService tafService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TafDto>> GetTafByIcaoCodeOrIdent(string icaoCodeOrIdent)
     {
-        var taf = await tafService.GetTafByIcaoCode(icaoCodeOrIdent.ToUpperInvariant());
+        var taf = await tafService.GetTafByIcaoCode(icaoCodeOrIdent);
         return Ok(taf);
     }
 }

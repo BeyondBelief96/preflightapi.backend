@@ -9,7 +9,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/g-airmets")]
 [ConditionalAuth]
 public class GAirmetController(IGAirmetService gairmetService)
     : ControllerBase

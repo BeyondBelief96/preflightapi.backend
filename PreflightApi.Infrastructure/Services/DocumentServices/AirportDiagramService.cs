@@ -31,14 +31,14 @@ public class AirportDiagramService : IAirportDiagramService
 
     public async Task<AirportDiagramsResponseDto> GetAirportDiagramsByAirportCode(string airportCode)
     {
-        var upperCode = airportCode.ToUpper();
+        var upperCode = airportCode.ToUpperInvariant();
         var airportDiagrams = await _context.AirportDiagrams
             .Where(d => d.IcaoIdent == upperCode || d.AirportIdent == upperCode)
             .ToListAsync();
 
         if (airportDiagrams.Count == 0)
         {
-            throw new ResourceNotFoundException($"Airport diagrams not found for airport with code: {airportCode}");
+            throw new AirportDiagramNotFoundException(airportCode);
         }
 
         var firstDiagram = airportDiagrams.First();
@@ -48,7 +48,7 @@ public class AirportDiagramService : IAirportDiagramService
         {
             try
             {
-                var transformedFileName = diagram.FileName.ToUpper();
+                var transformedFileName = diagram.FileName.ToUpperInvariant();
                 var presignedUrl = await _cloudStorageService.GeneratePresignedUrlAsync(
                     _containerName,
                     transformedFileName,
@@ -69,7 +69,7 @@ public class AirportDiagramService : IAirportDiagramService
 
         if (diagrams.Count == 0)
         {
-            throw new ResourceNotFoundException($"Could not generate URLs for airport diagrams: {airportCode}");
+            throw new AirportDiagramNotFoundException(airportCode);
         }
 
         return new AirportDiagramsResponseDto

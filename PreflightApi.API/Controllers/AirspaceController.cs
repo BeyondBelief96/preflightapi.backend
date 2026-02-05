@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/airspaces")]
 [ConditionalAuth]
 public class AirspaceController(IAirspaceService airspaceService)
     : ControllerBase

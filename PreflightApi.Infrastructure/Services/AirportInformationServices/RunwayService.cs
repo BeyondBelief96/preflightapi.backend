@@ -30,13 +30,12 @@ public class RunwayService : IRunwayService
             // First find the airport to get its SiteNo
             var airport = await _context.Airports
                 .FirstOrDefaultAsync(a =>
-                    a.IcaoId == icaoCodeOrIdent.ToUpper() ||
-                    a.ArptId == icaoCodeOrIdent.ToUpper());
+                    a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
+                    a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
 
             if (airport == null)
             {
-                throw new ResourceNotFoundException(
-                    $"Airport not found for ICAO code or identifier: {icaoCodeOrIdent}");
+                throw new AirportNotFoundException(icaoCodeOrIdent);
             }
 
             // Get all runways for this airport with their runway ends
@@ -48,7 +47,7 @@ public class RunwayService : IRunwayService
 
             return runways.Select(RunwayMapper.ToDto);
         }
-        catch (Exception ex) when (ex is not ResourceNotFoundException)
+        catch (Exception ex) when (ex is not AirportNotFoundException)
         {
             _logger.LogError(ex, "Error getting runways for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
             throw;

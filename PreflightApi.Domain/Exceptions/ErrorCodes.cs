@@ -14,6 +14,11 @@ public static class ErrorCodes
     // Airports
     public const string AirportNotFound = "AIRPORT_NOT_FOUND";
     public const string AirportDiagramNotFound = "AIRPORT_DIAGRAM_NOT_FOUND";
+    public const string RunwayNotFound = "RUNWAY_NOT_FOUND";
+    public const string CommunicationFrequencyNotFound = "COMMUNICATION_FREQUENCY_NOT_FOUND";
+
+    // Obstacles
+    public const string ObstacleNotFound = "OBSTACLE_NOT_FOUND";
 
     // Weather
     public const string MetarNotFound = "METAR_NOT_FOUND";

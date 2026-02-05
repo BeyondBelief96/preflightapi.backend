@@ -36,8 +36,8 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
         // Get airport data
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
-                a.IcaoId == icaoCodeOrIdent.ToUpper() ||
-                a.ArptId == icaoCodeOrIdent.ToUpper());
+                a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
+                a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
 
         if (airport == null)
         {
@@ -172,8 +172,8 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
         // Get airport data
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
-                a.IcaoId == icaoCodeOrIdent.ToUpper() ||
-                a.ArptId == icaoCodeOrIdent.ToUpper());
+                a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
+                a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
 
         if (airport == null)
         {
@@ -274,7 +274,7 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
 
         // East variation: subtract from true to get magnetic
         // West variation: add to true to get magnetic
-        int magneticHeading = magHemis?.ToUpper() == "E"
+        int magneticHeading = magHemis?.ToUpperInvariant() == "E"
             ? trueHeading - variation
             : trueHeading + variation;
 

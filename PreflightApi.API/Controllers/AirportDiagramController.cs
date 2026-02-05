@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/airport-diagrams")]
 [ConditionalAuth]
 public class AirportDiagramController(IAirportDiagramService airportDiagramService) : ControllerBase
 {

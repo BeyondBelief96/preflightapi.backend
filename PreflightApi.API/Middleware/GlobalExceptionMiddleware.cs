@@ -96,10 +96,6 @@ public class GlobalExceptionMiddleware
                 HttpStatusCode.NotFound,
                 CreateErrorResponse(ErrorCodes.NotFound, keyNotFoundEx.Message, timestamp, traceId, path, exception)),
 
-            ResourceNotFoundException resourceNotFoundEx => (
-                HttpStatusCode.NotFound,
-                CreateErrorResponse(ErrorCodes.NotFound, resourceNotFoundEx.Message, timestamp, traceId, path, exception)),
-
             ArgumentException argEx => (
                 HttpStatusCode.BadRequest,
                 CreateErrorResponse(ErrorCodes.ValidationError, argEx.Message, timestamp, traceId, path, exception)),

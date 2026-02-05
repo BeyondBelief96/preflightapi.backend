@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/metars")]
 [ConditionalAuth]
 public class MetarController(IMetarService metarService) : ControllerBase
 {
@@ -23,7 +23,7 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MetarDto>> GetMetarForAirport(string icaoCodeOrIdent)
     {
-        var metar = await metarService.GetMetarForAirport(icaoCodeOrIdent.ToUpperInvariant());
+        var metar = await metarService.GetMetarForAirport(icaoCodeOrIdent);
         return Ok(metar);
     }
 
@@ -37,7 +37,7 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsByState(string stateCode)
     {
-        var metars = await metarService.GetMetarsByState(stateCode.ToUpperInvariant());
+        var metars = await metarService.GetMetarsByState(stateCode);
         return Ok(metars);
     }
 
@@ -52,7 +52,7 @@ public class MetarController(IMetarService metarService) : ControllerBase
     public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsByStates(string stateCodes)
     {
         var stateCodeArray = stateCodes.Split(',')
-            .Select(s => s.Trim().ToUpperInvariant())
+            .Select(s => s.Trim())
             .ToArray();
 
         var metars = await metarService.GetMetarsByStates(stateCodeArray);

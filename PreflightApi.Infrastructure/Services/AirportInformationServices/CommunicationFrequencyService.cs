@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
@@ -22,7 +23,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
         private string StripIcaoPrefix(string facilityCode)
         {
-            facilityCode = facilityCode.ToUpper();
+            facilityCode = facilityCode.ToUpperInvariant();
             
             // Return original code if it's 3 or fewer characters
             if (facilityCode.Length <= 3)
@@ -45,13 +46,22 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
         {
             try
             {
-                _logger.LogInformation("Getting frequencies for serviced facility code: {ServicedFacility}", 
+                _logger.LogInformation("Getting frequencies for serviced facility code: {ServicedFacility}",
                     servicedFacility);
 
                 var strippedCode = StripIcaoPrefix(servicedFacility);
-                
-                _logger.LogDebug("Stripped facility code for lookup: {StrippedCode} (original: {OriginalCode})", 
+
+                _logger.LogDebug("Stripped facility code for lookup: {StrippedCode} (original: {OriginalCode})",
                     strippedCode, servicedFacility);
+
+                // Verify the airport/facility exists
+                var airportExists = await _context.Airports
+                    .AnyAsync(a => a.ArptId == strippedCode || a.IcaoId == strippedCode || a.IcaoId == servicedFacility.ToUpperInvariant());
+
+                if (!airportExists)
+                {
+                    throw new AirportNotFoundException(servicedFacility);
+                }
 
                 var frequencies = await _context.CommunicationFrequencies
                     .Where(f => f.ServicedFacility == strippedCode)
@@ -59,22 +69,14 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     .ThenBy(f => f.Frequency)
                     .ToListAsync();
 
-                if (!frequencies.Any())
-                {
-                    _logger.LogWarning("No frequencies found for serviced facility: {ServicedFacility} (stripped: {StrippedCode})", 
-                        servicedFacility, strippedCode);
-                }
-                else
-                {
-                    _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}", 
-                        frequencies.Count, servicedFacility);
-                }
+                _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}",
+                    frequencies.Count, servicedFacility);
 
                 return frequencies.Select(CommunicationFrequencyMapper.ToDto);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not AirportNotFoundException)
             {
-                _logger.LogError(ex, "Error getting frequencies for serviced facility: {ServicedFacility}", 
+                _logger.LogError(ex, "Error getting frequencies for serviced facility: {ServicedFacility}",
                     servicedFacility);
                 throw;
             }

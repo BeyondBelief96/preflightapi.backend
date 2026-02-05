@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
+using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/airports")]
     [ConditionalAuth]
     public class AirportController(
         IAirportService airportService,
@@ -34,10 +35,15 @@ namespace PreflightApi.API.Controllers
         /// <param name="query">Search query (minimum 2 characters)</param>
         /// <returns>List of airports matching the search criteria, prioritizing ICAO/ID matches</returns>
         /// <response code="200">Returns the list of matching airports (max 50)</response>
+        /// <response code="400">If the query is empty or too short</response>
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AirportDto>>> SearchAirports([FromQuery] string query)
         {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                throw new ValidationException("query", "Search query must be at least 2 characters");
+
             var airports = await airportService.SearchAirports(query);
             return Ok(airports);
         }

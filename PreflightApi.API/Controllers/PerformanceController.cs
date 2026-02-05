@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/performance")]
 [ConditionalAuth]
 public class PerformanceController(IPerformanceCalculatorService performanceCalculatorService)
     : ControllerBase
@@ -24,6 +24,7 @@ public class PerformanceController(IPerformanceCalculatorService performanceCalc
     [ProducesResponseType(typeof(AirportCrosswindResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<AirportCrosswindResponseDto>> GetCrosswindForAirport(string icaoCodeOrIdent)
     {
         var result = await performanceCalculatorService.GetCrosswindForAirportAsync(icaoCodeOrIdent);
@@ -60,6 +61,7 @@ public class PerformanceController(IPerformanceCalculatorService performanceCalc
     [ProducesResponseType(typeof(DensityAltitudeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<DensityAltitudeResponseDto>> GetDensityAltitudeForAirport(
         string icaoCodeOrIdent,
         [FromQuery] AirportDensityAltitudeRequestDto? request = null)

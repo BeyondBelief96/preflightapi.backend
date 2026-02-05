@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/notams")]
 [ConditionalAuth]
 public class NotamController(INotamService notamService)
     : ControllerBase
@@ -23,6 +23,7 @@ public class NotamController(INotamService notamService)
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsForAirport(
         string icaoCodeOrIdent,
         CancellationToken ct)
@@ -48,6 +49,7 @@ public class NotamController(INotamService notamService)
     [HttpGet("radius")]
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsByRadius(
         [FromQuery] double latitude,
         [FromQuery] double longitude,
@@ -103,6 +105,7 @@ public class NotamController(INotamService notamService)
     [HttpPost("route")]
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsForRoute(
         [FromBody] NotamQueryByRouteRequest request,
         CancellationToken ct)

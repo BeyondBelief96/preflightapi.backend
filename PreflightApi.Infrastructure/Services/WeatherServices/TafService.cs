@@ -21,13 +21,13 @@ public class TafService : ITafService
     
     public async Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent)
     {
-        var taf = await _dbContext.Tafs.FirstOrDefaultAsync(t => t.StationId == icaoCodeOrIdent.ToUpper());
+        var taf = await _dbContext.Tafs.FirstOrDefaultAsync(t => t.StationId == icaoCodeOrIdent.ToUpperInvariant());
 
         if (taf == null)
         {
             var airport = await _dbContext.Airports
-                .FirstOrDefaultAsync(a => a.ArptId == icaoCodeOrIdent.ToUpper() ||
-                                          a.IcaoId == icaoCodeOrIdent.ToUpper());
+                .FirstOrDefaultAsync(a => a.ArptId == icaoCodeOrIdent.ToUpperInvariant() ||
+                                          a.IcaoId == icaoCodeOrIdent.ToUpperInvariant());
 
             if (airport == null)
             {

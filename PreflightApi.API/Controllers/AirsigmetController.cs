@@ -9,7 +9,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/airsigmets")]
 [ConditionalAuth]
 public class AirsigmetController(IAirsigmetService airsigmetService)
     : ControllerBase

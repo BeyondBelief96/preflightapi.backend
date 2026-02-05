@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/chart-supplements")]
 [ConditionalAuth]
 public class ChartSupplementController(IChartSupplementService chartSupplementService) : ControllerBase
 {

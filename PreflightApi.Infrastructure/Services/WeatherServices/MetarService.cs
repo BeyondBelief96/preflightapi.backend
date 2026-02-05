@@ -33,15 +33,15 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 }
 
                 var metar = await _context.Metars
-                    .FirstOrDefaultAsync(m => m.StationId == icaoIdOrIdent.ToUpper());
+                    .FirstOrDefaultAsync(m => m.StationId == icaoIdOrIdent.ToUpperInvariant());
 
                 if (metar == null)
                 {
                     _logger.LogDebug("METAR not found directly, searching for airport: {IcaoIdOrIdent}", icaoIdOrIdent);
 
                     var airport = await _context.Airports
-                        .FirstOrDefaultAsync(a => a.ArptId == icaoIdOrIdent.ToUpper() ||
-                                                a.IcaoId == icaoIdOrIdent.ToUpper());
+                        .FirstOrDefaultAsync(a => a.ArptId == icaoIdOrIdent.ToUpperInvariant() ||
+                                                a.IcaoId == icaoIdOrIdent.ToUpperInvariant());
 
                     if (airport == null)
                     {
@@ -69,7 +69,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 _logger.LogInformation("Successfully retrieved METAR for airport: {IcaoIdOrIdent}", icaoIdOrIdent);
                 return MetarMapper.ToDto(metar);
             }
-            catch (Exception ex) when (ex is not ResourceNotFoundException)
+            catch (Exception ex) when (ex is not DomainException)
             {
                 _logger.LogError(ex, "Error retrieving METAR for airport: {IcaoIdOrIdent}", icaoIdOrIdent);
                 throw;
@@ -87,7 +87,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                     throw new ArgumentException("State code cannot be null or empty", nameof(stateCode));
                 }
 
-                var upperStateCode = stateCode.ToUpper();
+                var upperStateCode = stateCode.ToUpperInvariant();
                 var metars = await _context.Metars
                     .Where(m => _context.Airports.Any(a =>
                         a.StateCode == upperStateCode &&
@@ -127,7 +127,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                     throw new ArgumentException("State codes cannot contain null or empty values", nameof(stateCodes));
                 }
 
-                var upperStateCodes = stateCodes.Select(s => s?.ToUpper())
+                var upperStateCodes = stateCodes.Select(s => s?.ToUpperInvariant())
                     .Where(s => s != null)
                     .ToHashSet();
 

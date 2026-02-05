@@ -31,7 +31,7 @@ public class ChartSupplementService : IChartSupplementService
 
     private string StripIcaoPrefix(string airportCode)
     {
-        airportCode = airportCode.ToUpper();
+        airportCode = airportCode.ToUpperInvariant();
         
         // Return original code if it's 3 or fewer characters
         if (airportCode.Length <= 3)
@@ -62,11 +62,11 @@ public class ChartSupplementService : IChartSupplementService
         if (nameParts.Length != 2)
         {
             // If there's no extension or multiple dots, return the original filename uppercased
-            return fileName.ToUpper();
+            return fileName.ToUpperInvariant();
         }
 
         // Uppercase the filename part, keep the extension lowercase
-        return $"{nameParts[0].ToUpper()}.{nameParts[1].ToLower()}";
+        return $"{nameParts[0].ToUpperInvariant()}.{nameParts[1].ToLower()}";
     }
 
     public async Task<ChartSupplementUrlDto> GetChartSupplementUrlByAirportCode(string airportCode)
@@ -80,12 +80,12 @@ public class ChartSupplementService : IChartSupplementService
 
         if (chartSupplement == null)
         {
-            throw new ResourceNotFoundException($"Chart supplement not found for airport with code: {airportCode}");
+            throw new ChartSupplementNotFoundException(airportCode);
         }
 
         if (string.IsNullOrEmpty(chartSupplement.FileName))
         {
-            throw new ResourceNotFoundException($"No supplement file found for airport with code: {airportCode}");
+            throw new ChartSupplementNotFoundException(airportCode);
         }
 
         try

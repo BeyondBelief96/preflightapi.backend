@@ -31,7 +31,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting airspaces by classes: {Classes}", 
                     string.Join(", ", airspaceClasses));
 
-                var upperClasses = airspaceClasses.Select(c => c.ToUpper()).ToArray();
+                var upperClasses = airspaceClasses.Select(c => c.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
                     .Where(a => a.Class != null && upperClasses.Contains(a.Class))
                     .OrderBy(a => a.Name)
@@ -54,9 +54,9 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting airspaces by cities: {Cities}", 
                     string.Join(", ", cities));
 
-                var upperCities = cities.Select(c => c.ToUpper()).ToArray();
+                var upperCities = cities.Select(c => c.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
-                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpper()))
+                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpperInvariant()))
                     .OrderBy(a => a.Name)
                     .ToListAsync();
 
@@ -77,7 +77,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting airspaces by states: {States}", 
                     string.Join(", ", states));
 
-                var upperStates = states.Select(s => s.ToUpper()).ToArray();
+                var upperStates = states.Select(s => s.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
                     .Where(a => a.State != null && upperStates.Contains(a.State))
                     .OrderBy(a => a.Name)
@@ -100,7 +100,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting special use airspaces by type codes: {TypeCodes}", 
                     string.Join(", ", typeCodes));
 
-                var upperTypeCodes = typeCodes.Select(t => t.ToUpper()).ToArray();
+                var upperTypeCodes = typeCodes.Select(t => t.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.SpecialUseAirspaces
                     .Where(a => a.TypeCode != null && upperTypeCodes.Contains(a.TypeCode))
                     .OrderBy(a => a.Name)
@@ -123,7 +123,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting airspaces by ICAO codes or idents: {IcaoOrIdents}", 
                     string.Join(", ", icaoOrIdents));
 
-                var upperCodes = icaoOrIdents.Select(i => i.ToUpper()).ToArray();
+                var upperCodes = icaoOrIdents.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
                     .Where(a => 
                         a.IcaoId != null && upperCodes.Contains(a.IcaoId) || 
@@ -147,9 +147,9 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             {
                 _logger.LogInformation("Getting airspaces by global ids: {Ids}", string.Join(", ", globalIds));
 
-                var upperIds = globalIds.Select(i => i.ToUpper()).ToArray();
+                var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
-                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
+                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpperInvariant()))
                     .ToListAsync();
 
                 return airspaces.Select(AirspaceMapper.ToDto);
@@ -167,9 +167,9 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             {
                 _logger.LogInformation("Getting special use airspaces by global ids: {Ids}", string.Join(", ", globalIds));
 
-                var upperIds = globalIds.Select(i => i.ToUpper()).ToArray();
+                var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.SpecialUseAirspaces
-                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
+                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpperInvariant()))
                     .ToListAsync();
 
                 return airspaces.Select(AirspaceMapper.ToDto);

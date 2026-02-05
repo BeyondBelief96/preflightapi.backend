@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/obstacles")]
 [ConditionalAuth]
 public class ObstacleController(IObstacleService obstacleService)
     : ControllerBase
@@ -24,6 +24,7 @@ public class ObstacleController(IObstacleService obstacleService)
     /// <returns>List of obstacles sorted by height AMSL descending</returns>
     [HttpGet("search")]
     [ProducesResponseType(typeof(IEnumerable<ObstacleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<ObstacleDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
@@ -31,6 +32,13 @@ public class ObstacleController(IObstacleService obstacleService)
         [FromQuery] int? minHeightAgl = null,
         [FromQuery] int limit = 100)
     {
+        if (lat < -90 || lat > 90)
+            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
+        if (lon < -180 || lon > 180)
+            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+        if (radiusNm <= 0)
+            throw new ValidationException("radiusNm", "Radius must be greater than 0");
+
         limit = Math.Min(limit, 500);
         var obstacles = await obstacleService.SearchNearby(lat, lon, radiusNm, minHeightAgl, limit);
         return Ok(obstacles);
@@ -45,11 +53,15 @@ public class ObstacleController(IObstacleService obstacleService)
     /// <returns>List of obstacles in the state sorted by height AMSL descending</returns>
     [HttpGet("state/{stateCode}")]
     [ProducesResponseType(typeof(IEnumerable<ObstacleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<ObstacleDto>>> GetByState(
         string stateCode,
         [FromQuery] int? minHeightAgl = null,
         [FromQuery] int limit = 1000)
     {
+        if (string.IsNullOrWhiteSpace(stateCode))
+            throw new ValidationException("stateCode", "State code is required");
+
         limit = Math.Min(limit, 5000);
         var obstacles = await obstacleService.GetByState(stateCode, minHeightAgl, limit);
         return Ok(obstacles);
@@ -68,7 +80,7 @@ public class ObstacleController(IObstacleService obstacleService)
         var obstacle = await obstacleService.GetByOasNumber(oasNumber);
         if (obstacle == null)
         {
-            throw new NotFoundException("Obstacle", oasNumber);
+            throw new ObstacleNotFoundException(oasNumber);
         }
         return Ok(obstacle);
     }
@@ -109,6 +121,7 @@ public class ObstacleController(IObstacleService obstacleService)
     /// <returns>List of obstacles in the bounding box sorted by height AMSL descending</returns>
     [HttpGet("bbox")]
     [ProducesResponseType(typeof(IEnumerable<ObstacleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<ObstacleDto>>> GetByBoundingBox(
         [FromQuery] decimal minLat,
         [FromQuery] decimal maxLat,
@@ -117,6 +130,15 @@ public class ObstacleController(IObstacleService obstacleService)
         [FromQuery] int? minHeightAgl = null,
         [FromQuery] int limit = 1000)
     {
+        if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90)
+            throw new ValidationException("lat", "Latitude values must be between -90 and 90 degrees");
+        if (minLon < -180 || minLon > 180 || maxLon < -180 || maxLon > 180)
+            throw new ValidationException("lon", "Longitude values must be between -180 and 180 degrees");
+        if (minLat >= maxLat)
+            throw new ValidationException("lat", "minLat must be less than maxLat");
+        if (minLon >= maxLon)
+            throw new ValidationException("lon", "minLon must be less than maxLon");
+
         limit = Math.Min(limit, 5000);
         var obstacles = await obstacleService.GetByBoundingBox(minLat, maxLat, minLon, maxLon, minHeightAgl, limit);
         return Ok(obstacles);

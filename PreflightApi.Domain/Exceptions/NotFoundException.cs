@@ -80,3 +80,25 @@ public class ChartSupplementNotFoundException : NotFoundException
     {
     }
 }
+
+/// <summary>
+/// Exception thrown when an obstacle cannot be found.
+/// </summary>
+public class ObstacleNotFoundException : NotFoundException
+{
+    public ObstacleNotFoundException(string oasNumber)
+        : base(ErrorCodes.ObstacleNotFound, $"Obstacle was not found with OAS number '{oasNumber}'.")
+    {
+    }
+}
+
+/// <summary>
+/// Exception thrown when a runway cannot be found.
+/// </summary>
+public class RunwayNotFoundException : NotFoundException
+{
+    public RunwayNotFoundException(string airportId)
+        : base(ErrorCodes.RunwayNotFound, $"Runways were not found for airport '{airportId}'.")
+    {
+    }
+}

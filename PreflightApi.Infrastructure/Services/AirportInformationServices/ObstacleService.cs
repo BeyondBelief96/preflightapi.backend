@@ -43,7 +43,7 @@ public class ObstacleService : IObstacleService
 
             var obstacle = await _context.Obstacles
                 .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.OasNumber == oasNumber.ToUpper());
+                .FirstOrDefaultAsync(o => o.OasNumber == oasNumber.ToUpperInvariant());
 
             return obstacle != null ? ObstacleMapper.ToDto(obstacle) : null;
         }
@@ -58,7 +58,7 @@ public class ObstacleService : IObstacleService
     {
         try
         {
-            var oasNumberList = oasNumbers.Select(o => o.ToUpper()).ToList();
+            var oasNumberList = oasNumbers.Select(o => o.ToUpperInvariant()).ToList();
 
             if (oasNumberList.Count == 0)
             {
@@ -134,7 +134,7 @@ public class ObstacleService : IObstacleService
 
             var query = _context.Obstacles
                 .AsNoTracking()
-                .Where(o => o.StateId == stateCode.ToUpper());
+                .Where(o => o.StateId == stateCode.ToUpperInvariant());
 
             if (minHeightAgl.HasValue)
             {

@@ -24,7 +24,7 @@ namespace PreflightApi.Infrastructure.Services
                 var publicationCycle = await _dbContext.FaaPublicationCycles
                     .FirstOrDefaultAsync(p => p.PublicationType == type);
 
-                return publicationCycle ?? throw new ResourceNotFoundException($"No publication cycle found of type {type}.");
+                return publicationCycle ?? throw new NotFoundException("FaaPublicationCycle", type);
             
         }
 

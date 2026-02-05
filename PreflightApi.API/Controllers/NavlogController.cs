@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/navlog")]
 [ConditionalAuth]
 public class NavlogController(INavlogService navlogService)
     : ControllerBase
@@ -21,10 +21,11 @@ public class NavlogController(INavlogService navlogService)
     /// <response code="200">Returns the calculated navigation log</response>
     /// <response code="400">If the request data is invalid</response>
     /// <response code="404">If the aircraft performance profile is not found</response>
-    [HttpPost("[action]")]
+    [HttpPost("calculate")]
     [ProducesResponseType(typeof(NavlogResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NavlogResponseDto>> CalculateNavlog([FromBody] NavlogRequestDto request)
     {
         var response = await navlogService.CalculateNavlog(request);
@@ -38,9 +39,10 @@ public class NavlogController(INavlogService navlogService)
     /// <returns>True course, magnetic course, and distance between the points</returns>
     /// <response code="200">Returns the bearing and distance calculation</response>
     /// <response code="400">If the request data is invalid</response>
-    [HttpPost("[action]")]
+    [HttpPost("bearing-and-distance")]
     [ProducesResponseType(typeof(BearingAndDistanceResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<BearingAndDistanceResponseDto>> CalculateBearingAndDistance(
         [FromBody] BearingAndDistanceRequestDto request)
     {
@@ -55,9 +57,10 @@ public class NavlogController(INavlogService navlogService)
     /// <returns>Winds aloft data for the specified forecast period</returns>
     /// <response code="200">Returns the winds aloft data</response>
     /// <response code="400">If the forecast period is invalid</response>
-    [HttpGet("[action]/{forecast}")]
+    [HttpGet("winds-aloft/{forecast}")]
     [ProducesResponseType(typeof(WindsAloftDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<WindsAloftDto>> GetWindsAloftData(int forecast)
     {
         if (forecast != 6 && forecast != 12 && forecast != 24)
