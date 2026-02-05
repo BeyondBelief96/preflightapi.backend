@@ -4,7 +4,7 @@ services:
     container_name: preflightapi-db
     environment:
       - POSTGRES_USER=preflightapi_development_user
-      - POSTGRES_PASSWORD=local_dev_password
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=preflightapi_development_database
     ports:
       - "5432:5432"
@@ -31,7 +31,7 @@ services:
       - Database__Host=db
       - Database__Database=preflightapi_development_database
       - Database__Username=preflightapi_development_user
-      - Database__Password=local_dev_password
+      - Database__Password=${DB_PASSWORD}
       - Database__Port=5432
       # Azure Blob Storage Settings
       - CloudStorage__ConnectionString=${CLOUD_STORAGE_CONNECTION_STRING}
