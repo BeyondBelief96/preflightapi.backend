@@ -20,7 +20,9 @@
       "Bash(taskkill:*)",
       "Bash(dotnet user-secrets:*)",
       "Bash(find:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(del:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

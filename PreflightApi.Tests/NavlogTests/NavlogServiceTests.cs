@@ -2,19 +2,16 @@ using Bogus;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Dtos.Navlog;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
-using PreflightApi.Domain.Exceptions;
 using Xunit;
 
 namespace PreflightApi.Tests.NavlogTests
 {
         public class NavlogServiceTests
         {
-            private readonly IAircraftPerformanceProfileRepository _aircraftPerformanceProfileRepository;
             private readonly IWindsAloftService _windsAloftService;
             private readonly IMagneticVariationService _magneticVariationService;
             private readonly IAirspaceService _airspaceService;
@@ -23,10 +20,23 @@ namespace PreflightApi.Tests.NavlogTests
             private readonly NavlogService _navlogService;
             private readonly Faker _faker;
 
+            private static NavlogPerformanceDataDto TestPerformanceData => new()
+            {
+                ClimbTrueAirspeed = 90,
+                CruiseTrueAirspeed = 120,
+                DescentTrueAirspeed = 100,
+                ClimbFpm = 500,
+                DescentFpm = 500,
+                ClimbFuelBurn = 8.0,
+                CruiseFuelBurn = 6.5,
+                DescentFuelBurn = 4.0,
+                SttFuelGals = 3.0,
+                FuelOnBoardGals = 40.0
+            };
+
             public NavlogServiceTests()
             {
                 // Setup mocks
-                _aircraftPerformanceProfileRepository = Substitute.For<IAircraftPerformanceProfileRepository>();
                 _windsAloftService = Substitute.For<IWindsAloftService>();
                 _airspaceService = Substitute.For<IAirspaceService>();
                 _obstacleService = Substitute.For<IObstacleService>();
@@ -35,37 +45,12 @@ namespace PreflightApi.Tests.NavlogTests
 
                 // Setup NavlogService
                 _navlogService = new NavlogService(
-                    _aircraftPerformanceProfileRepository,
                     _windsAloftService,
                     _airspaceService,
                     _obstacleService,
                     _magneticVariationService,
                     _logger
                 );
-
-                // Setup test performance profile that will be returned by the repository
-                var testProfile = new AircraftPerformanceProfile
-                {
-                    Id = "test-profile-id",
-                    UserId = "test-user-id",
-                    ProfileName = "Test Profile",
-                    ClimbTrueAirspeed = 90,
-                    CruiseTrueAirspeed = 120,
-                    DescentTrueAirspeed = 100,
-                    ClimbFpm = 500,
-                    DescentFpm = 500,
-                    ClimbFuelBurn = 8.0,
-                    CruiseFuelBurn = 6.5,
-                    DescentFuelBurn = 4.0,
-                    SttFuelGals = 3.0,
-                    FuelOnBoardGals = 40.0
-                };
-
-                // Configure the repository to return the test profile when GetByIdAsync is called with "test-profile-id"
-                _aircraftPerformanceProfileRepository.GetByIdAsync("test-profile-id").Returns(testProfile);
-
-                // For the test that expects KeyNotFoundException, explicitly return null
-                _aircraftPerformanceProfileRepository.GetByIdAsync("non-existent-profile").Returns((AircraftPerformanceProfile)null);
 
                 // Setup Faker for generating test data with a fixed seed for reproducibility
                 _faker = new Faker("en") { Random = new Randomizer(12345) };
@@ -82,7 +67,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KBNA", 36.1244, -86.6782, 599)
                     },
                     PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Act
@@ -90,28 +75,6 @@ namespace PreflightApi.Tests.NavlogTests
 
                 // Assert
                 await act.Should().ThrowAsync<PreflightApi.Domain.Exceptions.ValidationException>();
-            }
-
-            [Fact]
-            public async Task CalculateNavlog_ShouldThrowPerformanceProfileNotFoundException_WhenProfileNotFound()
-            {
-                // Arrange
-                var request = new NavlogRequestDto
-                {
-                    TimeOfDeparture = DateTime.UtcNow,
-                    Waypoints = new List<WaypointDto> {
-                        CreateSpecificWaypoint("KBNA", 36.1244, -86.6782, 599),
-                        CreateSpecificWaypoint("KATL", 33.6367, -84.4278, 1026)
-                    },
-                    PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "non-existent-profile"
-                };
-
-                // Act
-                Func<Task> act = async () => await _navlogService.CalculateNavlog(request);
-
-                // Assert
-                await act.Should().ThrowAsync<PerformanceProfileNotFoundException>();
             }
 
             [Fact]
@@ -127,7 +90,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KATL", 33.6367, -84.4278, 1026)
                     },
                     PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup the mock for magnetic variation
@@ -168,7 +131,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KATL", 33.6367, -84.4278, 1026)
                     },
                     PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup the mock for magnetic variation
@@ -319,7 +282,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KDFW", 32.8968, -97.0380, 607)
                     },
                     PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup the mock for magnetic variation
@@ -367,7 +330,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KATL", 33.6367, -84.4278, 1026)
                     },
                     PlannedCruisingAltitude = 7500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup the mock for magnetic variation
@@ -404,7 +367,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("PANC", 61.17444, -149.99611, 152)  // Anchorage, Alaska
                     },
                     PlannedCruisingAltitude = 9500,
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup extreme magnetic variation (common near the poles)
@@ -439,7 +402,7 @@ namespace PreflightApi.Tests.NavlogTests
                         CreateSpecificWaypoint("KASE", 39.2232, -106.8685, 7820)  // Aspen, CO (very high elevation)
                     },
                     PlannedCruisingAltitude = 13500, // Higher cruise altitude for mountains
-                    AircraftPerformanceProfileId = "test-profile-id"
+                    PerformanceData = TestPerformanceData
                 };
 
                 // Setup the mock for magnetic variation
@@ -498,7 +461,7 @@ namespace PreflightApi.Tests.NavlogTests
                     CreateSpecificWaypoint(endAirport, endLat, endLon, 500)
                 },
                 PlannedCruisingAltitude = 6000,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             // Setup winds aloft with controlled parameters
@@ -544,7 +507,7 @@ namespace PreflightApi.Tests.NavlogTests
                 TimeOfDeparture = departureTime,
                 Waypoints = waypoints,
                 PlannedCruisingAltitude = 7500,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(0);
@@ -594,7 +557,7 @@ namespace PreflightApi.Tests.NavlogTests
                 TimeOfDeparture = departureTime,
                 Waypoints = waypoints,
                 PlannedCruisingAltitude = 7500,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(0);
@@ -651,7 +614,7 @@ namespace PreflightApi.Tests.NavlogTests
                 TimeOfDeparture = departureTime,
                 Waypoints = waypoints,
                 PlannedCruisingAltitude = 7500,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(0);
@@ -695,7 +658,7 @@ namespace PreflightApi.Tests.NavlogTests
                 TimeOfDeparture = departureTime,
                 Waypoints = waypoints,
                 PlannedCruisingAltitude = 7500,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(0);
@@ -737,7 +700,7 @@ namespace PreflightApi.Tests.NavlogTests
                 TimeOfDeparture = departureTime,
                 Waypoints = waypoints,
                 PlannedCruisingAltitude = 7500,
-                AircraftPerformanceProfileId = "test-profile-id"
+                PerformanceData = TestPerformanceData
             };
 
             _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(0);

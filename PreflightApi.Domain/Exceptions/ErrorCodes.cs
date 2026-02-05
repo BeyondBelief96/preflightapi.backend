@@ -11,25 +11,6 @@ public static class ErrorCodes
     public const string NotFound = "NOT_FOUND";
     public const string Conflict = "CONFLICT";
 
-    // Aircraft
-    public const string AircraftNotFound = "AIRCRAFT_NOT_FOUND";
-    public const string AircraftDuplicateTailNumber = "AIRCRAFT_DUPLICATE_TAIL_NUMBER";
-    public const string AircraftInUse = "AIRCRAFT_IN_USE";
-
-    // Aircraft Performance Profiles
-    public const string PerformanceProfileNotFound = "PERFORMANCE_PROFILE_NOT_FOUND";
-    public const string PerformanceProfileDuplicateName = "PERFORMANCE_PROFILE_DUPLICATE_NAME";
-
-    // Weight & Balance Profiles
-    public const string WeightBalanceProfileNotFound = "WEIGHT_BALANCE_PROFILE_NOT_FOUND";
-    public const string WeightBalanceProfileDuplicateName = "WEIGHT_BALANCE_PROFILE_DUPLICATE_NAME";
-
-    // Aircraft Documents
-    public const string DocumentNotFound = "DOCUMENT_NOT_FOUND";
-
-    // Flights
-    public const string FlightNotFound = "FLIGHT_NOT_FOUND";
-
     // Airports
     public const string AirportNotFound = "AIRPORT_NOT_FOUND";
     public const string AirportDiagramNotFound = "AIRPORT_DIAGRAM_NOT_FOUND";

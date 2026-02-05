@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PreflightApi.Infrastructure.Interfaces;
-using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Services.CloudStorage;
 using PreflightApi.Infrastructure.Settings;
 
@@ -22,9 +21,6 @@ public static class ServiceCollectionExtensions
 
         // Register initialization service
         services.AddScoped<ICloudStorageInitializationService, CloudStorageInitializationService>();
-
-        // Register aircraft document service
-        services.AddScoped<IAircraftDocumentService, AircraftDocumentService>();
 
         return services;
     }

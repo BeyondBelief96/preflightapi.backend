@@ -4,7 +4,7 @@ services:
     container_name: preflightapi-db
     environment:
       - POSTGRES_USER=preflightapi_development_user
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=local_dev_password
       - POSTGRES_DB=preflightapi_development_database
     ports:
       - "5432:5432"
@@ -31,17 +31,13 @@ services:
       - Database__Host=db
       - Database__Database=preflightapi_development_database
       - Database__Username=preflightapi_development_user
-      - Database__Password=${DB_PASSWORD}
+      - Database__Password=local_dev_password
       - Database__Port=5432
       # Azure Blob Storage Settings
       - CloudStorage__ConnectionString=${CLOUD_STORAGE_CONNECTION_STRING}
       - CloudStorage__ChartSupplementsContainerName=preflightapi-chart-supplements-centralus-test
       - CloudStorage__AirportDiagramsContainerName=preflightapi-airport-diagrams-centralus-test
       - CloudStorage__UseManagedIdentity=false
-      # Stripe Settings
-      - StripeSettings__StripeSecretKey=${STRIPE_SECRET_KEY}
-      - StripeSettings__StripeMonthlySubscriptionPriceId=price_1PpMqiDdx3lXaRF7yPMTYOMW
-      - StripeSettings__Domain=https://localhost:7014
       # NOAA API Settings
       - NOAASettings__NOAAApiKey=zNEw7
       # Auth0 Settings

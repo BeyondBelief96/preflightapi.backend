@@ -1,6 +1,5 @@
 using GeographicLib;
 using Microsoft.Extensions.Logging;
-using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Domain.Utilities.UnitConversions;
@@ -11,7 +10,6 @@ namespace PreflightApi.Infrastructure.Services;
 
 public class NavlogService : INavlogService
 {
-    private readonly IAircraftPerformanceProfileRepository _aircraftPerformanceProfileRepository;
     private readonly IWindsAloftService _windsAloftService;
     private readonly IAirspaceService _airspaceService;
     private readonly IObstacleService _obstacleService;
@@ -19,14 +17,12 @@ public class NavlogService : INavlogService
     private readonly ILogger<NavlogService> _logger;
 
     public NavlogService(
-        IAircraftPerformanceProfileRepository aircraftPerformanceProfileRepository,
         IWindsAloftService windsAloftService,
         IAirspaceService airspaceService,
         IObstacleService obstacleService,
         IMagneticVariationService magneticVariationService,
         ILogger<NavlogService> logger)
     {
-        _aircraftPerformanceProfileRepository = aircraftPerformanceProfileRepository;
         _windsAloftService = windsAloftService;
         _airspaceService = airspaceService;
         _obstacleService = obstacleService;
@@ -46,13 +42,12 @@ public class NavlogService : INavlogService
                 throw new ValidationException("Waypoints", "At least two waypoints are required for navigation");
             }
 
-            var performanceProfile = await _aircraftPerformanceProfileRepository.GetByIdAsync(request.AircraftPerformanceProfileId)
-                                     ?? throw new PerformanceProfileNotFoundException(request.AircraftPerformanceProfileId);
+            var performanceData = request.PerformanceData;
 
             var waypointsWithClimbAndDescent = AddClimbAndDescentWaypoints(
                 request.Waypoints,
                 request.PlannedCruisingAltitude,
-                performanceProfile);
+                performanceData);
 
             var waypointsAdjustedForCruisingAltitude = AdjustWaypointsForCruisingAltitude(
                 waypointsWithClimbAndDescent,
@@ -90,7 +85,7 @@ public class NavlogService : INavlogService
                     isDescentLeg,
                     waypointsAdjustedForCruisingAltitude[i],
                     waypointsAdjustedForCruisingAltitude[i + 1],
-                    performanceProfile,
+                    performanceData,
                     previousLegEndTime,
                     windsAloftData);
 
@@ -100,12 +95,12 @@ public class NavlogService : INavlogService
 
             response.TotalRouteDistance = CalculateTotalRouteDistance(response.Legs);
             var additionalDepartures = waypointsAdjustedForCruisingAltitude.Count(w => (w.IsRefuelingStop ?? false));
-            response.TotalFuelUsed = CalculateTotalFuelUsed(response.Legs, performanceProfile.SttFuelGals * (1 + additionalDepartures));
+            response.TotalFuelUsed = CalculateTotalFuelUsed(response.Legs, performanceData.SttFuelGals * (1 + additionalDepartures));
             response.TotalRouteTimeHours = CalculateTotalRouteTime(response.Legs);
             response.AverageWindComponent = CalculateAverageHeadwind(response.Legs);
 
             CalculateDistanceRemaining(response.Legs, response.TotalRouteDistance);
-            CalculateRemainingFuel(response.Legs, performanceProfile.FuelOnBoardGals, performanceProfile);
+            CalculateRemainingFuel(response.Legs, performanceData.FuelOnBoardGals, performanceData);
 
             try
             {
@@ -205,7 +200,7 @@ public class NavlogService : INavlogService
     private List<WaypointDto> AddClimbAndDescentWaypoints(
         List<WaypointDto> waypoints,
         int plannedCruisingAltitude,
-        AircraftPerformanceProfile performance)
+        NavlogPerformanceDataDto performance)
     {
         var refuelIndices = new List<int>();
         for (var i = 1; i < waypoints.Count - 1; i++)
@@ -335,7 +330,7 @@ public class NavlogService : INavlogService
         bool isDescentLeg,
         WaypointDto startPoint,
         WaypointDto endPoint,
-        AircraftPerformanceProfile performance,
+        NavlogPerformanceDataDto performance,
         DateTime previousLegEndTime,
         WindsAloftDto? windsAloftData)
     {
@@ -372,9 +367,9 @@ public class NavlogService : INavlogService
     private double CalculateTrueCourse(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
     {
         var result = Geodesic.WGS84.Inverse(
-            startLatitude, 
+            startLatitude,
             startLongitude,
-            endLatitude, 
+            endLatitude,
             endLongitude);
 
         // Normalize to 0-360
@@ -388,7 +383,7 @@ public class NavlogService : INavlogService
     private async Task<double> CalculateMagneticCourse(double latitude, double longitude, double trueCourse)
     {
         var magneticVariation = await _magneticVariationService.GetMagneticVariation(
-            latitude, 
+            latitude,
             longitude);
         // West headings come out negative, so we need to (subtract, which would come out to adding) it to our true course.
         // Easterly headings come out positive, so they get subtracted from our true course.
@@ -399,13 +394,13 @@ public class NavlogService : INavlogService
 
         return magneticCourse;
     }
-    
+
     private InverseGeodesicResult? CalculateInverseGeodesic(double startLatitude, double startLongitude, double endLatitude, double endLongitude)
     {
         var result = Geodesic.WGS84.Inverse(
-            startLatitude, 
+            startLatitude,
             startLongitude,
-            endLatitude, 
+            endLatitude,
             endLongitude);
 
         if (result == null)
@@ -425,7 +420,7 @@ public class NavlogService : INavlogService
     }
 
 
-    private int GetLegTas(bool isClimbLeg, bool isDescentLeg, AircraftPerformanceProfile performance)
+    private int GetLegTas(bool isClimbLeg, bool isDescentLeg, NavlogPerformanceDataDto performance)
     {
         if (isClimbLeg) return performance.ClimbTrueAirspeed;
         if (isDescentLeg) return performance.DescentTrueAirspeed;
@@ -507,12 +502,12 @@ public class NavlogService : INavlogService
         var windCorrectionAngle = Math.Atan(crosswindComponent / (indicatedAirspeed - headwindComponent));
         return windCorrectionAngle / radiansPerDegree;
     }
-    
+
     private void CalculateLegTimeAndFuel(
             NavigationLegDto leg,
             bool isClimbLeg,
             bool isDescentLeg,
-            AircraftPerformanceProfile performance)
+            NavlogPerformanceDataDto performance)
         {
             if (leg.GroundSpeed > 0)
             {
@@ -560,7 +555,7 @@ public class NavlogService : INavlogService
             }
         }
 
-        private void CalculateRemainingFuel(List<NavigationLegDto> legs, double startingFuel, AircraftPerformanceProfile performance)
+        private void CalculateRemainingFuel(List<NavigationLegDto> legs, double startingFuel, NavlogPerformanceDataDto performance)
         {
             double remainingFuel = startingFuel;
             bool needsSttDeduction = true; // Deduct STT at initial departure
@@ -633,7 +628,7 @@ public class NavlogService : INavlogService
                 {
                     var windsAloftData = await _windsAloftService.FetchWindsAloftData(forecastType);
 
-                    if (departureTime >= windsAloftData.ForUseStartTime && 
+                    if (departureTime >= windsAloftData.ForUseStartTime &&
                         departureTime < windsAloftData.ForUseEndTime)
                     {
                         return (forecastType, windsAloftData);
@@ -657,7 +652,7 @@ public class NavlogService : INavlogService
 
             var nearestAirport = FindNearestWindsAloftAirport(waypoint, windsAloftData);
             if (nearestAirport == null) return null;
-            
+
 
             var altitude = (int)waypoint.Altitude;
 

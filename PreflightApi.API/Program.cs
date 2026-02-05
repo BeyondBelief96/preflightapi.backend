@@ -13,7 +13,6 @@ using PreflightApi.API.Configuration;
 using PreflightApi.API.Middleware;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
-using PreflightApi.Infrastructure.Repositories;
 using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Services.AirportInformationServices;
 using PreflightApi.Infrastructure.Services.DocumentServices;
@@ -149,7 +148,6 @@ builder.Services.AddOpenApiDocument(options =>
 
 // Setup Environment Variable Settings
 builder.Services.Configure<NOAASettings>(builder.Configuration.GetSection("NOAASettings"));
-builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0Settings"));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
@@ -182,7 +180,6 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
 // Configure Services
 builder.Services.AddMemoryCache();
 builder.Services.AddCloudStorageServices(builder.Configuration);
-builder.Services.AddScoped<IAircraftPerformanceProfileRepository, AircraftPerformanceProfileRepository>();
 builder.Services.AddScoped<IMetarService, MetarService>();
 builder.Services.AddScoped<IPirepService, PirepService>();
 builder.Services.AddScoped<ITafService, TafService>();
@@ -198,11 +195,7 @@ builder.Services.AddScoped<IObstacleService, ObstacleService>();
 builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>();
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
-builder.Services.AddScoped<IAircraftPerformanceProfileService, AircraftPerformanceProfileService>();
-builder.Services.AddScoped<IAircraftService, AircraftService>();
-builder.Services.AddScoped<IWeightBalanceProfileService, WeightBalanceProfileService>();
 builder.Services.AddScoped<IPerformanceCalculatorService, PerformanceCalculatorService>();
-builder.Services.AddScoped<IFlightService, FlightService>();
 builder.Services.AddScoped<ConditionalAuthHandler>();
 
 // NOTAM Services

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PreflightApi.Domain.Entities;
-using PreflightApi.Domain.Entities;
 
 namespace PreflightApi.Infrastructure.Data
 {
@@ -8,7 +7,7 @@ namespace PreflightApi.Infrastructure.Data
     {
         public PreflightApiDbContext(DbContextOptions<PreflightApiDbContext> options) : base(options)
         {
-            
+
         }
 
         public virtual DbSet<Metar> Metars => Set<Metar>();
@@ -33,25 +32,13 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<SpecialUseAirspace> SpecialUseAirspaces => Set<SpecialUseAirspace>();
 
-        public virtual DbSet<FaaPublicationCycle> FaaPublicationCycles => Set<FaaPublicationCycle>();   
-        
-        public virtual DbSet<Flight> Flights => Set<Flight>();
-        
-        public virtual DbSet<AircraftPerformanceProfile> AircraftPerformanceProfiles => Set<AircraftPerformanceProfile>();
-
-        public virtual DbSet<Aircraft> Aircraft => Set<Aircraft>();
+        public virtual DbSet<FaaPublicationCycle> FaaPublicationCycles => Set<FaaPublicationCycle>();
 
         public virtual DbSet<Runway> Runways => Set<Runway>();
 
         public virtual DbSet<RunwayEnd> RunwayEnds => Set<RunwayEnd>();
 
         public virtual DbSet<Obstacle> Obstacles => Set<Obstacle>();
-
-        public virtual DbSet<WeightBalanceProfile> WeightBalanceProfiles => Set<WeightBalanceProfile>();
-
-        public virtual DbSet<WeightBalanceCalculation> WeightBalanceCalculations => Set<WeightBalanceCalculation>();
-
-        public virtual DbSet<AircraftDocument> AircraftDocuments => Set<AircraftDocument>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
