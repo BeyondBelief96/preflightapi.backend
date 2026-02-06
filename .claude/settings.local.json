@@ -25,7 +25,8 @@
       "Bash(powershell:*)",
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:github.com)",
-      "Bash(npx @tanstack/cli create:*)"
+      "Bash(npx @tanstack/cli create:*)",
+      "Bash(dotnet publish:*)"
     ],
     "deny": [],
     "ask": []
