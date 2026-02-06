@@ -19,6 +19,7 @@ env:
   API_APP_NAME: preflightapi-eastus-web-api-test
   FUNCTION_APP_NAME: preflightapi-eastus-function-app-test
   RESOURCE_GROUP: rg-preflightapi-eastus-test
+  DB_SERVER_NAME: pgsql-preflightapi-eastus-test
 
 jobs:
   build:
@@ -87,7 +88,30 @@ jobs:
   migrations:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE44E57EE6DC4C64A48DF6EBB0203FE2 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6EB62E26219440CE82EC092146FCB180 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_22083C2F047B4905AFFBDE355DDA927A }}
+
+      - name: Get runner IP
+        id: runner-ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
+      - name: Whitelist runner IP on database
+        run: >
+          az postgres flexible-server firewall-rule create
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.DB_SERVER_NAME }}
+          --rule-name github-runner-${{ github.run_id }}
+          --start-ip-address ${{ steps.runner-ip.outputs.ip }}
+          --end-ip-address ${{ steps.runner-ip.outputs.ip }}
+
       - name: Download EF bundle
         uses: actions/download-artifact@v4
         with:
@@ -98,6 +122,15 @@ jobs:
 
       - name: Apply migrations
         run: ./efbundle --connection "${{ secrets.DB_CONNECTION_STRING_TEST }}"
+
+      - name: Remove runner IP from database firewall
+        if: always()
+        run: >
+          az postgres flexible-server firewall-rule delete
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.DB_SERVER_NAME }}
+          --rule-name github-runner-${{ github.run_id }}
+          --yes
 
   deploy:
     needs: [build, migrations]
