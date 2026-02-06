@@ -166,9 +166,9 @@ jobs:
       - name: Azure Login (Functions)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CB0D786590604E9A832192A3FCB6DFCD }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_63EED50B91DA467181F9DFB8A2C5B271 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_23265641449D41E4B14297CC70B43CD1 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7CD3B206BAF440B6A34B04A078846383 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_59C57564308445499C83E01278352F89 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_0CB8C7DE87024DEDAE27335FF953CFFC }}
 
       - name: Download Functions artifact
         uses: actions/download-artifact@v4
@@ -176,15 +176,8 @@ jobs:
           name: preflightapi-functions
           path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
 
-      - name: Create Functions metadata
-        run: mkdir -p ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions && echo '{}' > ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions/functionsmetadata
-
-      - name: Create Functions zip
-        run: cd ${{ env.FUNCTIONS_PUBLISH_DIR }} && zip -r ../functionapp.zip .
-
       - name: Deploy Functions
-        run: >
-          az functionapp deployment source config-zip
-          --resource-group ${{ env.RESOURCE_GROUP }}
-          --name ${{ env.FUNCTION_APP_NAME }}
-          --src functionapp.zip
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: ${{ env.FUNCTIONS_PUBLISH_DIR }}
