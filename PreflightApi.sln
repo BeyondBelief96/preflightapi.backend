@@ -27,6 +27,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github Actions", "Github Ac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreflightApi.Azure.Functions", "PreflightApi.Azure.Functions\PreflightApi.Azure.Functions.csproj", "{BC682116-D837-42B6-821D-D887982B638D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9385-4741-8876-47ABEBFA992E}"
+	ProjectSection(SolutionItems) = preProject
+		docs\API Company Pivot Strategy.md = docs\API Company Pivot Strategy.md
+		docs\infrastructure-setup.md = docs\infrastructure-setup.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +87,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6345C756-6060-477B-80D1-E10500184627} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
+		{D44F098A-9385-4741-8876-47ABEBFA992E} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E778AF9-90E9-4492-934B-23D115DAE3FB}
