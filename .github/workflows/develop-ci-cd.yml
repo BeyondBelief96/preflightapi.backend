@@ -61,11 +61,14 @@ jobs:
       - name: Create Functions metadata
         run: mkdir -p ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions && echo '{}' > ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions/functionsmetadata
 
-      - name: Upload Functions artifact
+      - name: Create Functions zip
+        run: cd ${{ env.FUNCTIONS_PUBLISH_DIR }} && zip -r $GITHUB_WORKSPACE/functionapp.zip .
+
+      - name: Upload Functions zip
         uses: actions/upload-artifact@v4
         with:
           name: preflightapi-functions
-          path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
+          path: functionapp.zip
           if-no-files-found: error
 
       # EF Migration Bundle
@@ -173,14 +176,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_59C57564308445499C83E01278352F89 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_0CB8C7DE87024DEDAE27335FF953CFFC }}
 
-      - name: Download Functions artifact
+      - name: Download Functions zip
         uses: actions/download-artifact@v4
         with:
           name: preflightapi-functions
-          path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
 
       - name: Deploy Functions
         uses: azure/functions-action@v1
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
-          package: ${{ env.FUNCTIONS_PUBLISH_DIR }}
+          package: functionapp.zip
