@@ -1,41 +1,31 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
-    [Route("api/airports")]
-    [ConditionalAuth]
+    [Route("api/v{version:apiVersion}/airports")]
     public class AirportController(
         IAirportService airportService,
         IRunwayService runwayService)
         : ControllerBase
     {
-        /// <summary>
-        /// Gets all airports, optionally filtered by search term
-        /// </summary>
-        /// <param name="search">Optional search term for ICAO ID or airport identifier</param>
-        /// <returns>List of airports matching the search criteria</returns>
-        /// <response code="200">Returns the list of airports</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAllAirports([FromQuery] string? search)
+        [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAllAirports(
+            [FromQuery] string? search,
+            [FromQuery] PaginationParams pagination)
         {
-            var airports = await airportService.GetAllAirports(search);
-            return Ok(airports);
+            pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+            return Ok(await airportService.GetAllAirports(search, pagination.Cursor, pagination.Limit));
         }
 
-        /// <summary>
-        /// Searches airports by ICAO code, FAA ID, name, or city
-        /// </summary>
-        /// <param name="query">Search query (minimum 2 characters)</param>
-        /// <returns>List of airports matching the search criteria, prioritizing ICAO/ID matches</returns>
-        /// <response code="200">Returns the list of matching airports (max 50)</response>
-        /// <response code="400">If the query is empty or too short</response>
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -48,13 +38,6 @@ namespace PreflightApi.API.Controllers
             return Ok(airports);
         }
 
-        /// <summary>
-        /// Gets an airport by its ICAO code or identifier
-        /// </summary>
-        /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-        /// <returns>Airport information</returns>
-        /// <response code="200">Returns the airport information</response>
-        /// <response code="404">If the airport is not found</response>
         [HttpGet("{icaoCodeOrIdent}")]
         [ProducesResponseType(typeof(AirportDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -64,44 +47,30 @@ namespace PreflightApi.API.Controllers
             return Ok(airport);
         }
 
-        /// <summary>
-        /// Gets all airports in a specific state
-        /// </summary>
-        /// <param name="stateCode">Two-letter state code</param>
-        /// <returns>List of airports in the specified state</returns>
-        /// <response code="200">Returns the list of airports</response>
         [HttpGet("state/{stateCode}")]
-        [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByState(string stateCode)
+        [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAirportsByState(
+            string stateCode,
+            [FromQuery] PaginationParams pagination)
         {
-            var airports = await airportService.GetAirportsByState(stateCode);
-            return Ok(airports);
+            pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+            return Ok(await airportService.GetAirportsByState(stateCode, pagination.Cursor, pagination.Limit));
         }
 
-        /// <summary>
-        /// Gets all airports in multiple states
-        /// </summary>
-        /// <param name="stateCodes">Comma-separated list of two-letter state codes</param>
-        /// <returns>List of airports in the specified states</returns>
-        /// <response code="200">Returns the list of airports</response>
         [HttpGet("states/{stateCodes}")]
-        [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByStates(string stateCodes)
+        [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAirportsByStates(
+            string stateCodes,
+            [FromQuery] PaginationParams pagination)
         {
+            pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
             var stateCodeArray = stateCodes.Split(',')
                 .Select(s => s.Trim())
                 .ToArray();
 
-            var airports = await airportService.GetAirportsByStates(stateCodeArray);
-            return Ok(airports);
+            return Ok(await airportService.GetAirportsByStates(stateCodeArray, pagination.Cursor, pagination.Limit));
         }
 
-        /// <summary>
-        /// Gets airports by a batch of ICAO codes or identifiers
-        /// </summary>
-        /// <param name="icaoCodesOrIdents">Comma-separated list of ICAO codes or identifiers</param>
-        /// <returns>List of airports matching the provided codes</returns>
-        /// <response code="200">Returns the list of airports</response>
         [HttpGet("batch/{icaoCodesOrIdents}")]
         [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByIcaoCodesOrIdents(string icaoCodesOrIdents)
@@ -114,27 +83,16 @@ namespace PreflightApi.API.Controllers
             return Ok(airports);
         }
 
-        /// <summary>
-        /// Gets airports where ICAO code or identifier starts with the provided prefix
-        /// </summary>
-        /// <param name="prefix">The prefix to search for in ICAO codes or airport identifiers</param>
-        /// <returns>List of airports with ICAO codes or identifiers starting with the provided prefix</returns>
-        /// <response code="200">Returns the list of airports</response>
         [HttpGet("prefix/{prefix}")]
-        [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByPrefix(string prefix)
+        [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAirportsByPrefix(
+            string prefix,
+            [FromQuery] PaginationParams pagination)
         {
-            var airports = await airportService.GetAirportsByPrefix(prefix);
-            return Ok(airports);
+            pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+            return Ok(await airportService.GetAirportsByPrefix(prefix, pagination.Cursor, pagination.Limit));
         }
 
-        /// <summary>
-        /// Gets all runways for a specific airport
-        /// </summary>
-        /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-        /// <returns>List of runways with their runway ends</returns>
-        /// <response code="200">Returns the list of runways</response>
-        /// <response code="404">If the airport is not found</response>
         [HttpGet("{icaoCodeOrIdent}/runways")]
         [ProducesResponseType(typeof(IEnumerable<RunwayDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]

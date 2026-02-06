@@ -10,6 +10,282 @@ This document outlines the strategy for pivoting PreflightApi from a frontend-se
 
 ---
 
+## Business Model
+
+### How It Works
+
+PreflightApi is a **developer API platform**. We sell access to normalized aviation data via API keys. Our customers are developers building their own aviation applications — they never interact with our backend directly through a browser. Instead, they:
+
+1. Sign up on our management portal (the frontend)
+2. Choose a subscription tier and manage billing
+3. Get API keys from their dashboard
+4. Use those API keys in their own applications to call our API
+
+This is the same model as OpenWeatherMap, Google Maps API, Stripe, or Twilio. No OAuth flows, no bearer tokens, no user sessions — just an API key in a request header.
+
+### Two Separate Systems
+
+| System | Purpose | Tech Stack | Audience |
+|--------|---------|------------|----------|
+| **Management Portal** (Frontend) | Marketing, docs, signup, billing, API key management | TanStack Start (full-stack React) + Clerk auth | Our customers (developers) |
+| **Data API** (Backend) | Serve aviation data | .NET 8 + PostgreSQL + PostGIS, behind Azure APIM | Our customers' applications |
+
+These systems are **completely decoupled**. The frontend never calls the data API. The data API has no concept of users, sessions, or authentication — APIM handles all of that before requests reach it.
+
+### The Request Lifecycle
+
+```
+Developer's Application (their code, not ours)
+        │
+        │  API Key in header: Ocp-Apim-Subscription-Key: abc123
+        │  (No bearer tokens, no OAuth, no sessions)
+        │
+        ▼
+┌─────────────────────────────────┐
+│        Azure APIM Gateway       │
+│                                 │
+│  1. Validate API key            │
+│  2. Identify product/tier       │
+│  3. Enforce rate limits/quotas  │
+│  4. Cache response if possible  │
+│  5. Forward to backend          │
+└───────────────┬─────────────────┘
+                │
+                ▼
+┌─────────────────────────────────┐
+│       PreflightApi.API          │
+│      (No auth needed here)      │
+│                                 │
+│  Process request, query DB,     │
+│  return aviation data           │
+└─────────────────────────────────┘
+```
+
+### Example API Call (What Our Customers Do)
+
+```bash
+# Get METAR for JFK — that's it, just an API key
+curl -H "Ocp-Apim-Subscription-Key: their-api-key" \
+     https://api.preflightapi.com/v1/metar/KJFK
+```
+
+No login, no token exchange, no OAuth dance. Their app sends an API key, gets data back.
+
+---
+
+## System Architecture
+
+### Management Portal (Frontend — `preflightapi.frontend`)
+
+**Framework:** TanStack Start (full-stack React with server functions)
+**Authentication:** Clerk (for portal login only — developers managing their account)
+**Hosting:** Deployed independently from the data API
+
+The frontend is the **management portal and marketing site**. It never calls the data API directly. It serves three purposes:
+
+1. **Marketing:** Landing page, pricing, documentation
+2. **Account Management:** Signup/login via Clerk, billing via Stripe, API key management
+3. **APIM Provisioning:** Server functions call the APIM Management REST API to create/manage subscriptions
+
+#### Frontend Responsibilities
+
+| Responsibility | How | Details |
+|---------------|-----|---------|
+| User signup/login | Clerk | Developers sign in to manage their account |
+| Billing | Stripe | Subscription management, invoices, tier upgrades |
+| API key provisioning | APIM Management REST API | Called via TanStack Start server functions |
+| API key display/rotation | APIM Management REST API | Dashboard shows keys, allows regeneration |
+| Usage dashboard | APIM Analytics API | Show request counts, quota usage |
+| Documentation | Static/MDX content | API reference, guides, code examples |
+
+#### Provisioning Flow (Server Functions)
+
+When a developer signs up and selects a tier, the frontend's server functions handle the provisioning:
+
+```
+Developer signs up via Clerk
+        │
+        ▼
+TanStack Start Server Function
+        │
+        ├──► Stripe: Create subscription for selected tier
+        │
+        ├──► APIM Management API: Create APIM user
+        │
+        ├──► APIM Management API: Create subscription under correct Product
+        │         (generates primary + secondary API keys)
+        │
+        └──► Return API keys to developer's dashboard
+```
+
+#### Tier Change / Upgrade Flow
+
+```
+Developer clicks "Upgrade to Pro" on dashboard
+        │
+        ▼
+TanStack Start Server Function
+        │
+        ├──► Stripe: Update subscription (prorate billing)
+        │
+        ├──► APIM Management API: Move subscription to new Product
+        │         (API keys stay the same, rate limits change)
+        │
+        └──► Dashboard reflects new tier and limits
+```
+
+#### Webhook Handlers (Server Functions)
+
+| Webhook Source | Event | Action |
+|---------------|-------|--------|
+| Clerk | `user.created` | Create internal user record |
+| Clerk | `user.deleted` | Deactivate APIM subscription, cancel Stripe |
+| Stripe | `invoice.payment_failed` | Downgrade to Free tier in APIM, notify user |
+| Stripe | `customer.subscription.deleted` | Revoke APIM subscription |
+| Stripe | `customer.subscription.updated` | Update APIM Product assignment |
+
+### Data API (Backend — `preflight.api`)
+
+**Framework:** .NET 8 ASP.NET Core
+**Database:** PostgreSQL + PostGIS
+**Hosting:** Azure App Service (behind APIM)
+
+The data API is a **pure data service**. It has no concept of users, authentication, billing, or API keys. By the time a request reaches it, APIM has already validated the API key, checked rate limits, and approved the request.
+
+#### What the API Does
+
+- Serves normalized aviation data (weather, airports, airspace, obstacles, NOTAMs, charts)
+- Runs scheduled data sync jobs (Azure Functions cron)
+- Queries PostgreSQL/PostGIS for spatial data
+- Integrates with external sources (NOAA, FAA, ArcGIS, Azure Blob Storage)
+
+#### What the API Does NOT Do
+
+- No authentication or authorization (APIM handles this)
+- No rate limiting (APIM handles this)
+- No user management (frontend handles this)
+- No billing (frontend + Stripe handles this)
+- No CORS (APIM handles this)
+
+### Azure API Management (APIM)
+
+APIM sits between developers' applications and the data API. It is the **single entry point** for all API traffic.
+
+#### APIM Responsibilities
+
+| Responsibility | APIM Feature | Details |
+|---------------|-------------|---------|
+| API key validation | Subscription keys | Primary + secondary keys per subscription |
+| Tier enforcement | Products | Group APIs into Free/Dev/Pro/Enterprise |
+| Rate limiting | Policies | `rate-limit-by-key`, `quota-by-key` |
+| Response caching | Cache policies | Cache static data (airports, airspace) |
+| Usage analytics | Built-in analytics | Request counts, latency, errors per subscription |
+| CORS | CORS policies | Handle cross-origin requests |
+| API versioning | Version sets | Route `/v1/` and future `/v2/` |
+
+#### APIM Products (Tiers)
+
+| Product | Rate Limit | Quota | APIs Included | Price |
+|---------|-----------|-------|---------------|-------|
+| Free | 10 req/min | 100 req/day | Weather, Airports only | $0 |
+| Developer | 60 req/min | 10,000 req/day | All data endpoints | $49/mo |
+| Professional | 300 req/min | 100,000 req/day | All endpoints + Navlog | $199/mo |
+| Enterprise | Custom | Custom | All + SLA + support | Custom |
+
+#### APIM Rate Limiting Policy Example
+
+```xml
+<policies>
+  <inbound>
+    <!-- Per-subscription rate limit -->
+    <rate-limit-by-key calls="10" renewal-period="60"
+                       counter-key="@(context.Subscription.Id)" />
+    <!-- Per-subscription daily quota -->
+    <quota-by-key calls="100" renewal-period="86400"
+                  counter-key="@(context.Subscription.Id)" />
+  </inbound>
+</policies>
+```
+
+### APIM Management REST API
+
+The frontend's server functions use this API to provision and manage subscriptions programmatically. Developers never interact with APIM directly.
+
+```
+Base URL: https://management.azure.com/subscriptions/{azureSubscriptionId}/
+          resourceGroups/{resourceGroup}/providers/Microsoft.ApiManagement/
+          service/{serviceName}/...
+
+Key operations:
+- PUT  /users/{userId}                         → Create APIM user
+- PUT  /subscriptions/{subscriptionId}         → Create subscription (generates keys)
+- POST /subscriptions/{subscriptionId}/listSecrets → Retrieve subscription keys
+- POST /subscriptions/{subscriptionId}/regeneratePrimaryKey → Rotate primary key
+- POST /subscriptions/{subscriptionId}/regenerateSecondaryKey → Rotate secondary key
+- PATCH /subscriptions/{subscriptionId}        → Update subscription (change Product)
+- DELETE /subscriptions/{subscriptionId}       → Revoke access
+```
+
+Authentication: Azure AD service principal with `API Management Service Contributor` RBAC role.
+
+---
+
+## Full System Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Management Portal (Frontend)                       │
+│                    preflightapi.frontend                              │
+│                    TanStack Start + Clerk + Stripe                    │
+│                                                                      │
+│  ┌─────────┐  ┌──────────┐  ┌───────────┐  ┌──────────────────────┐ │
+│  │Marketing│  │  Docs    │  │ Dashboard │  │   API Key Mgmt      │ │
+│  │ Pages   │  │ (guides, │  │ (usage,   │  │ (view, rotate,      │ │
+│  │         │  │  ref)    │  │  billing) │  │  revoke keys)       │ │
+│  └─────────┘  └──────────┘  └───────────┘  └──────────────────────┘ │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │              TanStack Start Server Functions                     │ │
+│  │  - Clerk webhooks (user lifecycle)                              │ │
+│  │  - Stripe webhooks (billing lifecycle)                          │ │
+│  │  - APIM Management API calls (provision/manage subscriptions)   │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+└───────────┬──────────────────────┬──────────────────────┬────────────┘
+            │                      │                      │
+            ▼                      ▼                      ▼
+     ┌──────────┐           ┌──────────┐           ┌──────────┐
+     │  Clerk   │           │  Stripe  │           │  APIM    │
+     │  (auth)  │           │ (billing)│           │  Mgmt    │
+     │          │           │          │           │  API     │
+     └──────────┘           └──────────┘           └────┬─────┘
+                                                        │ configures
+                                                        ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│              Azure API Management (APIM Gateway)                     │
+│                                                                      │
+│  Validates API keys │ Enforces rate limits │ Caches responses        │
+│  Tracks usage       │ Handles CORS         │ Routes versions         │
+└───────────────────────────────────┬──────────────────────────────────┘
+                                    │ forwards validated requests
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                     PreflightApi.API (.NET 8)                        │
+│                     preflight.api                                    │
+│                                                                      │
+│  Pure data service — no auth, no users, no billing                   │
+│                                                                      │
+│  Weather │ Airports │ Airspace │ Obstacles │ NOTAMs │ Charts │ Navlog│
+└───────────────────────────────────┬──────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                     PostgreSQL + PostGIS                              │
+│                     Azure Blob Storage (charts, diagrams)            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Current State Assessment
 
 ### What We Have (Core Asset)
@@ -65,73 +341,6 @@ As of 2026-02-05, all user-specific features have been removed to focus on a pur
 
 ---
 
-## What Goes Into an API Company
-
-### 1. API Key Management & Tiered Access (via APIM)
-
-Azure API Management handles API key authentication out of the box:
-
-```
-Architecture:  Client -> APIM (subscription key validation) -> Your API
-```
-
-**APIM provides:**
-- Subscription keys (primary + secondary per subscription)
-- Products (group APIs into tiers)
-- Rate limits and quotas per product/subscription
-- Key regeneration and revocation
-- No custom auth middleware needed in API code
-
-**Tiered plans (APIM Products):**
-
-| Product | Rate Limit | APIs Included | Price |
-|---------|-----------|---------------|-------|
-| Free | 100 req/day | Weather, Airports only | $0 |
-| Developer | 10,000 req/day | All data endpoints | $49/mo |
-| Professional | 100,000 req/day | All endpoints + Navlog | $199/mo |
-| Enterprise | Custom | All + SLA + support | Custom |
-
-### 2. Rate Limiting & Throttling (via APIM)
-
-APIM policies handle all rate limiting — no custom middleware needed:
-
-```xml
-<rate-limit-by-key calls="100" renewal-period="86400"
-                   counter-key="@(context.Subscription.Id)" />
-```
-
-**APIM rate limiting dimensions:**
-- Per subscription (overall daily/monthly quota)
-- Per product (different limits for different tiers)
-- Per operation (expensive endpoints like `/navlog/calculate` cost more)
-- Burst protection via `rate-limit` and `quota` policies
-
-### 3. Documentation
-
-- **OpenAPI/Swagger spec** generated from controllers (Swashbuckle)
-- **Interactive API docs** (Swagger UI, Redoc, or custom portal)
-- **Code examples** in Python, JavaScript, C#, Go, cURL
-- **Guides** for common use cases (get weather for a flight route, find nearby airports, etc.)
-- **Changelog** for API versions
-
-### 4. Billing
-
-Reactivate existing Stripe integration with:
-- Usage-based billing or fixed tier subscriptions
-- Overage charges or hard cutoffs at quota
-- Invoice generation
-- Webhook handlers for subscription lifecycle events
-
-### 5. Legal & Compliance
-
-- **Terms of Service** for API usage
-- **Data attribution:** FAA data is public domain; NOAA has attribution requirements
-- **SLA commitments** per tier (99.9% uptime for Enterprise, best-effort for Free)
-- **Privacy policy** for customer data
-- **Acceptable use policy** (prevent abuse, reselling restrictions)
-
----
-
 ## Required Code Changes
 
 ### What APIM Handles (No Code Needed)
@@ -144,7 +353,7 @@ With APIM as the gateway, these concerns are handled via APIM policies:
 - **CORS** — APIM CORS policies
 - **Response caching** — APIM cache policies for static data
 
-### What Still Needs Code Changes
+### What Still Needs Code Changes in the Data API
 
 #### 1. API Versioning
 
@@ -205,6 +414,44 @@ Add Redis caching for hot data (in addition to APIM response caching):
 | NOTAMs | 5 minutes | Time-sensitive |
 | PIREPs | 5 minutes | Time-sensitive |
 
+#### 5. Remove Remaining Auth Code
+
+With APIM handling all access control, the data API should be stripped of:
+
+- Clerk JWT authentication handlers (in progress — switching from Auth0 to Clerk currently in working tree)
+- ConditionalAuthHandler/ConditionalAuthAttribute
+- Any CORS middleware (APIM handles this)
+- Any auth-related NuGet packages
+
+The API will be accessible only through APIM (network-level restriction via Azure VNET or IP whitelisting).
+
+### What Needs to Be Built in the Frontend
+
+#### 1. APIM Integration Service
+
+Server functions that wrap the APIM Management REST API:
+
+- `createApimUser(clerkUserId, email)` — Create APIM user linked to Clerk user
+- `createSubscription(apimUserId, productId)` — Create subscription, return API keys
+- `getSubscriptionKeys(subscriptionId)` — Retrieve current API keys
+- `regenerateKey(subscriptionId, keyType)` — Rotate primary or secondary key
+- `updateSubscription(subscriptionId, newProductId)` — Change tier
+- `deleteSubscription(subscriptionId)` — Revoke access
+
+#### 2. Stripe Integration
+
+- Checkout session creation for tier selection
+- Webhook handlers for payment lifecycle
+- Customer portal for self-service billing management
+- Sync tier changes to APIM (Stripe webhook → update APIM Product)
+
+#### 3. Dashboard Pages
+
+- **API Keys page:** View primary/secondary keys, copy to clipboard, regenerate
+- **Usage page:** Request counts, quota remaining, usage over time (from APIM analytics)
+- **Billing page:** Current plan, upgrade/downgrade, invoices (Stripe Customer Portal)
+- **Getting Started page:** Quick-start guide with user's actual API key pre-filled in examples
+
 ---
 
 ## Scaling Strategy
@@ -215,7 +462,7 @@ Add Redis caching for hot data (in addition to APIM response caching):
 |---|---|---|
 | Database | Single PostgreSQL instance | Read replicas, connection pooling (PgBouncer), caching layer |
 | No caching | Every request hits DB | Redis/Azure Cache for hot data |
-| No rate limiting | Unlimited requests | Middleware + Redis-backed sliding window |
+| No rate limiting | Unlimited requests | APIM rate limit policies |
 | Single API instance | One App Service | Azure App Service scale-out or AKS |
 | Cron jobs share DB | Same DB, no isolation | Separate read replicas; cron writes to primary, API reads from replica |
 | No pagination | Full result sets returned | Cursor-based pagination on all list endpoints |
@@ -226,7 +473,6 @@ Add Redis caching for hot data (in addition to APIM response caching):
 
 - Add Azure Cache for Redis (C0 Basic: ~$17/mo or C1 Standard: ~$85/mo)
 - Cache weather data, airport data, airspace data with appropriate TTLs
-- Add API key auth + rate limiting via middleware
 - Add response caching headers (ETag, Cache-Control)
 - Add pagination to all list endpoints
 - Scale App Service to S2 or P1v3 if needed
@@ -244,136 +490,12 @@ Add Redis caching for hot data (in addition to APIM response caching):
 
 ### Phase 3 — Enterprise Scale (~$2,000+/mo)
 
-**Containers + API Management**
+**Containers + Multi-Region**
 
 - Azure Container Apps or AKS for fine-grained scaling per endpoint
 - Database sharding or read-replica routing per region
-- Azure API Management (APIM) as full gateway
 - Multi-region deployment for latency-sensitive customers
 - Dedicated database instances for enterprise customers
-
-### The Azure API Management Shortcut
-
-Azure APIM handles many API-company concerns out of the box and can be placed in front of the existing API with minimal code changes:
-
-| Feature | APIM Handles It |
-|---------|----------------|
-| API key management and validation | Yes |
-| Rate limiting and quotas per subscription | Yes |
-| Built-in developer portal with interactive docs | Yes |
-| Usage analytics and reporting | Yes |
-| Request/response transformation | Yes |
-| Response caching | Yes |
-| API versioning | Yes |
-| OAuth2 / API key auth | Yes |
-
-**Pricing:**
-- Developer tier: ~$50/mo (non-production, no SLA)
-- Basic tier: ~$150/mo
-- Standard tier: ~$700/mo (includes developer portal)
-
-This could be a quick-win approach: put APIM in front of your existing API and get 80% of API company infrastructure without rewriting auth, rate limiting, or building a developer portal.
-
----
-
-## Custom Website + APIM Architecture
-
-### Why Not Use APIM's Built-in Developer Portal?
-
-APIM includes a developer portal for self-service signup, but it has limitations:
-- Generic look and feel (hard to customize branding)
-- Separate domain from your marketing site
-- Limited control over user experience
-- Doesn't integrate with your marketing/landing page
-
-**Our approach:** Build a custom website for marketing, signup, and key management, using the APIM Management REST API behind the scenes.
-
-### Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Custom Website                            │
-│  (Marketing, Pricing, Docs, Signup, Dashboard, Key Management)  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Website Backend                             │
-│    (Handles user auth, calls APIM Management API, Stripe)       │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        ┌──────────┐    ┌──────────┐    ┌──────────┐
-        │  APIM    │    │  Stripe  │    │ Database │
-        │  Mgmt    │    │  (billing)│    │ (users)  │
-        │  API     │    │          │    │          │
-        └──────────┘    └──────────┘    └──────────┘
-```
-
-### Customer Signup Flow
-
-1. Customer visits your marketing website
-2. Customer signs up (creates account in your database)
-3. Customer selects a pricing tier
-4. Website backend calls Stripe to set up subscription
-5. Website backend calls APIM Management API to create:
-   - APIM User (linked to your customer)
-   - APIM Subscription to the appropriate Product
-6. Customer receives their API keys (primary + secondary)
-7. Customer uses keys to call your API through APIM
-
-### APIM Management REST API
-
-The APIM Management API lets you programmatically manage everything:
-
-```
-Base URL: https://management.azure.com/subscriptions/{subscriptionId}/
-          resourceGroups/{resourceGroup}/providers/Microsoft.ApiManagement/
-          service/{serviceName}/...
-
-Key operations:
-- POST /users                    → Create APIM user
-- POST /subscriptions            → Create subscription (generates keys)
-- GET  /subscriptions/{id}/keys  → Retrieve subscription keys
-- POST /subscriptions/{id}/regenerateKey → Rotate keys
-- DELETE /subscriptions/{id}     → Revoke access
-```
-
-Authentication: Azure AD with appropriate RBAC roles (API Management Service Contributor).
-
-### What the Website Builds
-
-**Website includes:**
-- Landing page and marketing content
-- Pricing page with tier comparison
-- User signup/login (your own auth, not APIM)
-- Dashboard showing usage (pulls from APIM analytics API)
-- API key management (view, regenerate, revoke)
-- Stripe integration for billing
-- API documentation (can import from APIM OpenAPI spec)
-
-**Website does NOT build:**
-- Custom auth middleware (APIM handles key validation)
-- Rate limiting middleware (APIM policies)
-- Usage tracking (APIM analytics)
-- API gateway functionality (APIM)
-
-### API Simplification
-
-With APIM handling gateway concerns, the API codebase becomes simpler:
-
-**Remove from API:**
-- Auth0 JWT authentication (APIM validates keys)
-- CORS configuration (APIM CORS policies)
-- Rate limiting middleware (APIM policies)
-- Usage tracking middleware (APIM analytics)
-
-**Keep in API:**
-- Core business logic
-- Data access layer
-- External service integrations (NOAA, FAA, etc.)
-- Caching (Redis) for hot data
 
 ---
 
@@ -384,13 +506,15 @@ With APIM handling gateway concerns, the API codebase becomes simpler:
 - [x] Remove user-specific features (Aircraft, Flight, WeightBalance, Stripe)
 - [x] Refactor NavlogService to accept inline performance data
 - [x] Remove Auth0 JWT authentication from API
-- [ ] Remove CORS configuration from API (APIM will handle)
-- [ ] API versioning — prefix all data routes with `/v1/`
-- [ ] Add cursor-based pagination to all list endpoints
+- [x] Remove remaining auth code from API (Clerk handlers, CORS middleware)
+- [x] API versioning — prefix all data routes with `/v1/`
+- [x] Add cursor-based pagination to all list endpoints
+- [ ] Deploy API to Azure App Service
 - [ ] Deploy APIM instance (Developer tier for testing)
 - [ ] Import API into APIM from OpenAPI spec
 - [ ] Configure APIM Products (Free, Developer, Professional, Enterprise)
 - [ ] Set up APIM rate limit and quota policies per product
+- [ ] Restrict API to only accept traffic from APIM (IP whitelist or VNET)
 
 ### Milestone 2: Infrastructure (Weeks 3-4)
 
@@ -399,20 +523,21 @@ With APIM handling gateway concerns, the API codebase becomes simpler:
 - [ ] Add proper error response format with error codes
 - [ ] Configure APIM caching policies for static/semi-static data
 - [ ] Configure APIM CORS policies
-- [ ] Set up APIM to call backend API
 - [ ] Test end-to-end: Client → APIM → API → Database
 
-### Milestone 3: Custom Website (Weeks 5-7)
+### Milestone 3: Frontend — Management Portal (Weeks 5-7)
 
-- [ ] Set up website project (Next.js or similar)
 - [ ] Build landing page and marketing content
 - [ ] Build pricing page with tier comparison
-- [ ] Implement user signup/login (own auth system)
-- [ ] Integrate Stripe for billing
-- [ ] Integrate APIM Management API for subscription creation
-- [ ] Build dashboard showing API keys and usage
-- [ ] Build API key management (view, regenerate, revoke)
-- [ ] Import and display API documentation
+- [ ] Implement Clerk authentication (signup/login for portal)
+- [ ] Build APIM integration service (server functions calling APIM Management API)
+- [ ] Build Stripe integration (checkout, webhooks, customer portal)
+- [ ] Build provisioning flow: Clerk signup → Stripe subscription → APIM subscription → API keys
+- [ ] Build dashboard: API keys page (view, copy, regenerate)
+- [ ] Build dashboard: Usage page (APIM analytics)
+- [ ] Build dashboard: Billing page (Stripe Customer Portal embed)
+- [ ] Build API documentation pages
+- [ ] Build webhook handlers (Clerk user events, Stripe billing events)
 
 ### Milestone 4: Launch Prep (Weeks 8-9)
 
@@ -470,3 +595,6 @@ Infrastructure costs at 500 customers would be roughly $2,000-5,000/mo depending
 | 2026-02-05 | Use Azure API Management | APIM handles API keys, rate limiting, caching, CORS, analytics out of the box; avoids building custom middleware |
 | 2026-02-05 | Custom website over APIM developer portal | APIM's built-in portal is generic; custom website allows full branding, marketing integration, and better UX |
 | 2026-02-05 | Use APIM Management REST API | Programmatically create subscriptions and keys from custom website backend; customer never sees APIM directly |
+| 2026-02-05 | TanStack Start for frontend | Full-stack React framework with server functions; handles Clerk auth, Stripe webhooks, and APIM Management API calls without needing a separate backend service |
+| 2026-02-05 | API key-only access model | Developers use API keys only (no bearer tokens/OAuth) to call the data API; same model as OpenWeatherMap, Google Maps API; Clerk auth is only for the management portal |
+| 2026-02-05 | Frontend handles all provisioning | APIM subscription creation, Stripe billing, and API key management all handled by TanStack Start server functions; data API has zero knowledge of users or billing |

@@ -1,14 +1,15 @@
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface IAirportService
 {
-    Task<IEnumerable<AirportDto>> GetAllAirports(string? search = null);
+    Task<PaginatedResponse<AirportDto>> GetAllAirports(string? search, string? cursor, int limit);
     Task<AirportDto> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent);
-    Task<IEnumerable<AirportDto>> GetAirportsByState(string stateCode);
-    Task<IEnumerable<AirportDto>> GetAirportsByStates(string[] stateCodes);
+    Task<PaginatedResponse<AirportDto>> GetAirportsByState(string stateCode, string? cursor, int limit);
+    Task<PaginatedResponse<AirportDto>> GetAirportsByStates(string[] stateCodes, string? cursor, int limit);
     Task<IEnumerable<AirportDto>> GetAirportsByIcaoCodesOrIdents(string[] codesOrIdents);
-    Task<IEnumerable<AirportDto>> GetAirportsByPrefix(string prefix);
+    Task<PaginatedResponse<AirportDto>> GetAirportsByPrefix(string prefix, string? cursor, int limit);
     Task<IEnumerable<AirportDto>> SearchAirports(string query);
 }

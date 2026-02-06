@@ -23,7 +23,7 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("SpecialUseAirspaceFunction")]
-        public async Task Run([TimerTrigger("0 0 3 * * *")] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 3 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation($"Special Use Airspace Function executed at: {DateTime.UtcNow}");
             var cancellationToken = context.CancellationToken;

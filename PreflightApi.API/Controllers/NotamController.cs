@@ -1,5 +1,5 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos.Notam;
@@ -7,9 +7,9 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/notams")]
-[ConditionalAuth]
+[Route("api/v{version:apiVersion}/notams")]
 public class NotamController(INotamService notamService)
     : ControllerBase
 {

@@ -41,7 +41,7 @@ This is a Clean Architecture solution with the following layers:
 
 **Value Objects**: Complex weather data structures (sky conditions, turbulence, icing) are modeled as value objects owned by entities (see PreflightApi.Domain/ValueObjects).
 
-**Authentication**: Auth0 JWT Bearer authentication with conditional bypass in development via ConditionalAuthHandler.
+**Authentication**: Clerk JWT Bearer authentication with conditional bypass in development via ConditionalAuthHandler.
 
 ## Common Development Commands
 
@@ -171,7 +171,7 @@ Key settings sections:
 - `Database`: Connection parameters (Host, Database, Username, Password, Port)
 - `CloudStorage`: Azure Blob Storage configuration (ConnectionString, AccountName, UseManagedIdentity, container names)
 - `NOAASettings`: API key for weather services
-- `Auth0Settings`: JWT authentication configuration
+- `ClerkSettings`: JWT authentication configuration
 - `StripeSettings`: Payment subscription configuration
 
 ### Azure Functions Required Settings

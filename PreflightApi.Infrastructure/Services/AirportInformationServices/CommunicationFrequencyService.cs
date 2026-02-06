@@ -4,7 +4,9 @@ using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 {
@@ -24,16 +26,16 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
         private string StripIcaoPrefix(string facilityCode)
         {
             facilityCode = facilityCode.ToUpperInvariant();
-            
+
             // Return original code if it's 3 or fewer characters
             if (facilityCode.Length <= 3)
                 return facilityCode;
 
             // If it starts with K, P, or H and is 4 characters long,
             // return just the last 3 characters
-            if (facilityCode.Length == 4 && 
-                (facilityCode.StartsWith("K") || 
-                 facilityCode.StartsWith("P") || 
+            if (facilityCode.Length == 4 &&
+                (facilityCode.StartsWith("K") ||
+                 facilityCode.StartsWith("P") ||
                  facilityCode.StartsWith("H")))
             {
                 return facilityCode.Substring(1);
@@ -42,12 +44,15 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             return facilityCode;
         }
 
-        public async Task<IEnumerable<CommunicationFrequencyDto>> GetFrequenciesByServicedFacility(string servicedFacility)
+        public async Task<PaginatedResponse<CommunicationFrequencyDto>> GetFrequenciesByServicedFacility(
+            string servicedFacility,
+            string? cursor = null,
+            int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting frequencies for serviced facility code: {ServicedFacility}",
-                    servicedFacility);
+                _logger.LogInformation("Getting frequencies for serviced facility code: {ServicedFacility}, cursor: {Cursor}, limit: {Limit}",
+                    servicedFacility, cursor, limit);
 
                 var strippedCode = StripIcaoPrefix(servicedFacility);
 
@@ -63,16 +68,47 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     throw new AirportNotFoundException(servicedFacility);
                 }
 
-                var frequencies = await _context.CommunicationFrequencies
-                    .Where(f => f.ServicedFacility == strippedCode)
-                    .OrderBy(f => f.FacilityType)
-                    .ThenBy(f => f.Frequency)
-                    .ToListAsync();
+                // Decode cursor if provided
+                var decodedCursor = CursorHelper.DecodeString(cursor);
+                var query = _context.CommunicationFrequencies
+                    .Where(f => f.ServicedFacility == strippedCode);
 
-                _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}",
-                    frequencies.Count, servicedFacility);
+                // Apply cursor filter if decoded cursor is a valid Guid
+                if (decodedCursor != null && Guid.TryParse(decodedCursor, out var cursorGuid))
+                {
+                    query = query.Where(f => f.Id.CompareTo(cursorGuid) > 0);
+                }
 
-                return frequencies.Select(CommunicationFrequencyMapper.ToDto);
+                // Order by Id for pagination
+                query = query.OrderBy(f => f.Id);
+
+                // Fetch limit + 1 to determine if there are more results
+                var items = await query.Take(limit + 1).ToListAsync();
+
+                var hasMore = items.Count > limit;
+                if (hasMore)
+                {
+                    items = items.Take(limit).ToList();
+                }
+
+                var data = items.Select(CommunicationFrequencyMapper.ToDto);
+                var nextCursor = hasMore && items.Count > 0
+                    ? CursorHelper.Encode(items[^1].Id.ToString())
+                    : null;
+
+                _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}, hasMore: {HasMore}",
+                    items.Count, servicedFacility, hasMore);
+
+                return new PaginatedResponse<CommunicationFrequencyDto>
+                {
+                    Data = data,
+                    Pagination = new PaginationMetadata
+                    {
+                        Limit = limit,
+                        NextCursor = nextCursor,
+                        HasMore = hasMore
+                    }
+                };
             }
             catch (Exception ex) when (ex is not AirportNotFoundException)
             {

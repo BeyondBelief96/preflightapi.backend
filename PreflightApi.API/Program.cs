@@ -1,14 +1,10 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Azure.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using NSwag;
-using NSwag.Generation.Processors.Security;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Configuration;
 using PreflightApi.API.Middleware;
 using PreflightApi.Infrastructure.Data;
@@ -53,21 +49,6 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
         new MappedKeyVaultSecretManager(secretMappings));
 }
 
-// Setup CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowedOrigins",
-        policy =>
-        {
-            policy.WithOrigins(
-                    "http://localhost:5173")
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        });
-});
-
-
 // Setup Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -102,53 +83,29 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// Setup Authentication
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        var auth0Settings = builder.Configuration.GetSection("Auth0Settings").Get<Auth0Settings>();
-        Auth0Handler.ConfigureJwtBearer(options, auth0Settings);
-    
-        // Only disable HTTPS requirement in development
-        if (builder.Environment.IsDevelopment())
-        {
-            options.RequireHttpsMetadata = false;
-        }
-        else 
-        {
-            options.RequireHttpsMetadata = true; // Explicitly require HTTPS in production
-        }
-    })
-    .AddScheme<AuthenticationSchemeOptions, ConditionalAuthHandler>("Conditional", null);
-
+// Setup API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = false;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 // Setup Swagger
 builder.Services.AddOpenApiDocument(options =>
 {
     options.Title = "PreflightApi API";
     options.Version = "v1";
-    
-    options.AddSecurity("JWT", [],
-        new OpenApiSecurityScheme
-        {
-            Type = OpenApiSecuritySchemeType.ApiKey,
-            Name = "Authorization",
-            In = OpenApiSecurityApiKeyLocation.Header,
-            Description = "Enter your Bearer token in the format: Bearer {token}"
-        });
-
-    // Add security requirement to all operations
-    options.OperationProcessors.Add(
-        new AspNetCoreOperationSecurityScopeProcessor("JWT"));
 });
 
 // Setup Environment Variable Settings
 builder.Services.Configure<NOAASettings>(builder.Configuration.GetSection("NOAASettings"));
-builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0Settings"));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
 
@@ -196,7 +153,6 @@ builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>(
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
 builder.Services.AddScoped<IPerformanceCalculatorService, PerformanceCalculatorService>();
-builder.Services.AddScoped<ConditionalAuthHandler>();
 
 // NOTAM Services
 builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
@@ -231,7 +187,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseCors("AllowedOrigins");
 app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
@@ -241,7 +196,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 await app.RunAsync();

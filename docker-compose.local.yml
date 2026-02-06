@@ -40,10 +40,6 @@ services:
       - CloudStorage__UseManagedIdentity=false
       # NOAA API Settings
       - NOAASettings__NOAAApiKey=zNEw7
-      # Auth0 Settings
-      - Auth0Settings__Auth0ApiIdentifier=testAuth0ApiIdentifier
-      - Auth0Settings__Auth0Domain=testAuth0Domain
-      - Auth0Settings__RequireAuthenticationInDevelopment=false
       # NMS API Settings
       - NmsSettings__BaseUrl=https://api-staging.cgifederal-aim.com/nmsapi
       - NmsSettings__AuthBaseUrl=https://api-staging.cgifederal-aim.com

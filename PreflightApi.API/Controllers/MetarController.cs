@@ -1,23 +1,17 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/metars")]
-[ConditionalAuth]
+[Route("api/v{version:apiVersion}/metars")]
 public class MetarController(IMetarService metarService) : ControllerBase
 {
-    /// <summary>
-    /// Gets METAR information for a specific airport
-    /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-    /// <returns>METAR information for the specified airport</returns>
-    /// <response code="200">Returns the METAR information</response>
-    /// <response code="404">If the METAR or airport is not found</response>
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(MetarDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -27,35 +21,27 @@ public class MetarController(IMetarService metarService) : ControllerBase
         return Ok(metar);
     }
 
-    /// <summary>
-    /// Gets all METARs for a specific state
-    /// </summary>
-    /// <param name="stateCode">Two-letter state code (e.g., TN, WA)</param>
-    /// <returns>List of METARs for the specified state</returns>
-    /// <response code="200">Returns the list of METARs</response>
     [HttpGet("state/{stateCode}")]
-    [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsByState(string stateCode)
+    [ProducesResponseType(typeof(PaginatedResponse<MetarDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByState(
+        string stateCode,
+        [FromQuery] PaginationParams pagination)
     {
-        var metars = await metarService.GetMetarsByState(stateCode);
-        return Ok(metars);
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await metarService.GetMetarsByState(stateCode, pagination.Cursor, pagination.Limit));
     }
 
-    /// <summary>
-    /// Gets all METARs for multiple states
-    /// </summary>
-    /// <param name="stateCodes">Comma-separated list of two-letter state codes (e.g., TN,WA,OR)</param>
-    /// <returns>List of METARs for the specified states</returns>
-    /// <response code="200">Returns the list of METARs</response>
     [HttpGet("states/{stateCodes}")]
-    [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsByStates(string stateCodes)
+    [ProducesResponseType(typeof(PaginatedResponse<MetarDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByStates(
+        string stateCodes,
+        [FromQuery] PaginationParams pagination)
     {
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var stateCodeArray = stateCodes.Split(',')
             .Select(s => s.Trim())
             .ToArray();
 
-        var metars = await metarService.GetMetarsByStates(stateCodeArray);
-        return Ok(metars);
+        return Ok(await metarService.GetMetarsByStates(stateCodeArray, pagination.Cursor, pagination.Limit));
     }
 }

@@ -1,14 +1,14 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/tafs")]
-[ConditionalAuth]
+[Route("api/v{version:apiVersion}/tafs")]
 public class TafController(ITafService tafService) : ControllerBase
 {
     /// <summary>

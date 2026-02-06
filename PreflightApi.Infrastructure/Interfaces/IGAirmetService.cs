@@ -5,7 +5,7 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface IGAirmetService
 {
-    Task<IEnumerable<GAirmetDto>> GetAllGAirmets();
-    Task<IEnumerable<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product);
-    Task<IEnumerable<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType);
+    Task<List<GAirmetDto>> GetAllGAirmets();
+    Task<List<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product);
+    Task<List<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType);
 }

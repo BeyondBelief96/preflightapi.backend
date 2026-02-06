@@ -4,7 +4,9 @@ using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.WeatherServices
 {
@@ -76,11 +78,12 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             }
         }
 
-        public async Task<IEnumerable<MetarDto>> GetMetarsByState(string stateCode)
+        public async Task<PaginatedResponse<MetarDto>> GetMetarsByState(string stateCode, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Retrieving METARs for state: {StateCode}", stateCode);
+                _logger.LogInformation("Retrieving METARs for state: {StateCode}, cursor: {Cursor}, limit: {Limit}",
+                    stateCode, cursor, limit);
 
                 if (string.IsNullOrWhiteSpace(stateCode))
                 {
@@ -88,7 +91,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 }
 
                 var upperStateCode = stateCode.ToUpperInvariant();
-                var metars = await _context.Metars
+                var query = _context.Metars
                     .Where(m => _context.Airports.Any(a =>
                         a.StateCode == upperStateCode &&
                         (a.IcaoId == m.StationId ||
@@ -96,13 +99,9 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                           m.StationId.Length > 1 &&
                           (m.StationId.StartsWith("K") || m.StationId.StartsWith("P")) &&
                           a.ArptId == m.StationId.Substring(1)) ||
-                         a.ArptId == m.StationId)))
-                    .ToListAsync();
+                         a.ArptId == m.StationId)));
 
-                _logger.LogInformation("Retrieved {Count} METARs for state: {StateCode}",
-                    metars.Count, stateCode);
-
-                return metars.Select(MetarMapper.ToDto);
+                return await query.ToPaginatedAsync(m => m.Id, MetarMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
@@ -111,11 +110,12 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             }
         }
 
-        public async Task<IEnumerable<MetarDto>> GetMetarsByStates(string[] stateCodes)
+        public async Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Retrieving METARs for states: {@StateCodes}", stateCodes);
+                _logger.LogInformation("Retrieving METARs for states: {@StateCodes}, cursor: {Cursor}, limit: {Limit}",
+                    stateCodes, cursor, limit);
 
                 if (stateCodes == null || !stateCodes.Any())
                 {
@@ -131,7 +131,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                     .Where(s => s != null)
                     .ToHashSet();
 
-                var metars = await _context.Metars
+                var query = _context.Metars
                     .Where(m => _context.Airports.Any(a =>
                         a.StateCode != null &&
                         upperStateCodes.Contains(a.StateCode) &&
@@ -140,13 +140,9 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                           m.StationId.Length > 1 &&
                           (m.StationId.StartsWith("K") || m.StationId.StartsWith("P")) &&
                           a.ArptId == m.StationId.Substring(1)) ||
-                         a.ArptId == m.StationId)))
-                    .ToListAsync();
+                         a.ArptId == m.StationId)));
 
-                _logger.LogInformation("Retrieved {Count} METARs for states: {@StateCodes}",
-                    metars.Count, stateCodes);
-
-                return metars.Select(MetarMapper.ToDto);
+                return await query.ToPaginatedAsync(m => m.Id, MetarMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {

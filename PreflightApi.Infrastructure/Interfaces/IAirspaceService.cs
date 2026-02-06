@@ -1,14 +1,15 @@
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Navlog;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface IAirspaceService
 {
-    Task<IEnumerable<AirspaceDto>> GetByClasses(string[] airspaceClasses);
-    Task<IEnumerable<AirspaceDto>> GetByCities(string[] cities);
-    Task<IEnumerable<AirspaceDto>> GetByStates(string[] states);
-    Task<IEnumerable<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes);
+    Task<PaginatedResponse<AirspaceDto>> GetByClasses(string[] airspaceClasses, string? cursor, int limit);
+    Task<PaginatedResponse<AirspaceDto>> GetByCities(string[] cities, string? cursor, int limit);
+    Task<PaginatedResponse<AirspaceDto>> GetByStates(string[] states, string? cursor, int limit);
+    Task<PaginatedResponse<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes, string? cursor, int limit);
     Task<IEnumerable<AirspaceDto>> GetByIcaoOrIdents(string[] icaoOrIdents);
     Task<IEnumerable<AirspaceDto>> GetByGlobalIds(string[] globalIds);
     Task<IEnumerable<SpecialUseAirspaceDto>> GetSpecialUseByGlobalIds(string[] globalIds);

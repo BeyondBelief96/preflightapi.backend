@@ -7,7 +7,9 @@ using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
 using PreflightApi.Infrastructure.Dtos.Navlog;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services;
 
@@ -82,18 +84,19 @@ public class ObstacleService : IObstacleService
         }
     }
 
-    public async Task<IEnumerable<ObstacleDto>> SearchNearby(
+    public async Task<PaginatedResponse<ObstacleDto>> SearchNearby(
         decimal latitude,
         decimal longitude,
         double radiusNm,
         int? minHeightAgl = null,
+        string? cursor = null,
         int limit = 100)
     {
         try
         {
             _logger.LogInformation(
-                "Searching obstacles near ({Lat}, {Lon}) within {Radius} NM, minHeightAgl: {MinHeight}",
-                latitude, longitude, radiusNm, minHeightAgl);
+                "Searching obstacles near ({Lat}, {Lon}) within {Radius} NM, minHeightAgl: {MinHeight}, cursor: {Cursor}, limit: {Limit}",
+                latitude, longitude, radiusNm, minHeightAgl, cursor, limit);
 
             // Convert nautical miles to meters (1 NM = 1852 meters)
             var radiusMeters = radiusNm * 1852;
@@ -108,12 +111,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            var obstacles = await query
-                .OrderByDescending(o => o.HeightAmsl)
-                .Take(limit)
-                .ToListAsync();
-
-            return obstacles.Select(ObstacleMapper.ToDto);
+            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
         }
         catch (Exception ex)
         {
@@ -122,15 +120,16 @@ public class ObstacleService : IObstacleService
         }
     }
 
-    public async Task<IEnumerable<ObstacleDto>> GetByState(
+    public async Task<PaginatedResponse<ObstacleDto>> GetByState(
         string stateCode,
         int? minHeightAgl = null,
+        string? cursor = null,
         int limit = 1000)
     {
         try
         {
-            _logger.LogInformation("Getting obstacles for state: {StateCode}, minHeightAgl: {MinHeight}",
-                stateCode, minHeightAgl);
+            _logger.LogInformation("Getting obstacles for state: {StateCode}, minHeightAgl: {MinHeight}, cursor: {Cursor}, limit: {Limit}",
+                stateCode, minHeightAgl, cursor, limit);
 
             var query = _context.Obstacles
                 .AsNoTracking()
@@ -141,12 +140,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            var obstacles = await query
-                .OrderByDescending(o => o.HeightAmsl)
-                .Take(limit)
-                .ToListAsync();
-
-            return obstacles.Select(ObstacleMapper.ToDto);
+            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
         }
         catch (Exception ex)
         {
@@ -155,19 +149,20 @@ public class ObstacleService : IObstacleService
         }
     }
 
-    public async Task<IEnumerable<ObstacleDto>> GetByBoundingBox(
+    public async Task<PaginatedResponse<ObstacleDto>> GetByBoundingBox(
         decimal minLat,
         decimal maxLat,
         decimal minLon,
         decimal maxLon,
         int? minHeightAgl = null,
+        string? cursor = null,
         int limit = 1000)
     {
         try
         {
             _logger.LogInformation(
-                "Getting obstacles in bounding box: ({MinLat}, {MinLon}) to ({MaxLat}, {MaxLon})",
-                minLat, minLon, maxLat, maxLon);
+                "Getting obstacles in bounding box: ({MinLat}, {MinLon}) to ({MaxLat}, {MaxLon}), cursor: {Cursor}, limit: {Limit}",
+                minLat, minLon, maxLat, maxLon, cursor, limit);
 
             // Create a bounding box polygon for spatial query
             var coordinates = new[]
@@ -189,12 +184,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            var obstacles = await query
-                .OrderByDescending(o => o.HeightAmsl)
-                .Take(limit)
-                .ToListAsync();
-
-            return obstacles.Select(ObstacleMapper.ToDto);
+            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
         }
         catch (Exception ex)
         {

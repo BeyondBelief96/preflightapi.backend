@@ -1,8 +1,9 @@
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface ICommunicationFrequencyService
 {
-    Task<IEnumerable<CommunicationFrequencyDto>> GetFrequenciesByServicedFacility(string servicedFacility);
+    Task<PaginatedResponse<CommunicationFrequencyDto>> GetFrequenciesByServicedFacility(string servicedFacility, string? cursor, int limit);
 }

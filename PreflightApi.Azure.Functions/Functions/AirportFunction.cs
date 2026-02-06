@@ -29,7 +29,7 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("AirportFunction")]
-        public async Task Run([TimerTrigger("0 0 * * *")] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation($"Airport Function executed at: {DateTime.UtcNow}");
             var cancellationToken = context.CancellationToken;

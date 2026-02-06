@@ -1,5 +1,5 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.Exceptions;
@@ -8,108 +8,61 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/airsigmets")]
-[ConditionalAuth]
-public class AirsigmetController(IAirsigmetService airsigmetService)
-    : ControllerBase
+[Route("api/v{version:apiVersion}/airsigmets")]
+public class AirsigmetController(IAirsigmetService airsigmetService) : ControllerBase
 {
-    /// <summary>
-    /// Gets all AIRSIGMETs
-    /// </summary>
-    /// <returns>List of all AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of AIRSIGMETs</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetAllAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetAllAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAllAirsigmets();
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAllAirsigmets());
     }
 
-    /// <summary>
-    /// Gets AIRSIGMETs by hazard type
-    /// </summary>
-    /// <param name="hazardType">Hazard type: CONVECTIVE, ICE, TURB, IFR, or MTN_OBSCN</param>
-    /// <returns>List of AIRSIGMETs for the specified hazard type</returns>
-    /// <response code="200">Returns the list of AIRSIGMETs</response>
-    /// <response code="400">If the hazard type is invalid</response>
     [HttpGet("hazard/{hazardType}")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetAirsigmetsByHazardType(string hazardType)
+    public async Task<ActionResult<List<AirsigmetDto>>> GetAirsigmetsByHazardType(string hazardType)
     {
         if (!Enum.TryParse<AirsigmetHazardType>(hazardType, ignoreCase: true, out var hazardTypeEnum))
-        {
             throw new ValidationException("hazardType", $"Invalid hazard type '{hazardType}'. Valid values are: CONVECTIVE, ICE, TURB, IFR, MTN_OBSCN");
-        }
 
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(hazardTypeEnum);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(hazardTypeEnum));
     }
 
-    /// <summary>
-    /// Gets all CONVECTIVE AIRSIGMETs (thunderstorms)
-    /// </summary>
-    /// <returns>List of CONVECTIVE AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of CONVECTIVE AIRSIGMETs</response>
     [HttpGet("convective")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetConvectiveAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetConvectiveAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.CONVECTIVE);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.CONVECTIVE));
     }
 
-    /// <summary>
-    /// Gets all ICE AIRSIGMETs (icing conditions)
-    /// </summary>
-    /// <returns>List of ICE AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of ICE AIRSIGMETs</response>
     [HttpGet("ice")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetIceAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetIceAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.ICE);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.ICE));
     }
 
-    /// <summary>
-    /// Gets all TURB AIRSIGMETs (turbulence)
-    /// </summary>
-    /// <returns>List of TURB AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of TURB AIRSIGMETs</response>
     [HttpGet("turb")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetTurbAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetTurbAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.TURB);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.TURB));
     }
 
-    /// <summary>
-    /// Gets all IFR AIRSIGMETs (low visibility/ceiling)
-    /// </summary>
-    /// <returns>List of IFR AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of IFR AIRSIGMETs</response>
     [HttpGet("ifr")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetIfrAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetIfrAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.IFR);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.IFR));
     }
 
-    /// <summary>
-    /// Gets all MTN OBSCN AIRSIGMETs (mountain obscuration)
-    /// </summary>
-    /// <returns>List of MTN OBSCN AIRSIGMETs</returns>
-    /// <response code="200">Returns the list of MTN OBSCN AIRSIGMETs</response>
     [HttpGet("mtn-obscn")]
-    [ProducesResponseType(typeof(IEnumerable<AirsigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<AirsigmetDto>>> GetMtnObscnAirsigmets()
+    [ProducesResponseType(typeof(List<AirsigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AirsigmetDto>>> GetMtnObscnAirsigmets()
     {
-        var airsigmets = await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.MTN_OBSCN);
-        return Ok(airsigmets);
+        return Ok(await airsigmetService.GetAirsigmetsByHazardType(AirsigmetHazardType.MTN_OBSCN));
     }
 }

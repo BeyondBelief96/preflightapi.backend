@@ -1,14 +1,14 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using PreflightApi.API.Authentication;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/airport-diagrams")]
-[ConditionalAuth]
+[Route("api/v{version:apiVersion}/airport-diagrams")]
 public class AirportDiagramController(IAirportDiagramService airportDiagramService) : ControllerBase
 {
     /// <summary>

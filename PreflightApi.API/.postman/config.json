@@ -1,0 +1,16 @@
+{
+  "workspace": {
+    "id": ""
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [
+      "..\\obj\\Debug\\net8.0\\EndpointInfo\\PreflightApi.API.json",
+      "..\\obj\\x64\\Debug\\net8.0\\EndpointInfo\\PreflightApi.API.json"
+    ],
+    "collections": []
+  }
+}

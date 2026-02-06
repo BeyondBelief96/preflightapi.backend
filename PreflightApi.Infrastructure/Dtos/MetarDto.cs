@@ -2,6 +2,7 @@ namespace PreflightApi.Infrastructure.Dtos
 {
     public record MetarDto
     {
+        public int Id { get; init; }
         public string? RawText { get; init; }
         public string? StationId { get; init; }
         public string? ObservationTime { get; init; }

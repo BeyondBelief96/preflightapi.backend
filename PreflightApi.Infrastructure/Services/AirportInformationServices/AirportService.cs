@@ -4,7 +4,9 @@ using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services
 {
@@ -21,25 +23,25 @@ namespace PreflightApi.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<AirportDto>> GetAllAirports(string? search = null)
+        public async Task<PaginatedResponse<AirportDto>> GetAllAirports(string? search = null, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting all airports with search: {Search}", search);
+                _logger.LogInformation("Getting all airports with search: {Search}, cursor: {Cursor}, limit: {Limit}",
+                    search, cursor, limit);
 
                 var query = _context.Airports.AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     search = search.ToUpperInvariant();
-                    query = query.Where(a => 
+                    query = query.Where(a =>
                         (a.IcaoId != null && a.IcaoId.ToUpperInvariant().Contains(search)) ||
                         (a.ArptId != null && a.ArptId.ToUpperInvariant().Contains(search))
                     );
                 }
 
-                var airports = await query.ToListAsync();
-                return airports.Select(AirportMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
@@ -55,8 +57,8 @@ namespace PreflightApi.Infrastructure.Services
                 _logger.LogInformation("Getting airport by ICAO code or ident: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
                 var airport = await _context.Airports
-                    .FirstOrDefaultAsync(a => 
-                        a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() || 
+                    .FirstOrDefaultAsync(a =>
+                        a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
                         a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
 
                 if (airport == null)
@@ -73,17 +75,17 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        public async Task<IEnumerable<AirportDto>> GetAirportsByState(string stateCode)
+        public async Task<PaginatedResponse<AirportDto>> GetAirportsByState(string stateCode, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airports by state: {StateCode}", stateCode);
+                _logger.LogInformation("Getting airports by state: {StateCode}, cursor: {Cursor}, limit: {Limit}",
+                    stateCode, cursor, limit);
 
-                var airports = await _context.Airports
-                    .Where(a => a.StateCode == stateCode.ToUpperInvariant())
-                    .ToListAsync();
+                var query = _context.Airports
+                    .Where(a => a.StateCode == stateCode.ToUpperInvariant());
 
-                return airports.Select(AirportMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
@@ -92,18 +94,18 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        public async Task<IEnumerable<AirportDto>> GetAirportsByStates(string[] stateCodes)
+        public async Task<PaginatedResponse<AirportDto>> GetAirportsByStates(string[] stateCodes, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airports by states: {StateCodes}", string.Join(", ", stateCodes));
+                _logger.LogInformation("Getting airports by states: {StateCodes}, cursor: {Cursor}, limit: {Limit}",
+                    string.Join(", ", stateCodes), cursor, limit);
 
                 var upperStateCodes = stateCodes.Select(s => s.ToUpperInvariant()).ToArray();
-                var airports = await _context.Airports
-                    .Where(a => a.StateCode != null && upperStateCodes.Contains(a.StateCode))
-                    .ToListAsync();
+                var query = _context.Airports
+                    .Where(a => a.StateCode != null && upperStateCodes.Contains(a.StateCode));
 
-                return airports.Select(AirportMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
@@ -116,13 +118,13 @@ namespace PreflightApi.Infrastructure.Services
         {
             try
             {
-                _logger.LogInformation("Getting airports by ICAO codes or idents: {CodesOrIdents}", 
+                _logger.LogInformation("Getting airports by ICAO codes or idents: {CodesOrIdents}",
                     string.Join(", ", codesOrIdents));
 
                 var upperCodes = codesOrIdents.Select(c => c.ToUpperInvariant()).ToArray();
                 var airports = await _context.Airports
-                    .Where(a => 
-                        (a.IcaoId != null && upperCodes.Contains(a.IcaoId)) || 
+                    .Where(a =>
+                        (a.IcaoId != null && upperCodes.Contains(a.IcaoId)) ||
                         (a.ArptId != null && upperCodes.Contains(a.ArptId)))
                     .ToListAsync();
 
@@ -130,31 +132,40 @@ namespace PreflightApi.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting airports by ICAO codes or idents: {CodesOrIdents}", 
+                _logger.LogError(ex, "Error getting airports by ICAO codes or idents: {CodesOrIdents}",
                     string.Join(", ", codesOrIdents));
                 throw;
             }
         }
 
-        public async Task<IEnumerable<AirportDto>> GetAirportsByPrefix(string prefix)
+        public async Task<PaginatedResponse<AirportDto>> GetAirportsByPrefix(string prefix, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airports by prefix: {Prefix}", prefix);
+                _logger.LogInformation("Getting airports by prefix: {Prefix}, cursor: {Cursor}, limit: {Limit}",
+                    prefix, cursor, limit);
 
                 if (string.IsNullOrWhiteSpace(prefix))
                 {
-                    return Enumerable.Empty<AirportDto>();
+                    return new PaginatedResponse<AirportDto>
+                    {
+                        Data = Enumerable.Empty<AirportDto>(),
+                        Pagination = new PaginationMetadata
+                        {
+                            Limit = limit,
+                            NextCursor = null,
+                            HasMore = false
+                        }
+                    };
                 }
 
                 var upperPrefix = prefix.ToUpperInvariant();
-                var airports = await _context.Airports
+                var query = _context.Airports
                     .Where(a =>
                         (a.IcaoId != null && a.IcaoId.ToUpperInvariant().StartsWith(upperPrefix)) ||
-                        (a.ArptId != null && a.ArptId.ToUpperInvariant().StartsWith(upperPrefix)))
-                    .ToListAsync();
+                        (a.ArptId != null && a.ArptId.ToUpperInvariant().StartsWith(upperPrefix)));
 
-                return airports.Select(AirportMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {

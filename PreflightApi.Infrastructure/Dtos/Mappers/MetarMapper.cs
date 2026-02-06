@@ -9,6 +9,7 @@ public static class MetarMapper
     {
         return new MetarDto
         {
+            Id = metar.Id,
             RawText = metar.RawText,
             StationId = metar.StationId,
             ObservationTime = metar.ObservationTime,

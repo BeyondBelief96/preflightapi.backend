@@ -21,12 +21,14 @@ public class AirsigmetService : IAirsigmetService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<AirsigmetDto>> GetAllAirsigmets()
+    public async Task<List<AirsigmetDto>> GetAllAirsigmets()
     {
         try
         {
+            _logger.LogInformation("Retrieving all AIRSIGMETs");
+
             var airsigmets = await _context.Airsigmets.ToListAsync();
-            return airsigmets.Select(AirsigmetMapper.ToDto);
+            return airsigmets.Select(AirsigmetMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {
@@ -35,15 +37,18 @@ public class AirsigmetService : IAirsigmetService
         }
     }
 
-    public async Task<IEnumerable<AirsigmetDto>> GetAirsigmetsByHazardType(AirsigmetHazardType hazardType)
+    public async Task<List<AirsigmetDto>> GetAirsigmetsByHazardType(AirsigmetHazardType hazardType)
     {
         try
         {
+            _logger.LogInformation("Retrieving AIRSIGMETs for hazard type {HazardType}", hazardType);
+
             var hazardTypeString = ConvertHazardTypeToString(hazardType);
             var airsigmets = await _context.Airsigmets
                 .Where(a => a.Hazard != null && a.Hazard.Type == hazardTypeString)
                 .ToListAsync();
-            return airsigmets.Select(AirsigmetMapper.ToDto);
+
+            return airsigmets.Select(AirsigmetMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {

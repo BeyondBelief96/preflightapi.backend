@@ -21,12 +21,14 @@ public class GAirmetService : IGAirmetService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<GAirmetDto>> GetAllGAirmets()
+    public async Task<List<GAirmetDto>> GetAllGAirmets()
     {
         try
         {
+            _logger.LogInformation("Retrieving all G-AIRMETs");
+
             var gairmets = await _context.GAirmets.ToListAsync();
-            return gairmets.Select(GAirmetMapper.ToDto);
+            return gairmets.Select(GAirmetMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {
@@ -35,15 +37,18 @@ public class GAirmetService : IGAirmetService
         }
     }
 
-    public async Task<IEnumerable<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product)
+    public async Task<List<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product)
     {
         try
         {
+            _logger.LogInformation("Retrieving G-AIRMETs for product {Product}", product);
+
             var productString = product.ToString().ToUpperInvariant();
             var gairmets = await _context.GAirmets
                 .Where(g => g.Product == productString)
                 .ToListAsync();
-            return gairmets.Select(GAirmetMapper.ToDto);
+
+            return gairmets.Select(GAirmetMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {
@@ -52,15 +57,18 @@ public class GAirmetService : IGAirmetService
         }
     }
 
-    public async Task<IEnumerable<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType)
+    public async Task<List<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType)
     {
         try
         {
+            _logger.LogInformation("Retrieving G-AIRMETs for hazard type {HazardType}", hazardType);
+
             var hazardTypeStrings = GetHazardTypeStrings(hazardType);
             var gairmets = await _context.GAirmets
                 .Where(g => g.HazardType != null && hazardTypeStrings.Contains(g.HazardType))
                 .ToListAsync();
-            return gairmets.Select(GAirmetMapper.ToDto);
+
+            return gairmets.Select(GAirmetMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {

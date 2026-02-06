@@ -6,7 +6,9 @@ using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
 using PreflightApi.Infrastructure.Dtos.Navlog;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 {
@@ -24,93 +26,85 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             _logger = logger;
         }
 
-        public async Task<IEnumerable<AirspaceDto>> GetByClasses(string[] airspaceClasses)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByClasses(string[] airspaceClasses, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airspaces by classes: {Classes}", 
-                    string.Join(", ", airspaceClasses));
+                _logger.LogInformation("Getting airspaces by classes: {Classes}, cursor: {Cursor}, limit: {Limit}",
+                    string.Join(", ", airspaceClasses), cursor, limit);
 
                 var upperClasses = airspaceClasses.Select(c => c.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.Airspaces
-                    .Where(a => a.Class != null && upperClasses.Contains(a.Class))
-                    .OrderBy(a => a.Name)
-                    .ToListAsync();
+                var query = _context.Airspaces
+                    .Where(a => a.Class != null && upperClasses.Contains(a.Class));
 
-                return airspaces.Select(AirspaceMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting airspaces by classes: {Classes}", 
+                _logger.LogError(ex, "Error getting airspaces by classes: {Classes}",
                     string.Join(", ", airspaceClasses));
                 throw;
             }
         }
 
-        public async Task<IEnumerable<AirspaceDto>> GetByCities(string[] cities)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByCities(string[] cities, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airspaces by cities: {Cities}", 
-                    string.Join(", ", cities));
+                _logger.LogInformation("Getting airspaces by cities: {Cities}, cursor: {Cursor}, limit: {Limit}",
+                    string.Join(", ", cities), cursor, limit);
 
                 var upperCities = cities.Select(c => c.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.Airspaces
-                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpperInvariant()))
-                    .OrderBy(a => a.Name)
-                    .ToListAsync();
+                var query = _context.Airspaces
+                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpperInvariant()));
 
-                return airspaces.Select(AirspaceMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting airspaces by cities: {Cities}", 
+                _logger.LogError(ex, "Error getting airspaces by cities: {Cities}",
                     string.Join(", ", cities));
                 throw;
             }
         }
 
-        public async Task<IEnumerable<AirspaceDto>> GetByStates(string[] states)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByStates(string[] states, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting airspaces by states: {States}", 
-                    string.Join(", ", states));
+                _logger.LogInformation("Getting airspaces by states: {States}, cursor: {Cursor}, limit: {Limit}",
+                    string.Join(", ", states), cursor, limit);
 
                 var upperStates = states.Select(s => s.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.Airspaces
-                    .Where(a => a.State != null && upperStates.Contains(a.State))
-                    .OrderBy(a => a.Name)
-                    .ToListAsync();
+                var query = _context.Airspaces
+                    .Where(a => a.State != null && upperStates.Contains(a.State));
 
-                return airspaces.Select(AirspaceMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting airspaces by states: {States}", 
+                _logger.LogError(ex, "Error getting airspaces by states: {States}",
                     string.Join(", ", states));
                 throw;
             }
         }
 
-        public async Task<IEnumerable<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes)
+        public async Task<PaginatedResponse<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes, string? cursor = null, int limit = 100)
         {
             try
             {
-                _logger.LogInformation("Getting special use airspaces by type codes: {TypeCodes}", 
-                    string.Join(", ", typeCodes));
+                _logger.LogInformation("Getting special use airspaces by type codes: {TypeCodes}, cursor: {Cursor}, limit: {Limit}",
+                    string.Join(", ", typeCodes), cursor, limit);
 
                 var upperTypeCodes = typeCodes.Select(t => t.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.SpecialUseAirspaces
-                    .Where(a => a.TypeCode != null && upperTypeCodes.Contains(a.TypeCode))
-                    .OrderBy(a => a.Name)
-                    .ToListAsync();
+                var query = _context.SpecialUseAirspaces
+                    .Where(a => a.TypeCode != null && upperTypeCodes.Contains(a.TypeCode));
 
-                return airspaces.Select(AirspaceMapper.ToDto);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting special use airspaces by type codes: {TypeCodes}", 
+                _logger.LogError(ex, "Error getting special use airspaces by type codes: {TypeCodes}",
                     string.Join(", ", typeCodes));
                 throw;
             }
@@ -120,13 +114,13 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
         {
             try
             {
-                _logger.LogInformation("Getting airspaces by ICAO codes or idents: {IcaoOrIdents}", 
+                _logger.LogInformation("Getting airspaces by ICAO codes or idents: {IcaoOrIdents}",
                     string.Join(", ", icaoOrIdents));
 
                 var upperCodes = icaoOrIdents.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
-                    .Where(a => 
-                        a.IcaoId != null && upperCodes.Contains(a.IcaoId) || 
+                    .Where(a =>
+                        a.IcaoId != null && upperCodes.Contains(a.IcaoId) ||
                         a.Ident != null && upperCodes.Contains(a.Ident))
                     .OrderBy(a => a.Name)
                     .ToListAsync();
@@ -135,7 +129,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting airspaces by ICAO codes or idents: {IcaoOrIdents}", 
+                _logger.LogError(ex, "Error getting airspaces by ICAO codes or idents: {IcaoOrIdents}",
                     string.Join(", ", icaoOrIdents));
                 throw;
             }

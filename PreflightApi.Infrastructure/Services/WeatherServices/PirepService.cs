@@ -20,12 +20,14 @@ public class PirepService : IPirepService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<PirepDto>> GetAllPireps()
+    public async Task<List<PirepDto>> GetAllPireps()
     {
         try
         {
+            _logger.LogInformation("Retrieving all PIREPs");
+
             var pireps = await _context.Pireps.ToListAsync();
-            return pireps.Select(PirepMapper.ToDto);
+            return pireps.Select(PirepMapper.ToDto).ToList();
         }
         catch (Exception ex)
         {

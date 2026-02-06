@@ -22,7 +22,7 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("ChartSupplementFunction")]
-        public async Task Run([TimerTrigger("0 0 4 * * *")] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 4 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation($"Chart Supplement Function executed at: {DateTime.UtcNow}");
             var cancellationToken = context.CancellationToken;

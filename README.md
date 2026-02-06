@@ -70,7 +70,7 @@ PreflightApi is the server-side component of the PreflightApi aviation platform.
 | Database | PostgreSQL 15 with PostGIS |
 | ORM | Entity Framework Core 9 |
 | Spatial Data | NetTopologySuite |
-| Authentication | Auth0 JWT Bearer |
+| Authentication | Clerk JWT Bearer |
 | Cloud Storage | Azure Blob Storage |
 | Serverless | Azure Functions (isolated worker) |
 | API Docs | NSwag (OpenAPI/Swagger) |
@@ -330,13 +330,12 @@ Configuration is loaded hierarchically:
 }
 ```
 
-#### Auth0 (Authentication)
+#### Clerk (Authentication)
 
 ```json
 {
-  "Auth0Settings": {
-    "Auth0ApiIdentifier": "your_api_identifier",
-    "Auth0Domain": "your_tenant.auth0.com",
+  "ClerkSettings": {
+    "Authority": "https://your-instance.clerk.accounts.dev",
     "RequireAuthenticationInDevelopment": false
   }
 }

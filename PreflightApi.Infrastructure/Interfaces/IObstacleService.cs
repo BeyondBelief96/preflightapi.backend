@@ -1,5 +1,6 @@
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Navlog;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
@@ -7,9 +8,9 @@ public interface IObstacleService
 {
     Task<ObstacleDto?> GetByOasNumber(string oasNumber);
     Task<IEnumerable<ObstacleDto>> GetByOasNumbers(IEnumerable<string> oasNumbers);
-    Task<IEnumerable<ObstacleDto>> SearchNearby(decimal latitude, decimal longitude, double radiusNm, int? minHeightAgl = null, int limit = 100);
-    Task<IEnumerable<ObstacleDto>> GetByState(string stateCode, int? minHeightAgl = null, int limit = 1000);
-    Task<IEnumerable<ObstacleDto>> GetByBoundingBox(decimal minLat, decimal maxLat, decimal minLon, decimal maxLon, int? minHeightAgl = null, int limit = 1000);
+    Task<PaginatedResponse<ObstacleDto>> SearchNearby(decimal latitude, decimal longitude, double radiusNm, int? minHeightAgl, string? cursor, int limit);
+    Task<PaginatedResponse<ObstacleDto>> GetByState(string stateCode, int? minHeightAgl, string? cursor, int limit);
+    Task<PaginatedResponse<ObstacleDto>> GetByBoundingBox(decimal minLat, decimal maxLat, decimal minLon, decimal maxLon, int? minHeightAgl, string? cursor, int limit);
 
     /// <summary>
     /// Gets obstacles along a flight route using two methods:

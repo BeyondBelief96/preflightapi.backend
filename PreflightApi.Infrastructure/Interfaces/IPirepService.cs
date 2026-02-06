@@ -4,6 +4,6 @@ namespace PreflightApi.Infrastructure.Interfaces
 {
     public interface IPirepService
     {
-        Task<IEnumerable<PirepDto>> GetAllPireps();
+        Task<List<PirepDto>> GetAllPireps();
     }
 }
