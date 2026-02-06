@@ -148,26 +148,35 @@ Single consolidated workflow at `.github/workflows/develop-ci-cd.yml`:
 
 1. **Build job**: Restore, build, test, publish API + Functions, create EF migration bundle
 2. **Migrations job**: Azure login > whitelist runner IP on database firewall > apply migrations > remove firewall rule
-3. **Deploy job**: Deploy API via `azure/webapps-deploy`, deploy Functions via `az functionapp deployment source config-zip`
+3. **Deploy job**: Deploy API via `azure/webapps-deploy`, deploy Functions via `azure/functions-action@v1` with pre-built zip
 
 ### Key CI/CD Details
 
 - **Database firewall**: Runner IP is dynamically whitelisted using `az postgres flexible-server firewall-rule create` and cleaned up with `if: always()` to ensure removal even on failure
-- **Functions deployment**: Uses Azure CLI zip deployment (`az functionapp deployment source config-zip`) instead of `azure/functions-action@v1` because Flex Consumption has compatibility issues with the GitHub Action
+- **Functions deployment**: Must zip the publish output (including `.azurefunctions` metadata) in the build step, upload the zip as an artifact, then deploy the zip via `azure/functions-action@v1`. Do NOT upload the raw directory as an artifact — `actions/upload-artifact` strips hidden directories like `.azurefunctions`.
 - **OIDC authentication**: Uses two separate Azure logins in the deploy job — one for the Web App identity (also used for migrations) and one for the Function App identity
 - **Path filtering**: Workflow only triggers when code in project directories changes
+- **Function App plan**: Use regular Consumption plan (not Flex Consumption) for simpler deployment. Flex Consumption requires different deployment methods and rejects `FUNCTIONS_WORKER_RUNTIME` as an app setting.
 
 ## Gotchas & Lessons Learned
 
-1. **Flex Consumption + `FUNCTIONS_WORKER_RUNTIME`**: Flex Consumption rejects this app setting. The runtime is platform-managed. Use Azure CLI zip deployment instead of `azure/functions-action`.
+1. **Functions `.azurefunctions` metadata**: The publish output must include a `.azurefunctions/functionsmetadata` directory. Create it after `dotnet publish`, then zip everything before uploading as an artifact. `actions/upload-artifact` strips hidden directories, so you must zip first.
 
-2. **Database firewall**: GitHub Actions runners have random public IPs that are NOT in Azure's network. You must either allow all IPs (fine for test) or dynamically whitelist the runner IP (preferred).
+2. **Flex Consumption vs Consumption**: Flex Consumption rejects `FUNCTIONS_WORKER_RUNTIME` as an app setting (platform-managed) and has stricter deployment packaging requirements. Regular Consumption is simpler for cron jobs.
 
-3. **OIDC App Registration permissions**: Portal-created App Registrations are scoped to their specific app. To manage database firewall rules from CI/CD, you must explicitly grant Contributor on the PostgreSQL resource.
+3. **Database firewall**: GitHub Actions runners have random public IPs that are NOT in Azure's network. Dynamically whitelist the runner IP before migrations and clean up with `if: always()`.
 
-4. **EF migration bundle connection string**: The `Database=` parameter must be explicit. Omitting it causes Npgsql to connect to the default `postgres` database.
+4. **Azure-to-Azure database access**: App Services and Function Apps also can't reach the database by default. Enable "Allow public access from any Azure service within Azure to this server" on the PostgreSQL Networking settings.
 
-5. **Azure CLI deprecation (May 2026)**: `az postgres flexible-server firewall-rule` arguments are changing in CLI 2.86.0. `--name` will become the rule name and `--server-name` will replace it for the server. Update workflows after the breaking change.
+5. **OIDC App Registration permissions**: Portal-created App Registrations are scoped to their specific app. To manage database firewall rules from CI/CD, you must explicitly grant Contributor on the PostgreSQL resource.
+
+6. **EF migration bundle connection string**: The `Database=` parameter must be explicit. Omitting it causes Npgsql to connect to the default `postgres` database.
+
+7. **Function timeout on Consumption plan**: Max is 10 minutes (`host.json` `functionTimeout`). If your functions need longer, use a Premium or Dedicated plan.
+
+8. **Azure CLI deprecation (May 2026)**: `az postgres flexible-server firewall-rule` arguments are changing in CLI 2.86.0. `--name` will become the rule name and `--server-name` will replace it for the server. Update workflows after the breaking change.
+
+9. **PostgreSQL extensions**: Enable `POSTGIS` via Server parameters > `azure.extensions` before running migrations.
 
 ## Production Checklist
 
