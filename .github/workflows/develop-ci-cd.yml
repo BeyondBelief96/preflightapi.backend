@@ -176,9 +176,6 @@ jobs:
           name: preflightapi-functions
           path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
 
-      - name: Stop Functions App
-        run: az functionapp stop --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.FUNCTION_APP_NAME }}
-
       - name: Create Functions metadata
         run: mkdir -p ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions && echo '{}' > ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions/functionsmetadata
 
@@ -191,6 +188,3 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
           --src functionapp.zip
-
-      - name: Start Functions App
-        run: az functionapp start --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.FUNCTION_APP_NAME }}
