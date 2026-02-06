@@ -26,7 +26,13 @@
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:github.com)",
       "Bash(npx @tanstack/cli create:*)",
-      "Bash(dotnet publish:*)"
+      "Bash(dotnet publish:*)",
+      "Bash(az apim product list:*)",
+      "Bash(az apim api list:*)",
+      "Bash(python:*)",
+      "Bash(az apim product policy show:*)",
+      "Bash(az apim product policy list:*)",
+      "Bash(az apim:*)"
     ],
     "deny": [],
     "ask": []
