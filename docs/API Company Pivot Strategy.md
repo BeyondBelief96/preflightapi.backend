@@ -509,7 +509,7 @@ Server functions that wrap the APIM Management REST API:
 - [x] Remove remaining auth code from API (Clerk handlers, CORS middleware)
 - [x] API versioning — prefix all data routes with `/v1/`
 - [x] Add cursor-based pagination to all list endpoints
-- [ ] Deploy API to Azure App Service
+- [x] Deploy API to Azure App Service
 - [ ] Deploy APIM instance (Developer tier for testing)
 - [ ] Import API into APIM from OpenAPI spec
 - [ ] Configure APIM Products (Free, Developer, Professional, Enterprise)

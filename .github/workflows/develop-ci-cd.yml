@@ -1,0 +1,156 @@
+name: Develop CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'PreflightApi.API/**'
+      - 'PreflightApi.Domain/**'
+      - 'PreflightApi.Infrastructure/**'
+      - 'PreflightApi.Azure.Functions/**'
+      - 'PreflightApi.Tests/**'
+      - '.github/workflows/develop-ci-cd.yml'
+
+env:
+  DOTNET_CORE_VERSION: 8.0.x
+  CONFIGURATION: Release
+  API_PUBLISH_DIR: ./api-publish
+  FUNCTIONS_PUBLISH_DIR: ./functions-publish
+  API_APP_NAME: preflightapi-eastus-web-api-test
+  FUNCTION_APP_NAME: preflightapi-eastus-function-app-test
+  RESOURCE_GROUP: rg-preflightapi-eastus-test
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
+      - name: Restore solution
+        run: dotnet restore PreflightApi.sln
+
+      - name: Build solution
+        run: dotnet build PreflightApi.sln --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      # Publish API
+      - name: Publish API
+        run: dotnet publish PreflightApi.API/PreflightApi.API.csproj --configuration ${{ env.CONFIGURATION }} --output ${{ env.API_PUBLISH_DIR }}
+
+      - name: Upload API artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflightapi-api
+          path: ${{ env.API_PUBLISH_DIR }}
+          if-no-files-found: error
+
+      # Publish Functions
+      - name: Publish Functions
+        run: dotnet publish PreflightApi.Azure.Functions/PreflightApi.Azure.Functions.csproj --configuration ${{ env.CONFIGURATION }} --output ${{ env.FUNCTIONS_PUBLISH_DIR }}
+
+      - name: Upload Functions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflightapi-functions
+          path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
+          if-no-files-found: error
+
+      # EF Migration Bundle
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Create EF migrations bundle
+        run: >
+          dotnet ef migrations bundle
+          --project PreflightApi.Infrastructure/PreflightApi.Infrastructure.csproj
+          --startup-project PreflightApi.API/PreflightApi.API.csproj
+          --configuration ${{ env.CONFIGURATION }}
+          -o efbundle
+          --force
+
+      - name: Upload EF bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ef-bundle
+          path: efbundle
+          if-no-files-found: error
+
+  migrations:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download EF bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ef-bundle
+
+      - name: Make bundle executable
+        run: chmod +x efbundle
+
+      - name: Apply migrations
+        run: ./efbundle --connection "${{ secrets.DB_CONNECTION_STRING_TEST }}"
+
+  deploy:
+    needs: [build, migrations]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      # Deploy API
+      - name: Azure Login (API)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE44E57EE6DC4C64A48DF6EBB0203FE2 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6EB62E26219440CE82EC092146FCB180 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_22083C2F047B4905AFFBDE355DDA927A }}
+
+      - name: Download API artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: preflightapi-api
+          path: ${{ env.API_PUBLISH_DIR }}
+
+      - name: Deploy API to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.API_APP_NAME }}
+          package: ${{ env.API_PUBLISH_DIR }}
+
+      - name: Restart API
+        run: az webapp restart --name ${{ env.API_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
+
+      # Deploy Functions
+      - name: Azure Login (Functions)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CB0D786590604E9A832192A3FCB6DFCD }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_63EED50B91DA467181F9DFB8A2C5B271 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_23265641449D41E4B14297CC70B43CD1 }}
+
+      - name: Download Functions artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: preflightapi-functions
+          path: ${{ env.FUNCTIONS_PUBLISH_DIR }}
+
+      - name: Stop Functions App
+        run: az functionapp stop --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.FUNCTION_APP_NAME }}
+
+      - name: Deploy Functions
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: ${{ env.FUNCTIONS_PUBLISH_DIR }}
+
+      - name: Start Functions App
+        run: az functionapp start --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.FUNCTION_APP_NAME }}
