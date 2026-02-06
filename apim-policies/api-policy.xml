@@ -1,0 +1,20 @@
+<policies>
+	<inbound>
+		<base />
+		<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->
+		<set-header name="X-Api-Gateway-Secret" exists-action="override">
+			<value>{{apim-gateway-secret}}</value>
+		</set-header>
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+		<!-- Strip the secret header from the response so it's never exposed to callers -->
+		<set-header name="X-Api-Gateway-Secret" exists-action="delete" />
+	</outbound>
+	<on-error>
+		<base />
+	</on-error>
+</policies>

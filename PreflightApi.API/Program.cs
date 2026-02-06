@@ -188,6 +188,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseGlobalExceptionHandling();
+app.UseGatewaySecretValidation();
 
 app.UseOpenApi();
 

@@ -32,7 +32,9 @@
       "Bash(python:*)",
       "Bash(az apim product policy show:*)",
       "Bash(az apim product policy list:*)",
-      "Bash(az apim:*)"
+      "Bash(az apim:*)",
+      "Bash(python3:*)",
+      "Bash(az webapp config appsettings set:*)"
     ],
     "deny": [],
     "ask": []
