@@ -189,9 +189,10 @@ using (var scope = app.Services.CreateScope())
 
 app.UseGlobalExceptionHandling();
 
+app.UseOpenApi();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseOpenApi();
     app.UseSwaggerUi();
 }
 
