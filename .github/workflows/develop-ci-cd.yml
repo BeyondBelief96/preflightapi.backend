@@ -174,7 +174,7 @@ jobs:
       - name: Azure Login (Functions)
         uses: azure/login@v2
         with:
-          client-id: ${{ AZUREAPPSERVICE_CLIENTID_7AEB19A55B9D4D05B418B3FC09A381D5 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7AEB19A55B9D4D05B418B3FC09A381D5 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3EE61D83BA114072AB7BE8C5745D21C6 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C6D5E21F86A34E009DB8D7BAD6A7A41F }}
 
