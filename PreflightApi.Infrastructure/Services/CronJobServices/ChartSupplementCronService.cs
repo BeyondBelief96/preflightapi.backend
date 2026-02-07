@@ -96,11 +96,11 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     .SelectMany(location => location.Elements("airport"))
                     .Select(airport => new ChartSupplement
                     {
-                        AirportName = airport.Element("aptname")?.Value,
-                        AirportCity = airport.Element("aptcity")?.Value,
-                        NavigationalAidName = airport.Element("navidname")?.Value,
-                        AirportCode = airport.Element("aptid")?.Value,
-                        FileName = airport.Element("pages")?.Element("pdf")?.Value
+                        AirportName = NullIfEmpty(airport.Element("aptname")?.Value),
+                        AirportCity = NullIfEmpty(airport.Element("aptcity")?.Value),
+                        NavigationalAidName = NullIfEmpty(airport.Element("navidname")?.Value),
+                        AirportCode = NullIfEmpty(airport.Element("aptid")?.Value),
+                        FileName = NullIfEmpty(airport.Element("pages")?.Element("pdf")?.Value)
                     })
                     .ToList();
 
@@ -327,6 +327,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
             _logger.LogInformation("Completed uploading {Count} chart supplements to storage", uploadedCount);
         }
+
+        private static string? NullIfEmpty(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value;
 
         private static string ExtractBaseName(string chartSupplementFileName)
         {
