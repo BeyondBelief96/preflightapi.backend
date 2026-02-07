@@ -57,7 +57,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchGAirmetXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(GAirmetUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -104,31 +104,41 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private IEnumerable<GAirmet> ParseGAirmetXmlData(string xmlData)
         {
+            var gairmets = new List<GAirmet>();
             var doc = XDocument.Parse(xmlData);
             var gairmetElements = doc.Descendants("GAIRMET");
 
-            return gairmetElements.Select(element =>
+            foreach (var element in gairmetElements)
             {
-                var hazardElement = element.Element("hazard");
-
-                return new GAirmet
+                try
                 {
-                    ReceiptTime = ParseDateTime(element.Element("receipt_time")?.Value),
-                    IssueTime = ParseDateTime(element.Element("issue_time")?.Value),
-                    ExpireTime = ParseDateTime(element.Element("expire_time")?.Value),
-                    ValidTime = ParseDateTime(element.Element("valid_time")?.Value),
-                    Product = element.Element("product")?.Value ?? string.Empty,
-                    Tag = element.Element("tag")?.Value,
-                    ForecastHour = ParsingUtilities.ParseInt(
-                        element.Element("roughly_the_number_of_hours_between_the_issue_time_and_the_valid_time")?.Value ?? "0"),
-                    HazardType = hazardElement?.Attribute("type")?.Value,
-                    HazardSeverity = hazardElement?.Attribute("severity")?.Value,
-                    GeometryType = element.Element("geometry_type")?.Value,
-                    DueTo = element.Element("due_to")?.Value,
-                    Altitudes = ParseAltitudes(element),
-                    Area = ParseArea(element.Element("area"))
-                };
-            }).ToList();
+                    var hazardElement = element.Element("hazard");
+
+                    gairmets.Add(new GAirmet
+                    {
+                        ReceiptTime = ParseDateTime(element.Element("receipt_time")?.Value),
+                        IssueTime = ParseDateTime(element.Element("issue_time")?.Value),
+                        ExpireTime = ParseDateTime(element.Element("expire_time")?.Value),
+                        ValidTime = ParseDateTime(element.Element("valid_time")?.Value),
+                        Product = element.Element("product")?.Value ?? string.Empty,
+                        Tag = element.Element("tag")?.Value,
+                        ForecastHour = ParsingUtilities.ParseInt(
+                            element.Element("roughly_the_number_of_hours_between_the_issue_time_and_the_valid_time")?.Value ?? "0"),
+                        HazardType = hazardElement?.Attribute("type")?.Value,
+                        HazardSeverity = hazardElement?.Attribute("severity")?.Value,
+                        GeometryType = element.Element("geometry_type")?.Value,
+                        DueTo = element.Element("due_to")?.Value,
+                        Altitudes = ParseAltitudes(element),
+                        Area = ParseArea(element.Element("area"))
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse G-AIRMET element");
+                }
+            }
+
+            return gairmets;
         }
 
         private static DateTime ParseDateTime(string? value)

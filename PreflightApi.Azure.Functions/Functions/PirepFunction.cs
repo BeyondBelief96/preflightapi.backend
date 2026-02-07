@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
@@ -20,15 +21,9 @@ public class PirepFunction
     [Function("PirepFunction")]
     public async Task Run([TimerTrigger("0 */5 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
     {
-        _logger.LogInformation($"PirepFunction executed at: {DateTime.Now}");
-        try
-        {
-            await _pirepService.PollWeatherDataAsync(context.CancellationToken);
-            _logger.LogInformation("Pirep data processed successfully.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while processing Pirep data.");
-        }
+        _logger.LogInformation("PIREP Function executed at: {Time}", DateTime.UtcNow);
+        var sw = Stopwatch.StartNew();
+        await _pirepService.PollWeatherDataAsync(context.CancellationToken);
+        _logger.LogInformation("PIREP Function completed in {ElapsedMs}ms", sw.ElapsedMilliseconds);
     }
 }

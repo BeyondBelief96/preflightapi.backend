@@ -36,7 +36,11 @@
       "Bash(python3:*)",
       "Bash(az webapp config appsettings set:*)",
       "WebFetch(domain:www.checkwxapi.com)",
-      "WebFetch(domain:aviationstack.com)"
+      "WebFetch(domain:aviationstack.com)",
+      "Bash(npx openapi-typescript:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs:*)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []

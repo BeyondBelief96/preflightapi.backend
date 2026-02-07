@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
@@ -20,17 +21,9 @@ public class TafFunction
     [Function("TafFunction")]
     public async Task Run([TimerTrigger("0 */30 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
     {
-        _logger.LogInformation("TAF Function executed at: {time}", DateTime.UtcNow);
-        var cancellationToken = context.CancellationToken;
-
-        try
-        {
-            await _tafService.PollWeatherDataAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred executing TAF service");
-            throw;
-        }
+        _logger.LogInformation("TAF Function executed at: {Time}", DateTime.UtcNow);
+        var sw = Stopwatch.StartNew();
+        await _tafService.PollWeatherDataAsync(context.CancellationToken);
+        _logger.LogInformation("TAF Function completed in {ElapsedMs}ms", sw.ElapsedMilliseconds);
     }
 }

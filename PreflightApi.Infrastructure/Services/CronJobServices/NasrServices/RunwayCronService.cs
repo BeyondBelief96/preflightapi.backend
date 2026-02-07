@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mappings
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
 
-public class RunwayCronService : FaaNasrBaseService<Runway>
+public class RunwayCronService : FaaNasrBaseService<Runway>, IRunwayCronService
 {
     protected override NasrDataType DataType => NasrDataType.APT;
     protected override string[] UniqueIdentifiers => new[] { "SiteNo", "RunwayId" };

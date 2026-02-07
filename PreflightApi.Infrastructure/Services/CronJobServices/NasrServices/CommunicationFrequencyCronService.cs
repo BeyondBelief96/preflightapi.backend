@@ -8,7 +8,7 @@ using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mappings
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
 {
-    public class CommunicationFrequencyCronService : FaaNasrBaseService<CommunicationFrequency>
+    public class CommunicationFrequencyCronService : FaaNasrBaseService<CommunicationFrequency>, ICommunicationFrequencyCronService
     {
         protected override NasrDataType DataType => NasrDataType.FRQ;
         protected override string[] UniqueIdentifiers => new[] {

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
@@ -24,7 +25,7 @@ namespace PreflightApi.Azure.Functions.Functions
         [Function("AirportDiagramFunction")]
         public async Task Run([TimerTrigger("0 0 5 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
-            _logger.LogInformation($"Airport Diagram Function executed at: {DateTime.UtcNow}");
+            _logger.LogInformation("Airport Diagram Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
             try
@@ -33,19 +34,19 @@ namespace PreflightApi.Azure.Functions.Functions
 
                 if (await _publicationService.ShouldRunUpdateAsync(PublicationType.AirportDiagram, currentDate))
                 {
+                    var sw = Stopwatch.StartNew();
                     _logger.LogInformation("Starting airport diagram update process");
                     await _airportDiagramService.DownloadAndProcessAirportDiagramsAsync(cancellationToken);
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.AirportDiagram, currentDate);
-                    _logger.LogInformation("Airport diagram update completed successfully");
+                    _logger.LogInformation("Airport diagram update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 }
                 else
                 {
                     _logger.LogInformation("No airport diagram update needed at this time");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error occurred executing Airport Diagram service");
                 throw;
             }
         }

@@ -56,7 +56,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 faaChartSupplementUrl,
                 currentPublicationDate);
 
-                using var client = _httpClientFactory.CreateClient();
+                using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
                 using var response = await client.GetStreamAsync(faaChartSupplementUrl, cancellationToken);
                 using var zipArchive = new ZipArchive(response);
 

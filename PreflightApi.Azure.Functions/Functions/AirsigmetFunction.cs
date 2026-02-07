@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
@@ -20,15 +21,9 @@ public class AirsigmetFunction
     [Function("AirsigmetFunction")]
     public async Task Run([TimerTrigger("0 */30 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
     {
-        _logger.LogInformation("AIRSIGMET Function executed at: {time}", DateTime.UtcNow);
-        try
-        {
-            await _airsigmetService.PollWeatherDataAsync(context.CancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred executing AIRSIGMET service");
-            throw;
-        }
+        _logger.LogInformation("AIRSIGMET Function executed at: {Time}", DateTime.UtcNow);
+        var sw = Stopwatch.StartNew();
+        await _airsigmetService.PollWeatherDataAsync(context.CancellationToken);
+        _logger.LogInformation("AIRSIGMET Function completed in {ElapsedMs}ms", sw.ElapsedMilliseconds);
     }
 }

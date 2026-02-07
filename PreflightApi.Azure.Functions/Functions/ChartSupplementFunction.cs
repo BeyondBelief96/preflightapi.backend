@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
@@ -24,7 +25,7 @@ namespace PreflightApi.Azure.Functions.Functions
         [Function("ChartSupplementFunction")]
         public async Task Run([TimerTrigger("0 0 4 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
-            _logger.LogInformation($"Chart Supplement Function executed at: {DateTime.UtcNow}");
+            _logger.LogInformation("Chart Supplement Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
             try
@@ -33,19 +34,19 @@ namespace PreflightApi.Azure.Functions.Functions
 
                 if (await _publicationService.ShouldRunUpdateAsync(PublicationType.ChartSupplement, currentDate))
                 {
+                    var sw = Stopwatch.StartNew();
                     _logger.LogInformation("Starting chart supplement update process");
                     await _chartSupplementService.DownloadAndProcessChartSupplementsAsync(cancellationToken);
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.ChartSupplement, currentDate);
-                    _logger.LogInformation("Chart supplement update completed successfully");
+                    _logger.LogInformation("Chart supplement update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 }
                 else
                 {
                     _logger.LogInformation("No chart supplement update needed at this time");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error occurred executing Chart Supplement service");
                 throw;
             }
         }

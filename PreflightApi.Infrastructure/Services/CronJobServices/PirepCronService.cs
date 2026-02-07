@@ -59,7 +59,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchPirepXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(PirepUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -112,29 +112,36 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
             foreach (var element in pirepElements)
             {
-                var pirep = new Pirep
+                try
                 {
-                    ReceiptTime = element.Element("receipt_time")?.Value,
-                    ObservationTime = element.Element("observation_time")?.Value,
-                    QualityControlFlags = ParseQualityControlFlags(element.Element("quality_control_flags")),
-                    AircraftRef = element.Element("aircraft_ref")?.Value,
-                    Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
-                    Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
-                    AltitudeFtMsl = ParsingUtilities.ParseNullableInt(element.Element("altitude_ft_msl")?.Value),
-                    SkyConditions = ParseSkyConditions(element.Elements("sky_condition")),
-                    TurbulenceConditions = ParseTurbulenceConditions(element.Elements("turbulence_condition")),
-                    IcingConditions = ParseIcingConditions(element.Elements("icing_condition")),
-                    VisibilityStatuteMi = ParsingUtilities.ParseNullableInt(element.Element("visibility_statute_mi")?.Value),
-                    WxString = element.Element("wx_string")?.Value,
-                    TempC = ParsingUtilities.ParseNullableFloat(element.Element("temp_c")?.Value),
-                    WindDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("wind_dir_degrees")?.Value),
-                    WindSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_speed_kt")?.Value),
-                    VertGustKt = ParsingUtilities.ParseNullableInt(element.Element("vert_gust_kt")?.Value),
-                    ReportType = element.Element("report_type")?.Value,
-                    RawText = element.Element("raw_text")?.Value
-                };
+                    var pirep = new Pirep
+                    {
+                        ReceiptTime = element.Element("receipt_time")?.Value,
+                        ObservationTime = element.Element("observation_time")?.Value,
+                        QualityControlFlags = ParseQualityControlFlags(element.Element("quality_control_flags")),
+                        AircraftRef = element.Element("aircraft_ref")?.Value,
+                        Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
+                        Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
+                        AltitudeFtMsl = ParsingUtilities.ParseNullableInt(element.Element("altitude_ft_msl")?.Value),
+                        SkyConditions = ParseSkyConditions(element.Elements("sky_condition")),
+                        TurbulenceConditions = ParseTurbulenceConditions(element.Elements("turbulence_condition")),
+                        IcingConditions = ParseIcingConditions(element.Elements("icing_condition")),
+                        VisibilityStatuteMi = ParsingUtilities.ParseNullableInt(element.Element("visibility_statute_mi")?.Value),
+                        WxString = element.Element("wx_string")?.Value,
+                        TempC = ParsingUtilities.ParseNullableFloat(element.Element("temp_c")?.Value),
+                        WindDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("wind_dir_degrees")?.Value),
+                        WindSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_speed_kt")?.Value),
+                        VertGustKt = ParsingUtilities.ParseNullableInt(element.Element("vert_gust_kt")?.Value),
+                        ReportType = element.Element("report_type")?.Value,
+                        RawText = element.Element("raw_text")?.Value
+                    };
 
-                pireps.Add(pirep);
+                    pireps.Add(pirep);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse PIREP element");
+                }
             }
 
             return pireps;

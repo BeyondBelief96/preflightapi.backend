@@ -55,7 +55,7 @@ public class ObstacleCronService : IObstacleCronService
                 url,
                 currentPublicationDate);
 
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
             using var response = await client.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
@@ -110,7 +110,9 @@ public class ObstacleCronService : IObstacleCronService
             _logger.LogInformation("Parsed {ObstacleCount} obstacles from DOF.DAT. Starting database update...",
                 obstacles.Count);
 
-            // Full refresh: delete all existing obstacles and bulk insert new ones
+            // Full refresh wrapped in a transaction so a mid-insert failure doesn't leave partial data
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             await _dbContext.Obstacles.ExecuteDeleteAsync(cancellationToken);
             _logger.LogInformation("Deleted existing obstacles from database");
 
@@ -128,6 +130,7 @@ public class ObstacleCronService : IObstacleCronService
                     batch.Count);
             }
 
+            await transaction.CommitAsync(cancellationToken);
             _logger.LogInformation("Completed obstacle processing. Total obstacles: {Count}", obstacles.Count);
         }
         catch (Exception ex)

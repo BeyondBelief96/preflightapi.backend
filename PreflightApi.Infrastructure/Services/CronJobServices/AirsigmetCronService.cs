@@ -55,7 +55,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchAirsigmetXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(AirsigmetUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -102,21 +102,34 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private IEnumerable<Airsigmet> ParseAirsigmetXmlData(string xmlData)
         {
+            var airsigmets = new List<Airsigmet>();
             var doc = XDocument.Parse(xmlData);
             var airsigmetElements = doc.Descendants("AIRSIGMET");
 
-            return airsigmetElements.Select(element => new Airsigmet
+            foreach (var element in airsigmetElements)
             {
-                RawText = element.Element("raw_text")?.Value,
-                ValidTimeFrom = element.Element("valid_time_from")?.Value,
-                ValidTimeTo = element.Element("valid_time_to")?.Value,
-                MovementDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("movement_dir_degrees")?.Value),
-                MovementSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("movement_speed_kt")?.Value),
-                AirsigmetType = element.Element("airsigmet_type")?.Value,
-                Altitude = ParseAltitude(element.Element("altitude")),
-                Hazard = ParseHazard(element.Element("hazard")),
-                Areas = ParseAreas(element.Elements("area"))
-            }).ToList();
+                try
+                {
+                    airsigmets.Add(new Airsigmet
+                    {
+                        RawText = element.Element("raw_text")?.Value,
+                        ValidTimeFrom = element.Element("valid_time_from")?.Value,
+                        ValidTimeTo = element.Element("valid_time_to")?.Value,
+                        MovementDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("movement_dir_degrees")?.Value),
+                        MovementSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("movement_speed_kt")?.Value),
+                        AirsigmetType = element.Element("airsigmet_type")?.Value,
+                        Altitude = ParseAltitude(element.Element("altitude")),
+                        Hazard = ParseHazard(element.Element("hazard")),
+                        Areas = ParseAreas(element.Elements("area"))
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse AIRSIGMET element");
+                }
+            }
+
+            return airsigmets;
         }
 
         private static AirsigmetAltitude? ParseAltitude(XElement? element)

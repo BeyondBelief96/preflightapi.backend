@@ -1,19 +1,19 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
-using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
 
 namespace PreflightApi.Azure.Functions.Functions
 {
     public class FrequencyFunction
     {
-        private readonly CommunicationFrequencyCronService _frequencyService;
+        private readonly ICommunicationFrequencyCronService _frequencyService;
         private readonly IFaaPublicationCycleService _publicationService;
         private readonly ILogger<FrequencyFunction> _logger;
 
         public FrequencyFunction(
-            CommunicationFrequencyCronService frequencyService,
+            ICommunicationFrequencyCronService frequencyService,
             IFaaPublicationCycleService publicationService,
             ILoggerFactory loggerFactory)
         {
@@ -25,7 +25,7 @@ namespace PreflightApi.Azure.Functions.Functions
         [Function("FrequencyFunction")]
         public async Task Run([TimerTrigger("0 0 1 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
-            _logger.LogInformation($"Frequency Function executed at: {DateTime.UtcNow}");
+            _logger.LogInformation("Frequency Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
             try
@@ -34,19 +34,19 @@ namespace PreflightApi.Azure.Functions.Functions
 
                 if (await _publicationService.ShouldRunUpdateAsync(PublicationType.NasrSubscription_Frequencies, currentDate))
                 {
+                    var sw = Stopwatch.StartNew();
                     _logger.LogInformation("Starting frequency data update process");
                     await _frequencyService.DownloadAndProcessDataAsync(cancellationToken);
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Frequencies, currentDate);
-                    _logger.LogInformation("Frequency data update completed successfully");
+                    _logger.LogInformation("Frequency data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 }
                 else
                 {
                     _logger.LogInformation("No frequency data update needed at this time");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error occurred executing Frequency service");
                 throw;
             }
         }

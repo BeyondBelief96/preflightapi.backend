@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
@@ -33,19 +34,19 @@ public class ObstacleFunction
 
             if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Obstacles, currentDate))
             {
+                var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting obstacle data update process");
                 await _obstacleService.DownloadAndProcessObstaclesAsync(cancellationToken);
                 await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Obstacles, currentDate);
-                _logger.LogInformation("Obstacle data update completed successfully");
+                _logger.LogInformation("Obstacle data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
             }
             else
             {
                 _logger.LogInformation("No obstacle data update needed at this time");
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Error occurred executing Obstacle service");
             throw;
         }
     }

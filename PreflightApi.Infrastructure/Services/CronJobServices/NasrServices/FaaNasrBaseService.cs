@@ -61,7 +61,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             var publicationCycle = await _faaPublicationCycleService.GetPublicationCycleAsync(PublicationType);
             if (publicationCycle == null)
             {
-                _logger.LogWarning($"No publication cycle found for {DataType}");
+                _logger.LogWarning("No publication cycle found for {DataType}", DataType);
                 return;
             }
 
@@ -74,8 +74,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
 
             try
             {
-                _logger.LogInformation($"Downloading {DataType} data from {zipUrl}");
-                using var client = _httpClientFactory.CreateClient();
+                _logger.LogInformation("Downloading {DataType} data from {ZipUrl}", DataType, zipUrl);
+                using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
                 await using var response = await client.GetStreamAsync(zipUrl, cancellationToken);
                 using var archive = new ZipArchive(response);
 
@@ -88,11 +88,11 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                     await ProcessStandaloneDatasetAsync(archive, cancellationToken);
                 }
 
-                _logger.LogInformation($"{DataType} data update completed successfully");
+                _logger.LogInformation("{DataType} data update completed successfully", DataType);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error processing {DataType} data");
+                _logger.LogError(ex, "Error processing {DataType} data", DataType);
                 throw;
             }
         }
@@ -196,7 +196,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 }
                 else
                 {
-                    _logger.LogWarning($"Base file {baseMapping.FileName} not found in archive");
+                    _logger.LogWarning("Base file {FileName} not found in archive", baseMapping.FileName);
                 }
             }
 
@@ -213,7 +213,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 }
                 else
                 {
-                    _logger.LogWarning($"Supplementary file {mapping.FileName} not found in archive");
+                    _logger.LogWarning("Supplementary file {FileName} not found in archive", mapping.FileName);
                 }
             }
         }
@@ -223,7 +223,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             var mapping = CsvMappings.FirstOrDefault();
             if (mapping == default)
             {
-                _logger.LogWarning($"No CSV mapping defined for {DataType}");
+                _logger.LogWarning("No CSV mapping defined for {DataType}", DataType);
                 return;
             }
 
@@ -236,7 +236,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             }
             else
             {
-                _logger.LogWarning($"File {mapping.FileName} not found in archive");
+                _logger.LogWarning("File {FileName} not found in archive", mapping.FileName);
             }
         }
 
@@ -267,7 +267,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                     // Skip duplicates within the CSV file
                     if (!processedKeys.Add(uniqueKey))
                     {
-                        _logger.LogDebug($"Skipping duplicate record in CSV: {uniqueKey}");
+                        _logger.LogDebug("Skipping duplicate record in CSV: {UniqueKey}", uniqueKey);
                         continue;
                     }
 
@@ -283,7 +283,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                         await ProcessEntitiesBatchAsync(entities, mode, mappedProperties, cancellationToken);
                         entities.Clear();
 
-                        _logger.LogInformation($"Processed {totalProcessed} {DataType} records from {entry.Name}");
+                        _logger.LogInformation("Processed {TotalProcessed} {DataType} records from {FileName}", totalProcessed, DataType, entry.Name);
                     }
                 }
 
@@ -293,11 +293,11 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                     await ProcessEntitiesBatchAsync(entities, mode, mappedProperties, cancellationToken);
                 }
 
-                _logger.LogInformation($"Completed processing {totalProcessed} {DataType} records from {entry.Name}");
+                _logger.LogInformation("Completed processing {TotalProcessed} {DataType} records from {FileName}", totalProcessed, DataType, entry.Name);
             }
             catch (ReaderException ex)
             {
-                _logger.LogError(ex, $"CSV parsing error in {entry.Name} at row {ex.Context?.Parser?.Row}");
+                _logger.LogError(ex, "CSV parsing error in {FileName} at row {Row}", entry.Name, ex.Context?.Parser?.Row);
                 throw;
             }
         }

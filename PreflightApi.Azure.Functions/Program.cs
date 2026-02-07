@@ -7,7 +7,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PreflightApi.Domain.Entities;
-using PreflightApi.Domain.Entities;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
@@ -50,15 +49,15 @@ builder.Services.AddScoped<IAviationWeatherService<GAirmet>, GAirmetCronService>
 builder.Services.AddScoped<IAviationWeatherService<Pirep>, PirepCronService>();
 builder.Services.AddScoped<IAirspaceCronService<Airspace>, AirspaceCronService>();
 builder.Services.AddScoped<IAirspaceCronService<SpecialUseAirspace>, SpecialUseAirspaceCronService>();
-builder.Services.AddScoped<AirportCronService>();
-builder.Services.AddScoped<CommunicationFrequencyCronService>();
-builder.Services.AddScoped<RunwayCronService>();
-builder.Services.AddScoped<RunwayEndCronService>();
+builder.Services.AddScoped<IAirportCronService, AirportCronService>();
+builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFrequencyCronService>();
+builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
+builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
-builder.Services.AddHttpClient();
+builder.Services.AddResilientHttpClients();
 
-// Configure HttpClient for ArcGIS services with extended timeout
+// Configure HttpClient for ArcGIS services with extended timeout (has its own Polly retry in ArcGisBaseService)
 builder.Services.AddHttpClient("ArcGis", client =>
 {
     client.Timeout = TimeSpan.FromMinutes(10);
