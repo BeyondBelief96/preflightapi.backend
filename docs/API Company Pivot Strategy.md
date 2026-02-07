@@ -529,16 +529,16 @@ Server functions that wrap the APIM Management REST API:
 
 ### Milestone 3: Frontend — Management Portal (Weeks 5-7)
 
-- [ ] Build landing page and marketing content
-- [ ] Build pricing page with tier comparison
-- [ ] Implement Clerk authentication (signup/login for portal)
-- [ ] Build APIM integration service (server functions calling APIM Management API)
-- [ ] Build Stripe integration (checkout, webhooks, customer portal)
-- [ ] Build provisioning flow: Clerk signup → Stripe subscription → APIM subscription → API keys
-- [ ] Build dashboard: API keys page (view, copy, regenerate)
-- [ ] Build dashboard: Usage page (APIM analytics)
-- [ ] Build dashboard: Billing page (Stripe Customer Portal embed)
-- [ ] Build API documentation pages
+- [x] Build landing page and marketing content
+- [x] Build pricing page with tier comparison
+- [x] Implement Clerk authentication (signup/login for portal)
+- [x] Build APIM integration service (server functions calling APIM Management API)
+- [x] Build Stripe integration (checkout, webhooks, customer portal)
+- [x] Build provisioning flow: Clerk signup → Stripe subscription → APIM subscription → API keys
+- [x] Build dashboard: API keys page (view, copy, regenerate)
+- [x] Build dashboard: Usage page (APIM analytics)
+- [x] Build dashboard: Billing page (Stripe Customer Portal embed)
+- [x] Build API documentation pages
 - [ ] Build webhook handlers (Clerk user events, Stripe billing events)
 
 ### Milestone 4: Launch Prep (Weeks 8-9)

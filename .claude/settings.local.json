@@ -34,7 +34,9 @@
       "Bash(az apim product policy list:*)",
       "Bash(az apim:*)",
       "Bash(python3:*)",
-      "Bash(az webapp config appsettings set:*)"
+      "Bash(az webapp config appsettings set:*)",
+      "WebFetch(domain:www.checkwxapi.com)",
+      "WebFetch(domain:aviationstack.com)"
     ],
     "deny": [],
     "ask": []

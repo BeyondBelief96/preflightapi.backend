@@ -11,8 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.dockerignore = .dockerignore
 		.env = .env
 		docs\API Company Pivot Strategy.md = docs\API Company Pivot Strategy.md
+		apim-policies\api-policy.xml = apim-policies\api-policy.xml
 		docker-compose.local.yml = docker-compose.local.yml
 		Dockerfile.local = Dockerfile.local
+		apim-policies\free-tier-policy.xml = apim-policies\free-tier-policy.xml
+		apim-policies\professional-tier-policy.xml = apim-policies\professional-tier-policy.xml
+		apim-policies\starter-tier-policy.xml = apim-policies\starter-tier-policy.xml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreflightApi.Tests", "PreflightApi.Tests\PreflightApi.Tests.csproj", "{35475761-0C85-4F54-AA17-E5920551E48D}"

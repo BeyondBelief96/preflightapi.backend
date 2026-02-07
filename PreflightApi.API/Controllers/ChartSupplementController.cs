@@ -12,18 +12,18 @@ namespace PreflightApi.API.Controllers;
 public class ChartSupplementController(IChartSupplementService chartSupplementService) : ControllerBase
 {
     /// <summary>
-    /// Gets a pre-signed URL for a chart supplement by ICAO code or identifier
+    /// Gets pre-signed URLs for chart supplements by ICAO code or identifier
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-    /// <returns>Pre-signed URL for the chart supplement PDF</returns>
-    /// <response code="200">Returns the URL to the chart supplement</response>
-    /// <response code="404">If the chart supplement is not found</response>
+    /// <returns>Chart supplement metadata and pre-signed URLs for all supplement PDFs</returns>
+    /// <response code="200">Returns the chart supplements for the airport</response>
+    /// <response code="404">If no chart supplements are found</response>
     [HttpGet("{icaoCodeOrIdent}")]
-    [ProducesResponseType(typeof(ChartSupplementUrlDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChartSupplementsResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ChartSupplementUrlDto>> GetChartSupplementUrl(string icaoCodeOrIdent)
+    public async Task<ActionResult<ChartSupplementsResponseDto>> GetChartSupplements(string icaoCodeOrIdent)
     {
-        var supplementUrl = await chartSupplementService.GetChartSupplementUrlByAirportCode(icaoCodeOrIdent);
-        return Ok(supplementUrl);
+        var supplements = await chartSupplementService.GetChartSupplementsByAirportCode(icaoCodeOrIdent);
+        return Ok(supplements);
     }
 }

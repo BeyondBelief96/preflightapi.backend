@@ -136,28 +136,39 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             for (int i = 0; i < supplements.Count; i += batchSize)
             {
                 var batch = supplements.Skip(i).Take(batchSize).ToList();
-                var batchCodes = batch.Select(s => s.AirportCode!).ToList();
+                var batchFileNames = batch
+                    .Where(s => !string.IsNullOrEmpty(s.FileName))
+                    .Select(s => s.FileName!)
+                    .Distinct()
+                    .ToList();
 
-                // Get existing records for this batch in one query
+                // Get existing records by FileName, then key by (FileName, AirportCode) composite
                 var existingSupplements = await _dbContext.ChartSupplements
-                    .Where(cs => cs.AirportCode != null && batchCodes.Contains(cs.AirportCode))
+                    .Where(cs => cs.FileName != null && batchFileNames.Contains(cs.FileName))
                     .ToListAsync(cancellationToken);
 
-                // Group existing supplements by AirportCode only
-                var existingLookup = existingSupplements
-                    .ToDictionary(x => x.AirportCode!, x => x);
+                var existingLookup = new Dictionary<(string, string), ChartSupplement>();
+                foreach (var existing in existingSupplements)
+                {
+                    if (!string.IsNullOrEmpty(existing.FileName) && !string.IsNullOrEmpty(existing.AirportCode))
+                    {
+                        existingLookup.TryAdd((existing.FileName, existing.AirportCode), existing);
+                    }
+                }
 
                 var newSupplements = new List<ChartSupplement>();
 
                 foreach (var supplement in batch)
                 {
-                    // Look for an existing record with the same AirportCode
-                    if (existingLookup.TryGetValue(supplement.AirportCode!, out var existingMatch))
+                    if (string.IsNullOrEmpty(supplement.FileName) || string.IsNullOrEmpty(supplement.AirportCode))
                     {
-                        // Update existing record via change tracking (batched on SaveChanges)
+                        continue;
+                    }
+
+                    if (existingLookup.TryGetValue((supplement.FileName, supplement.AirportCode), out var existingMatch))
+                    {
                         existingMatch.AirportName = supplement.AirportName;
                         existingMatch.AirportCity = supplement.AirportCity;
-                        existingMatch.FileName = supplement.FileName;
                     }
                     else
                     {
@@ -165,7 +176,6 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     }
                 }
 
-                // Batch add new supplements
                 if (newSupplements.Count > 0)
                 {
                     await _dbContext.ChartSupplements.AddRangeAsync(newSupplements, cancellationToken);
@@ -184,28 +194,39 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             for (int i = 0; i < supplements.Count; i += batchSize)
             {
                 var batch = supplements.Skip(i).Take(batchSize).ToList();
-                var batchNames = batch.Select(s => s.NavigationalAidName!).ToList();
+                var batchFileNames = batch
+                    .Where(s => !string.IsNullOrEmpty(s.FileName))
+                    .Select(s => s.FileName!)
+                    .Distinct()
+                    .ToList();
 
-                // Get existing records for this batch in one query
+                // Get existing records by FileName, then key by (FileName, NavigationalAidName) composite
                 var existingSupplements = await _dbContext.ChartSupplements
-                    .Where(cs => cs.NavigationalAidName != null && batchNames.Contains(cs.NavigationalAidName))
+                    .Where(cs => cs.FileName != null && batchFileNames.Contains(cs.FileName))
                     .ToListAsync(cancellationToken);
 
-                // Group existing supplements by NavigationalAidName only
-                var existingLookup = existingSupplements
-                    .ToDictionary(x => x.NavigationalAidName!, x => x);
+                var existingLookup = new Dictionary<(string, string), ChartSupplement>();
+                foreach (var existing in existingSupplements)
+                {
+                    if (!string.IsNullOrEmpty(existing.FileName) && !string.IsNullOrEmpty(existing.NavigationalAidName))
+                    {
+                        existingLookup.TryAdd((existing.FileName, existing.NavigationalAidName), existing);
+                    }
+                }
 
                 var newSupplements = new List<ChartSupplement>();
 
                 foreach (var supplement in batch)
                 {
-                    // Look for an existing record with the same NavigationalAidName
-                    if (existingLookup.TryGetValue(supplement.NavigationalAidName!, out var existingMatch))
+                    if (string.IsNullOrEmpty(supplement.FileName) || string.IsNullOrEmpty(supplement.NavigationalAidName))
                     {
-                        // Update existing record via change tracking (batched on SaveChanges)
+                        continue;
+                    }
+
+                    if (existingLookup.TryGetValue((supplement.FileName, supplement.NavigationalAidName), out var existingMatch))
+                    {
                         existingMatch.AirportName = supplement.AirportName;
                         existingMatch.AirportCity = supplement.AirportCity;
-                        existingMatch.FileName = supplement.FileName;
                     }
                     else
                     {
@@ -213,7 +234,6 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     }
                 }
 
-                // Batch add new supplements
                 if (newSupplements.Count > 0)
                 {
                     await _dbContext.ChartSupplements.AddRangeAsync(newSupplements, cancellationToken);

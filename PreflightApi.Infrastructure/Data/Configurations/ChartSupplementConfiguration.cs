@@ -10,6 +10,8 @@ namespace PreflightApi.Infrastructure.Data.Configurations
         {
             builder.HasIndex(e => e.AirportCode);
             builder.HasIndex(e => e.NavigationalAidName);
+            builder.HasIndex(e => new { e.FileName, e.AirportCode }).IsUnique();
+            builder.HasIndex(e => new { e.FileName, e.NavigationalAidName }).IsUnique();
 
             builder.Property(e => e.AirportName)
                 .HasMaxLength(255);
