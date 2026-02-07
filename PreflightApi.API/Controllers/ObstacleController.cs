@@ -11,9 +11,21 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/obstacles")]
+[Tags("Obstacles")]
 public class ObstacleController(IObstacleService obstacleService)
     : ControllerBase
 {
+    /// <summary>
+    /// Searches for obstacles near a geographic point
+    /// </summary>
+    /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
+    /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 5)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <returns>Paginated list of obstacles within the search radius</returns>
+    /// <response code="200">Returns the obstacles found</response>
+    /// <response code="400">If coordinates or radius are invalid</response>
     [HttpGet("search")]
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -36,6 +48,15 @@ public class ObstacleController(IObstacleService obstacleService)
         return Ok(await obstacleService.SearchNearby(lat, lon, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit));
     }
 
+    /// <summary>
+    /// Gets obstacles in a specific state
+    /// </summary>
+    /// <param name="stateCode">Two-letter state code (e.g., TX, CA)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <returns>Paginated list of obstacles in the state</returns>
+    /// <response code="200">Returns the obstacles</response>
+    /// <response code="400">If the state code is empty</response>
     [HttpGet("state/{stateCode}")]
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -52,6 +73,13 @@ public class ObstacleController(IObstacleService obstacleService)
         return Ok(await obstacleService.GetByState(stateCode, minHeightAgl, pagination.Cursor, pagination.Limit));
     }
 
+    /// <summary>
+    /// Gets an obstacle by its OAS number
+    /// </summary>
+    /// <param name="oasNumber">Obstacle Assessment Surface number</param>
+    /// <returns>The obstacle details</returns>
+    /// <response code="200">Returns the obstacle</response>
+    /// <response code="404">If the obstacle is not found</response>
     [HttpGet("{oasNumber}")]
     [ProducesResponseType(typeof(ObstacleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -65,6 +93,13 @@ public class ObstacleController(IObstacleService obstacleService)
         return Ok(obstacle);
     }
 
+    /// <summary>
+    /// Gets multiple obstacles by their OAS numbers
+    /// </summary>
+    /// <param name="oasNumbers">List of OAS numbers (maximum 1000)</param>
+    /// <returns>Obstacles matching the specified OAS numbers</returns>
+    /// <response code="200">Returns the matching obstacles</response>
+    /// <response code="400">If the list is empty or exceeds 1000 items</response>
     [HttpPost("by-oas-numbers")]
     [ProducesResponseType(typeof(IEnumerable<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -84,6 +119,18 @@ public class ObstacleController(IObstacleService obstacleService)
         return Ok(obstacles);
     }
 
+    /// <summary>
+    /// Gets obstacles within a geographic bounding box
+    /// </summary>
+    /// <param name="minLat">Minimum latitude (-90 to 90)</param>
+    /// <param name="maxLat">Maximum latitude (-90 to 90)</param>
+    /// <param name="minLon">Minimum longitude (-180 to 180)</param>
+    /// <param name="maxLon">Maximum longitude (-180 to 180)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <returns>Paginated list of obstacles within the bounding box</returns>
+    /// <response code="200">Returns the obstacles found</response>
+    /// <response code="400">If coordinates are invalid or minLat >= maxLat</response>
     [HttpGet("bbox")]
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

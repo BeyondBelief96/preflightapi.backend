@@ -100,8 +100,9 @@ builder.Services.AddApiVersioning(options =>
 // Setup Swagger
 builder.Services.AddOpenApiDocument(options =>
 {
-    options.Title = "PreflightApi API";
+    options.Title = "PreflightApi";
     options.Version = "v1";
+    options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and performance calculations.";
 });
 
 // Setup Environment Variable Settings

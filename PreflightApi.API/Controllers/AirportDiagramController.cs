@@ -9,6 +9,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/airport-diagrams")]
+[Tags("Airport Diagrams")]
 public class AirportDiagramController(IAirportDiagramService airportDiagramService) : ControllerBase
 {
     /// <summary>

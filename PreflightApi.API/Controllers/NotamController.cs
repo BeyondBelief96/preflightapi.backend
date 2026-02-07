@@ -10,6 +10,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/notams")]
+[Tags("NOTAMs")]
 public class NotamController(INotamService notamService)
     : ControllerBase
 {
@@ -17,6 +18,7 @@ public class NotamController(INotamService notamService)
     /// Gets NOTAMs for a specific airport
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <param name="ct">Cancellation token</param>
     /// <returns>NOTAMs for the specified airport</returns>
     /// <response code="200">Returns the NOTAMs</response>
     /// <response code="400">If the identifier is invalid</response>
@@ -43,6 +45,7 @@ public class NotamController(INotamService notamService)
     /// <param name="latitude">Latitude in decimal degrees</param>
     /// <param name="longitude">Longitude in decimal degrees</param>
     /// <param name="radiusNm">Radius in nautical miles (max 100)</param>
+    /// <param name="ct">Cancellation token</param>
     /// <returns>NOTAMs within the specified radius</returns>
     /// <response code="200">Returns the NOTAMs</response>
     /// <response code="400">If parameters are invalid</response>
@@ -79,6 +82,7 @@ public class NotamController(INotamService notamService)
     /// Gets NOTAMs for a flight route (airports and/or waypoints)
     /// </summary>
     /// <param name="request">Route query request with airport identifiers and/or route points with coordinates</param>
+    /// <param name="ct">Cancellation token</param>
     /// <returns>Aggregated and deduplicated NOTAMs for the route</returns>
     /// <remarks>
     /// The route can be specified using either:

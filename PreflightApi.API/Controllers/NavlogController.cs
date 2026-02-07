@@ -10,6 +10,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/navlog")]
+[Tags("Navigation Log")]
 public class NavlogController(INavlogService navlogService)
     : ControllerBase
 {

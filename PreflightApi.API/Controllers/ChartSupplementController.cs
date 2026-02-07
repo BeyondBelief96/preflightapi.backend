@@ -9,6 +9,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/chart-supplements")]
+[Tags("Chart Supplements")]
 public class ChartSupplementController(IChartSupplementService chartSupplementService) : ControllerBase
 {
     /// <summary>

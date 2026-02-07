@@ -9,6 +9,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/performance")]
+[Tags("Performance Calculations")]
 public class PerformanceController(IPerformanceCalculatorService performanceCalculatorService)
     : ControllerBase
 {

@@ -9,6 +9,7 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/tafs")]
+[Tags("Weather - TAFs")]
 public class TafController(ITafService tafService) : ControllerBase
 {
     /// <summary>

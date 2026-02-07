@@ -11,9 +11,19 @@ namespace PreflightApi.API.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/communication-frequencies")]
+[Tags("Communication Frequencies")]
 public class CommunicationFrequencyController(ICommunicationFrequencyService frequencyService)
     : ControllerBase
 {
+    /// <summary>
+    /// Gets communication frequencies for a serviced facility
+    /// </summary>
+    /// <param name="servicedFacility">FAA facility identifier (e.g., DFW, AUS)</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <returns>Paginated list of communication frequencies for the facility</returns>
+    /// <response code="200">Returns the communication frequencies</response>
+    /// <response code="400">If the serviced facility identifier is empty</response>
+    /// <response code="404">If the facility is not found</response>
     [HttpGet("{servicedFacility}")]
     [ProducesResponseType(typeof(PaginatedResponse<CommunicationFrequencyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
