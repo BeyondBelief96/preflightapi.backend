@@ -18,7 +18,7 @@ env:
   API_PUBLISH_DIR: ./api-publish
   FUNCTIONS_PUBLISH_DIR: ./functions-publish
   API_APP_NAME: preflightapi-eastus-web-api-test
-  FUNCTION_APP_NAME: preflightapi-eastus-function-app-test
+  FUNCTION_APP_NAME: az-func-preflightapi-eastus-test
   RESOURCE_GROUP: rg-preflightapi-eastus-test
   DB_SERVER_NAME: pgsql-preflightapi-eastus-test
   APIM_SERVICE_NAME: preflightapi-apim-service-test
@@ -184,18 +184,19 @@ jobs:
           name: preflightapi-functions
 
       - name: Deploy Functions
-        uses: azure/functions-action@v1
-        with:
-          app-name: ${{ env.FUNCTION_APP_NAME }}
-          package: functionapp.zip
+        run: >
+          az functionapp deployment source config-zip
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+          --src functionapp.zip
 
       # Deploy APIM Policies
       - name: Azure Login (APIM)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE44E57EE6DC4C64A48DF6EBB0203FE2 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6EB62E26219440CE82EC092146FCB180 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_22083C2F047B4905AFFBDE355DDA927A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FA2BE7826B3A4B33B62B14B6E2005A1C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_EF590F266C2748FBB0468C97A96C1948 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_76DDE6E191A646B594D1DE2A40CE89C3 }}
 
       - name: Checkout for APIM policies
         uses: actions/checkout@v4
