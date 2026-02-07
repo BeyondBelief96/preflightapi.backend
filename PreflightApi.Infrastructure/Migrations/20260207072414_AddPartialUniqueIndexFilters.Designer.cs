@@ -13,7 +13,7 @@ using PreflightApi.Infrastructure.Data;
 namespace PreflightApi.Infrastructure.Migrations
 {
     [DbContext(typeof(PreflightApiDbContext))]
-    [Migration("20260207065810_AddPartialUniqueIndexFilters")]
+    [Migration("20260207072414_AddPartialUniqueIndexFilters")]
     partial class AddPartialUniqueIndexFilters
     {
         /// <inheritdoc />
@@ -765,7 +765,7 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.HasIndex("FileName", "NavigationalAidName")
                         .IsUnique()
-                        .HasFilter("\"navigational_aid_name\" IS NOT NULL");
+                        .HasFilter("\"navigational_aid_name\" IS NOT NULL AND \"airport_code\" IS NULL");
 
                     b.ToTable("chart_supplement");
                 });

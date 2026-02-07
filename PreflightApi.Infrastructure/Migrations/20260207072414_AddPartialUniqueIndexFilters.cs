@@ -30,7 +30,7 @@ namespace PreflightApi.Infrastructure.Migrations
                 table: "chart_supplement",
                 columns: new[] { "file_name", "navigational_aid_name" },
                 unique: true,
-                filter: "\"navigational_aid_name\" IS NOT NULL");
+                filter: "\"navigational_aid_name\" IS NOT NULL AND \"airport_code\" IS NULL");
         }
 
         /// <inheritdoc />

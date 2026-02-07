@@ -223,13 +223,15 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         continue;
                     }
 
-                    if (existingLookup.TryGetValue((supplement.FileName, supplement.NavigationalAidName), out var existingMatch))
+                    var key = (supplement.FileName, supplement.NavigationalAidName);
+                    if (existingLookup.TryGetValue(key, out var existingMatch))
                     {
                         existingMatch.AirportName = supplement.AirportName;
                         existingMatch.AirportCity = supplement.AirportCity;
                     }
-                    else
+                    else if (existingLookup.TryAdd(key, supplement))
                     {
+                        // TryAdd guards against within-batch duplicates
                         newSupplements.Add(supplement);
                     }
                 }

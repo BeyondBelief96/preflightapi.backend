@@ -762,7 +762,7 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.HasIndex("FileName", "NavigationalAidName")
                         .IsUnique()
-                        .HasFilter("\"navigational_aid_name\" IS NOT NULL");
+                        .HasFilter("\"navigational_aid_name\" IS NOT NULL AND \"airport_code\" IS NULL");
 
                     b.ToTable("chart_supplement");
                 });
