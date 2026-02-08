@@ -40,7 +40,16 @@
       "Bash(npx openapi-typescript:*)",
       "Bash(npx tsc:*)",
       "Bash(xargs:*)",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(az ad sp create:*)",
+      "Bash(az ad app federated-credential create:*)",
+      "Bash(az role assignment:*)",
+      "Bash(az account set:*)",
+      "Bash(az account show:*)",
+      "Bash(az group show:*)",
+      "Bash(az version:*)",
+      "Bash(az provider show:*)"
     ],
     "deny": [],
     "ask": []
