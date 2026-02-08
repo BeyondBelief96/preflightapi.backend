@@ -22,7 +22,7 @@ param skuCapacity int = 1
 @description('Backend Web App hostname (e.g., preflightapi-eastus-web-api-prod.azurewebsites.net)')
 param backendWebAppHostName string
 
-var apimName = 'preflightapi-apim-service-${environment}'
+var apimName = '${baseName}-apim-service-${environment}'
 
 // API Management Service
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' = {

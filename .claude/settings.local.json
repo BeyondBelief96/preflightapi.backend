@@ -60,7 +60,20 @@
       "Bash(az appservice plan list:*)",
       "Bash(az postgres flexible-server firewall-rule list:*)",
       "Bash(az postgres flexible-server parameter show:*)",
-      "Bash(az bicep build:*)"
+      "Bash(az bicep build:*)",
+      "Bash(az functionapp config appsettings list:*)",
+      "Bash(az webapp config appsettings list:*)",
+      "Bash(export:*)",
+      "Bash(export APIM_PUBLISHER_EMAIL=\"placeholder@example.com\")",
+      "Bash(export NOAA_API_KEY:*)",
+      "Bash(export NMS_CLIENT_SECRET=\"placeholder\")",
+      "Bash(export GATEWAY_SECRET=\"placeholder\")",
+      "Bash(az deployment sub what-if:*)",
+      "Bash(az deployment sub validate:*)",
+      "Bash(az postgres flexible-server db list:*)",
+      "Bash(az:*)",
+      "Bash(for loc in eastus2 centralus westus2 northcentralus southcentralus)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

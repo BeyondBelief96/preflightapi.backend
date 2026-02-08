@@ -84,6 +84,10 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
         }
         {
+          name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
+        }
+        {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsightsConnectionString
         }

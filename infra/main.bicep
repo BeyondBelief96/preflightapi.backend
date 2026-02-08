@@ -28,6 +28,9 @@ param dbSkuTier string = 'Burstable'
 @description('PostgreSQL storage size in GB')
 param dbStorageSizeGB int = 32
 
+@description('Azure region for the PostgreSQL server (defaults to location if not specified)')
+param dbLocation string = location
+
 @description('Storage account name for blob data (must be globally unique)')
 param storageAccountName string
 
@@ -42,6 +45,28 @@ param apimPublisherEmail string
 
 @description('APIM SKU (Developer, Basic, Standard, Premium)')
 param apimSkuName string = 'Developer'
+
+@secure()
+@description('NOAA API key for weather services')
+param noaaApiKey string
+
+@description('NMS API base URL (staging or production)')
+param nmsBaseUrl string
+
+@description('NMS OAuth2 auth base URL (staging or production)')
+param nmsAuthBaseUrl string
+
+@secure()
+@description('NMS OAuth2 client ID')
+param nmsClientId string
+
+@secure()
+@description('NMS OAuth2 client secret')
+param nmsClientSecret string
+
+@secure()
+@description('APIM-to-API shared secret for gateway validation')
+param gatewaySecret string
 
 @description('Principal ID of the GitHub deployment service principal (optional, for DB firewall management)')
 param githubDeploymentPrincipalId string = ''
@@ -77,7 +102,7 @@ module postgresql 'modules/postgresql.bicep' = {
   name: 'postgresql-${environment}'
   scope: rg
   params: {
-    location: location
+    location: dbLocation
     baseName: baseName
     environment: environment
     administratorLogin: dbAdminLogin
@@ -118,6 +143,12 @@ module appService 'modules/app-service.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     airportDiagramsContainerName: storage.outputs.airportDiagramsContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
+    noaaApiKey: noaaApiKey
+    nmsBaseUrl: nmsBaseUrl
+    nmsAuthBaseUrl: nmsAuthBaseUrl
+    nmsClientId: nmsClientId
+    nmsClientSecret: nmsClientSecret
+    gatewaySecret: gatewaySecret
   }
 }
 

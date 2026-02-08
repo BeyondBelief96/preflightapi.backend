@@ -38,6 +38,28 @@ param airportDiagramsContainerName string
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
 
+@secure()
+@description('NOAA API key for weather services')
+param noaaApiKey string
+
+@description('NMS API base URL')
+param nmsBaseUrl string
+
+@description('NMS OAuth2 auth base URL')
+param nmsAuthBaseUrl string
+
+@secure()
+@description('NMS OAuth2 client ID')
+param nmsClientId string
+
+@secure()
+@description('NMS OAuth2 client secret')
+param nmsClientSecret string
+
+@secure()
+@description('APIM-to-API shared secret for gateway validation')
+param gatewaySecret string
+
 var appServicePlanName = 'asp-${baseName}-api-${environment}'
 var webAppName = 'preflightapi-${baseName}-web-api-${environment}'
 
@@ -114,6 +136,46 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'CloudStorage__ChartSupplementsContainerName'
           value: chartSupplementsContainerName
+        }
+        {
+          name: 'NOAASettings__NOAAApiKey'
+          value: noaaApiKey
+        }
+        {
+          name: 'NmsSettings__BaseUrl'
+          value: nmsBaseUrl
+        }
+        {
+          name: 'NmsSettings__AuthBaseUrl'
+          value: nmsAuthBaseUrl
+        }
+        {
+          name: 'NmsSettings__ClientId'
+          value: nmsClientId
+        }
+        {
+          name: 'NmsSettings__ClientSecret'
+          value: nmsClientSecret
+        }
+        {
+          name: 'GatewaySecret'
+          value: gatewaySecret
+        }
+        {
+          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
+          value: '~2'
+        }
+        {
+          name: 'XDT_MicrosoftApplicationInsights_Mode'
+          value: 'default'
+        }
+        {
+          name: 'DIAGNOSTICS_AZUREBLOBRETENTIONINDAYS'
+          value: '1'
+        }
+        {
+          name: 'WEBSITE_HTTPLOGGING_RETENTION_DAYS'
+          value: '1'
         }
       ]
     }
