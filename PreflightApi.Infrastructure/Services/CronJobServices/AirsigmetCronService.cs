@@ -182,41 +182,19 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var validTimeFroms = airsigmetsList
                 .Where(a => a.ValidTimeFrom != null)
                 .Select(a => a.ValidTimeFrom!)
+                .Distinct()
                 .ToList();
 
-            // Get existing AIRSIGMETs by ValidTimeFrom
-            var existingAirsigmets = await _dbContext.Airsigmets
+            // Remove existing AIRSIGMETs that overlap with incoming data
+            // (ValidTimeFrom is not unique — multiple AIRSIGMETs can share the same start time)
+            var deleted = await _dbContext.Airsigmets
                 .Where(a => a.ValidTimeFrom != null && validTimeFroms.Contains(a.ValidTimeFrom))
-                .ToDictionaryAsync(
-                    a => a.ValidTimeFrom!,
-                    a => a,
-                    cancellationToken);
+                .ExecuteDeleteAsync(cancellationToken);
 
-            foreach (var airsigmet in airsigmetsList)
-            {
-                if (airsigmet.ValidTimeFrom != null &&
-                    existingAirsigmets.TryGetValue(airsigmet.ValidTimeFrom, out var existingAirsigmet))
-                {
-                    if (existingAirsigmet.RawText != airsigmet.RawText)
-                    {
-                        _logger.LogDebug("Updating existing AIRSIGMET for time {ValidTimeFrom}", airsigmet.ValidTimeFrom);
-                        existingAirsigmet.RawText = airsigmet.RawText;
-                        existingAirsigmet.ValidTimeTo = airsigmet.ValidTimeTo;
-                        existingAirsigmet.MovementDirDegrees = airsigmet.MovementDirDegrees;
-                        existingAirsigmet.MovementSpeedKt = airsigmet.MovementSpeedKt;
-                        existingAirsigmet.AirsigmetType = airsigmet.AirsigmetType;
-                        existingAirsigmet.Altitude = airsigmet.Altitude;
-                        existingAirsigmet.Hazard = airsigmet.Hazard;
-                        existingAirsigmet.Areas = airsigmet.Areas;
-                    }
-                }
-                else
-                {
-                    _logger.LogDebug("Creating new AIRSIGMET for time {ValidTimeFrom}", airsigmet.ValidTimeFrom);
-                    await _dbContext.Airsigmets.AddAsync(airsigmet, cancellationToken);
-                }
-            }
+            if (deleted > 0)
+                _logger.LogDebug("Removed {Count} existing AIRSIGMETs for replacement", deleted);
 
+            await _dbContext.Airsigmets.AddRangeAsync(airsigmetsList, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 

@@ -49,7 +49,18 @@
       "Bash(az account show:*)",
       "Bash(az group show:*)",
       "Bash(az version:*)",
-      "Bash(az provider show:*)"
+      "Bash(az provider show:*)",
+      "Bash(az resource list:*)",
+      "Bash(az postgres flexible-server show:*)",
+      "Bash(az webapp show:*)",
+      "Bash(az appservice plan show:*)",
+      "Bash(az functionapp show:*)",
+      "Bash(az storage container list:*)",
+      "Bash(az storage account show:*)",
+      "Bash(az appservice plan list:*)",
+      "Bash(az postgres flexible-server firewall-rule list:*)",
+      "Bash(az postgres flexible-server parameter show:*)",
+      "Bash(az bicep build:*)"
     ],
     "deny": [],
     "ask": []

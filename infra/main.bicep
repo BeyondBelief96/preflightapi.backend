@@ -1,0 +1,203 @@
+targetScope = 'subscription'
+
+// ─── Parameters ────────────────────────────────────────────────────────────────
+
+@description('Azure region for all resources')
+param location string
+
+@description('Environment name (test, prod)')
+@allowed(['test', 'prod'])
+param environment string
+
+@description('PostgreSQL administrator login')
+param dbAdminLogin string
+
+@secure()
+@description('PostgreSQL administrator password')
+param dbAdminPassword string
+
+@description('PostgreSQL database name')
+param databaseName string = 'preflightapi'
+
+@description('PostgreSQL SKU name')
+param dbSkuName string = 'Standard_B1ms'
+
+@description('PostgreSQL SKU tier')
+param dbSkuTier string = 'Burstable'
+
+@description('PostgreSQL storage size in GB')
+param dbStorageSizeGB int = 32
+
+@description('Storage account name for blob data (must be globally unique)')
+param storageAccountName string
+
+@description('App Service Plan SKU name for API')
+param apiSkuName string = 'B2'
+
+@description('App Service Plan SKU tier for API')
+param apiSkuTier string = 'Basic'
+
+@description('APIM publisher email')
+param apimPublisherEmail string
+
+@description('APIM SKU (Developer, Basic, Standard, Premium)')
+param apimSkuName string = 'Developer'
+
+@description('Principal ID of the GitHub deployment service principal (optional, for DB firewall management)')
+param githubDeploymentPrincipalId string = ''
+
+// ─── Derived values ────────────────────────────────────────────────────────────
+
+var baseName = 'preflightapi-${location}'
+var resourceGroupName = 'rg-${baseName}-${environment}'
+var regionShortName = location
+
+// ─── Resource Group ────────────────────────────────────────────────────────────
+
+resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
+  name: resourceGroupName
+  location: location
+}
+
+// ─── Modules ───────────────────────────────────────────────────────────────────
+
+// Monitoring (deployed first — other modules depend on App Insights)
+module monitoring 'modules/monitoring.bicep' = {
+  name: 'monitoring-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+  }
+}
+
+// PostgreSQL
+module postgresql 'modules/postgresql.bicep' = {
+  name: 'postgresql-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+    administratorLogin: dbAdminLogin
+    administratorPassword: dbAdminPassword
+    skuName: dbSkuName
+    skuTier: dbSkuTier
+    storageSizeGB: dbStorageSizeGB
+  }
+}
+
+// Storage Account + Blob Containers
+module storage 'modules/storage.bicep' = {
+  name: 'storage-${environment}'
+  scope: rg
+  params: {
+    location: location
+    regionShortName: regionShortName
+    environment: environment
+    storageAccountName: storageAccountName
+  }
+}
+
+// App Service (API)
+module appService 'modules/app-service.bicep' = {
+  name: 'app-service-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+    skuName: apiSkuName
+    skuTier: apiSkuTier
+    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    databaseHost: postgresql.outputs.serverFqdn
+    databaseName: databaseName
+    databaseUsername: dbAdminLogin
+    databasePassword: dbAdminPassword
+    storageAccountName: storage.outputs.storageAccountName
+    airportDiagramsContainerName: storage.outputs.airportDiagramsContainerName
+    chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
+  }
+}
+
+// Function App
+module functionApp 'modules/function-app.bicep' = {
+  name: 'function-app-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    databaseHost: postgresql.outputs.serverFqdn
+    databaseName: databaseName
+    databaseUsername: dbAdminLogin
+    databasePassword: dbAdminPassword
+    storageAccountName: storage.outputs.storageAccountName
+    airportDiagramsContainerName: storage.outputs.airportDiagramsContainerName
+    chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
+  }
+}
+
+// API Management
+module apim 'modules/apim.bicep' = {
+  name: 'apim-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+    publisherEmail: apimPublisherEmail
+    skuName: apimSkuName
+    backendWebAppHostName: appService.outputs.webAppHostName
+  }
+}
+
+// Role Assignments (RBAC)
+module roleAssignments 'modules/role-assignments.bicep' = {
+  name: 'role-assignments-${environment}'
+  scope: rg
+  params: {
+    webAppPrincipalId: appService.outputs.webAppPrincipalId
+    functionAppPrincipalId: functionApp.outputs.functionAppPrincipalId
+    storageAccountId: storage.outputs.storageAccountId
+    postgresServerId: postgresql.outputs.serverId
+    githubDeploymentPrincipalId: githubDeploymentPrincipalId
+  }
+}
+
+// ─── Outputs ───────────────────────────────────────────────────────────────────
+
+@description('Resource group name')
+output resourceGroupName string = rg.name
+
+@description('PostgreSQL server FQDN')
+output postgresServerFqdn string = postgresql.outputs.serverFqdn
+
+@description('PostgreSQL server name')
+output postgresServerName string = postgresql.outputs.serverName
+
+@description('Web App name')
+output webAppName string = appService.outputs.webAppName
+
+@description('Web App hostname')
+output webAppHostName string = appService.outputs.webAppHostName
+
+@description('Function App name')
+output functionAppName string = functionApp.outputs.functionAppName
+
+@description('Function App hostname')
+output functionAppHostName string = functionApp.outputs.functionAppHostName
+
+@description('Storage account name')
+output storageAccountName string = storage.outputs.storageAccountName
+
+@description('APIM gateway URL')
+output apimGatewayUrl string = apim.outputs.apimGatewayUrl
+
+@description('APIM service name')
+output apimServiceName string = apim.outputs.apimName
+
+@description('Application Insights connection string')
+output appInsightsConnectionString string = monitoring.outputs.appInsightsConnectionString

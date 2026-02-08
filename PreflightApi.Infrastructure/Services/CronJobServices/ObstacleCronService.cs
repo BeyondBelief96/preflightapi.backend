@@ -111,27 +111,32 @@ public class ObstacleCronService : IObstacleCronService
                 obstacles.Count);
 
             // Full refresh wrapped in a transaction so a mid-insert failure doesn't leave partial data
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            await _dbContext.Obstacles.ExecuteDeleteAsync(cancellationToken);
-            _logger.LogInformation("Deleted existing obstacles from database");
-
-            // Batch insert
-            for (int i = 0; i < obstacles.Count; i += BatchSize)
+            // Must use execution strategy to support NpgsqlRetryingExecutionStrategy with transactions
+            var strategy = _dbContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                var batch = obstacles.Skip(i).Take(BatchSize).ToList();
-                await _dbContext.Obstacles.AddRangeAsync(batch, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                _dbContext.ChangeTracker.Clear();
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                _logger.LogInformation("Inserted batch {BatchNumber}/{TotalBatches} ({Count} obstacles)",
-                    (i / BatchSize) + 1,
-                    (obstacles.Count / BatchSize) + 1,
-                    batch.Count);
-            }
+                await _dbContext.Obstacles.ExecuteDeleteAsync(cancellationToken);
+                _logger.LogInformation("Deleted existing obstacles from database");
 
-            await transaction.CommitAsync(cancellationToken);
-            _logger.LogInformation("Completed obstacle processing. Total obstacles: {Count}", obstacles.Count);
+                // Batch insert
+                for (int i = 0; i < obstacles.Count; i += BatchSize)
+                {
+                    var batch = obstacles.Skip(i).Take(BatchSize).ToList();
+                    await _dbContext.Obstacles.AddRangeAsync(batch, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    _dbContext.ChangeTracker.Clear();
+
+                    _logger.LogInformation("Inserted batch {BatchNumber}/{TotalBatches} ({Count} obstacles)",
+                        (i / BatchSize) + 1,
+                        (obstacles.Count / BatchSize) + 1,
+                        batch.Count);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                _logger.LogInformation("Completed obstacle processing. Total obstacles: {Count}", obstacles.Count);
+            });
         }
         catch (Exception ex)
         {
