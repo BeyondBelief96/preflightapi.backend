@@ -12,8 +12,8 @@ param dbSkuTier = 'Burstable'
 param dbStorageSizeGB = 32
 param dbLocation = 'eastus2'
 
-// Storage (must match existing test storage account name)
-param storageAccountName = 'stpreflightapitest'
+// Storage (existing manually-created test storage account)
+param storageAccountName = 'rgpreflightapieastusad'
 
 // App Service
 param apiSkuName = 'B2'

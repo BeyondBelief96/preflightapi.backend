@@ -37,6 +37,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9
 		docs\infrastructure-setup.md = docs\infrastructure-setup.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
+	ProjectSection(SolutionItems) = preProject
+		infra\main.bicep = infra\main.bicep
+		infra\main.json = infra\main.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{6E50947F-9F17-4FE3-B017-BE38774A996A}"
+	ProjectSection(SolutionItems) = preProject
+		infra\modules\apim.bicep = infra\modules\apim.bicep
+		infra\modules\app-service.bicep = infra\modules\app-service.bicep
+		infra\modules\function-app.bicep = infra\modules\function-app.bicep
+		infra\modules\monitoring.bicep = infra\modules\monitoring.bicep
+		infra\modules\postgresql.bicep = infra\modules\postgresql.bicep
+		infra\modules\role-assignments.bicep = infra\modules\role-assignments.bicep
+		infra\modules\storage.bicep = infra\modules\storage.bicep
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "parameters", "parameters", "{CCE5402C-67B8-4B04-A5B0-A05A0DC2FDC4}"
+	ProjectSection(SolutionItems) = preProject
+		infra\parameters\prod.bicepparam = infra\parameters\prod.bicepparam
+		infra\parameters\test.bicepparam = infra\parameters\test.bicepparam
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +115,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6345C756-6060-477B-80D1-E10500184627} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
 		{D44F098A-9385-4741-8876-47ABEBFA992E} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
+		{1A80306F-2913-4132-96C0-371DF2D6C173} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
+		{6E50947F-9F17-4FE3-B017-BE38774A996A} = {1A80306F-2913-4132-96C0-371DF2D6C173}
+		{CCE5402C-67B8-4B04-A5B0-A05A0DC2FDC4} = {1A80306F-2913-4132-96C0-371DF2D6C173}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E778AF9-90E9-4492-934B-23D115DAE3FB}
