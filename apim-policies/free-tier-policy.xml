@@ -1,8 +1,10 @@
 <policies>
 	<inbound>
 		<base />
-		<rate-limit-by-key calls="10" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-variable-name="rateLimitRemaining" total-calls-variable-name="rateLimitTotal" retry-after-variable-name="rateLimitRetryAfter" />
-		<quota-by-key calls="500" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-variable-name="quotaRemaining" total-calls-variable-name="quotaTotal" />
+		<rate-limit-by-key calls="10" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-variable-name="rateLimitRemaining" retry-after-variable-name="rateLimitRetryAfter" />
+		<quota-by-key calls="500" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
+		<set-variable name="rateLimitTotal" value="@(10)" />
+		<set-variable name="quotaTotal" value="@(500)" />
 		<!-- Endpoint gating: Free tier only allows basic weather and airports -->
 		<set-variable name="is-allowed" value="@{
 			var path = context.Request.Url.Path.ToLower();
