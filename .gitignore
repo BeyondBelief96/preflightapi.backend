@@ -363,5 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /docs/FAA NMS Docs/PreflightApi.xlsx
 
-# Docker Compose local secrets
+# Environment secrets (Docker Compose, Bicep deployments, etc.)
 .env
+.env.*
+!.env.example

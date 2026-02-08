@@ -182,6 +182,12 @@ jobs:
           --name ${{ env.FUNCTION_APP_NAME }}
           --src functionapp.zip
 
+      - name: Restart Function App
+        run: >
+          az functionapp restart
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+
       # Deploy APIM Policies
       - name: Checkout for APIM policies
         uses: actions/checkout@v4

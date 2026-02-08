@@ -73,7 +73,8 @@
       "Bash(az postgres flexible-server db list:*)",
       "Bash(az:*)",
       "Bash(for loc in eastus2 centralus westus2 northcentralus southcentralus)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git check-ignore:*)"
     ],
     "deny": [],
     "ask": []
