@@ -28,9 +28,9 @@
 		<!-- Apply cache lookup for cacheable GET requests -->
 		<choose>
 			<when condition="@((int)context.Variables["cacheDuration"] > 0)">
-				<cache-lookup vary-by-developer="false"
-				              vary-by-developer-groups="false"
-				              vary-by-query-parameter="*" />
+				<cache-lookup vary-by-developer="false" vary-by-developer-groups="false">
+					<vary-by-query-parameter>*</vary-by-query-parameter>
+				</cache-lookup>
 			</when>
 		</choose>
 	</inbound>
