@@ -1,11 +1,9 @@
 using System.Text.Json.Serialization;
 using Asp.Versioning;
-using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using PreflightApi.API.Configuration;
 using PreflightApi.API.Middleware;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
@@ -28,26 +26,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
     .AddEnvironmentVariables()
     .AddUserSecrets<Program>(optional: true, reloadOnChange: true);
-
-// Add Azure Key Vault for secrets
-var keyVaultUrl = builder.Configuration["KeyVault:Url"];
-if (!string.IsNullOrEmpty(keyVaultUrl))
-{
-    var credential = new DefaultAzureCredential();
-
-    // Map Key Vault secret names to configuration keys based on environment
-    var secretSuffix = builder.Environment.IsProduction() ? "prd" : "staging";
-    var secretMappings = new Dictionary<string, string>
-    {
-        { $"preflightapi-faa-nms-api-client-id-{secretSuffix}", "NmsSettings:ClientId" },
-        { $"preflightapi-faa-nms-api-client-secret-{secretSuffix}", "NmsSettings:ClientSecret" }
-    };
-
-    builder.Configuration.AddAzureKeyVault(
-        new Uri(keyVaultUrl),
-        credential,
-        new MappedKeyVaultSecretManager(secretMappings));
-}
 
 // Setup Logging
 builder.Logging.ClearProviders();
