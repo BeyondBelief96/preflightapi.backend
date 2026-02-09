@@ -102,3 +102,36 @@ public class RunwayNotFoundException : NotFoundException
     {
     }
 }
+
+/// <summary>
+/// Exception thrown when a navigational aid cannot be found.
+/// </summary>
+public class NavigationalAidNotFoundException : NotFoundException
+{
+    public NavigationalAidNotFoundException(string identifier)
+        : base(ErrorCodes.NavigationalAidNotFound, $"Navigational aid was not found with identifier '{identifier}'.")
+    {
+    }
+}
+
+/// <summary>
+/// Exception thrown when a fix/reporting point cannot be found.
+/// </summary>
+public class FixNotFoundException : NotFoundException
+{
+    public FixNotFoundException(string identifier)
+        : base(ErrorCodes.FixNotFound, $"Fix was not found with identifier '{identifier}'.")
+    {
+    }
+}
+
+/// <summary>
+/// Exception thrown when a weather station cannot be found.
+/// </summary>
+public class WeatherStationNotFoundException : NotFoundException
+{
+    public WeatherStationNotFoundException(string identifier)
+        : base(ErrorCodes.WeatherStationNotFound, $"Weather station was not found with identifier '{identifier}'.")
+    {
+    }
+}

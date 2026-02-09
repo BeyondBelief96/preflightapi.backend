@@ -24,7 +24,10 @@ namespace PreflightApi.Infrastructure.Data
                 { PublicationType.NasrSubscription_Airport, (3, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) },
                 { PublicationType.NasrSubscription_Frequencies, (4, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) },
                 { PublicationType.Airspaces, (5, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) },
-                { PublicationType.SpecialUseAirspaces, (6, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) }
+                { PublicationType.SpecialUseAirspaces, (6, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) },
+                { PublicationType.NasrSubscription_NavigationalAids, (7, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) },
+                { PublicationType.NasrSubscription_Fixes, (8, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) },
+                { PublicationType.NasrSubscription_WeatherStations, (9, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) }
             };
             
             // Get existing records

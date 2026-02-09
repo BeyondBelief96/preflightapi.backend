@@ -25,8 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreflightApi.Azure.Function
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9385-4741-8876-47ABEBFA992E}"
 	ProjectSection(SolutionItems) = preProject
-		docs\API Company Pivot Strategy.md = docs\API Company Pivot Strategy.md
+		docs\azure-functions-improvement-plan.md = docs\azure-functions-improvement-plan.md
 		docs\infrastructure-setup.md = docs\infrastructure-setup.md
+		docs\nasr-phase1-implementation-plan.md = docs\nasr-phase1-implementation-plan.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
@@ -65,6 +66,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{8F5BA3
 		.dockerignore = .dockerignore
 		docker-compose.local.yml = docker-compose.local.yml
 		Dockerfile.local = Dockerfile.local
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FAA NMS Docs", "FAA NMS Docs", "{A7C3CBB3-C1B8-4E77-93D8-3C1A9B525196}"
+	ProjectSection(SolutionItems) = preProject
+		docs\FAA NMS Docs\FAQ_NMS-API.pdf = docs\FAA NMS Docs\FAQ_NMS-API.pdf
+		docs\FAA NMS Docs\NMS-API-Pre-Prod-soapui-project_sample.xml = docs\FAA NMS Docs\NMS-API-Pre-Prod-soapui-project_sample.xml
+		docs\FAA NMS Docs\nms-api.yaml = docs\FAA NMS Docs\nms-api.yaml
+		docs\FAA NMS Docs\nms-api_checklist_example.json = docs\FAA NMS Docs\nms-api_checklist_example.json
+		docs\FAA NMS Docs\nms-api_curl_examples.txt = docs\FAA NMS Docs\nms-api_curl_examples.txt
+		docs\FAA NMS Docs\nms-api_sample_initial_load.xml = docs\FAA NMS Docs\nms-api_sample_initial_load.xml
+		docs\FAA NMS Docs\nms_api_initial_load_example.json = docs\FAA NMS Docs\nms_api_initial_load_example.json
+		docs\FAA NMS Docs\PreflightApi.xlsx = docs\FAA NMS Docs\PreflightApi.xlsx
 	EndProjectSection
 EndProject
 Global
@@ -127,6 +140,7 @@ Global
 		{CCE5402C-67B8-4B04-A5B0-A05A0DC2FDC4} = {1A80306F-2913-4132-96C0-371DF2D6C173}
 		{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
 		{8F5BA337-9853-4AF3-9C64-50FF5F1FFE58} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
+		{A7C3CBB3-C1B8-4E77-93D8-3C1A9B525196} = {D44F098A-9385-4741-8876-47ABEBFA992E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E778AF9-90E9-4492-934B-23D115DAE3FB}

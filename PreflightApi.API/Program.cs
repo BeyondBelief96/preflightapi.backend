@@ -132,6 +132,9 @@ builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>(
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
 builder.Services.AddScoped<IPerformanceCalculatorService, PerformanceCalculatorService>();
+builder.Services.AddScoped<INavigationalAidService, NavigationalAidService>();
+builder.Services.AddScoped<IFixService, FixService>();
+builder.Services.AddScoped<IWeatherStationService, WeatherStationService>();
 
 // NOTAM Services
 builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();

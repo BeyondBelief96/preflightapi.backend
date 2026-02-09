@@ -44,4 +44,13 @@ public static class ErrorCodes
 
     // Navigation
     public const string NavlogCalculationError = "NAVLOG_CALCULATION_ERROR";
+
+    // Navigational Aids
+    public const string NavigationalAidNotFound = "NAVIGATIONAL_AID_NOT_FOUND";
+
+    // Fixes
+    public const string FixNotFound = "FIX_NOT_FOUND";
+
+    // Weather Stations
+    public const string WeatherStationNotFound = "WEATHER_STATION_NOT_FOUND";
 }

@@ -75,7 +75,10 @@
       "Bash(for loc in eastus2 centralus westus2 northcentralus southcentralus)",
       "Bash(done)",
       "Bash(git check-ignore:*)",
-      "WebFetch(domain:nfdc.faa.gov)"
+      "WebFetch(domain:nfdc.faa.gov)",
+      "Bash(unzip:*)",
+      "Bash(pip install:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

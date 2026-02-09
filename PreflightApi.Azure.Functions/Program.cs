@@ -54,6 +54,9 @@ builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFreq
 builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
 builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();
+builder.Services.AddScoped<INavigationalAidCronService, NavigationalAidCronService>();
+builder.Services.AddScoped<IFixCronService, FixCronService>();
+builder.Services.AddScoped<IWeatherStationCronService, WeatherStationCronService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddResilientHttpClients();
 

@@ -27,6 +27,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
         private readonly IFaaPublicationCycleService _faaPublicationCycleService;
+
+        protected PreflightApiDbContext DbContext => _dbContext;
+        protected ILogger Logger => _logger;
         private readonly string _baseUrl = "https://nfdc.faa.gov/webContent/28DaySub/extra/";
 
         private readonly KeyExtractor<T> _keyExtractor;
@@ -87,6 +90,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 {
                     await ProcessStandaloneDatasetAsync(archive, cancellationToken);
                 }
+
+                await PostProcessAsync(archive, cancellationToken);
 
                 _logger.LogInformation("{DataType} data update completed successfully", DataType);
             }
@@ -368,7 +373,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 .ToHashSet() ?? _allPropertyNames.Value;
         }
 
-        private static CsvConfiguration GetCsvConfiguration()
+        protected static CsvConfiguration GetCsvConfiguration()
         {
             return new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -380,7 +385,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             };
         }
 
-        private static void ConfigureCsvReader(CsvReader csv)
+        protected static void ConfigureCsvReader(CsvReader csv)
         {
             csv.Context.TypeConverterCache.RemoveConverter<decimal?>();
             csv.Context.TypeConverterCache.RemoveConverter<int?>();
@@ -388,6 +393,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             csv.Context.TypeConverterCache.AddConverter<int?>(new OptionalIntConverter());
             csv.Context.TypeConverterCache.AddConverter<DateTime?>(new OptionalDateConverter());
         }
+
+        protected virtual Task PostProcessAsync(ZipArchive archive, CancellationToken cancellationToken) => Task.CompletedTask;
 
         private enum ProcessingMode
         {

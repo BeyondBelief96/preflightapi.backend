@@ -40,6 +40,12 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Obstacle> Obstacles => Set<Obstacle>();
 
+        public virtual DbSet<NavigationalAid> NavigationalAids => Set<NavigationalAid>();
+
+        public virtual DbSet<Fix> Fixes => Set<Fix>();
+
+        public virtual DbSet<WeatherStation> WeatherStations => Set<WeatherStation>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
