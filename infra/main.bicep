@@ -195,6 +195,7 @@ module apim 'modules/apim.bicep' = {
     publisherEmail: apimPublisherEmail
     skuName: apimSkuName
     backendWebAppHostName: appService.outputs.webAppHostName
+    gatewaySecret: gatewaySecret
   }
 }
 
