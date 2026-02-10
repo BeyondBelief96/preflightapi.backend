@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using PreflightApi.API.Configuration;
 using PreflightApi.API.Middleware;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
@@ -81,6 +82,7 @@ builder.Services.AddOpenApiDocument(options =>
     options.Title = "PreflightApi";
     options.Version = "v1";
     options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
+    options.DocumentProcessors.Add(new ControllerXmlDocProcessor());
 });
 
 // Setup Environment Variable Settings
