@@ -105,7 +105,13 @@ public class ObstacleController(IObstacleService obstacleService)
     /// ObstacleOasNumbers returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
     /// to retrieve full details for obstacles near a planned route.
     /// </summary>
-    /// <param name="oasNumbers">JSON array of OAS number strings (maximum 1000). Example: ["12-345678","12-345679"]</param>
+    /// <remarks>
+    /// Send a JSON array of OAS number strings in the request body:
+    /// <code>
+    /// ["12-345678", "12-345679", "12-345680"]
+    /// </code>
+    /// </remarks>
+    /// <param name="oasNumbers">JSON array of OAS number strings (maximum 1000)</param>
     /// <returns>Obstacles matching the specified OAS numbers with type, height, lighting, and location data</returns>
     /// <response code="200">Returns the matching obstacles</response>
     /// <response code="400">If the list is empty or exceeds 1000 items</response>

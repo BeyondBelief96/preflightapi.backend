@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
@@ -55,16 +56,25 @@ public class MetarController(IMetarService metarService) : ControllerBase
     /// <summary>
     /// Gets METARs for all airports across multiple states
     /// </summary>
-    /// <param name="stateCodes">Comma-separated state codes (e.g., TX,OK,LA)</param>
+    /// <remarks>
+    /// Pass state codes as a single comma-separated query parameter:
+    /// <code>GET /api/v1/metars/by-states?stateCodes=TX,OK,LA</code>
+    /// </remarks>
+    /// <param name="stateCodes">Comma-separated two-letter state codes (e.g., TX,OK,LA). Must contain at least one code.</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of METARs for airports in the specified states</returns>
     /// <response code="200">Returns the paginated METARs</response>
-    [HttpGet("states/{stateCodes}")]
+    /// <response code="400">If the state codes parameter is empty</response>
+    [HttpGet("by-states")]
     [ProducesResponseType(typeof(PaginatedResponse<MetarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByStates(
-        string stateCodes,
+        [FromQuery] string stateCodes,
         [FromQuery] PaginationParams pagination)
     {
+        if (string.IsNullOrWhiteSpace(stateCodes))
+            throw new ValidationException("stateCodes", "State codes are required");
+
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var stateCodeArray = stateCodes.Split(',')
             .Select(s => s.Trim())

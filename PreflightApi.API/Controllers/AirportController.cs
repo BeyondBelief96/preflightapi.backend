@@ -95,16 +95,25 @@ namespace PreflightApi.API.Controllers
         /// <summary>
         /// Gets airports across multiple states
         /// </summary>
-        /// <param name="stateCodes">Comma-separated state codes (e.g., TX,OK,LA)</param>
+        /// <remarks>
+        /// Pass state codes as a single comma-separated query parameter:
+        /// <code>GET /api/v1/airports/by-states?stateCodes=TX,OK,LA</code>
+        /// </remarks>
+        /// <param name="stateCodes">Comma-separated two-letter state codes (e.g., TX,OK,LA). Must contain at least one code.</param>
         /// <param name="pagination">Cursor-based pagination parameters</param>
         /// <returns>Paginated list of airports in the specified states</returns>
         /// <response code="200">Returns the paginated airports</response>
-        [HttpGet("states/{stateCodes}")]
+        /// <response code="400">If the state codes parameter is empty</response>
+        [HttpGet("by-states")]
         [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAirportsByStates(
-            string stateCodes,
+            [FromQuery] string stateCodes,
             [FromQuery] PaginationParams pagination)
         {
+            if (string.IsNullOrWhiteSpace(stateCodes))
+                throw new ValidationException("stateCodes", "State codes are required");
+
             pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
             var stateCodeArray = stateCodes.Split(',')
                 .Select(s => s.Trim())
@@ -116,13 +125,24 @@ namespace PreflightApi.API.Controllers
         /// <summary>
         /// Gets multiple airports by their ICAO codes or identifiers
         /// </summary>
-        /// <param name="icaoCodesOrIdents">Comma-separated ICAO codes or FAA identifiers (e.g., KDFW,KAUS,KHOU)</param>
+        /// <remarks>
+        /// Pass ICAO codes or FAA identifiers as a single comma-separated query parameter:
+        /// <code>GET /api/v1/airports/batch?icaoCodesOrIdents=KDFW,KAUS,KHOU</code>
+        /// Both ICAO codes (KDFW) and FAA identifiers (DFW) can be mixed in the same request.
+        /// </remarks>
+        /// <param name="icaoCodesOrIdents">Comma-separated ICAO codes or FAA identifiers (e.g., KDFW,KAUS,KHOU). Must contain at least one code.</param>
         /// <returns>Airports matching the specified codes</returns>
         /// <response code="200">Returns the matching airports</response>
-        [HttpGet("batch/{icaoCodesOrIdents}")]
+        /// <response code="400">If the ICAO codes or identifiers parameter is empty</response>
+        [HttpGet("batch")]
         [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByIcaoCodesOrIdents(string icaoCodesOrIdents)
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsByIcaoCodesOrIdents(
+            [FromQuery] string icaoCodesOrIdents)
         {
+            if (string.IsNullOrWhiteSpace(icaoCodesOrIdents))
+                throw new ValidationException("icaoCodesOrIdents", "ICAO codes or identifiers are required");
+
             var codesArray = icaoCodesOrIdents.Split(',')
                 .Select(s => s.Trim())
                 .ToArray();
