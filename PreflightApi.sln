@@ -56,10 +56,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apim-policies", "apim-policies", "{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9}"
 	ProjectSection(SolutionItems) = preProject
 		apim-policies\api-policy.xml = apim-policies\api-policy.xml
-		apim-policies\atp-policy.xml = apim-policies\atp-policy.xml
 		apim-policies\commercial-pilot-policy.xml = apim-policies\commercial-pilot-policy.xml
-		apim-policies\student-pilot-policy.xml = apim-policies\student-pilot-policy.xml
+		apim-policies\atp-pilot-policy.xml = apim-policies\atp-pilot-policy.xml
 		apim-policies\private-pilot-policy.xml = apim-policies\private-pilot-policy.xml
+		apim-policies\student-pilot-policy.xml = apim-policies\student-pilot-policy.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{8F5BA337-9853-4AF3-9C64-50FF5F1FFE58}"
