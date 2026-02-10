@@ -6,6 +6,12 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to FAA Chart Supplement (formerly Airport/Facility Directory) PDFs.
+/// Chart supplements contain comprehensive airport information including detailed runway data,
+/// lighting, available services, airspace, and other operational details.
+/// PDFs are returned as time-limited pre-signed URLs.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/chart-supplements")]
@@ -13,10 +19,12 @@ namespace PreflightApi.API.Controllers;
 public class ChartSupplementController(IChartSupplementService chartSupplementService) : ControllerBase
 {
     /// <summary>
-    /// Gets pre-signed URLs for chart supplements by ICAO code or identifier
+    /// Gets time-limited pre-signed URLs for all chart supplement pages for an airport.
+    /// Multi-page supplements will have one URL per page. The URLs expire after a limited period;
+    /// request new URLs if they have expired.
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-    /// <returns>Chart supplement metadata and pre-signed URLs for all supplement PDFs</returns>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <returns>Airport metadata and pre-signed URLs for each chart supplement PDF page</returns>
     /// <response code="200">Returns the chart supplements for the airport</response>
     /// <response code="404">If no chart supplements are found</response>
     [HttpGet("{icaoCodeOrIdent}")]

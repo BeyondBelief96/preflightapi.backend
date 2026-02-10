@@ -8,6 +8,12 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to AIRMET and SIGMET advisories. AIRMETs warn of weather hazards significant to light aircraft
+/// (moderate turbulence/icing, IFR conditions, mountain obscuration). SIGMETs warn of severe weather hazards
+/// significant to all aircraft (severe turbulence/icing, convective activity). Each advisory includes the
+/// hazard type, severity, altitude range, and geographic polygon defining the affected area.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/airsigmets")]

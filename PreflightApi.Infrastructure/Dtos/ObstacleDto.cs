@@ -3,11 +3,13 @@ using PreflightApi.Domain.Enums;
 namespace PreflightApi.Infrastructure.Dtos;
 
 /// <summary>
-/// Obstacle data from the FAA Digital Obstacle File.
+/// Obstacle data from the FAA Digital Obstacle File (DOF).
+/// Use the OasNumber to cross-reference with navigation log results — the navlog response's
+/// ObstacleOasNumbers field contains OAS numbers from this endpoint for obstacles near a planned route.
 /// </summary>
 public record ObstacleDto
 {
-    /// <summary>Obstacle Assessment Surface number (unique identifier).</summary>
+    /// <summary>Obstacle Assessment Surface (OAS) number — the unique identifier for this obstacle. This is the key used to look up obstacles returned by the navigation log endpoint's ObstacleOasNumbers field.</summary>
     public string OasNumber { get; init; } = string.Empty;
     /// <summary>Two-letter state identifier.</summary>
     public string? StateId { get; init; }

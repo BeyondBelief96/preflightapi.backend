@@ -7,6 +7,13 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to NOTAMs (Notices to Air Missions) from the FAA NOTAM Search (NMS) system.
+/// NOTAMs contain time-critical aeronautical information about airport closures, airspace restrictions,
+/// runway conditions, navigation aid outages, and other flight safety hazards. NOTAMs are returned as
+/// GeoJSON Features with geographic geometry and detailed properties including effective dates, text content,
+/// and plain-English translations. Query by airport, geographic radius, or along a flight route.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/notams")]

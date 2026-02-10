@@ -8,6 +8,13 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to obstacle data from the FAA Digital Obstacle File (DOF).
+/// Obstacles include towers, buildings, smokestacks, and other structures that may affect flight safety.
+/// Each obstacle has an OAS (Obstacle Assessment Surface) number as its unique identifier.
+/// OAS numbers are returned by the navigation log endpoint for obstacles near a planned route —
+/// use the by-oas-numbers endpoint to retrieve full details for those obstacles.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/obstacles")]
@@ -94,10 +101,12 @@ public class ObstacleController(IObstacleService obstacleService)
     }
 
     /// <summary>
-    /// Gets multiple obstacles by their OAS numbers
+    /// Gets multiple obstacles by their OAS numbers. This endpoint is designed to be used with the
+    /// ObstacleOasNumbers returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
+    /// to retrieve full details for obstacles near a planned route.
     /// </summary>
-    /// <param name="oasNumbers">List of OAS numbers (maximum 1000)</param>
-    /// <returns>Obstacles matching the specified OAS numbers</returns>
+    /// <param name="oasNumbers">JSON array of OAS number strings (maximum 1000). Example: ["12-345678","12-345679"]</param>
+    /// <returns>Obstacles matching the specified OAS numbers with type, height, lighting, and location data</returns>
     /// <response code="200">Returns the matching obstacles</response>
     /// <response code="400">If the list is empty or exceeds 1000 items</response>
     [HttpPost("by-oas-numbers")]

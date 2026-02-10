@@ -7,6 +7,11 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to METAR (Meteorological Aerodrome Report) observations.
+/// METARs are routine weather observations from airport weather stations, updated approximately every hour.
+/// METAR data is also used by the Performance endpoints to automatically calculate crosswind and density altitude for airports.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/metars")]
@@ -14,7 +19,8 @@ namespace PreflightApi.API.Controllers;
 public class MetarController(IMetarService metarService) : ControllerBase
 {
     /// <summary>
-    /// Gets the latest METAR for a specific airport
+    /// Gets the most recent METAR observation for a specific airport.
+    /// Returns decoded weather data including wind, visibility, sky conditions, temperature, and flight category.
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
     /// <returns>The latest METAR observation for the airport</returns>

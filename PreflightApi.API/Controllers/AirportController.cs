@@ -8,6 +8,12 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers
 {
+    /// <summary>
+    /// Provides access to FAA airport data from the National Airspace System Resources (NASR) database.
+    /// Airports can be queried by ICAO code, FAA identifier, state, or text search. Use an airport's
+    /// ICAO code or identifier to query related data from other endpoints such as METARs, TAFs, runways,
+    /// communication frequencies, airport diagrams, and chart supplements.
+    /// </summary>
     [ApiVersion("1.0")]
     [ApiController]
     [Route("api/v{version:apiVersion}/airports")]
@@ -143,7 +149,9 @@ namespace PreflightApi.API.Controllers
         }
 
         /// <summary>
-        /// Gets runways for a specific airport
+        /// Gets runways for a specific airport, including dimensions, surface type, lighting,
+        /// and detailed runway end information (approach types, markings, obstacles).
+        /// Runway heading data can be used with the Performance crosswind calculator endpoint.
         /// </summary>
         /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
         /// <returns>Runways and runway end details for the airport</returns>

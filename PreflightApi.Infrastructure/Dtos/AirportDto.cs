@@ -1,7 +1,13 @@
 namespace PreflightApi.Infrastructure.Dtos
 {
     /// <summary>
-    /// Airport data from the FAA NASR database.
+    /// Airport data from the FAA National Airspace System Resources (NASR) database.
+    /// Use the airport's IcaoId or ArptId to query related endpoints such as runways
+    /// (<c>GET /api/v1/airports/{icaoCodeOrIdent}/runways</c>), communication frequencies
+    /// (<c>GET /api/v1/communication-frequencies/{servicedFacility}</c>), METARs
+    /// (<c>GET /api/v1/metars/{icaoCodeOrIdent}</c>), TAFs (<c>GET /api/v1/tafs/{icaoCodeOrIdent}</c>),
+    /// airport diagrams (<c>GET /api/v1/airport-diagrams/{icaoCodeOrIdent}</c>), and
+    /// chart supplements (<c>GET /api/v1/chart-supplements/{icaoCodeOrIdent}</c>).
     /// </summary>
     public record AirportDto
     {
@@ -29,15 +35,15 @@ namespace PreflightApi.Infrastructure.Dtos
         public decimal? LongDecimal { get; init; }
         /// <summary>Field elevation in feet MSL.</summary>
         public decimal? Elev { get; init; }
-        /// <summary>Magnetic variation in degrees.</summary>
+        /// <summary>Magnetic variation in degrees. Combine with MagHemis to determine east/west deviation (e.g., 5E means add 5 degrees to true heading for magnetic heading).</summary>
         public decimal? MagVarn { get; init; }
-        /// <summary>Magnetic variation hemisphere (E or W).</summary>
+        /// <summary>Magnetic variation hemisphere: E (east/add to true heading) or W (west/subtract from true heading).</summary>
         public string? MagHemis { get; init; }
         /// <summary>Sectional chart name.</summary>
         public string? ChartName { get; init; }
-        /// <summary>Airport operational status.</summary>
+        /// <summary>Airport operational status: O (operational), CI (closed indefinitely), or CP (closed permanently).</summary>
         public string? ArptStatus { get; init; }
-        /// <summary>Available fuel types.</summary>
+        /// <summary>Available fuel types (e.g., "100LL", "JET-A", "MOGAS"). Comma-separated if multiple types available.</summary>
         public string? FuelTypes { get; init; }
         /// <summary>Date of the last FAA inspection.</summary>
         public DateTime? LastInspection { get; init; }

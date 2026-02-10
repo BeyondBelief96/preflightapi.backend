@@ -8,15 +8,19 @@ namespace PreflightApi.Infrastructure.Dtos.Notam;
 /// </summary>
 public record NotamDto
 {
+    /// <summary>GeoJSON type, always "Feature".</summary>
     [JsonPropertyName("type")]
     public string Type { get; init; } = "Feature";
 
+    /// <summary>Unique NOTAM feature identifier.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
 
+    /// <summary>GeoJSON geometry representing the NOTAM's geographic location or affected area (Point, Polygon, or GeometryCollection).</summary>
     [JsonPropertyName("geometry")]
     public NotamGeometryDto? Geometry { get; init; }
 
+    /// <summary>NOTAM properties containing the core NOTAM data, detail fields, and translations.</summary>
     [JsonPropertyName("properties")]
     public NotamPropertiesDto? Properties { get; init; }
 }
@@ -44,20 +48,30 @@ public record NotamGeometryDto
     public List<NotamGeometryDto>? Geometries { get; init; }
 }
 
+/// <summary>
+/// Properties of a NOTAM GeoJSON Feature containing the core NOTAM data.
+/// </summary>
 public record NotamPropertiesDto
 {
+    /// <summary>Core NOTAM data including the event metadata, detail fields, and translations.</summary>
     [JsonPropertyName("coreNOTAMData")]
     public CoreNotamDataDto? CoreNotamData { get; init; }
 }
 
+/// <summary>
+/// Core NOTAM data structure containing event metadata, the NOTAM detail, and any translations.
+/// </summary>
 public record CoreNotamDataDto
 {
+    /// <summary>NOTAM event metadata (encoding format and scenario).</summary>
     [JsonPropertyName("notamEvent")]
     public NotamEventDto? NotamEvent { get; init; }
 
+    /// <summary>The NOTAM detail fields including identifier, text, effective dates, location, and classification.</summary>
     [JsonPropertyName("notam")]
     public NotamDetailDto? Notam { get; init; }
 
+    /// <summary>NOTAM text translations in various formats (plain English, domestic format, ICAO format).</summary>
     [JsonPropertyName("notamTranslation")]
     public List<NotamTranslationDto>? NotamTranslation { get; init; }
 }

@@ -14,11 +14,13 @@ namespace PreflightApi.Infrastructure.Dtos
     }
 
     /// <summary>
-    /// Controlled airspace data (Class B, C, D, E) from ArcGIS.
+    /// Controlled airspace data (Class B, C, D, E) sourced from FAA ArcGIS.
+    /// Use the GlobalId to cross-reference with navigation log results — the navlog response's
+    /// AirspaceGlobalIds field contains GlobalIds from this endpoint for airspaces along a planned route.
     /// </summary>
     public class AirspaceDto
     {
-        /// <summary>ArcGIS global unique identifier.</summary>
+        /// <summary>ArcGIS global unique identifier. This is the key used to look up airspaces returned by the navigation log endpoint's AirspaceGlobalIds field.</summary>
         public string? GlobalId { get; set; }
         /// <summary>FAA identifier.</summary>
         public string? Ident { get; set; }
@@ -83,11 +85,13 @@ namespace PreflightApi.Infrastructure.Dtos
     }
 
     /// <summary>
-    /// Special use airspace data (restricted, prohibited, warning, MOA, alert) from ArcGIS.
+    /// Special use airspace data (restricted, prohibited, warning, MOA, alert) sourced from FAA ArcGIS.
+    /// Use the GlobalId to cross-reference with navigation log results — the navlog response's
+    /// SpecialUseAirspaceGlobalIds field contains GlobalIds from this endpoint for special use airspaces along a planned route.
     /// </summary>
     public class SpecialUseAirspaceDto
     {
-        /// <summary>ArcGIS global unique identifier.</summary>
+        /// <summary>ArcGIS global unique identifier. This is the key used to look up special use airspaces returned by the navigation log endpoint's SpecialUseAirspaceGlobalIds field.</summary>
         public string? GlobalId { get; set; }
         /// <summary>Airspace name.</summary>
         public string? Name { get; set; }

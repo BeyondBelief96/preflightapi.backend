@@ -8,6 +8,13 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to controlled airspace (Class B, C, D, E) and special use airspace
+/// (restricted, prohibited, warning, MOA, alert) data sourced from FAA ArcGIS services.
+/// Each airspace includes boundary geometry (GeoJSON), altitude limits, and classification.
+/// Airspace GlobalIds are returned by the navigation log endpoint for airspaces along a planned route —
+/// use the by-global-ids endpoints to retrieve full details for those airspaces.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/airspaces")]
@@ -128,10 +135,12 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets airspaces by their global IDs
+    /// Gets controlled airspaces by their global IDs. This endpoint is designed to be used with the
+    /// AirspaceGlobalIds returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
+    /// to retrieve full details for airspaces along a planned route.
     /// </summary>
-    /// <param name="globalIds">Comma-separated global IDs</param>
-    /// <returns>Airspaces matching the specified global IDs</returns>
+    /// <param name="globalIds">Comma-separated global IDs (e.g., from the navlog response's AirspaceGlobalIds)</param>
+    /// <returns>Airspaces matching the specified global IDs with full boundary geometry and altitude data</returns>
     /// <response code="200">Returns the matching airspaces</response>
     /// <response code="400">If the global IDs parameter is empty</response>
     [HttpGet("by-global-ids")]
@@ -148,10 +157,12 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets special use airspaces by their global IDs
+    /// Gets special use airspaces by their global IDs. This endpoint is designed to be used with the
+    /// SpecialUseAirspaceGlobalIds returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
+    /// to retrieve full details for special use airspaces along a planned route.
     /// </summary>
-    /// <param name="globalIds">Comma-separated global IDs</param>
-    /// <returns>Special use airspaces matching the specified global IDs</returns>
+    /// <param name="globalIds">Comma-separated global IDs (e.g., from the navlog response's SpecialUseAirspaceGlobalIds)</param>
+    /// <returns>Special use airspaces matching the specified global IDs with full boundary geometry and altitude data</returns>
     /// <response code="200">Returns the matching special use airspaces</response>
     /// <response code="400">If the global IDs parameter is empty</response>
     [HttpGet("special-use/by-global-ids")]
