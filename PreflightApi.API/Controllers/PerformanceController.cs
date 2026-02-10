@@ -99,4 +99,77 @@ public class PerformanceController(IPerformanceCalculatorService performanceCalc
         var result = performanceCalculatorService.CalculateDensityAltitude(request);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Calculates true heading and ground speed using the wind triangle.
+    /// Given true course, true airspeed, wind direction, and wind speed, returns the wind correction angle,
+    /// true heading, ground speed, and headwind/crosswind components.
+    /// </summary>
+    /// <param name="request">True course (degrees), TAS (knots), wind direction (degrees), wind speed (knots)</param>
+    /// <returns>True heading, ground speed, WCA, and wind components</returns>
+    /// <response code="200">Returns wind triangle calculation results</response>
+    /// <response code="400">If the request parameters are invalid</response>
+    [HttpPost("wind-triangle/calculate")]
+    [ProducesResponseType(typeof(WindTriangleResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public ActionResult<WindTriangleResponseDto> CalculateWindTriangle(
+        [FromBody] WindTriangleRequestDto request)
+    {
+        var result = performanceCalculatorService.CalculateWindTriangle(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Calculates true airspeed (TAS) from calibrated airspeed, pressure altitude, and outside air temperature.
+    /// Also returns density altitude and Mach number at the given conditions.
+    /// </summary>
+    /// <param name="request">Calibrated airspeed (knots), pressure altitude (feet), OAT (°C)</param>
+    /// <returns>True airspeed, density altitude, and Mach number</returns>
+    /// <response code="200">Returns TAS calculation results</response>
+    /// <response code="400">If the request parameters are invalid</response>
+    [HttpPost("true-airspeed/calculate")]
+    [ProducesResponseType(typeof(TrueAirspeedResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public ActionResult<TrueAirspeedResponseDto> CalculateTrueAirspeed(
+        [FromBody] TrueAirspeedRequestDto request)
+    {
+        var result = performanceCalculatorService.CalculateTrueAirspeed(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Estimates cloud base height AGL from surface temperature and dewpoint.
+    /// Uses the standard spread × 400 formula (equivalent to spread / 2.5 × 1000).
+    /// </summary>
+    /// <param name="request">Surface temperature (°C) and dewpoint (°C)</param>
+    /// <returns>Estimated cloud base in feet AGL and temperature/dewpoint spread</returns>
+    /// <response code="200">Returns cloud base estimation</response>
+    /// <response code="400">If dewpoint exceeds temperature</response>
+    [HttpPost("cloud-base/calculate")]
+    [ProducesResponseType(typeof(CloudBaseResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public ActionResult<CloudBaseResponseDto> CalculateCloudBase(
+        [FromBody] CloudBaseRequestDto request)
+    {
+        var result = performanceCalculatorService.CalculateCloudBase(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Calculates pressure altitude from field elevation and altimeter setting.
+    /// PA = field elevation + (29.92 − altimeter) × 1000.
+    /// </summary>
+    /// <param name="request">Field elevation (feet MSL) and altimeter setting (inHg)</param>
+    /// <returns>Pressure altitude and altimeter correction in feet</returns>
+    /// <response code="200">Returns pressure altitude calculation</response>
+    /// <response code="400">If the altimeter setting is out of range</response>
+    [HttpPost("pressure-altitude/calculate")]
+    [ProducesResponseType(typeof(PressureAltitudeResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public ActionResult<PressureAltitudeResponseDto> CalculatePressureAltitude(
+        [FromBody] PressureAltitudeRequestDto request)
+    {
+        var result = performanceCalculatorService.CalculatePressureAltitude(request);
+        return Ok(result);
+    }
 }

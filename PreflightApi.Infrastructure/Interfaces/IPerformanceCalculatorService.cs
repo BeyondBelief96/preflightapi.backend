@@ -34,4 +34,32 @@ public interface IPerformanceCalculatorService
     /// <param name="request">Density altitude calculation parameters</param>
     /// <returns>Calculated density altitude</returns>
     DensityAltitudeResponseDto CalculateDensityAltitude(DensityAltitudeRequestDto request);
+
+    /// <summary>
+    /// Calculates wind correction angle, true heading, and ground speed from a wind triangle
+    /// </summary>
+    /// <param name="request">Wind triangle calculation parameters</param>
+    /// <returns>Heading, ground speed, and wind components</returns>
+    WindTriangleResponseDto CalculateWindTriangle(WindTriangleRequestDto request);
+
+    /// <summary>
+    /// Calculates true airspeed from calibrated airspeed, pressure altitude, and temperature
+    /// </summary>
+    /// <param name="request">True airspeed calculation parameters</param>
+    /// <returns>TAS, density altitude, and Mach number</returns>
+    TrueAirspeedResponseDto CalculateTrueAirspeed(TrueAirspeedRequestDto request);
+
+    /// <summary>
+    /// Estimates cloud base height AGL from temperature/dewpoint spread
+    /// </summary>
+    /// <param name="request">Cloud base estimation parameters</param>
+    /// <returns>Estimated cloud base in feet AGL</returns>
+    CloudBaseResponseDto CalculateCloudBase(CloudBaseRequestDto request);
+
+    /// <summary>
+    /// Calculates pressure altitude from field elevation and altimeter setting
+    /// </summary>
+    /// <param name="request">Pressure altitude calculation parameters</param>
+    /// <returns>Pressure altitude and altimeter correction</returns>
+    PressureAltitudeResponseDto CalculatePressureAltitude(PressureAltitudeRequestDto request);
 }

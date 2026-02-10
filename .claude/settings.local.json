@@ -80,7 +80,10 @@
       "Bash(gh repo view:*)",
       "Bash(git -C /c/Users/brand/source/repos/preflight.api remote -v)",
       "Bash(bicep build:*)",
-      "Bash(/c/Users/brand/.azure/bin/bicep.exe build:*)"
+      "Bash(/c/Users/brand/.azure/bin/bicep.exe build:*)",
+      "WebFetch(domain:e6bx.com)",
+      "WebFetch(domain:interstateaviation.com)",
+      "WebFetch(domain:asa2fly.com)"
     ],
     "deny": [],
     "ask": []

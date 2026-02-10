@@ -16,8 +16,14 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
     // Standard atmosphere constants
     private const double StandardPressureInHg = 29.92;
     private const double SeaLevelStandardTempCelsius = 15.0;
+    private const double StandardTempKelvin = 288.15; // 15°C in Kelvin
     private const double LapseRateCelsiusPerThousandFt = 2.0;
     private const double DensityAltitudeFactor = 120.0;
+    private const double PressureLapseConstant = 0.0000068756;
+    private const double PressureExponent = 5.2559;
+    private const double CloudBaseFactor = 400.0; // °C spread to feet AGL
+    private const double SpeedOfSoundSeaLevelKt = 661.47;
+    private const double CelsiusToKelvinOffset = 273.15;
 
     public PerformanceCalculatorService(
         PreflightApiDbContext context,
@@ -263,6 +269,107 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
         };
     }
 
+    public WindTriangleResponseDto CalculateWindTriangle(WindTriangleRequestDto request)
+    {
+        if (request.TrueAirspeedKt <= 0)
+            throw new ValidationException("TrueAirspeedKt", "True airspeed must be greater than 0.");
+        if (request.WindSpeedKt < 0)
+            throw new ValidationException("WindSpeedKt", "Wind speed cannot be negative.");
+        if (request.TrueCourseDegrees < 0 || request.TrueCourseDegrees > 360)
+            throw new ValidationException("TrueCourseDegrees", "True course must be between 0 and 360 degrees.");
+        if (request.WindDirectionDegrees < 0 || request.WindDirectionDegrees > 360)
+            throw new ValidationException("WindDirectionDegrees", "Wind direction must be between 0 and 360 degrees.");
+
+        _logger.LogInformation(
+            "Calculating wind triangle: TC={TC}° TAS={TAS}kt Wind={WindDir}°@{WindSpd}kt",
+            request.TrueCourseDegrees, request.TrueAirspeedKt,
+            request.WindDirectionDegrees, request.WindSpeedKt);
+
+        var result = CalculateWindTriangleInternal(
+            request.TrueCourseDegrees, request.TrueAirspeedKt,
+            request.WindDirectionDegrees, request.WindSpeedKt);
+
+        return new WindTriangleResponseDto
+        {
+            TrueHeadingDegrees = result.TrueHeading,
+            GroundSpeedKt = result.GroundSpeed,
+            WindCorrectionAngleDegrees = result.WindCorrectionAngle,
+            HeadwindComponentKt = result.HeadwindComponent,
+            CrosswindComponentKt = result.CrosswindComponent,
+            TrueCourseDegrees = request.TrueCourseDegrees,
+            TrueAirspeedKt = request.TrueAirspeedKt,
+            WindDirectionDegrees = request.WindDirectionDegrees,
+            WindSpeedKt = request.WindSpeedKt
+        };
+    }
+
+    public TrueAirspeedResponseDto CalculateTrueAirspeed(TrueAirspeedRequestDto request)
+    {
+        if (request.CalibratedAirspeedKt <= 0)
+            throw new ValidationException("CalibratedAirspeedKt", "Calibrated airspeed must be greater than 0.");
+        if (request.OutsideAirTemperatureCelsius < -70 || request.OutsideAirTemperatureCelsius > 60)
+            throw new ValidationException("OutsideAirTemperatureCelsius", "Temperature must be between -70°C and 60°C.");
+
+        _logger.LogInformation(
+            "Calculating TAS: CAS={CAS}kt PA={PA}ft OAT={OAT}°C",
+            request.CalibratedAirspeedKt, request.PressureAltitudeFt, request.OutsideAirTemperatureCelsius);
+
+        var result = CalculateTrueAirspeedInternal(
+            request.CalibratedAirspeedKt, request.PressureAltitudeFt, request.OutsideAirTemperatureCelsius);
+
+        return new TrueAirspeedResponseDto
+        {
+            TrueAirspeedKt = result.TrueAirspeed,
+            DensityAltitudeFt = result.DensityAltitude,
+            MachNumber = result.MachNumber,
+            CalibratedAirspeedKt = request.CalibratedAirspeedKt,
+            PressureAltitudeFt = request.PressureAltitudeFt,
+            OutsideAirTemperatureCelsius = request.OutsideAirTemperatureCelsius
+        };
+    }
+
+    public CloudBaseResponseDto CalculateCloudBase(CloudBaseRequestDto request)
+    {
+        if (request.DewpointCelsius > request.TemperatureCelsius)
+            throw new ValidationException("DewpointCelsius", "Dewpoint cannot exceed temperature.");
+
+        _logger.LogInformation(
+            "Calculating cloud base: Temp={Temp}°C Dewpoint={Dewpoint}°C",
+            request.TemperatureCelsius, request.DewpointCelsius);
+
+        double spread = request.TemperatureCelsius - request.DewpointCelsius;
+        double cloudBaseFtAgl = Math.Round(spread * CloudBaseFactor, 0);
+
+        return new CloudBaseResponseDto
+        {
+            EstimatedCloudBaseFtAgl = cloudBaseFtAgl,
+            TemperatureDewpointSpreadCelsius = Math.Round(spread, 1),
+            TemperatureCelsius = request.TemperatureCelsius,
+            DewpointCelsius = request.DewpointCelsius
+        };
+    }
+
+    public PressureAltitudeResponseDto CalculatePressureAltitude(PressureAltitudeRequestDto request)
+    {
+        if (request.AltimeterInHg < 25.0 || request.AltimeterInHg > 35.0)
+            throw new ValidationException("AltimeterInHg", "Altimeter setting must be between 25.0 and 35.0 inHg.");
+
+        _logger.LogInformation(
+            "Calculating pressure altitude: Elevation={Elev}ft Altimeter={Altim}inHg",
+            request.FieldElevationFt, request.AltimeterInHg);
+
+        double altimeterCorrection = (StandardPressureInHg - request.AltimeterInHg) * 1000;
+        double pressureAltitude = request.FieldElevationFt + altimeterCorrection;
+
+        return new PressureAltitudeResponseDto
+        {
+            PressureAltitudeFt = Math.Round(pressureAltitude, 0),
+            AltimeterCorrectionFt = Math.Round(altimeterCorrection, 0),
+            FieldElevationFt = request.FieldElevationFt,
+            AltimeterInHg = request.AltimeterInHg
+        };
+    }
+
     private static int ConvertTrueToMagnetic(int trueHeading, decimal? magVarn, string? magHemis)
     {
         if (magVarn == null)
@@ -357,5 +464,90 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
             Math.Round(isaTemperature, 1),
             Math.Round(temperatureDeviation, 1)
         );
+    }
+
+    private static (double TrueHeading, double GroundSpeed, double WindCorrectionAngle,
+        double HeadwindComponent, double CrosswindComponent)
+        CalculateWindTriangleInternal(double trueCourse, double tas, double windDirection, double windSpeed)
+    {
+        if (windSpeed == 0)
+            return (NormalizeDegrees(trueCourse), tas, 0, 0, 0);
+
+        double tcRad = trueCourse * Math.PI / 180.0;
+        double wdRad = windDirection * Math.PI / 180.0;
+
+        // Wind angle relative to course (wind blowing FROM windDirection TOWARD the aircraft's course)
+        double windAngle = wdRad - tcRad;
+
+        // Wind correction angle: arcsin((windSpeed * sin(windDir - trueCourse)) / TAS)
+        double sinWca = windSpeed * Math.Sin(windAngle) / tas;
+
+        // Clamp to [-1, 1] for safety when wind speed approaches/exceeds TAS
+        sinWca = Math.Clamp(sinWca, -1.0, 1.0);
+        double wca = Math.Asin(sinWca);
+        double wcaDegrees = wca * 180.0 / Math.PI;
+
+        // True heading = true course + WCA
+        double trueHeading = NormalizeDegrees(trueCourse + wcaDegrees);
+
+        // Ground speed = TAS * cos(WCA) - windSpeed * cos(windDirection - trueCourse)
+        // Minus because wind direction is FROM, so the wind vector opposes the course component
+        double groundSpeed = tas * Math.Cos(wca) - windSpeed * Math.Cos(windAngle);
+        groundSpeed = Math.Max(0, groundSpeed); // Ground speed can't be negative
+
+        // Headwind component (positive = headwind, negative = tailwind)
+        // Wind blowing FROM windDirection; headwind is the component along the course direction
+        double headwindComponent = windSpeed * Math.Cos(windAngle);
+
+        // Crosswind component (positive = from right, negative = from left)
+        double crosswindComponent = windSpeed * Math.Sin(windAngle);
+
+        return (
+            Math.Round(trueHeading, 1),
+            Math.Round(groundSpeed, 1),
+            Math.Round(wcaDegrees, 1),
+            Math.Round(headwindComponent, 1),
+            Math.Round(crosswindComponent, 1)
+        );
+    }
+
+    private static (double TrueAirspeed, double DensityAltitude, double MachNumber)
+        CalculateTrueAirspeedInternal(double cas, double pressureAltitude, double oatCelsius)
+    {
+        // ISA temperature at this pressure altitude
+        double isaTempCelsius = SeaLevelStandardTempCelsius - (pressureAltitude / 1000.0) * LapseRateCelsiusPerThousandFt;
+
+        // Convert to Kelvin
+        double oatKelvin = oatCelsius + CelsiusToKelvinOffset;
+        double isaKelvin = isaTempCelsius + CelsiusToKelvinOffset;
+
+        // Pressure ratio using barometric formula
+        double pressureRatio = Math.Pow(1 - PressureLapseConstant * pressureAltitude, PressureExponent);
+
+        // TAS = CAS / sqrt(pressureRatio) * sqrt(OAT_K / ISA_K)
+        double tas = cas / Math.Sqrt(pressureRatio) * Math.Sqrt(oatKelvin / isaKelvin);
+
+        // Density altitude using the temperature deviation method
+        double tempDeviation = oatCelsius - isaTempCelsius;
+        double densityAltitude = pressureAltitude + DensityAltitudeFactor * tempDeviation;
+
+        // Mach number: TAS / local speed of sound
+        // Speed of sound = 661.47 * sqrt(OAT_K / 288.15)
+        double localSpeedOfSound = SpeedOfSoundSeaLevelKt * Math.Sqrt(oatKelvin / StandardTempKelvin);
+        double machNumber = tas / localSpeedOfSound;
+
+        return (
+            Math.Round(tas, 1),
+            Math.Round(densityAltitude, 0),
+            Math.Round(machNumber, 3)
+        );
+    }
+
+    private static double NormalizeDegrees(double degrees)
+    {
+        double result = degrees % 360.0;
+        if (result <= 0)
+            result += 360.0;
+        return result;
     }
 }
