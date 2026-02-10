@@ -367,3 +367,4 @@ FodyWeavers.xsd
 .env
 .env.*
 !.env.example
+/docs/azure-cost-optimization-guide.docx

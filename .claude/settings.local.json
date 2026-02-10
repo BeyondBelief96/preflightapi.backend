@@ -76,6 +76,7 @@
       "Bash(done)",
       "Bash(git check-ignore:*)",
       "WebFetch(domain:nfdc.faa.gov)",
+<<<<<<< Updated upstream
       "Bash(dotnet list:*)",
       "Bash(gh repo view:*)",
       "Bash(git -C /c/Users/brand/source/repos/preflight.api remote -v)",
@@ -96,6 +97,14 @@
       "Bash(/c/Python313/python.exe:*)",
       "Bash(ls:*)",
       "WebFetch(domain:docs.dndocs.com)"
+=======
+      "Bash(unzip:*)",
+      "Bash(pip install:*)",
+      "Bash(wc:*)",
+      "Bash(node docs/azure-cost-optimization.js:*)",
+      "Bash(npm install:*)",
+      "Bash(npm root:*)"
+>>>>>>> Stashed changes
     ],
     "deny": [],
     "ask": []
