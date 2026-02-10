@@ -34,8 +34,11 @@ param dbLocation string = location
 @description('Storage account name for blob data (must be globally unique)')
 param storageAccountName string
 
+@description('Storage account SKU')
+param storageSkuName string = 'Standard_LRS'
+
 @description('App Service Plan SKU name for API')
-param apiSkuName string = 'B2'
+param apiSkuName string = 'B1'
 
 @description('App Service Plan SKU tier for API')
 param apiSkuTier string = 'Basic'
@@ -122,6 +125,7 @@ module storage 'modules/storage.bicep' = {
     regionShortName: regionShortName
     environment: environment
     storageAccountName: storageAccountName
+    skuName: storageSkuName
   }
 }
 

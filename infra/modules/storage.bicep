@@ -11,7 +11,7 @@ param environment string
 param storageAccountName string
 
 @description('Storage account SKU')
-param skuName string = 'Standard_RAGRS'
+param skuName string = 'Standard_LRS'
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {

@@ -8,7 +8,7 @@ param baseName string
 param environment string
 
 @description('App Service Plan SKU name (e.g., B2)')
-param skuName string = 'B2'
+param skuName string = 'B1'
 
 @description('App Service Plan SKU tier (e.g., Basic)')
 param skuTier string = 'Basic'

@@ -25,8 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreflightApi.Azure.Function
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9385-4741-8876-47ABEBFA992E}"
 	ProjectSection(SolutionItems) = preProject
-		docs\API Company Pivot Strategy.md = docs\API Company Pivot Strategy.md
+		docs\azure-functions-improvement-plan.md = docs\azure-functions-improvement-plan.md
 		docs\infrastructure-setup.md = docs\infrastructure-setup.md
+		docs\nasr-phase1-implementation-plan.md = docs\nasr-phase1-implementation-plan.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
@@ -55,9 +56,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apim-policies", "apim-policies", "{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9}"
 	ProjectSection(SolutionItems) = preProject
 		apim-policies\api-policy.xml = apim-policies\api-policy.xml
-		apim-policies\free-tier-policy.xml = apim-policies\free-tier-policy.xml
-		apim-policies\professional-tier-policy.xml = apim-policies\professional-tier-policy.xml
-		apim-policies\starter-tier-policy.xml = apim-policies\starter-tier-policy.xml
+		apim-policies\private-pilot-policy.xml = apim-policies\private-pilot-policy.xml
+		apim-policies\commercial-pilot-policy.xml = apim-policies\commercial-pilot-policy.xml
+		apim-policies\student-pilot-policy.xml = apim-policies\student-pilot-policy.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{8F5BA337-9853-4AF3-9C64-50FF5F1FFE58}"

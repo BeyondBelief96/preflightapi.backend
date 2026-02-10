@@ -14,9 +14,10 @@ param dbLocation = 'eastus2'
 
 // Storage
 param storageAccountName = 'stpreflightapiprod'
+param storageSkuName = 'Standard_LRS'
 
 // App Service
-param apiSkuName = 'B2'
+param apiSkuName = 'B1'
 param apiSkuTier = 'Basic'
 
 // APIM
