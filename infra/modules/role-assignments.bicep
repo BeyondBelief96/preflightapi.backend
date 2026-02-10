@@ -7,10 +7,7 @@ param functionAppPrincipalId string
 @description('Resource ID of the storage account for blob data access')
 param storageAccountId string
 
-@description('Resource ID of the PostgreSQL server (for CI/CD firewall management)')
-param postgresServerId string
-
-@description('Principal ID of the GitHub deployment service principal (optional)')
+@description('Principal ID of the GitHub deployment identity (optional)')
 param githubDeploymentPrincipalId string = ''
 
 // Built-in role definition IDs
@@ -40,10 +37,10 @@ resource functionAppStorageRole 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
-// Contributor on PostgreSQL — GitHub deployment SP (for firewall rule management in CI/CD)
-resource githubPostgresContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(githubDeploymentPrincipalId)) {
-  name: guid(postgresServerId, githubDeploymentPrincipalId, contributorRoleId)
-  scope: postgresServer
+// Contributor on resource group — GitHub deployment identity
+// Covers: Web App deploy, Function App deploy, PostgreSQL firewall rules, APIM policy updates
+resource githubRgContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(githubDeploymentPrincipalId)) {
+  name: guid(resourceGroup().id, githubDeploymentPrincipalId, contributorRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: githubDeploymentPrincipalId
@@ -54,8 +51,4 @@ resource githubPostgresContributor 'Microsoft.Authorization/roleAssignments@2022
 // Reference existing resources by ID for scoping
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: last(split(storageAccountId, '/'))
-}
-
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' existing = {
-  name: last(split(postgresServerId, '/'))
 }

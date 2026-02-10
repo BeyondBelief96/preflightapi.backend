@@ -213,7 +213,7 @@ jobs:
           BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/products"
           API_VERSION="2024-05-01"
 
-          for policy_file in repo/apim-policies/*-tier-policy.xml; do
+          for policy_file in repo/apim-policies/*-pilot-policy.xml; do
             product_id=$(basename "$policy_file" | sed 's/-policy\.xml//')
             echo "Deploying policy for product: ${product_id}"
             policy_content=$(python3 -c "import json; print(json.dumps(open('${policy_file}').read()))")

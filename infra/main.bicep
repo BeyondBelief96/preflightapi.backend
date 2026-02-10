@@ -71,8 +71,17 @@ param nmsClientSecret string
 @description('APIM-to-API shared secret for gateway validation')
 param gatewaySecret string
 
-@description('Principal ID of the GitHub deployment service principal (optional, for DB firewall management)')
-param githubDeploymentPrincipalId string = ''
+@description('GitHub organization or username (for OIDC federated credentials)')
+param githubOrganization string = 'BeyondBelief96'
+
+@description('GitHub repository name (for OIDC federated credentials)')
+param githubRepository string = 'preflightapi.backend'
+
+@description('Branches to create federated credentials for')
+param githubBranches array = [
+  'main'
+  'develop'
+]
 
 // ─── Derived values ────────────────────────────────────────────────────────────
 
@@ -189,6 +198,20 @@ module apim 'modules/apim.bicep' = {
   }
 }
 
+// GitHub Deployment Identity (OIDC federated credentials)
+module githubIdentity 'modules/github-identity.bicep' = {
+  name: 'github-identity-${environment}'
+  scope: rg
+  params: {
+    location: location
+    baseName: baseName
+    environment: environment
+    githubOrganization: githubOrganization
+    githubRepository: githubRepository
+    branches: githubBranches
+  }
+}
+
 // Role Assignments (RBAC)
 module roleAssignments 'modules/role-assignments.bicep' = {
   name: 'role-assignments-${environment}'
@@ -197,8 +220,7 @@ module roleAssignments 'modules/role-assignments.bicep' = {
     webAppPrincipalId: appService.outputs.webAppPrincipalId
     functionAppPrincipalId: functionApp.outputs.functionAppPrincipalId
     storageAccountId: storage.outputs.storageAccountId
-    postgresServerId: postgresql.outputs.serverId
-    githubDeploymentPrincipalId: githubDeploymentPrincipalId
+    githubDeploymentPrincipalId: githubIdentity.outputs.principalId
   }
 }
 
@@ -236,3 +258,6 @@ output apimServiceName string = apim.outputs.apimName
 
 @description('Application Insights connection string')
 output appInsightsConnectionString string = monitoring.outputs.appInsightsConnectionString
+
+@description('GitHub deployment identity client ID — set as AZURE_CLIENT_ID secret in GitHub')
+output githubDeploymentClientId string = githubIdentity.outputs.clientId

@@ -76,7 +76,11 @@
       "Bash(done)",
       "Bash(git check-ignore:*)",
       "WebFetch(domain:nfdc.faa.gov)",
-      "Bash(dotnet list:*)"
+      "Bash(dotnet list:*)",
+      "Bash(gh repo view:*)",
+      "Bash(git -C /c/Users/brand/source/repos/preflight.api remote -v)",
+      "Bash(bicep build:*)",
+      "Bash(/c/Users/brand/.azure/bin/bicep.exe build:*)"
     ],
     "deny": [],
     "ask": []

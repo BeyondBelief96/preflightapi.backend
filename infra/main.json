@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.40.2.10011",
-      "templateHash": "209381302702597970"
+      "templateHash": "622506590653940429"
     }
   },
   "parameters": {
@@ -78,9 +78,16 @@
         "description": "Storage account name for blob data (must be globally unique)"
       }
     },
+    "storageSkuName": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Storage account SKU"
+      }
+    },
     "apiSkuName": {
       "type": "string",
-      "defaultValue": "B2",
+      "defaultValue": "B1",
       "metadata": {
         "description": "App Service Plan SKU name for API"
       }
@@ -141,11 +148,28 @@
         "description": "APIM-to-API shared secret for gateway validation"
       }
     },
-    "githubDeploymentPrincipalId": {
+    "githubOrganization": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "BeyondBelief96",
       "metadata": {
-        "description": "Principal ID of the GitHub deployment service principal (optional, for DB firewall management)"
+        "description": "GitHub organization or username (for OIDC federated credentials)"
+      }
+    },
+    "githubRepository": {
+      "type": "string",
+      "defaultValue": "preflightapi.backend",
+      "metadata": {
+        "description": "GitHub repository name (for OIDC federated credentials)"
+      }
+    },
+    "githubBranches": {
+      "type": "array",
+      "defaultValue": [
+        "main",
+        "develop"
+      ],
+      "metadata": {
+        "description": "Branches to create federated credentials for"
       }
     }
   },
@@ -489,6 +513,9 @@
           },
           "storageAccountName": {
             "value": "[parameters('storageAccountName')]"
+          },
+          "skuName": {
+            "value": "[parameters('storageSkuName')]"
           }
         },
         "template": {
@@ -498,7 +525,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "16117782915306874970"
+              "templateHash": "15519744274077943865"
             }
           },
           "parameters": {
@@ -528,7 +555,7 @@
             },
             "skuName": {
               "type": "string",
-              "defaultValue": "Standard_RAGRS",
+              "defaultValue": "Standard_LRS",
               "metadata": {
                 "description": "Storage account SKU"
               }
@@ -694,7 +721,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "11479479336375767815"
+              "templateHash": "10659317540243103161"
             }
           },
           "parameters": {
@@ -718,7 +745,7 @@
             },
             "skuName": {
               "type": "string",
-              "defaultValue": "B2",
+              "defaultValue": "B1",
               "metadata": {
                 "description": "App Service Plan SKU name (e.g., B2)"
               }
@@ -1434,6 +1461,137 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
+      "name": "[format('github-identity-{0}', parameters('environment'))]",
+      "resourceGroup": "[variables('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "baseName": {
+            "value": "[variables('baseName')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "githubOrganization": {
+            "value": "[parameters('githubOrganization')]"
+          },
+          "githubRepository": {
+            "value": "[parameters('githubRepository')]"
+          },
+          "branches": {
+            "value": "[parameters('githubBranches')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.40.2.10011",
+              "templateHash": "15883639171628752729"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for the managed identity"
+              }
+            },
+            "baseName": {
+              "type": "string",
+              "metadata": {
+                "description": "Base name for resource naming"
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "Environment name (test, prod)"
+              }
+            },
+            "githubOrganization": {
+              "type": "string",
+              "metadata": {
+                "description": "GitHub organization or username"
+              }
+            },
+            "githubRepository": {
+              "type": "string",
+              "metadata": {
+                "description": "GitHub repository name"
+              }
+            },
+            "branches": {
+              "type": "array",
+              "defaultValue": [
+                "main",
+                "develop"
+              ],
+              "metadata": {
+                "description": "Branches to create federated credentials for"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-01-31",
+              "name": "[format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "copy": {
+                "name": "federatedCredentials",
+                "count": "[length(parameters('branches'))]"
+              },
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials",
+              "apiVersion": "2023-01-31",
+              "name": "[format('{0}/{1}', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment')), format('github-{0}', replace(parameters('branches')[copyIndex()], '/', '-')))]",
+              "properties": {
+                "issuer": "https://token.actions.githubusercontent.com",
+                "subject": "[format('repo:{0}/{1}:ref:refs/heads/{2}', parameters('githubOrganization'), parameters('githubRepository'), parameters('branches')[copyIndex()])]",
+                "audiences": [
+                  "api://AzureADTokenExchange"
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "principalId": {
+              "type": "string",
+              "metadata": {
+                "description": "Principal (object) ID of the managed identity — use for RBAC role assignments"
+              },
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))), '2023-01-31').principalId]"
+            },
+            "clientId": {
+              "type": "string",
+              "metadata": {
+                "description": "Client ID of the managed identity — use as AZURE_CLIENT_ID in GitHub Actions"
+              },
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))), '2023-01-31').clientId]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
       "name": "[format('role-assignments-{0}', parameters('environment'))]",
       "resourceGroup": "[variables('resourceGroupName')]",
       "properties": {
@@ -1451,11 +1609,8 @@
           "storageAccountId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountId.value]"
           },
-          "postgresServerId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverId.value]"
-          },
           "githubDeploymentPrincipalId": {
-            "value": "[parameters('githubDeploymentPrincipalId')]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment'))), '2025-04-01').outputs.principalId.value]"
           }
         },
         "template": {
@@ -1465,7 +1620,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "9693183345797196179"
+              "templateHash": "6550081935519801717"
             }
           },
           "parameters": {
@@ -1487,17 +1642,11 @@
                 "description": "Resource ID of the storage account for blob data access"
               }
             },
-            "postgresServerId": {
-              "type": "string",
-              "metadata": {
-                "description": "Resource ID of the PostgreSQL server (for CI/CD firewall management)"
-              }
-            },
             "githubDeploymentPrincipalId": {
               "type": "string",
               "defaultValue": "",
               "metadata": {
-                "description": "Principal ID of the GitHub deployment service principal (optional)"
+                "description": "Principal ID of the GitHub deployment identity (optional)"
               }
             }
           },
@@ -1532,8 +1681,7 @@
               "condition": "[not(empty(parameters('githubDeploymentPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', last(split(parameters('postgresServerId'), '/')))]",
-              "name": "[guid(parameters('postgresServerId'), parameters('githubDeploymentPrincipalId'), variables('contributorRoleId'))]",
+              "name": "[guid(resourceGroup().id, parameters('githubDeploymentPrincipalId'), variables('contributorRoleId'))]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]",
                 "principalId": "[parameters('githubDeploymentPrincipalId')]",
@@ -1546,7 +1694,7 @@
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment')))]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
       ]
@@ -1629,6 +1777,13 @@
         "description": "Application Insights connection string"
       },
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+    },
+    "githubDeploymentClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "GitHub deployment identity client ID — set as AZURE_CLIENT_ID secret in GitHub"
+      },
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment'))), '2025-04-01').outputs.clientId.value]"
     }
   }
 }
