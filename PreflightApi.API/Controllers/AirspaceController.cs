@@ -9,7 +9,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides access to controlled airspace (Class B, C, D, E) and special use airspace
+/// Provides access to controlled airspace (Class B, C, D) and special use airspace
 /// (restricted, prohibited, warning, MOA, alert) data sourced from FAA ArcGIS services.
 /// Each airspace includes boundary geometry (GeoJSON), altitude limits, and classification.
 /// Airspace GlobalIds are returned by the navigation log endpoint for airspaces along a planned route —
