@@ -7,28 +7,31 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.Infrastructure.Services;
 
-public class PerformanceCalculatorService : IPerformanceCalculatorService
+public class E6bCalculatorService : IE6bCalculatorService
 {
     private readonly PreflightApiDbContext _context;
     private readonly IMetarService _metarService;
-    private readonly ILogger<PerformanceCalculatorService> _logger;
+    private readonly ILogger<E6bCalculatorService> _logger;
 
-    // Standard atmosphere constants
+    // Standard atmosphere constants (ICAO Doc 7488 / ISA)
     private const double StandardPressureInHg = 29.92;
     private const double SeaLevelStandardTempCelsius = 15.0;
     private const double StandardTempKelvin = 288.15; // 15°C in Kelvin
     private const double LapseRateCelsiusPerThousandFt = 2.0;
     private const double DensityAltitudeFactor = 120.0;
-    private const double PressureLapseConstant = 0.0000068756;
+    private const double PressureLapseConstant = 6.8756e-6;
     private const double PressureExponent = 5.2559;
     private const double CloudBaseFactor = 400.0; // °C spread to feet AGL
-    private const double SpeedOfSoundSeaLevelKt = 661.47;
+    private const double SpeedOfSoundSeaLevelKt = 661.47; // a₀ at sea level standard
     private const double CelsiusToKelvinOffset = 273.15;
+    private const double TropopauseAltitudeFt = 36089.0; // ISA tropopause
+    private const double TropopausePressureRatio = 0.22336; // δ at tropopause
+    private const double StratosphereExpConstant = 4.80634e-5; // exponential decay rate above tropopause
 
-    public PerformanceCalculatorService(
+    public E6bCalculatorService(
         PreflightApiDbContext context,
         IMetarService metarService,
-        ILogger<PerformanceCalculatorService> logger)
+        ILogger<E6bCalculatorService> logger)
     {
         _context = context;
         _metarService = metarService;
@@ -514,33 +517,69 @@ public class PerformanceCalculatorService : IPerformanceCalculatorService
     private static (double TrueAirspeed, double DensityAltitude, double MachNumber)
         CalculateTrueAirspeedInternal(double cas, double pressureAltitude, double oatCelsius)
     {
-        // ISA temperature at this pressure altitude
-        double isaTempCelsius = SeaLevelStandardTempCelsius - (pressureAltitude / 1000.0) * LapseRateCelsiusPerThousandFt;
+        // Full compressible CAS-to-TAS conversion using isentropic flow relations.
+        // Accurate at all subsonic speeds and altitudes including above the tropopause.
+        // Reference: ICAO Doc 7488 (Standard Atmosphere), isentropic flow equations.
+        //
+        // Steps:
+        //   1. CAS → impact pressure (qc) using sea-level standard conditions
+        //   2. Pressure ratio (δ) at altitude (troposphere + stratosphere)
+        //   3. Impact pressure ratio at altitude → Mach number
+        //   4. Mach × local speed of sound → TAS
 
-        // Convert to Kelvin
         double oatKelvin = oatCelsius + CelsiusToKelvinOffset;
-        double isaKelvin = isaTempCelsius + CelsiusToKelvinOffset;
 
-        // Pressure ratio using barometric formula
-        double pressureRatio = Math.Pow(1 - PressureLapseConstant * pressureAltitude, PressureExponent);
+        // Step 1: Impact pressure ratio from CAS at sea-level standard
+        // qc/P₀ = (1 + 0.2 × (CAS/a₀)²)^3.5 − 1
+        double casRatio = cas / SpeedOfSoundSeaLevelKt;
+        double qcOverP0 = Math.Pow(1 + 0.2 * casRatio * casRatio, 3.5) - 1;
 
-        // TAS = CAS / sqrt(pressureRatio) * sqrt(OAT_K / ISA_K)
-        double tas = cas / Math.Sqrt(pressureRatio) * Math.Sqrt(oatKelvin / isaKelvin);
+        // Step 2: Pressure ratio (δ) at altitude
+        double delta = CalculatePressureRatio(pressureAltitude);
 
-        // Density altitude using the temperature deviation method
+        // Step 3: Impact pressure ratio at altitude and Mach number
+        // qc/P = (qc/P₀) / δ
+        double qcOverP = qcOverP0 / delta;
+
+        // M = √(5 × ((qc/P + 1)^(2/7) − 1))
+        double machNumber = Math.Sqrt(5.0 * (Math.Pow(qcOverP + 1, 2.0 / 7.0) - 1));
+
+        // Step 4: TAS from Mach number and OAT
+        // θ = OAT_K / 288.15 (temperature ratio)
+        // a_local = a₀ × √θ (local speed of sound)
+        // TAS = M × a_local
+        double theta = oatKelvin / StandardTempKelvin;
+        double localSpeedOfSound = SpeedOfSoundSeaLevelKt * Math.Sqrt(theta);
+        double tas = machNumber * localSpeedOfSound;
+
+        // Density altitude using ISA temperature deviation method
+        double isaTempCelsius = pressureAltitude <= TropopauseAltitudeFt
+            ? SeaLevelStandardTempCelsius - (pressureAltitude / 1000.0) * LapseRateCelsiusPerThousandFt
+            : -56.5; // ISA temperature is constant above the tropopause
         double tempDeviation = oatCelsius - isaTempCelsius;
         double densityAltitude = pressureAltitude + DensityAltitudeFactor * tempDeviation;
-
-        // Mach number: TAS / local speed of sound
-        // Speed of sound = 661.47 * sqrt(OAT_K / 288.15)
-        double localSpeedOfSound = SpeedOfSoundSeaLevelKt * Math.Sqrt(oatKelvin / StandardTempKelvin);
-        double machNumber = tas / localSpeedOfSound;
 
         return (
             Math.Round(tas, 1),
             Math.Round(densityAltitude, 0),
             Math.Round(machNumber, 3)
         );
+    }
+
+    /// <summary>
+    /// Calculates the ISA pressure ratio (δ) at a given pressure altitude.
+    /// Handles both the troposphere (below 36,089 ft) and lower stratosphere (above).
+    /// </summary>
+    private static double CalculatePressureRatio(double pressureAltitudeFt)
+    {
+        if (pressureAltitudeFt <= TropopauseAltitudeFt)
+        {
+            // Troposphere: δ = (1 − 6.8756×10⁻⁶ × PA)^5.2559
+            return Math.Pow(1 - PressureLapseConstant * pressureAltitudeFt, PressureExponent);
+        }
+
+        // Stratosphere (isothermal layer): δ = 0.22336 × e^(−4.80634×10⁻⁵ × (PA − 36089))
+        return TropopausePressureRatio * Math.Exp(-StratosphereExpConstant * (pressureAltitudeFt - TropopauseAltitudeFt));
     }
 
     private static double NormalizeDegrees(double degrees)

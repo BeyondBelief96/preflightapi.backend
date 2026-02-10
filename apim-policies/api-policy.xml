@@ -11,8 +11,8 @@
 			var path = context.Request.Url.Path.ToLower();
 			// Real-time weather: 2 min
 			if (path.Contains("/metars") || path.Contains("/pireps")) { return 120; }
-			// Performance GET endpoints use live METAR: 2 min
-			if (path.Contains("/performance/")) { return 120; }
+			// E6B GET endpoints use live METAR: 2 min
+			if (path.Contains("/e6b/")) { return 120; }
 			// Forecast weather, NOTAMs: 5 min
 			if (path.Contains("/tafs") || path.Contains("/airsigmets") || path.Contains("/g-airmets")) { return 300; }
 			if (path.Contains("/notams")) { return 300; }

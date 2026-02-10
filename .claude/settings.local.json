@@ -83,7 +83,17 @@
       "Bash(/c/Users/brand/.azure/bin/bicep.exe build:*)",
       "WebFetch(domain:e6bx.com)",
       "WebFetch(domain:interstateaviation.com)",
-      "WebFetch(domain:asa2fly.com)"
+      "WebFetch(domain:asa2fly.com)",
+      "Bash(py -3:*)",
+      "WebFetch(domain:aerotoolbox.com)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:aircraftflightmechanics.com)",
+      "WebFetch(domain:pilotinstitute.com)",
+      "WebFetch(domain:skybrary.aero)",
+      "Bash(where:*)",
+      "Bash(C:\\\\Python313\\\\python.exe:*)",
+      "Bash(\"/c/Python313/python.exe\" --version)",
+      "Bash(/c/Python313/python.exe:*)"
     ],
     "deny": [],
     "ask": []

@@ -80,7 +80,7 @@ builder.Services.AddOpenApiDocument(options =>
 {
     options.Title = "PreflightApi";
     options.Version = "v1";
-    options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and performance calculations.";
+    options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
 });
 
 // Setup Environment Variable Settings
@@ -131,7 +131,7 @@ builder.Services.AddScoped<IObstacleService, ObstacleService>();
 builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>();
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
-builder.Services.AddScoped<IPerformanceCalculatorService, PerformanceCalculatorService>();
+builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();
 
 // NOTAM Services
 builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();

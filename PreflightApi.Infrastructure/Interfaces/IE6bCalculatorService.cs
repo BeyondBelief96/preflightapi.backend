@@ -2,7 +2,7 @@ using PreflightApi.Infrastructure.Dtos.Performance;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
-public interface IPerformanceCalculatorService
+public interface IE6bCalculatorService
 {
     /// <summary>
     /// Calculates crosswind components for all runways at an airport using current METAR data
