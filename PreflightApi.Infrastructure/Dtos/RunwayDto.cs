@@ -136,9 +136,9 @@ public record RunwayEndDto
 
     /// <summary>
     /// FAA NASR field: RWY_VISUAL_RANGE_EQUIP_CODE. Runway Visual Range (RVR) equipment location.
-    /// <para>Possible values: T (Touchdown), M (Midfield), R (Rollout), N (No RVR Available), TM, TR, MR, TMR.</para>
+    /// <para>Possible values: Touchdown (T), Midfield (M), Rollout (R), None (N), TouchdownMidfield (TM), TouchdownRollout (TR), MidfieldRollout (MR), TouchdownMidfieldRollout (TMR).</para>
     /// </summary>
-    public string? RunwayVisualRangeEquipment { get; init; }
+    public RunwayVisualRangeEquipmentType RunwayVisualRangeEquipment { get; init; }
 
     /// <summary>
     /// FAA NASR field: RWY_VSBY_VALUE_EQUIP_FLAG. Whether Runway Visibility Value (RVV) equipment is installed.

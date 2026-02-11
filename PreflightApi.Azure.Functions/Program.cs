@@ -32,8 +32,17 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-// Configure logging to ensure logs go to Application Insights
-builder.Logging.AddApplicationInsights();
+// ConfigureFunctionsApplicationInsights() adds a filter that defaults the Application Insights
+// logger to Warning level, which silently drops all Information/Debug logs. Remove that filter
+// so our host.json log level configuration controls what gets captured.
+// See: https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#application-insights
+builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
+{
+    var toRemove = options.Rules.FirstOrDefault(rule =>
+        rule.ProviderName == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
+    if (toRemove is not null)
+        options.Rules.Remove(toRemove);
+});
 
 // Register settings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
