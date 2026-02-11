@@ -47,7 +47,7 @@ public static class RunwayMapper
             DisplacedThresholdLength = runwayEnd.DisplacedThresholdLength,
             TouchdownZoneElevation = runwayEnd.TouchdownZoneElev,
             VisualGlideSlopeIndicator = ParseVisualGlideSlopeIndicator(runwayEnd.VisualGlideSlopeIndicator),
-            RunwayVisualRangeEquipment = runwayEnd.RunwayVisualRangeEquipment,
+            RunwayVisualRangeEquipment = ParseRunwayVisualRangeEquipment(runwayEnd.RunwayVisualRangeEquipment),
             RunwayVisibilityValueEquipment = runwayEnd.RunwayVisibilityValueEquipment,
             ApproachLightSystem = ParseApproachLightSystem(runwayEnd.ApproachLightSystem),
             HasRunwayEndLights = runwayEnd.RunwayEndLights,
@@ -276,6 +276,25 @@ public static class RunwayMapper
             "L" => ControllingObjectMarking.Lighted,
             "ML" => ControllingObjectMarking.MarkedAndLighted,
             _ => ControllingObjectMarking.Unknown
+        };
+    }
+
+    private static RunwayVisualRangeEquipmentType ParseRunwayVisualRangeEquipment(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return RunwayVisualRangeEquipmentType.Unknown;
+
+        return code.Trim().ToUpperInvariant() switch
+        {
+            "N" => RunwayVisualRangeEquipmentType.None,
+            "T" => RunwayVisualRangeEquipmentType.Touchdown,
+            "M" => RunwayVisualRangeEquipmentType.Midfield,
+            "R" => RunwayVisualRangeEquipmentType.Rollout,
+            "TM" => RunwayVisualRangeEquipmentType.TouchdownMidfield,
+            "TR" => RunwayVisualRangeEquipmentType.TouchdownRollout,
+            "MR" => RunwayVisualRangeEquipmentType.MidfieldRollout,
+            "TMR" => RunwayVisualRangeEquipmentType.TouchdownMidfieldRollout,
+            _ => RunwayVisualRangeEquipmentType.Unknown
         };
     }
 }

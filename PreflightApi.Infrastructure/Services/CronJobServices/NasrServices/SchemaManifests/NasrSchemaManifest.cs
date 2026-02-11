@@ -122,3 +122,37 @@ public static class NasrSchemaManifestLoader
         return JsonSerializer.Deserialize<NasrSchemaManifest>(stream, JsonOptions);
     }
 }
+
+/// <summary>
+/// Result of validating CSV headers against a schema manifest.
+/// </summary>
+public class NasrSchemaValidationResult
+{
+    public bool HasDrift => MissingColumns.Count > 0 || UnexpectedColumns.Count > 0;
+    public string CsvFile { get; init; } = string.Empty;
+    public List<string> MissingColumns { get; init; } = new();
+    public List<string> UnexpectedColumns { get; init; } = new();
+}
+
+/// <summary>
+/// Validates actual CSV headers against expected schema manifests to detect drift.
+/// </summary>
+public static class NasrSchemaValidator
+{
+    public static NasrSchemaValidationResult ValidateHeaders(string csvFileName, string[] actualHeaders)
+    {
+        var result = new NasrSchemaValidationResult { CsvFile = csvFileName };
+
+        var manifest = NasrSchemaManifestLoader.LoadByCsvFile(csvFileName);
+        if (manifest == null)
+            return result;
+
+        var expectedColumns = new HashSet<string>(manifest.Columns.Keys, StringComparer.OrdinalIgnoreCase);
+        var actualColumnsSet = new HashSet<string>(actualHeaders, StringComparer.OrdinalIgnoreCase);
+
+        result.MissingColumns.AddRange(expectedColumns.Except(actualColumnsSet, StringComparer.OrdinalIgnoreCase));
+        result.UnexpectedColumns.AddRange(actualColumnsSet.Except(expectedColumns, StringComparer.OrdinalIgnoreCase));
+
+        return result;
+    }
+}

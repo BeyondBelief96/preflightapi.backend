@@ -10,6 +10,7 @@ using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Enums;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.SchemaManifests;
 using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Utils;
 using PreflightApi.Infrastructure.Utilities;
 
@@ -253,6 +254,20 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
 
             ConfigureCsvReader(csv);
             csv.Context.RegisterClassMap(classMap);
+
+            // Read and validate CSV headers against schema manifest
+            await csv.ReadAsync();
+            csv.ReadHeader();
+            var validationResult = NasrSchemaValidator.ValidateHeaders(entry.Name, csv.HeaderRecord!);
+            if (validationResult.HasDrift)
+            {
+                if (validationResult.MissingColumns.Count > 0)
+                    _logger.LogWarning("Schema drift detected in {FileName}: missing columns: {Columns}",
+                        entry.Name, string.Join(", ", validationResult.MissingColumns));
+                if (validationResult.UnexpectedColumns.Count > 0)
+                    _logger.LogWarning("Schema drift detected in {FileName}: unexpected columns: {Columns}",
+                        entry.Name, string.Join(", ", validationResult.UnexpectedColumns));
+            }
 
             var processedKeys = new HashSet<string>();
             var entities = new List<T>();
