@@ -55,7 +55,8 @@
       "Bash(where:*)",
       "Bash(taskkill:*)",
       "Bash(powershell:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "WebFetch(domain:aviationweather.gov)"
     ],
     "deny": [],
     "ask": []
