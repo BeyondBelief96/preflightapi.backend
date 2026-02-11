@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "WebSearch",
-
       "WebFetch(domain:www.faa.gov)",
       "WebFetch(domain:nfdc.faa.gov)",
       "WebFetch(domain:tanstack.com)",
@@ -18,7 +17,6 @@
       "WebFetch(domain:pilotinstitute.com)",
       "WebFetch(domain:skybrary.aero)",
       "WebFetch(domain:docs.dndocs.com)",
-
       "Bash(dotnet build:*)",
       "Bash(dotnet add:*)",
       "Bash(dotnet remove:*)",
@@ -29,27 +27,21 @@
       "Bash(dotnet package search:*)",
       "Bash(dotnet user-secrets:*)",
       "Bash(dotnet ef:*)",
-
       "Bash(az:*)",
-
       "Bash(docker compose -f docker-compose.local.yml down)",
       "Bash(docker logs:*)",
       "Bash(docker exec:*)",
       "Bash(docker ps:*)",
-
       "Bash(git:*)",
       "Bash(gh repo view:*)",
-
       "Bash(npm install:*)",
       "Bash(npm root:*)",
       "Bash(npx:*)",
       "Bash(node:*)",
       "Bash(pip install:*)",
-
       "Bash(python:*)",
       "Bash(python3:*)",
       "Bash(py -3:*)",
-
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
@@ -58,12 +50,12 @@
       "Bash(unzip:*)",
       "Bash(curl:*)",
       "Bash(export:*)",
-
       "Bash(dir:*)",
       "Bash(del:*)",
       "Bash(where:*)",
       "Bash(taskkill:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(xxd:*)"
     ],
     "deny": [],
     "ask": []

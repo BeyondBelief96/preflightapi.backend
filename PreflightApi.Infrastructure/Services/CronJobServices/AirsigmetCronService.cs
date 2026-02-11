@@ -67,7 +67,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         System.IO.Compression.CompressionMode.Decompress))
                     using (var reader = new StreamReader(decompressedStream))
                     {
-                        return await reader.ReadToEndAsync(cancellationToken);
+                        var content = await reader.ReadToEndAsync(cancellationToken);
+                        return string.IsNullOrWhiteSpace(content) ? null : content;
                     }
 
                 case HttpStatusCode.NoContent:
