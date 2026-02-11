@@ -262,10 +262,10 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             if (validationResult.HasDrift)
             {
                 if (validationResult.MissingColumns.Count > 0)
-                    _logger.LogWarning("Schema drift detected in {FileName}: missing columns: {Columns}",
+                    _logger.LogError("Schema drift detected in {FileName}: missing expected columns: {Columns}",
                         entry.Name, string.Join(", ", validationResult.MissingColumns));
                 if (validationResult.UnexpectedColumns.Count > 0)
-                    _logger.LogWarning("Schema drift detected in {FileName}: unexpected columns: {Columns}",
+                    _logger.LogWarning("Schema drift detected in {FileName}: unexpected new columns: {Columns}",
                         entry.Name, string.Join(", ", validationResult.UnexpectedColumns));
             }
 
