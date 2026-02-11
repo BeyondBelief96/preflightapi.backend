@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <None Remove="Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.2" />
     <PackageReference Include="FluentAssertions" Version="8.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.7" />
@@ -35,10 +41,6 @@
     <ProjectReference Include="..\PreflightApi.API\PreflightApi.API.csproj" />
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
     <ProjectReference Include="..\PreflightApi.Infrastructure\PreflightApi.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
