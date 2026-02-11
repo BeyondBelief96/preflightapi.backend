@@ -2,7 +2,7 @@
 	<inbound>
 		<base />
 		<rate-limit-by-key calls="300" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" />
-		<quota-by-key calls="250000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
+		<quota-by-key calls="750000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
 		<!-- No endpoint gating: Professional tier has access to all endpoints -->
 	</inbound>
 	<backend>
