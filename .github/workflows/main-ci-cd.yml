@@ -1,0 +1,223 @@
+name: Main (Production) CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'PreflightApi.API/**'
+      - 'PreflightApi.Domain/**'
+      - 'PreflightApi.Infrastructure/**'
+      - 'PreflightApi.Azure.Functions/**'
+      - 'PreflightApi.Tests/**'
+      - '.github/workflows/main-ci-cd.yml'
+      - 'apim-policies/**'
+
+env:
+  DOTNET_CORE_VERSION: 8.0.x
+  CONFIGURATION: Release
+  API_PUBLISH_DIR: ./api-publish
+  FUNCTIONS_PUBLISH_DIR: ./functions-publish
+  API_APP_NAME: was-eastus-preflightapi-prd
+  FUNCTION_APP_NAME: function-app-eastus-preflightapi-prd
+  RESOURCE_GROUP: rg-eastus-preflightapi-prd
+  DB_SERVER_NAME: pgsql-eastus2-preflightapi-prd
+  APIM_SERVICE_NAME: apim-eastus-preflightapi-prd
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
+      - name: Restore solution
+        run: dotnet restore PreflightApi.sln
+
+      - name: Build solution
+        run: dotnet build PreflightApi.sln --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      # Publish API
+      - name: Publish API
+        run: dotnet publish PreflightApi.API/PreflightApi.API.csproj --configuration ${{ env.CONFIGURATION }} --output ${{ env.API_PUBLISH_DIR }}
+
+      - name: Upload API artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflightapi-api
+          path: ${{ env.API_PUBLISH_DIR }}
+          if-no-files-found: error
+
+      # Publish Functions
+      - name: Publish Functions
+        run: dotnet publish PreflightApi.Azure.Functions/PreflightApi.Azure.Functions.csproj --configuration ${{ env.CONFIGURATION }} --output ${{ env.FUNCTIONS_PUBLISH_DIR }}
+
+      - name: Create Functions metadata
+        run: mkdir -p ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions && echo '{}' > ${{ env.FUNCTIONS_PUBLISH_DIR }}/.azurefunctions/functionsmetadata
+
+      - name: Create Functions zip
+        run: cd ${{ env.FUNCTIONS_PUBLISH_DIR }} && zip -r $GITHUB_WORKSPACE/functionapp.zip .
+
+      - name: Upload Functions zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflightapi-functions
+          path: functionapp.zip
+          if-no-files-found: error
+
+      # EF Migration Bundle
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Create EF migrations bundle
+        run: >
+          dotnet ef migrations bundle
+          --project PreflightApi.Infrastructure/PreflightApi.Infrastructure.csproj
+          --startup-project PreflightApi.API/PreflightApi.API.csproj
+          --configuration ${{ env.CONFIGURATION }}
+          -o efbundle
+          --force
+
+      - name: Upload EF bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ef-bundle
+          path: efbundle
+          if-no-files-found: error
+
+  migrations:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GITHUB_DEPLOYMENT_PRD_CLIENTID }}
+          tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
+
+      - name: Get runner IP
+        id: runner-ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
+      - name: Whitelist runner IP on database
+        run: >
+          az postgres flexible-server firewall-rule create
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.DB_SERVER_NAME }}
+          --rule-name github-runner-${{ github.run_id }}
+          --start-ip-address ${{ steps.runner-ip.outputs.ip }}
+          --end-ip-address ${{ steps.runner-ip.outputs.ip }}
+
+      - name: Download EF bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ef-bundle
+
+      - name: Make bundle executable
+        run: chmod +x efbundle
+
+      - name: Apply migrations
+        run: ./efbundle --connection "${{ secrets.DB_CONNECTION_STRING_PRD }}"
+
+      - name: Remove runner IP from database firewall
+        if: always()
+        run: >
+          az postgres flexible-server firewall-rule delete
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.DB_SERVER_NAME }}
+          --rule-name github-runner-${{ github.run_id }}
+          --yes
+
+  deploy:
+    needs: [build, migrations]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GITHUB_DEPLOYMENT_PRD_CLIENTID }}
+          tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
+
+      - name: Download API artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: preflightapi-api
+          path: ${{ env.API_PUBLISH_DIR }}
+
+      - name: Deploy API to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.API_APP_NAME }}
+          package: ${{ env.API_PUBLISH_DIR }}
+
+      - name: Restart API
+        run: az webapp restart --name ${{ env.API_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
+
+      # Deploy Functions
+      - name: Download Functions zip
+        uses: actions/download-artifact@v4
+        with:
+          name: preflightapi-functions
+
+      - name: Deploy Functions
+        run: >
+          az functionapp deployment source config-zip
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+          --src functionapp.zip
+
+      - name: Restart Function App
+        run: >
+          az functionapp restart
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+
+      # Deploy APIM Policies
+      - name: Checkout for APIM policies
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: apim-policies
+          path: repo
+
+      - name: Deploy APIM API-level policy
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}"
+          API_VERSION="2024-05-01"
+
+          echo "Deploying API-level policy"
+          policy_content=$(python3 -c "import json; print(json.dumps(open('repo/apim-policies/api-policy.xml').read()))")
+          az rest --method put \
+            --url "${BASE_URL}/apis/preflightapi/policies/policy?api-version=${API_VERSION}" \
+            --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+
+      - name: Deploy APIM product policies
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/products"
+          API_VERSION="2024-05-01"
+
+          for policy_file in repo/apim-policies/*-pilot-policy.xml; do
+            product_id=$(basename "$policy_file" | sed 's/-policy\.xml//')
+            echo "Deploying policy for product: ${product_id}"
+            policy_content=$(python3 -c "import json; print(json.dumps(open('${policy_file}').read()))")
+            az rest --method put \
+              --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
+              --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+          done
