@@ -19,9 +19,43 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/obstacles")]
 [Tags("Obstacles")]
-public class ObstacleController(IObstacleService obstacleService)
+public class ObstacleController(IObstacleService obstacleService, IAirportService airportService)
     : ControllerBase
 {
+    /// <summary>
+    /// Searches for obstacles near an airport
+    /// </summary>
+    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 10)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <returns>Paginated list of obstacles within the search radius of the airport</returns>
+    /// <response code="200">Returns the obstacles found</response>
+    /// <response code="400">If the radius is invalid or the airport has no coordinates on record</response>
+    /// <response code="404">If the airport is not found</response>
+    [HttpGet("airport/{icaoCodeOrIdent}")]
+    [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> SearchNearAirport(
+        string icaoCodeOrIdent,
+        [FromQuery] double radiusNm = 10,
+        [FromQuery] int? minHeightAgl = null,
+        [FromQuery] PaginationParams? pagination = null)
+    {
+        if (radiusNm <= 0)
+            throw new ValidationException("radiusNm", "Radius must be greater than 0");
+
+        var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
+
+        if (airport.LatDecimal == null || airport.LongDecimal == null)
+            throw new ValidationException("icaoCodeOrIdent", $"Airport '{icaoCodeOrIdent}' does not have coordinates on record");
+
+        pagination ??= new PaginationParams();
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await obstacleService.SearchNearby(airport.LatDecimal.Value, airport.LongDecimal.Value, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit));
+    }
+
     /// <summary>
     /// Searches for obstacles near a geographic point
     /// </summary>
