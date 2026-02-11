@@ -3,52 +3,87 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PreflightApi.Domain.Entities;
 
+/// <summary>
+/// Runway data from the FAA NASR database. Sourced from APT_RWY CSV file in the FAA NASR 28-day subscription.
+/// Ordered by SITE_NO, SITE_TYPE_CODE, RWY_ID.
+/// </summary>
 [Table("runways")]
 public class Runway : INasrEntity<Runway>
 {
+    /// <summary>System-generated unique identifier.</summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+    /// <summary>FAA NASR field: SITE_NO. Unique Site Number of the parent airport facility.</summary>
     [Column("site_no", TypeName = "varchar(9)")]
     [Required]
     public string SiteNo { get; set; } = string.Empty;
 
+    /// <summary>FAA NASR field: RWY_ID. Runway identification (e.g., "01/19", "09L/27R", "H1" for helipad).</summary>
     [Column("runway_id", TypeName = "varchar(7)")]
     [Required]
     public string RunwayId { get; set; } = string.Empty;
 
+    /// <summary>FAA NASR field: RWY_LEN. Physical runway length to the nearest foot.</summary>
     [Column("length")]
     public int? Length { get; set; }
 
+    /// <summary>FAA NASR field: RWY_WIDTH. Physical runway width to the nearest foot.</summary>
     [Column("width")]
     public int? Width { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: SURFACE_TYPE_CODE. Runway surface type. May be a single type or a combination
+    /// of two types when the runway is composed of distinct sections.
+    /// <para>Common values: CONC (Portland Cement Concrete), ASPH (Asphalt or Bituminous Concrete),
+    /// SNOW, ICE, MATS (PSP/Landing Mats/Membranes), TREATED (Oiled/Soil Cement/Lime Stabilized),
+    /// GRAVEL (Gravel/Cinders/Crushed Rock/Coral/Shells/Slag), TURF (Grass/Sod), DIRT (Natural Soil),
+    /// PEM (Partially Concrete/Asphalt/Bitumen-Bound Macadam), ROOF-TOP, WATER.</para>
+    /// <para>Less common: ALUMINUM, BRICK, CALICHE, CORAL, DECK, GRASS, METAL, NSTD, OIL&amp;CHIP,
+    /// PSP, SAND, SOD, STEEL, TRTD, WOOD.</para>
+    /// </summary>
     [Column("surface_type_code", TypeName = "varchar(12)")]
     public string? SurfaceTypeCode { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: TREATMENT_CODE. Runway surface treatment.
+    /// <para>Possible values: GRVD (Saw-Cut or Plastic Grooved), PFC (Porous Friction Course),
+    /// AFSC (Aggregate Friction Seal Coat), RFSC (Rubberized Friction Seal Coat),
+    /// WC (Wire Comb or Wire Tine), NONE (No Special Surface Treatment).</para>
+    /// </summary>
     [Column("surface_treatment_code", TypeName = "varchar(5)")]
     public string? SurfaceTreatmentCode { get; set; }
 
+    /// <summary>FAA NASR field: PCN. Pavement Classification Number. See FAA Advisory Circular 150/5335-5 for code definitions and PCN determination formula.</summary>
     [Column("pavement_classification", TypeName = "varchar(11)")]
     public string? PavementClassification { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_LGT_CODE. Runway lights edge intensity.
+    /// <para>Possible values: HIGH, MED (Medium), LOW, FLD (Flood), NSTD (Non-Standard Lighting System),
+    /// PERI (Perimeter), STRB (Strobe), NONE (No Edge Lighting System).</para>
+    /// </summary>
     [Column("edge_light_intensity", TypeName = "varchar(5)")]
     public string? EdgeLightIntensity { get; set; }
 
+    /// <summary>FAA NASR field: GROSS_WT_SW. Runway weight-bearing capacity for single wheel type landing gear, in pounds.</summary>
     [Column("weight_bearing_single_wheel")]
     public int? WeightBearingSingleWheel { get; set; }
 
+    /// <summary>FAA NASR field: GROSS_WT_DW. Runway weight-bearing capacity for dual wheel type landing gear, in pounds.</summary>
     [Column("weight_bearing_dual_wheel")]
     public int? WeightBearingDualWheel { get; set; }
 
+    /// <summary>FAA NASR field: GROSS_WT_DTW. Runway weight-bearing capacity for two dual wheels in tandem type landing gear, in pounds.</summary>
     [Column("weight_bearing_dual_tandem")]
     public int? WeightBearingDualTandem { get; set; }
 
+    /// <summary>FAA NASR field: GROSS_WT_DDTW. Runway weight-bearing capacity for two dual wheels in tandem/two dual wheels in double tandem body gear type landing gear, in pounds.</summary>
     [Column("weight_bearing_double_dual_tandem")]
     public int? WeightBearingDoubleDualTandem { get; set; }
 
-    // Navigation property
+    /// <summary>Navigation property to the runway ends (typically two per runway, one for each direction).</summary>
     public virtual ICollection<RunwayEnd> RunwayEnds { get; set; } = new List<RunwayEnd>();
 
     // INasrEntity<Runway> implementation

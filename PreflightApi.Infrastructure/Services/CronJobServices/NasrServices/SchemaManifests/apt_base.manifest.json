@@ -1,0 +1,437 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "APT_BASE.csv",
+  "description": "Base airport facility data from the FAA NASR 28-day subscription.",
+  "entity": "Airport",
+  "lastVerified": "2026-02-11",
+  "columns": {
+    "SITE_NO": {
+      "entityProperty": "SiteNo",
+      "dataType": "string",
+      "required": true,
+      "description": "Unique Site Number assigned by the FAA."
+    },
+    "EFF_DATE": {
+      "entityProperty": "EffDate",
+      "dataType": "date",
+      "required": true,
+      "description": "Effective date of the airport information."
+    },
+    "SITE_TYPE_CODE": {
+      "entityProperty": "SiteTypeCode",
+      "dataType": "string",
+      "description": "Landing facility type code.",
+      "enumeratedValues": ["A", "H", "S", "G", "U"]
+    },
+    "STATE_CODE": {
+      "entityProperty": "StateCode",
+      "dataType": "string",
+      "description": "Two-letter USPS state code."
+    },
+    "ARPT_ID": {
+      "entityProperty": "ArptId",
+      "dataType": "string",
+      "description": "FAA location identifier (e.g., DFW, LAX)."
+    },
+    "CITY": {
+      "entityProperty": "City",
+      "dataType": "string",
+      "description": "Associated city name."
+    },
+    "COUNTRY_CODE": {
+      "entityProperty": "CountryCode",
+      "dataType": "string",
+      "description": "Two-letter country code."
+    },
+    "REGION_CODE": {
+      "entityProperty": "RegionCode",
+      "dataType": "string",
+      "description": "FAA region code."
+    },
+    "ADO_CODE": {
+      "entityProperty": "AdoCode",
+      "dataType": "string",
+      "description": "FAA Airports District Office code."
+    },
+    "STATE_NAME": {
+      "entityProperty": "StateName",
+      "dataType": "string",
+      "description": "Full state name."
+    },
+    "COUNTY_NAME": {
+      "entityProperty": "CountyName",
+      "dataType": "string",
+      "description": "County name."
+    },
+    "COUNTY_ASSOC_STATE": {
+      "entityProperty": "CountyAssocState",
+      "dataType": "string",
+      "description": "State code associated with the county."
+    },
+    "ARPT_NAME": {
+      "entityProperty": "ArptName",
+      "dataType": "string",
+      "description": "Official airport facility name."
+    },
+    "OWNERSHIP_TYPE_CODE": {
+      "entityProperty": "OwnershipTypeCode",
+      "dataType": "string",
+      "description": "Airport ownership type.",
+      "enumeratedValues": ["PU", "PR", "MA", "MN", "MR"]
+    },
+    "FACILITY_USE_CODE": {
+      "entityProperty": "FacilityUseCode",
+      "dataType": "string",
+      "description": "Facility use designation.",
+      "enumeratedValues": ["PU", "PR"]
+    },
+    "LAT_DECIMAL": {
+      "entityProperty": "LatDecimal",
+      "dataType": "decimal",
+      "description": "Latitude in decimal degrees."
+    },
+    "LONG_DECIMAL": {
+      "entityProperty": "LongDecimal",
+      "dataType": "decimal",
+      "description": "Longitude in decimal degrees."
+    },
+    "LAT_DEG": {
+      "entityProperty": "LatDeg",
+      "dataType": "int",
+      "description": "Latitude degrees."
+    },
+    "LAT_MIN": {
+      "entityProperty": "LatMin",
+      "dataType": "int",
+      "description": "Latitude minutes."
+    },
+    "LAT_SEC": {
+      "entityProperty": "LatSec",
+      "dataType": "decimal",
+      "description": "Latitude seconds."
+    },
+    "LAT_HEMIS": {
+      "entityProperty": "LatHemis",
+      "dataType": "string",
+      "description": "Latitude hemisphere.",
+      "enumeratedValues": ["N", "S"]
+    },
+    "LONG_DEG": {
+      "entityProperty": "LongDeg",
+      "dataType": "int",
+      "description": "Longitude degrees."
+    },
+    "LONG_MIN": {
+      "entityProperty": "LongMin",
+      "dataType": "int",
+      "description": "Longitude minutes."
+    },
+    "LONG_SEC": {
+      "entityProperty": "LongSec",
+      "dataType": "decimal",
+      "description": "Longitude seconds."
+    },
+    "LONG_HEMIS": {
+      "entityProperty": "LongHemis",
+      "dataType": "string",
+      "description": "Longitude hemisphere.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "SURVEY_METHOD_CODE": {
+      "entityProperty": "SurveyMethodCode",
+      "dataType": "string",
+      "description": "Position survey method.",
+      "enumeratedValues": ["E", "S"]
+    },
+    "ELEV": {
+      "entityProperty": "Elev",
+      "dataType": "decimal",
+      "description": "Airport elevation in feet MSL."
+    },
+    "ELEV_METHOD_CODE": {
+      "entityProperty": "ElevMethodCode",
+      "dataType": "string",
+      "description": "Elevation determination method.",
+      "enumeratedValues": ["E", "S"]
+    },
+    "MAG_VARN": {
+      "entityProperty": "MagVarn",
+      "dataType": "decimal",
+      "description": "Magnetic variation in degrees."
+    },
+    "MAG_HEMIS": {
+      "entityProperty": "MagHemis",
+      "dataType": "string",
+      "description": "Magnetic variation hemisphere.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "MAG_VARN_YEAR": {
+      "entityProperty": "MagVarnYear",
+      "dataType": "int",
+      "description": "Year magnetic variation was determined."
+    },
+    "TPA": {
+      "entityProperty": "Tpa",
+      "dataType": "int",
+      "description": "Traffic Pattern Altitude in feet MSL."
+    },
+    "CHART_NAME": {
+      "entityProperty": "ChartName",
+      "dataType": "string",
+      "description": "Sectional aeronautical chart name."
+    },
+    "DIST_CITY_TO_AIRPORT": {
+      "entityProperty": "DistCityToAirport",
+      "dataType": "decimal",
+      "description": "Distance from city to airport in nautical miles."
+    },
+    "DIRECTION_CODE": {
+      "entityProperty": "DirectionCode",
+      "dataType": "string",
+      "description": "Compass direction from city to airport."
+    },
+    "ACREAGE": {
+      "entityProperty": "Acreage",
+      "dataType": "int",
+      "description": "Airport acreage."
+    },
+    "RESP_ARTCC_ID": {
+      "entityProperty": "RespArtccId",
+      "dataType": "string",
+      "description": "Responsible ARTCC identifier."
+    },
+    "FSS_ON_ARPT_FLAG": {
+      "entityProperty": "FssOnArptFlag",
+      "dataType": "string",
+      "description": "FSS located on airport.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "FSS_ID": {
+      "entityProperty": "FssId",
+      "dataType": "string",
+      "description": "Flight Service Station identifier."
+    },
+    "FSS_NAME": {
+      "entityProperty": "FssName",
+      "dataType": "string",
+      "description": "Flight Service Station name."
+    },
+    "NOTAM_ID": {
+      "entityProperty": "NotamId",
+      "dataType": "string",
+      "description": "NOTAM facility identifier."
+    },
+    "NOTAM_FLAG": {
+      "entityProperty": "NotamFlag",
+      "dataType": "string",
+      "description": "NOTAM service availability.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "ACTIVATION_DATE": {
+      "entityProperty": "ActivationDate",
+      "dataType": "string",
+      "description": "Airport activation date (MM/YYYY)."
+    },
+    "ARPT_STATUS": {
+      "entityProperty": "ArptStatus",
+      "dataType": "string",
+      "description": "Airport operational status.",
+      "enumeratedValues": ["O", "CI", "CP"]
+    },
+    "NASP_CODE": {
+      "entityProperty": "NaspCode",
+      "dataType": "string",
+      "description": "NPIAS or Federal/Military Airport code."
+    },
+    "CUST_FLAG": {
+      "entityProperty": "CustomsFlag",
+      "dataType": "string",
+      "description": "Customs airport of entry flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "LNDG_RIGHTS_FLAG": {
+      "entityProperty": "LndgRightsFlag",
+      "dataType": "string",
+      "description": "Customs landing rights flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "JOINT_USE_FLAG": {
+      "entityProperty": "JointUseFlag",
+      "dataType": "string",
+      "description": "Joint civil/military use agreement.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "MIL_LNDG_FLAG": {
+      "entityProperty": "MilLndgFlag",
+      "dataType": "string",
+      "description": "Military landing rights agreement.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "INSPECT_METHOD_CODE": {
+      "entityProperty": "InspectMethodCode",
+      "dataType": "string",
+      "description": "Airport inspection method.",
+      "enumeratedValues": ["F", "S", "C", "1", "2"]
+    },
+    "INSPECTOR_CODE": {
+      "entityProperty": "InspectorCode",
+      "dataType": "string",
+      "description": "Agency performing inspection.",
+      "enumeratedValues": ["F", "S", "C"]
+    },
+    "LAST_INSPECTION": {
+      "entityProperty": "LastInspection",
+      "dataType": "date",
+      "description": "Date of last physical inspection."
+    },
+    "LAST_INFO_RESPONSE": {
+      "entityProperty": "LastInfoResponse",
+      "dataType": "date",
+      "description": "Date of last information request response."
+    },
+    "FUEL_TYPES": {
+      "entityProperty": "FuelTypes",
+      "dataType": "string",
+      "description": "Available fuel types (comma-separated)."
+    },
+    "AIRFRAME_REPAIR_SER_CODE": {
+      "entityProperty": "AirframeRepairSerCode",
+      "dataType": "string",
+      "description": "Airframe repair service availability.",
+      "enumeratedValues": ["MAJOR", "MINOR", "NONE"]
+    },
+    "PWR_PLANT_REPAIR_SER": {
+      "entityProperty": "PwrPlantRepairSer",
+      "dataType": "string",
+      "description": "Power plant repair service availability.",
+      "enumeratedValues": ["MAJOR", "MINOR", "NONE"]
+    },
+    "BOTTLED_OXY_TYPE": {
+      "entityProperty": "BottledOxyType",
+      "dataType": "string",
+      "description": "Bottled oxygen type available.",
+      "enumeratedValues": ["HIGH", "LOW", "HIGH/LOW", "NONE"]
+    },
+    "BULK_OXY_TYPE": {
+      "entityProperty": "BulkOxyType",
+      "dataType": "string",
+      "description": "Bulk oxygen type available.",
+      "enumeratedValues": ["HIGH", "LOW", "HIGH/LOW", "NONE"]
+    },
+    "LGT_SKED": {
+      "entityProperty": "LgtSked",
+      "dataType": "string",
+      "description": "Airport lighting schedule."
+    },
+    "BCN_LGT_SKED": {
+      "entityProperty": "BcnLgtSked",
+      "dataType": "string",
+      "description": "Beacon lighting schedule."
+    },
+    "TWR_TYPE_CODE": {
+      "entityProperty": "TwrTypeCode",
+      "dataType": "string",
+      "description": "Air Traffic Control Tower type."
+    },
+    "SEG_CIRCLE_MKR_FLAG": {
+      "entityProperty": "SegCircleMkrFlag",
+      "dataType": "string",
+      "description": "Segmented circle marker system.",
+      "enumeratedValues": ["Y", "Y-L", "N"]
+    },
+    "BCN_LENS_COLOR": {
+      "entityProperty": "BcnLensColor",
+      "dataType": "string",
+      "description": "Airport beacon lens color.",
+      "enumeratedValues": ["CG", "CY", "CGY", "SCG", "C"]
+    },
+    "LNDG_FEE_FLAG": {
+      "entityProperty": "LndgFeeFlag",
+      "dataType": "string",
+      "description": "Landing fees charged.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "MEDICAL_USE_FLAG": {
+      "entityProperty": "MedicalUseFlag",
+      "dataType": "string",
+      "description": "Airport used for medical purposes.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "ARPT_PSN_SOURCE": {
+      "entityProperty": "ArptPsnSource",
+      "dataType": "string",
+      "description": "Source of airport position information."
+    },
+    "POSITION_SRC_DATE": {
+      "entityProperty": "PositionSrcDate",
+      "dataType": "date",
+      "description": "Date position information was determined."
+    },
+    "ARPT_ELEV_SOURCE": {
+      "entityProperty": "ArptElevSource",
+      "dataType": "string",
+      "description": "Source of airport elevation information."
+    },
+    "ELEVATION_SRC_DATE": {
+      "entityProperty": "ElevationSrcDate",
+      "dataType": "date",
+      "description": "Date elevation information was determined."
+    },
+    "CONTR_FUEL_AVBL": {
+      "entityProperty": "ContrFuelAvbl",
+      "dataType": "string",
+      "description": "Contract fuel availability.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "TRNS_STRG_BUOY_FLAG": {
+      "entityProperty": "TrnsStrgBuoyFlag",
+      "dataType": "string",
+      "description": "Transient storage - buoys.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "TRNS_STRG_HGR_FLAG": {
+      "entityProperty": "TrnsStrgHgrFlag",
+      "dataType": "string",
+      "description": "Transient storage - hangars.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "TRNS_STRG_TIE_FLAG": {
+      "entityProperty": "TrnsStrgTieFlag",
+      "dataType": "string",
+      "description": "Transient storage - tie-downs.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "OTHER_SERVICES": {
+      "entityProperty": "OtherServices",
+      "dataType": "string",
+      "description": "Other airport services (comma-separated).",
+      "enumeratedValues": ["AFRT", "AGRI", "AMB", "AVNCS", "BCHGR", "CARGO", "CHTR", "GLD", "INSTR", "PAJA", "RNTL", "SALES", "SURV", "TOW"]
+    },
+    "WIND_INDCR_FLAG": {
+      "entityProperty": "WindIndcrFlag",
+      "dataType": "string",
+      "description": "Wind indicator presence.",
+      "enumeratedValues": ["N", "Y", "Y-L"]
+    },
+    "ICAO_ID": {
+      "entityProperty": "IcaoId",
+      "dataType": "string",
+      "description": "ICAO identifier (e.g., KDFW, KLAX)."
+    },
+    "MIN_OP_NETWORK": {
+      "entityProperty": "MinOpNetwork",
+      "dataType": "string",
+      "description": "Minimum Operational Network designation."
+    },
+    "USER_FEE_FLAG": {
+      "entityProperty": "UserFeeFlag",
+      "dataType": "string",
+      "description": "US Customs User Fee Airport designation."
+    },
+    "CTA": {
+      "entityProperty": "Cta",
+      "dataType": "string",
+      "description": "Cold Temperature Airport correction value in Celsius."
+    }
+  }
+}

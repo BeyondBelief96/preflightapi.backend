@@ -1,0 +1,187 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "APT_RWY_END.csv",
+  "description": "Runway end data from the FAA NASR 28-day subscription. Each runway has two ends. Ordered by SITE_NO, SITE_TYPE_CODE, RWY_ID, RWY_END_ID.",
+  "entity": "RunwayEnd",
+  "lastVerified": "2026-02-11",
+  "columns": {
+    "SITE_NO": {
+      "entityProperty": "SiteNo",
+      "dataType": "string",
+      "required": true,
+      "description": "Unique Site Number of the parent airport facility."
+    },
+    "RWY_ID": {
+      "entityProperty": "RunwayIdRef",
+      "dataType": "string",
+      "required": true,
+      "description": "Runway identification of the parent runway."
+    },
+    "RWY_END_ID": {
+      "entityProperty": "RunwayEndId",
+      "dataType": "string",
+      "required": true,
+      "description": "Runway end identifier (e.g., 01, 19, 09L, 27R)."
+    },
+    "TRUE_ALIGNMENT": {
+      "entityProperty": "TrueAlignment",
+      "dataType": "int",
+      "description": "True heading of the runway to the nearest degree."
+    },
+    "APCH_TYPE_CODE": {
+      "entityProperty": "ApproachType",
+      "dataType": "string",
+      "description": "Instrument Landing System type.",
+      "enumeratedValues": ["ILS", "MLS", "SDF", "LOCALIZER", "LDA", "ISMLS", "ILS/DME", "SDF/DME", "LOC/DME", "LOC/GS", "LDA/DME"]
+    },
+    "RIGHT_HAND_TRAFFIC_PAT_FLAG": {
+      "entityProperty": "RightHandTrafficPattern",
+      "dataType": "boolean",
+      "description": "Right-hand traffic pattern in effect.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "RWY_MKG_TYPE_CODE": {
+      "entityProperty": "RunwayMarkingsType",
+      "dataType": "string",
+      "description": "Runway markings type.",
+      "enumeratedValues": ["PIR", "NPI", "BSC", "NRS", "NSTD", "BUOY", "STOL", "NONE"]
+    },
+    "RWY_MKG_COND": {
+      "entityProperty": "RunwayMarkingsCondition",
+      "dataType": "string",
+      "description": "Runway markings condition.",
+      "enumeratedValues": ["G", "F", "P"]
+    },
+    "LAT_DECIMAL": {
+      "entityProperty": "LatDecimal",
+      "dataType": "decimal",
+      "description": "Latitude of physical runway end in decimal degrees."
+    },
+    "LONG_DECIMAL": {
+      "entityProperty": "LongDecimal",
+      "dataType": "decimal",
+      "description": "Longitude of physical runway end in decimal degrees."
+    },
+    "RWY_END_ELEV": {
+      "entityProperty": "Elevation",
+      "dataType": "decimal",
+      "description": "Elevation at the physical runway end in feet MSL."
+    },
+    "THR_CROSSING_HGT": {
+      "entityProperty": "ThresholdCrossingHeight",
+      "dataType": "decimal",
+      "description": "Threshold Crossing Height in feet AGL."
+    },
+    "VISUAL_GLIDE_PATH_ANGLE": {
+      "entityProperty": "VisualGlidePathAngle",
+      "dataType": "decimal",
+      "description": "Visual glide path angle in hundredths of degrees."
+    },
+    "DSPLCD_THR_LAT_DECIMAL": {
+      "entityProperty": "DisplacedThresholdLatDecimal",
+      "dataType": "decimal",
+      "description": "Latitude of displaced threshold in decimal degrees."
+    },
+    "DSPLCD_THR_LONG_DECIMAL": {
+      "entityProperty": "DisplacedThresholdLongDecimal",
+      "dataType": "decimal",
+      "description": "Longitude of displaced threshold in decimal degrees."
+    },
+    "DSPLCD_THR_ELEV": {
+      "entityProperty": "DisplacedThresholdElev",
+      "dataType": "decimal",
+      "description": "Elevation at displaced threshold in feet MSL."
+    },
+    "DSPLCD_THR_LEN": {
+      "entityProperty": "DisplacedThresholdLength",
+      "dataType": "int",
+      "description": "Displaced threshold length in feet."
+    },
+    "TDZ_ELEV": {
+      "entityProperty": "TouchdownZoneElev",
+      "dataType": "decimal",
+      "description": "Elevation at the touchdown zone in feet MSL."
+    },
+    "VGSI_CODE": {
+      "entityProperty": "VisualGlideSlopeIndicator",
+      "dataType": "string",
+      "description": "Visual Glide Slope Indicator type.",
+      "enumeratedValues": [
+        "S2L", "S2R", "V2L", "V2R", "V4L", "V4R", "V6L", "V6R", "V12", "V16",
+        "P2L", "P2R", "P4L", "P4R", "TRIL", "TRIR", "PSIL", "PSIR",
+        "PNIL", "PNIR", "NSTD", "PVT", "VAS", "NONE", "N"
+      ]
+    },
+    "RVR_EQUIP_CODE": {
+      "entityProperty": "RunwayVisualRangeEquipment",
+      "dataType": "string",
+      "description": "Runway Visual Range equipment location.",
+      "enumeratedValues": ["T", "M", "R", "N", "TM", "TR", "MR", "TMR"]
+    },
+    "RVV_EQUIP_FLAG": {
+      "entityProperty": "RunwayVisibilityValueEquipment",
+      "dataType": "boolean",
+      "description": "Runway Visibility Value equipment installed.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "APCH_LGT_SYSTEM_CODE": {
+      "entityProperty": "ApproachLightSystem",
+      "dataType": "string",
+      "description": "Approach light system type.",
+      "enumeratedValues": [
+        "AFOVRN", "ALSAF", "ALSF1", "ALSF2", "MALS", "MALSF", "MALSR",
+        "RAIL", "SALS", "SALSF", "SSALS", "SSALF", "SSALR", "ODALS",
+        "RLLS", "MIL OVRN", "NSTD", "NONE"
+      ]
+    },
+    "RWY_END_LGTS_FLAG": {
+      "entityProperty": "RunwayEndLights",
+      "dataType": "boolean",
+      "description": "Runway End Identifier Lights (REIL) installed.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "CNTRLN_LGTS_AVBL_FLAG": {
+      "entityProperty": "CenterlineLights",
+      "dataType": "boolean",
+      "description": "Runway centerline lights installed.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "TDZ_LGT_AVBL_FLAG": {
+      "entityProperty": "TouchdownZoneLights",
+      "dataType": "boolean",
+      "description": "Touchdown zone lights installed.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "CNTL_OBJ_DESC": {
+      "entityProperty": "ControllingObjectDescription",
+      "dataType": "string",
+      "description": "Controlling object description (type of obstacle)."
+    },
+    "CNTL_OBJ_MKD_LGT": {
+      "entityProperty": "ControllingObjectMarkedLighted",
+      "dataType": "string",
+      "description": "Controlling object marked/lighted status.",
+      "enumeratedValues": ["M", "L", "ML", "NONE"]
+    },
+    "CNTL_OBJ_SLOPE": {
+      "entityProperty": "ControllingObjectClearanceSlope",
+      "dataType": "int",
+      "description": "Controlling object clearance slope ratio N:1."
+    },
+    "CNTL_OBJ_HGT": {
+      "entityProperty": "ControllingObjectHeightAboveRunway",
+      "dataType": "int",
+      "description": "Controlling object height above runway end in feet AGL."
+    },
+    "CNTL_OBJ_DIST": {
+      "entityProperty": "ControllingObjectDistanceFromRunway",
+      "dataType": "int",
+      "description": "Controlling object distance from runway end in feet."
+    },
+    "CNTL_OBJ_OFFSET": {
+      "entityProperty": "ControllingObjectCenterlineOffset",
+      "dataType": "string",
+      "description": "Controlling object centerline offset distance in feet."
+    }
+  }
+}
