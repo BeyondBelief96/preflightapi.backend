@@ -114,6 +114,47 @@ public static class NasrSchemaManifestLoader
             : new HashSet<string>();
     }
 
+    /// <summary>
+    /// Gets the common columns for the NASR dataset that a CSV file belongs to.
+    /// Derives the dataset prefix from the filename (e.g., "APT_RWY.csv" → "APT")
+    /// and loads the corresponding common columns definition if one exists.
+    /// </summary>
+    public static HashSet<string> GetCommonColumns(string csvFileName)
+    {
+        var datasetPrefix = GetDatasetPrefix(csvFileName);
+        if (datasetPrefix == null)
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var resourceName = ManifestAssembly.GetManifestResourceNames()
+            .FirstOrDefault(n => n.Contains($"{datasetPrefix}.common_columns.json", StringComparison.OrdinalIgnoreCase));
+
+        if (resourceName == null)
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        using var stream = ManifestAssembly.GetManifestResourceStream(resourceName);
+        if (stream == null)
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var definition = JsonSerializer.Deserialize<NasrCommonColumnsDefinition>(stream, JsonOptions);
+        return definition != null
+            ? new HashSet<string>(definition.Columns, StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Extracts the NASR dataset prefix from a CSV filename.
+    /// For multi-file datasets like "APT_RWY.csv" → "apt".
+    /// For single-file datasets like "FRQ.csv" → "frq".
+    /// </summary>
+    private static string? GetDatasetPrefix(string csvFileName)
+    {
+        var name = csvFileName.Replace(".csv", "", StringComparison.OrdinalIgnoreCase);
+        var underscoreIndex = name.IndexOf('_');
+        return underscoreIndex > 0
+            ? name[..underscoreIndex].ToLowerInvariant()
+            : name.ToLowerInvariant();
+    }
+
     private static NasrSchemaManifest? Load(string resourceName)
     {
         using var stream = ManifestAssembly.GetManifestResourceStream(resourceName);
@@ -135,6 +176,25 @@ public class NasrSchemaValidationResult
 }
 
 /// <summary>
+/// Represents a NASR dataset common columns definition. Each NASR dataset (e.g., APT, FRQ)
+/// may define a set of "COMMON TO ALL" columns that appear in every CSV file within that dataset.
+/// </summary>
+public class NasrCommonColumnsDefinition
+{
+    [JsonPropertyName("$schema")]
+    public string Schema { get; set; } = string.Empty;
+
+    [JsonPropertyName("dataset")]
+    public string Dataset { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    [JsonPropertyName("columns")]
+    public List<string> Columns { get; set; } = new();
+}
+
+/// <summary>
 /// Validates actual CSV headers against expected schema manifests to detect drift.
 /// </summary>
 public static class NasrSchemaValidator
@@ -149,9 +209,12 @@ public static class NasrSchemaValidator
 
         var expectedColumns = new HashSet<string>(manifest.Columns.Keys, StringComparer.OrdinalIgnoreCase);
         var actualColumnsSet = new HashSet<string>(actualHeaders, StringComparer.OrdinalIgnoreCase);
+        var commonColumns = NasrSchemaManifestLoader.GetCommonColumns(csvFileName);
 
         result.MissingColumns.AddRange(expectedColumns.Except(actualColumnsSet, StringComparer.OrdinalIgnoreCase));
-        result.UnexpectedColumns.AddRange(actualColumnsSet.Except(expectedColumns, StringComparer.OrdinalIgnoreCase));
+        result.UnexpectedColumns.AddRange(
+            actualColumnsSet.Except(expectedColumns, StringComparer.OrdinalIgnoreCase)
+                .Where(col => !commonColumns.Contains(col)));
 
         return result;
     }

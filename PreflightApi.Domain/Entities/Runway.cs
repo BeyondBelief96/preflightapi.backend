@@ -16,12 +16,12 @@ public class Runway : INasrEntity<Runway>
     public Guid Id { get; set; }
 
     /// <summary>FAA NASR field: SITE_NO. Unique Site Number of the parent airport facility.</summary>
-    [Column("site_no", TypeName = "varchar(9)")]
+    [Column("site_no")]
     [Required]
     public string SiteNo { get; set; } = string.Empty;
 
     /// <summary>FAA NASR field: RWY_ID. Runway identification (e.g., "01/19", "09L/27R", "H1" for helipad).</summary>
-    [Column("runway_id", TypeName = "varchar(7)")]
+    [Column("runway_id")]
     [Required]
     public string RunwayId { get; set; } = string.Empty;
 
@@ -43,7 +43,7 @@ public class Runway : INasrEntity<Runway>
     /// <para>Less common: ALUMINUM, BRICK, CALICHE, CORAL, DECK, GRASS, METAL, NSTD, OIL&amp;CHIP,
     /// PSP, SAND, SOD, STEEL, TRTD, WOOD.</para>
     /// </summary>
-    [Column("surface_type_code", TypeName = "varchar(12)")]
+    [Column("surface_type_code")]
     public string? SurfaceTypeCode { get; set; }
 
     /// <summary>
@@ -52,11 +52,11 @@ public class Runway : INasrEntity<Runway>
     /// AFSC (Aggregate Friction Seal Coat), RFSC (Rubberized Friction Seal Coat),
     /// WC (Wire Comb or Wire Tine), NONE (No Special Surface Treatment).</para>
     /// </summary>
-    [Column("surface_treatment_code", TypeName = "varchar(5)")]
+    [Column("surface_treatment_code")]
     public string? SurfaceTreatmentCode { get; set; }
 
     /// <summary>FAA NASR field: PCN. Pavement Classification Number. See FAA Advisory Circular 150/5335-5 for code definitions and PCN determination formula.</summary>
-    [Column("pavement_classification", TypeName = "varchar(11)")]
+    [Column("pavement_classification")]
     public string? PavementClassification { get; set; }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class Runway : INasrEntity<Runway>
     /// <para>Possible values: HIGH, MED (Medium), LOW, FLD (Flood), NSTD (Non-Standard Lighting System),
     /// PERI (Perimeter), STRB (Strobe), NONE (No Edge Lighting System).</para>
     /// </summary>
-    [Column("edge_light_intensity", TypeName = "varchar(5)")]
+    [Column("edge_light_intensity")]
     public string? EdgeLightIntensity { get; set; }
 
     /// <summary>FAA NASR field: GROSS_WT_SW. Runway weight-bearing capacity for single wheel type landing gear, in pounds.</summary>
@@ -82,6 +82,34 @@ public class Runway : INasrEntity<Runway>
     /// <summary>FAA NASR field: GROSS_WT_DDTW. Runway weight-bearing capacity for two dual wheels in tandem/two dual wheels in double tandem body gear type landing gear, in pounds.</summary>
     [Column("weight_bearing_double_dual_tandem")]
     public int? WeightBearingDoubleDualTandem { get; set; }
+
+    /// <summary>FAA NASR field: COND. Runway surface condition.</summary>
+    [Column("surface_condition")]
+    public string? SurfaceCondition { get; set; }
+
+    /// <summary>FAA NASR field: PAVEMENT_TYPE_CODE. Pavement type code.</summary>
+    [Column("pavement_type_code")]
+    public string? PavementTypeCode { get; set; }
+
+    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade strength code.</summary>
+    [Column("subgrade_strength_code")]
+    public string? SubgradeStrengthCode { get; set; }
+
+    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire pressure code.</summary>
+    [Column("tire_pressure_code")]
+    public string? TirePressureCode { get; set; }
+
+    /// <summary>FAA NASR field: DTRM_METHOD_CODE. Determination method code for pavement strength.</summary>
+    [Column("determination_method_code")]
+    public string? DeterminationMethodCode { get; set; }
+
+    /// <summary>FAA NASR field: RWY_LEN_SOURCE. Source of runway length information.</summary>
+    [Column("runway_length_source")]
+    public string? RunwayLengthSource { get; set; }
+
+    /// <summary>FAA NASR field: LENGTH_SOURCE_DATE. Date of runway length source information.</summary>
+    [Column("length_source_date")]
+    public DateTime? LengthSourceDate { get; set; }
 
     /// <summary>Navigation property to the runway ends (typically two per runway, one for each direction).</summary>
     public virtual ICollection<RunwayEnd> RunwayEnds { get; set; } = new List<RunwayEnd>();
@@ -132,6 +160,20 @@ public class Runway : INasrEntity<Runway>
             selective.WeightBearingDualTandem = WeightBearingDualTandem;
         if (properties.Contains(nameof(WeightBearingDoubleDualTandem)))
             selective.WeightBearingDoubleDualTandem = WeightBearingDoubleDualTandem;
+        if (properties.Contains(nameof(SurfaceCondition)))
+            selective.SurfaceCondition = SurfaceCondition;
+        if (properties.Contains(nameof(PavementTypeCode)))
+            selective.PavementTypeCode = PavementTypeCode;
+        if (properties.Contains(nameof(SubgradeStrengthCode)))
+            selective.SubgradeStrengthCode = SubgradeStrengthCode;
+        if (properties.Contains(nameof(TirePressureCode)))
+            selective.TirePressureCode = TirePressureCode;
+        if (properties.Contains(nameof(DeterminationMethodCode)))
+            selective.DeterminationMethodCode = DeterminationMethodCode;
+        if (properties.Contains(nameof(RunwayLengthSource)))
+            selective.RunwayLengthSource = RunwayLengthSource;
+        if (properties.Contains(nameof(LengthSourceDate)))
+            selective.LengthSourceDate = LengthSourceDate;
 
         return selective;
     }
@@ -148,6 +190,13 @@ public class Runway : INasrEntity<Runway>
         WeightBearingDualWheel = source.WeightBearingDualWheel;
         WeightBearingDualTandem = source.WeightBearingDualTandem;
         WeightBearingDoubleDualTandem = source.WeightBearingDoubleDualTandem;
+        SurfaceCondition = source.SurfaceCondition;
+        PavementTypeCode = source.PavementTypeCode;
+        SubgradeStrengthCode = source.SubgradeStrengthCode;
+        TirePressureCode = source.TirePressureCode;
+        DeterminationMethodCode = source.DeterminationMethodCode;
+        RunwayLengthSource = source.RunwayLengthSource;
+        LengthSourceDate = source.LengthSourceDate;
     }
 
     private void UpdateSelectiveProperties(Runway source, HashSet<string> limitToProperties)
@@ -172,5 +221,19 @@ public class Runway : INasrEntity<Runway>
             WeightBearingDualTandem = source.WeightBearingDualTandem;
         if (limitToProperties.Contains(nameof(WeightBearingDoubleDualTandem)) && source.WeightBearingDoubleDualTandem != null)
             WeightBearingDoubleDualTandem = source.WeightBearingDoubleDualTandem;
+        if (limitToProperties.Contains(nameof(SurfaceCondition)) && source.SurfaceCondition != null)
+            SurfaceCondition = source.SurfaceCondition;
+        if (limitToProperties.Contains(nameof(PavementTypeCode)) && source.PavementTypeCode != null)
+            PavementTypeCode = source.PavementTypeCode;
+        if (limitToProperties.Contains(nameof(SubgradeStrengthCode)) && source.SubgradeStrengthCode != null)
+            SubgradeStrengthCode = source.SubgradeStrengthCode;
+        if (limitToProperties.Contains(nameof(TirePressureCode)) && source.TirePressureCode != null)
+            TirePressureCode = source.TirePressureCode;
+        if (limitToProperties.Contains(nameof(DeterminationMethodCode)) && source.DeterminationMethodCode != null)
+            DeterminationMethodCode = source.DeterminationMethodCode;
+        if (limitToProperties.Contains(nameof(RunwayLengthSource)) && source.RunwayLengthSource != null)
+            RunwayLengthSource = source.RunwayLengthSource;
+        if (limitToProperties.Contains(nameof(LengthSourceDate)) && source.LengthSourceDate != null)
+            LengthSourceDate = source.LengthSourceDate;
     }
 }

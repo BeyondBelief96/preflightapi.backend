@@ -15,25 +15,10 @@ public class RunwayConfiguration : IEntityTypeConfiguration<Runway>
 
         // Required fields
         builder.Property(e => e.SiteNo)
-            .IsRequired()
-            .HasMaxLength(9);
+            .IsRequired();
 
         builder.Property(e => e.RunwayId)
-            .IsRequired()
-            .HasMaxLength(7);
-
-        // Optional fields with max lengths
-        builder.Property(e => e.SurfaceTypeCode)
-            .HasMaxLength(12);
-
-        builder.Property(e => e.SurfaceTreatmentCode)
-            .HasMaxLength(5);
-
-        builder.Property(e => e.PavementClassification)
-            .HasMaxLength(11);
-
-        builder.Property(e => e.EdgeLightIntensity)
-            .HasMaxLength(5);
+            .IsRequired();
 
         // Relationship to Airport (via SiteNo alternate key)
         builder.HasOne<Airport>()

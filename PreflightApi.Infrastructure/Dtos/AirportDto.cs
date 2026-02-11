@@ -160,6 +160,9 @@ public record AirportDto
     /// <summary>FAA NASR field: RESP_ARTCC_ID. Identifier of the responsible Air Route Traffic Control Center (ARTCC).</summary>
     public string? RespArtccId { get; init; }
 
+    /// <summary>FAA NASR field: ARTCC_NAME. Name of the responsible ARTCC.</summary>
+    public string? ArtccName { get; init; }
+
     /// <summary>FAA NASR field: TWR_TYPE_CODE. Air Traffic Control Tower type (e.g., NON-ATCT, ATCT).</summary>
     public string? TwrTypeCode { get; init; }
 
@@ -171,6 +174,21 @@ public record AirportDto
 
     /// <summary>FAA NASR field: FSS_NAME. Name of the Flight Service Station (FSS) serving the airport.</summary>
     public string? FssName { get; init; }
+
+    /// <summary>FAA NASR field: PHONE_NO. FSS local phone number.</summary>
+    public string? FssPhoneNumber { get; init; }
+
+    /// <summary>FAA NASR field: TOLL_FREE_NO. FSS toll-free phone number.</summary>
+    public string? TollFreeNumber { get; init; }
+
+    /// <summary>FAA NASR field: ALT_FSS_ID. Alternate Flight Service Station identifier.</summary>
+    public string? AltFssId { get; init; }
+
+    /// <summary>FAA NASR field: ALT_FSS_NAME. Alternate Flight Service Station name.</summary>
+    public string? AltFssName { get; init; }
+
+    /// <summary>FAA NASR field: ALT_TOLL_FREE_NO. Alternate FSS toll-free phone number.</summary>
+    public string? AltTollFreeNumber { get; init; }
 
     /// <summary>FAA NASR field: NOTAM_ID. NOTAM facility identifier.</summary>
     public string? NotamId { get; init; }
@@ -277,7 +295,27 @@ public record AirportDto
     /// <summary>FAA NASR field: CTA. Cold Temperature Airport. Altitude correction required at or below the temperature given in Celsius.</summary>
     public string? Cta { get; init; }
 
+    /// <summary>FAA NASR field: COMPUTER_ID. Computer identifier assigned to the airport.</summary>
+    public string? ComputerId { get; init; }
+
+    // ── Certification ───────────────────────────────────────────────────
+
+    /// <summary>FAA NASR field: FAR_139_TYPE_CODE. FAR Part 139 airport certification type code.</summary>
+    public string? Far139TypeCode { get; init; }
+
+    /// <summary>FAA NASR field: FAR_139_CARRIER_SER_CODE. FAR Part 139 carrier service code.</summary>
+    public string? Far139CarrierSerCode { get; init; }
+
+    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. ARFF certification type and date.</summary>
+    public DateTime? ArffCertTypeDate { get; init; }
+
+    /// <summary>FAA NASR field: ASP_ANLYS_DTRM_CODE. Airport safety analysis determination code.</summary>
+    public string? AspAnalysisDtrmCode { get; init; }
+
     // ── Attendance (from APT_ATT) ───────────────────────────────────────
+
+    /// <summary>FAA NASR field: SKED_SEQ_NO (APT_ATT). Attendance Schedule Sequence Number.</summary>
+    public int? SkedSeqNo { get; init; }
 
     /// <summary>FAA NASR field: MONTH (APT_ATT). Months the facility is attended. May contain 'UNATNDD' for unattended facilities.</summary>
     public string? AttendanceMonth { get; init; }

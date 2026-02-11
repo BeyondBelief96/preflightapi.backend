@@ -44,10 +44,17 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mapp
             Map(m => m.DistCityToAirport).Name("DIST_CITY_TO_AIRPORT").TypeConverter<OptionalDecimalConverter>().Optional();
             Map(m => m.DirectionCode).Name("DIRECTION_CODE").Optional();
             Map(m => m.Acreage).Name("ACREAGE").TypeConverter<OptionalIntConverter>().Optional();
+            Map(m => m.ComputerId).Name("COMPUTER_ID").Optional();
             Map(m => m.RespArtccId).Name("RESP_ARTCC_ID").Optional();
+            Map(m => m.ArtccName).Name("ARTCC_NAME").Optional();
             Map(m => m.FssOnArptFlag).Name("FSS_ON_ARPT_FLAG").Optional();
             Map(m => m.FssId).Name("FSS_ID").Optional();
             Map(m => m.FssName).Name("FSS_NAME").Optional();
+            Map(m => m.FssPhoneNumber).Name("PHONE_NO").Optional();
+            Map(m => m.TollFreeNumber).Name("TOLL_FREE_NO").Optional();
+            Map(m => m.AltFssId).Name("ALT_FSS_ID").Optional();
+            Map(m => m.AltFssName).Name("ALT_FSS_NAME").Optional();
+            Map(m => m.AltTollFreeNumber).Name("ALT_TOLL_FREE_NO").Optional();
             Map(m => m.NotamId).Name("NOTAM_ID").Optional();
             Map(m => m.NotamFlag).Name("NOTAM_FLAG").Optional();
             Map(m => m.ActivationDate).Name("ACTIVATION_DATE").Optional();
@@ -87,6 +94,10 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mapp
             Map(m => m.MinOpNetwork).Name("MIN_OP_NETWORK").Optional();
             Map(m => m.UserFeeFlag).Name("USER_FEE_FLAG").Optional();
             Map(m => m.Cta).Name("CTA").Optional();
+            Map(m => m.Far139TypeCode).Name("FAR_139_TYPE_CODE").Optional();
+            Map(m => m.Far139CarrierSerCode).Name("FAR_139_CARRIER_SER_CODE").Optional();
+            Map(m => m.ArffCertTypeDate).Name("ARFF_CERT_TYPE_DATE").TypeConverter<OptionalDateConverter>().Optional();
+            Map(m => m.AspAnalysisDtrmCode).Name("ASP_ANLYS_DTRM_CODE").Optional();
         }
     }
 
@@ -101,6 +112,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mapp
             Map(m => m.ArptId).Name("ARPT_ID").Optional();
             Map(m => m.City).Name("CITY").Optional();
             Map(m => m.CountryCode).Name("COUNTRY_CODE").Optional();
+            Map(m => m.SkedSeqNo).Name("SKED_SEQ_NO").TypeConverter<OptionalIntConverter>().Optional();
             Map(m => m.AttendanceMonth).Name("MONTH").Optional();
             Map(m => m.AttendanceDay).Name("DAY").Optional();
             Map(m => m.AttendanceHours).Name("HOUR").Optional();

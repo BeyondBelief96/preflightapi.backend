@@ -16,12 +16,12 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public Guid Id { get; set; }
 
     /// <summary>FAA NASR field: SITE_NO. Unique Site Number of the parent airport facility.</summary>
-    [Column("site_no", TypeName = "varchar(9)")]
+    [Column("site_no")]
     [Required]
     public string SiteNo { get; set; } = string.Empty;
 
     /// <summary>FAA NASR field: RWY_ID. Runway identification of the parent runway.</summary>
-    [Column("runway_id_ref", TypeName = "varchar(7)")]
+    [Column("runway_id_ref")]
     [Required]
     public string RunwayIdRef { get; set; } = string.Empty;
 
@@ -30,7 +30,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public Guid? RunwayFk { get; set; }
 
     /// <summary>FAA NASR field: RWY_END_ID. Runway end identifier (e.g., "01", "19", "09L", "27R").</summary>
-    [Column("runway_end_id", TypeName = "varchar(3)")]
+    [Column("runway_end_id")]
     [Required]
     public string RunwayEndId { get; set; } = string.Empty;
 
@@ -42,7 +42,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     /// FAA NASR field: ILS_TYPE. Instrument Landing System (ILS) type.
     /// <para>Possible values: ILS, MLS, SDF, LOCALIZER, LDA, ISMLS, ILS/DME, SDF/DME, LOC/DME, LOC/GS, LDA/DME.</para>
     /// </summary>
-    [Column("approach_type", TypeName = "varchar(10)")]
+    [Column("approach_type")]
     public string? ApproachType { get; set; }
 
     /// <summary>
@@ -57,14 +57,14 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     /// <para>Possible values: PIR (Precision Instrument), NPI (Nonprecision Instrument), BSC (Basic),
     /// NRS (Numbers Only), NSTD (Nonstandard), BUOY (Buoys - Seaplane Base), STOL (Short Takeoff and Landing), NONE.</para>
     /// </summary>
-    [Column("runway_markings_type", TypeName = "varchar(5)")]
+    [Column("runway_markings_type")]
     public string? RunwayMarkingsType { get; set; }
 
     /// <summary>
     /// FAA NASR field: RWY_MARKING_COND. Runway markings condition.
     /// <para>Possible values: G (Good), F (Fair), P (Poor).</para>
     /// </summary>
-    [Column("runway_markings_condition", TypeName = "varchar(1)")]
+    [Column("runway_markings_condition")]
     public string? RunwayMarkingsCondition { get; set; }
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees.</summary>
@@ -113,7 +113,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     /// P2L/P2R/P4L/P4R (PAPI), TRIL/TRIR (Tri-Color), PSIL/PSIR (Pulsating),
     /// PNIL/PNIR (Panel), NSTD (Nonstandard), PVT (Private Use), VAS (Non-Specific), NONE/N.</para>
     /// </summary>
-    [Column("visual_glide_slope_indicator", TypeName = "varchar(5)")]
+    [Column("visual_glide_slope_indicator")]
     public string? VisualGlideSlopeIndicator { get; set; }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     /// <para>Possible values: T (Touchdown), M (Midfield), R (Rollout), N (No RVR Available),
     /// TM, TR, MR, TMR (combinations).</para>
     /// </summary>
-    [Column("runway_visual_range_equipment", TypeName = "varchar(3)")]
+    [Column("runway_visual_range_equipment")]
     public string? RunwayVisualRangeEquipment { get; set; }
 
     /// <summary>
@@ -137,7 +137,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     /// <para>Possible values: AFOVRN, ALSAF, ALSF1, ALSF2, MALS, MALSF, MALSR, RAIL, SALS, SALSF,
     /// SSALS, SSALF, SSALR, ODALS, RLLS, MIL OVRN, NSTD, NONE.</para>
     /// </summary>
-    [Column("approach_light_system", TypeName = "varchar(8)")]
+    [Column("approach_light_system")]
     public string? ApproachLightSystem { get; set; }
 
     /// <summary>
@@ -162,14 +162,14 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public bool TouchdownZoneLights { get; set; }
 
     /// <summary>FAA NASR field: OBSTN_TYPE. Controlling object description (type of obstacle).</summary>
-    [Column("controlling_object_description", TypeName = "varchar(11)")]
+    [Column("controlling_object_description")]
     public string? ControllingObjectDescription { get; set; }
 
     /// <summary>
     /// FAA NASR field: OBSTN_MRKD_CODE. Controlling object marked/lighted status.
     /// <para>Possible values: M (Marked), L (Lighted), ML (Marked and Lighted), NONE.</para>
     /// </summary>
-    [Column("controlling_object_marked_lighted", TypeName = "varchar(4)")]
+    [Column("controlling_object_marked_lighted")]
     public string? ControllingObjectMarkedLighted { get; set; }
 
     /// <summary>FAA NASR field: OBSTN_CLNC_SLOPE. Controlling object clearance slope value, expressed as a ratio of N:1. If greater than 50:1, then 50 is entered.</summary>
@@ -185,8 +185,186 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public int? ControllingObjectDistanceFromRunway { get; set; }
 
     /// <summary>FAA NASR field: CNTRLN_OFFSET. Controlling object centerline offset distance in feet. Distance that the controlling object is located away from the extended runway centerline, measured horizontally on a line perpendicular to the extended runway centerline.</summary>
-    [Column("controlling_object_centerline_offset", TypeName = "varchar(7)")]
+    [Column("controlling_object_centerline_offset")]
     public string? ControllingObjectCenterlineOffset { get; set; }
+
+    // DMS Coordinates - Runway End
+    /// <summary>FAA NASR field: RWY_END_LAT_DEG. Runway end latitude degrees.</summary>
+    [Column("rwy_end_lat_deg")]
+    public int? RwyEndLatDeg { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LAT_MIN. Runway end latitude minutes.</summary>
+    [Column("rwy_end_lat_min")]
+    public int? RwyEndLatMin { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LAT_SEC. Runway end latitude seconds.</summary>
+    [Column("rwy_end_lat_sec", TypeName = "decimal(6,2)")]
+    public decimal? RwyEndLatSec { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LAT_HEMIS. Runway end latitude hemisphere.</summary>
+    [Column("rwy_end_lat_hemis")]
+    public string? RwyEndLatHemis { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LONG_DEG. Runway end longitude degrees.</summary>
+    [Column("rwy_end_long_deg")]
+    public int? RwyEndLongDeg { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LONG_MIN. Runway end longitude minutes.</summary>
+    [Column("rwy_end_long_min")]
+    public int? RwyEndLongMin { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LONG_SEC. Runway end longitude seconds.</summary>
+    [Column("rwy_end_long_sec", TypeName = "decimal(6,2)")]
+    public decimal? RwyEndLongSec { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LONG_HEMIS. Runway end longitude hemisphere.</summary>
+    [Column("rwy_end_long_hemis")]
+    public string? RwyEndLongHemis { get; set; }
+
+    // DMS Coordinates - Displaced Threshold
+    /// <summary>FAA NASR field: DISPLACED_THR_LAT_DEG. Displaced threshold latitude degrees.</summary>
+    [Column("displaced_thr_lat_deg")]
+    public int? DisplacedThrLatDeg { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LAT_MIN. Displaced threshold latitude minutes.</summary>
+    [Column("displaced_thr_lat_min")]
+    public int? DisplacedThrLatMin { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LAT_SEC. Displaced threshold latitude seconds.</summary>
+    [Column("displaced_thr_lat_sec", TypeName = "decimal(6,2)")]
+    public decimal? DisplacedThrLatSec { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LAT_HEMIS. Displaced threshold latitude hemisphere.</summary>
+    [Column("displaced_thr_lat_hemis")]
+    public string? DisplacedThrLatHemis { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LONG_DEG. Displaced threshold longitude degrees.</summary>
+    [Column("displaced_thr_long_deg")]
+    public int? DisplacedThrLongDeg { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LONG_MIN. Displaced threshold longitude minutes.</summary>
+    [Column("displaced_thr_long_min")]
+    public int? DisplacedThrLongMin { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LONG_SEC. Displaced threshold longitude seconds.</summary>
+    [Column("displaced_thr_long_sec", TypeName = "decimal(6,2)")]
+    public decimal? DisplacedThrLongSec { get; set; }
+
+    /// <summary>FAA NASR field: DISPLACED_THR_LONG_HEMIS. Displaced threshold longitude hemisphere.</summary>
+    [Column("displaced_thr_long_hemis")]
+    public string? DisplacedThrLongHemis { get; set; }
+
+    // Codes & Gradient
+    /// <summary>FAA NASR field: FAR_PART_77_CODE. FAR Part 77 approach category code.</summary>
+    [Column("far_part_77_code")]
+    public string? FarPart77Code { get; set; }
+
+    /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Centerline direction code.</summary>
+    [Column("centerline_direction_code")]
+    public string? CenterlineDirectionCode { get; set; }
+
+    /// <summary>FAA NASR field: RWY_GRAD. Runway gradient as a percentage.</summary>
+    [Column("runway_gradient", TypeName = "decimal(5,2)")]
+    public decimal? RunwayGradient { get; set; }
+
+    /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway gradient direction (UP or DOWN).</summary>
+    [Column("runway_gradient_direction")]
+    public string? RunwayGradientDirection { get; set; }
+
+    // Source/Date Metadata
+    /// <summary>FAA NASR field: RWY_END_PSN_SOURCE. Source of runway end position information.</summary>
+    [Column("rwy_end_position_source")]
+    public string? RwyEndPositionSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_PSN_DATE. Date of runway end position information.</summary>
+    [Column("rwy_end_position_date")]
+    public DateTime? RwyEndPositionDate { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_ELEV_SOURCE. Source of runway end elevation information.</summary>
+    [Column("rwy_end_elevation_source")]
+    public string? RwyEndElevationSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_ELEV_DATE. Date of runway end elevation information.</summary>
+    [Column("rwy_end_elevation_date")]
+    public DateTime? RwyEndElevationDate { get; set; }
+
+    /// <summary>FAA NASR field: DSPL_THR_PSN_SOURCE. Source of displaced threshold position information.</summary>
+    [Column("displaced_thr_position_source")]
+    public string? DisplacedThrPositionSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_PSN_DATE. Date of displaced threshold position information.</summary>
+    [Column("displaced_thr_position_date")]
+    public DateTime? DisplacedThrPositionDate { get; set; }
+
+    /// <summary>FAA NASR field: DSPL_THR_ELEV_SOURCE. Source of displaced threshold elevation information.</summary>
+    [Column("displaced_thr_elevation_source")]
+    public string? DisplacedThrElevationSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_ELEV_DATE. Date of displaced threshold elevation information.</summary>
+    [Column("displaced_thr_elevation_date")]
+    public DateTime? DisplacedThrElevationDate { get; set; }
+
+    /// <summary>FAA NASR field: TDZ_ELEV_SOURCE. Source of touchdown zone elevation information.</summary>
+    [Column("touchdown_zone_elev_source")]
+    public string? TouchdownZoneElevSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_TDZ_ELEV_DATE. Date of touchdown zone elevation information.</summary>
+    [Column("touchdown_zone_elev_date")]
+    public DateTime? TouchdownZoneElevDate { get; set; }
+
+    // Declared Distances
+    /// <summary>FAA NASR field: TKOF_RUN_AVBL. Takeoff Run Available (TORA) in feet.</summary>
+    [Column("takeoff_run_available")]
+    public int? TakeoffRunAvailable { get; set; }
+
+    /// <summary>FAA NASR field: TKOF_DIST_AVBL. Takeoff Distance Available (TODA) in feet.</summary>
+    [Column("takeoff_distance_available")]
+    public int? TakeoffDistanceAvailable { get; set; }
+
+    /// <summary>FAA NASR field: ACLT_STOP_DIST_AVBL. Accelerate-Stop Distance Available (ASDA) in feet.</summary>
+    [Column("accelerate_stop_dist_available")]
+    public int? AccelerateStopDistAvailable { get; set; }
+
+    /// <summary>FAA NASR field: LNDG_DIST_AVBL. Landing Distance Available (LDA) in feet.</summary>
+    [Column("landing_distance_available")]
+    public int? LandingDistanceAvailable { get; set; }
+
+    // LAHSO (Land and Hold Short Operations)
+    /// <summary>FAA NASR field: LAHSO_ALD. LAHSO available landing distance in feet.</summary>
+    [Column("lahso_available_landing_distance")]
+    public int? LahsoAvailableLandingDistance { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_INTERSECT_LAHSO. Intersecting runway for LAHSO operations.</summary>
+    [Column("lahso_intersecting_runway")]
+    public string? LahsoIntersectingRunway { get; set; }
+
+    /// <summary>FAA NASR field: LAHSO_DESC. LAHSO hold short point description.</summary>
+    [Column("lahso_description")]
+    public string? LahsoDescription { get; set; }
+
+    /// <summary>FAA NASR field: LAHSO_LAT. LAHSO hold short point latitude (DMS format).</summary>
+    [Column("lahso_latitude")]
+    public string? LahsoLatitude { get; set; }
+
+    /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees.</summary>
+    [Column("lahso_lat_decimal", TypeName = "decimal(10,8)")]
+    public decimal? LahsoLatDecimal { get; set; }
+
+    /// <summary>FAA NASR field: LAHSO_LONG. LAHSO hold short point longitude (DMS format).</summary>
+    [Column("lahso_longitude")]
+    public string? LahsoLongitude { get; set; }
+
+    /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees.</summary>
+    [Column("lahso_long_decimal", TypeName = "decimal(11,8)")]
+    public decimal? LahsoLongDecimal { get; set; }
+
+    /// <summary>FAA NASR field: LAHSO_PSN_SOURCE. Source of LAHSO position information.</summary>
+    [Column("lahso_position_source")]
+    public string? LahsoPositionSource { get; set; }
+
+    /// <summary>FAA NASR field: RWY_END_LAHSO_PSN_DATE. Date of LAHSO position information.</summary>
+    [Column("lahso_position_date")]
+    public DateTime? LahsoPositionDate { get; set; }
 
     /// <summary>Navigation property to the parent Runway entity.</summary>
     [ForeignKey(nameof(RunwayFk))]
@@ -277,6 +455,102 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
         if (properties.Contains(nameof(ControllingObjectCenterlineOffset)))
             selective.ControllingObjectCenterlineOffset = ControllingObjectCenterlineOffset;
 
+        // DMS Coordinates - Runway End
+        if (properties.Contains(nameof(RwyEndLatDeg)))
+            selective.RwyEndLatDeg = RwyEndLatDeg;
+        if (properties.Contains(nameof(RwyEndLatMin)))
+            selective.RwyEndLatMin = RwyEndLatMin;
+        if (properties.Contains(nameof(RwyEndLatSec)))
+            selective.RwyEndLatSec = RwyEndLatSec;
+        if (properties.Contains(nameof(RwyEndLatHemis)))
+            selective.RwyEndLatHemis = RwyEndLatHemis;
+        if (properties.Contains(nameof(RwyEndLongDeg)))
+            selective.RwyEndLongDeg = RwyEndLongDeg;
+        if (properties.Contains(nameof(RwyEndLongMin)))
+            selective.RwyEndLongMin = RwyEndLongMin;
+        if (properties.Contains(nameof(RwyEndLongSec)))
+            selective.RwyEndLongSec = RwyEndLongSec;
+        if (properties.Contains(nameof(RwyEndLongHemis)))
+            selective.RwyEndLongHemis = RwyEndLongHemis;
+        if (properties.Contains(nameof(DisplacedThrLatDeg)))
+            selective.DisplacedThrLatDeg = DisplacedThrLatDeg;
+        if (properties.Contains(nameof(DisplacedThrLatMin)))
+            selective.DisplacedThrLatMin = DisplacedThrLatMin;
+        if (properties.Contains(nameof(DisplacedThrLatSec)))
+            selective.DisplacedThrLatSec = DisplacedThrLatSec;
+        if (properties.Contains(nameof(DisplacedThrLatHemis)))
+            selective.DisplacedThrLatHemis = DisplacedThrLatHemis;
+        if (properties.Contains(nameof(DisplacedThrLongDeg)))
+            selective.DisplacedThrLongDeg = DisplacedThrLongDeg;
+        if (properties.Contains(nameof(DisplacedThrLongMin)))
+            selective.DisplacedThrLongMin = DisplacedThrLongMin;
+        if (properties.Contains(nameof(DisplacedThrLongSec)))
+            selective.DisplacedThrLongSec = DisplacedThrLongSec;
+        if (properties.Contains(nameof(DisplacedThrLongHemis)))
+            selective.DisplacedThrLongHemis = DisplacedThrLongHemis;
+
+        // Codes & Gradient
+        if (properties.Contains(nameof(FarPart77Code)))
+            selective.FarPart77Code = FarPart77Code;
+        if (properties.Contains(nameof(CenterlineDirectionCode)))
+            selective.CenterlineDirectionCode = CenterlineDirectionCode;
+        if (properties.Contains(nameof(RunwayGradient)))
+            selective.RunwayGradient = RunwayGradient;
+        if (properties.Contains(nameof(RunwayGradientDirection)))
+            selective.RunwayGradientDirection = RunwayGradientDirection;
+
+        // Source/Date Metadata
+        if (properties.Contains(nameof(RwyEndPositionSource)))
+            selective.RwyEndPositionSource = RwyEndPositionSource;
+        if (properties.Contains(nameof(RwyEndPositionDate)))
+            selective.RwyEndPositionDate = RwyEndPositionDate;
+        if (properties.Contains(nameof(RwyEndElevationSource)))
+            selective.RwyEndElevationSource = RwyEndElevationSource;
+        if (properties.Contains(nameof(RwyEndElevationDate)))
+            selective.RwyEndElevationDate = RwyEndElevationDate;
+        if (properties.Contains(nameof(DisplacedThrPositionSource)))
+            selective.DisplacedThrPositionSource = DisplacedThrPositionSource;
+        if (properties.Contains(nameof(DisplacedThrPositionDate)))
+            selective.DisplacedThrPositionDate = DisplacedThrPositionDate;
+        if (properties.Contains(nameof(DisplacedThrElevationSource)))
+            selective.DisplacedThrElevationSource = DisplacedThrElevationSource;
+        if (properties.Contains(nameof(DisplacedThrElevationDate)))
+            selective.DisplacedThrElevationDate = DisplacedThrElevationDate;
+        if (properties.Contains(nameof(TouchdownZoneElevSource)))
+            selective.TouchdownZoneElevSource = TouchdownZoneElevSource;
+        if (properties.Contains(nameof(TouchdownZoneElevDate)))
+            selective.TouchdownZoneElevDate = TouchdownZoneElevDate;
+
+        // Declared Distances
+        if (properties.Contains(nameof(TakeoffRunAvailable)))
+            selective.TakeoffRunAvailable = TakeoffRunAvailable;
+        if (properties.Contains(nameof(TakeoffDistanceAvailable)))
+            selective.TakeoffDistanceAvailable = TakeoffDistanceAvailable;
+        if (properties.Contains(nameof(AccelerateStopDistAvailable)))
+            selective.AccelerateStopDistAvailable = AccelerateStopDistAvailable;
+        if (properties.Contains(nameof(LandingDistanceAvailable)))
+            selective.LandingDistanceAvailable = LandingDistanceAvailable;
+
+        // LAHSO
+        if (properties.Contains(nameof(LahsoAvailableLandingDistance)))
+            selective.LahsoAvailableLandingDistance = LahsoAvailableLandingDistance;
+        if (properties.Contains(nameof(LahsoIntersectingRunway)))
+            selective.LahsoIntersectingRunway = LahsoIntersectingRunway;
+        if (properties.Contains(nameof(LahsoDescription)))
+            selective.LahsoDescription = LahsoDescription;
+        if (properties.Contains(nameof(LahsoLatitude)))
+            selective.LahsoLatitude = LahsoLatitude;
+        if (properties.Contains(nameof(LahsoLatDecimal)))
+            selective.LahsoLatDecimal = LahsoLatDecimal;
+        if (properties.Contains(nameof(LahsoLongitude)))
+            selective.LahsoLongitude = LahsoLongitude;
+        if (properties.Contains(nameof(LahsoLongDecimal)))
+            selective.LahsoLongDecimal = LahsoLongDecimal;
+        if (properties.Contains(nameof(LahsoPositionSource)))
+            selective.LahsoPositionSource = LahsoPositionSource;
+        if (properties.Contains(nameof(LahsoPositionDate)))
+            selective.LahsoPositionDate = LahsoPositionDate;
+
         return selective;
     }
 
@@ -310,6 +584,59 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
         ControllingObjectHeightAboveRunway = source.ControllingObjectHeightAboveRunway;
         ControllingObjectDistanceFromRunway = source.ControllingObjectDistanceFromRunway;
         ControllingObjectCenterlineOffset = source.ControllingObjectCenterlineOffset;
+
+        // DMS Coordinates - Runway End
+        RwyEndLatDeg = source.RwyEndLatDeg;
+        RwyEndLatMin = source.RwyEndLatMin;
+        RwyEndLatSec = source.RwyEndLatSec;
+        RwyEndLatHemis = source.RwyEndLatHemis;
+        RwyEndLongDeg = source.RwyEndLongDeg;
+        RwyEndLongMin = source.RwyEndLongMin;
+        RwyEndLongSec = source.RwyEndLongSec;
+        RwyEndLongHemis = source.RwyEndLongHemis;
+        DisplacedThrLatDeg = source.DisplacedThrLatDeg;
+        DisplacedThrLatMin = source.DisplacedThrLatMin;
+        DisplacedThrLatSec = source.DisplacedThrLatSec;
+        DisplacedThrLatHemis = source.DisplacedThrLatHemis;
+        DisplacedThrLongDeg = source.DisplacedThrLongDeg;
+        DisplacedThrLongMin = source.DisplacedThrLongMin;
+        DisplacedThrLongSec = source.DisplacedThrLongSec;
+        DisplacedThrLongHemis = source.DisplacedThrLongHemis;
+
+        // Codes & Gradient
+        FarPart77Code = source.FarPart77Code;
+        CenterlineDirectionCode = source.CenterlineDirectionCode;
+        RunwayGradient = source.RunwayGradient;
+        RunwayGradientDirection = source.RunwayGradientDirection;
+
+        // Source/Date Metadata
+        RwyEndPositionSource = source.RwyEndPositionSource;
+        RwyEndPositionDate = source.RwyEndPositionDate;
+        RwyEndElevationSource = source.RwyEndElevationSource;
+        RwyEndElevationDate = source.RwyEndElevationDate;
+        DisplacedThrPositionSource = source.DisplacedThrPositionSource;
+        DisplacedThrPositionDate = source.DisplacedThrPositionDate;
+        DisplacedThrElevationSource = source.DisplacedThrElevationSource;
+        DisplacedThrElevationDate = source.DisplacedThrElevationDate;
+        TouchdownZoneElevSource = source.TouchdownZoneElevSource;
+        TouchdownZoneElevDate = source.TouchdownZoneElevDate;
+
+        // Declared Distances
+        TakeoffRunAvailable = source.TakeoffRunAvailable;
+        TakeoffDistanceAvailable = source.TakeoffDistanceAvailable;
+        AccelerateStopDistAvailable = source.AccelerateStopDistAvailable;
+        LandingDistanceAvailable = source.LandingDistanceAvailable;
+
+        // LAHSO
+        LahsoAvailableLandingDistance = source.LahsoAvailableLandingDistance;
+        LahsoIntersectingRunway = source.LahsoIntersectingRunway;
+        LahsoDescription = source.LahsoDescription;
+        LahsoLatitude = source.LahsoLatitude;
+        LahsoLatDecimal = source.LahsoLatDecimal;
+        LahsoLongitude = source.LahsoLongitude;
+        LahsoLongDecimal = source.LahsoLongDecimal;
+        LahsoPositionSource = source.LahsoPositionSource;
+        LahsoPositionDate = source.LahsoPositionDate;
     }
 
     private void UpdateSelectiveProperties(RunwayEnd source, HashSet<string> limitToProperties)
@@ -370,5 +697,101 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
             ControllingObjectDistanceFromRunway = source.ControllingObjectDistanceFromRunway;
         if (limitToProperties.Contains(nameof(ControllingObjectCenterlineOffset)) && source.ControllingObjectCenterlineOffset != null)
             ControllingObjectCenterlineOffset = source.ControllingObjectCenterlineOffset;
+
+        // DMS Coordinates - Runway End
+        if (limitToProperties.Contains(nameof(RwyEndLatDeg)) && source.RwyEndLatDeg != null)
+            RwyEndLatDeg = source.RwyEndLatDeg;
+        if (limitToProperties.Contains(nameof(RwyEndLatMin)) && source.RwyEndLatMin != null)
+            RwyEndLatMin = source.RwyEndLatMin;
+        if (limitToProperties.Contains(nameof(RwyEndLatSec)) && source.RwyEndLatSec != null)
+            RwyEndLatSec = source.RwyEndLatSec;
+        if (limitToProperties.Contains(nameof(RwyEndLatHemis)) && source.RwyEndLatHemis != null)
+            RwyEndLatHemis = source.RwyEndLatHemis;
+        if (limitToProperties.Contains(nameof(RwyEndLongDeg)) && source.RwyEndLongDeg != null)
+            RwyEndLongDeg = source.RwyEndLongDeg;
+        if (limitToProperties.Contains(nameof(RwyEndLongMin)) && source.RwyEndLongMin != null)
+            RwyEndLongMin = source.RwyEndLongMin;
+        if (limitToProperties.Contains(nameof(RwyEndLongSec)) && source.RwyEndLongSec != null)
+            RwyEndLongSec = source.RwyEndLongSec;
+        if (limitToProperties.Contains(nameof(RwyEndLongHemis)) && source.RwyEndLongHemis != null)
+            RwyEndLongHemis = source.RwyEndLongHemis;
+        if (limitToProperties.Contains(nameof(DisplacedThrLatDeg)) && source.DisplacedThrLatDeg != null)
+            DisplacedThrLatDeg = source.DisplacedThrLatDeg;
+        if (limitToProperties.Contains(nameof(DisplacedThrLatMin)) && source.DisplacedThrLatMin != null)
+            DisplacedThrLatMin = source.DisplacedThrLatMin;
+        if (limitToProperties.Contains(nameof(DisplacedThrLatSec)) && source.DisplacedThrLatSec != null)
+            DisplacedThrLatSec = source.DisplacedThrLatSec;
+        if (limitToProperties.Contains(nameof(DisplacedThrLatHemis)) && source.DisplacedThrLatHemis != null)
+            DisplacedThrLatHemis = source.DisplacedThrLatHemis;
+        if (limitToProperties.Contains(nameof(DisplacedThrLongDeg)) && source.DisplacedThrLongDeg != null)
+            DisplacedThrLongDeg = source.DisplacedThrLongDeg;
+        if (limitToProperties.Contains(nameof(DisplacedThrLongMin)) && source.DisplacedThrLongMin != null)
+            DisplacedThrLongMin = source.DisplacedThrLongMin;
+        if (limitToProperties.Contains(nameof(DisplacedThrLongSec)) && source.DisplacedThrLongSec != null)
+            DisplacedThrLongSec = source.DisplacedThrLongSec;
+        if (limitToProperties.Contains(nameof(DisplacedThrLongHemis)) && source.DisplacedThrLongHemis != null)
+            DisplacedThrLongHemis = source.DisplacedThrLongHemis;
+
+        // Codes & Gradient
+        if (limitToProperties.Contains(nameof(FarPart77Code)) && source.FarPart77Code != null)
+            FarPart77Code = source.FarPart77Code;
+        if (limitToProperties.Contains(nameof(CenterlineDirectionCode)) && source.CenterlineDirectionCode != null)
+            CenterlineDirectionCode = source.CenterlineDirectionCode;
+        if (limitToProperties.Contains(nameof(RunwayGradient)) && source.RunwayGradient != null)
+            RunwayGradient = source.RunwayGradient;
+        if (limitToProperties.Contains(nameof(RunwayGradientDirection)) && source.RunwayGradientDirection != null)
+            RunwayGradientDirection = source.RunwayGradientDirection;
+
+        // Source/Date Metadata
+        if (limitToProperties.Contains(nameof(RwyEndPositionSource)) && source.RwyEndPositionSource != null)
+            RwyEndPositionSource = source.RwyEndPositionSource;
+        if (limitToProperties.Contains(nameof(RwyEndPositionDate)) && source.RwyEndPositionDate != null)
+            RwyEndPositionDate = source.RwyEndPositionDate;
+        if (limitToProperties.Contains(nameof(RwyEndElevationSource)) && source.RwyEndElevationSource != null)
+            RwyEndElevationSource = source.RwyEndElevationSource;
+        if (limitToProperties.Contains(nameof(RwyEndElevationDate)) && source.RwyEndElevationDate != null)
+            RwyEndElevationDate = source.RwyEndElevationDate;
+        if (limitToProperties.Contains(nameof(DisplacedThrPositionSource)) && source.DisplacedThrPositionSource != null)
+            DisplacedThrPositionSource = source.DisplacedThrPositionSource;
+        if (limitToProperties.Contains(nameof(DisplacedThrPositionDate)) && source.DisplacedThrPositionDate != null)
+            DisplacedThrPositionDate = source.DisplacedThrPositionDate;
+        if (limitToProperties.Contains(nameof(DisplacedThrElevationSource)) && source.DisplacedThrElevationSource != null)
+            DisplacedThrElevationSource = source.DisplacedThrElevationSource;
+        if (limitToProperties.Contains(nameof(DisplacedThrElevationDate)) && source.DisplacedThrElevationDate != null)
+            DisplacedThrElevationDate = source.DisplacedThrElevationDate;
+        if (limitToProperties.Contains(nameof(TouchdownZoneElevSource)) && source.TouchdownZoneElevSource != null)
+            TouchdownZoneElevSource = source.TouchdownZoneElevSource;
+        if (limitToProperties.Contains(nameof(TouchdownZoneElevDate)) && source.TouchdownZoneElevDate != null)
+            TouchdownZoneElevDate = source.TouchdownZoneElevDate;
+
+        // Declared Distances
+        if (limitToProperties.Contains(nameof(TakeoffRunAvailable)) && source.TakeoffRunAvailable != null)
+            TakeoffRunAvailable = source.TakeoffRunAvailable;
+        if (limitToProperties.Contains(nameof(TakeoffDistanceAvailable)) && source.TakeoffDistanceAvailable != null)
+            TakeoffDistanceAvailable = source.TakeoffDistanceAvailable;
+        if (limitToProperties.Contains(nameof(AccelerateStopDistAvailable)) && source.AccelerateStopDistAvailable != null)
+            AccelerateStopDistAvailable = source.AccelerateStopDistAvailable;
+        if (limitToProperties.Contains(nameof(LandingDistanceAvailable)) && source.LandingDistanceAvailable != null)
+            LandingDistanceAvailable = source.LandingDistanceAvailable;
+
+        // LAHSO
+        if (limitToProperties.Contains(nameof(LahsoAvailableLandingDistance)) && source.LahsoAvailableLandingDistance != null)
+            LahsoAvailableLandingDistance = source.LahsoAvailableLandingDistance;
+        if (limitToProperties.Contains(nameof(LahsoIntersectingRunway)) && source.LahsoIntersectingRunway != null)
+            LahsoIntersectingRunway = source.LahsoIntersectingRunway;
+        if (limitToProperties.Contains(nameof(LahsoDescription)) && source.LahsoDescription != null)
+            LahsoDescription = source.LahsoDescription;
+        if (limitToProperties.Contains(nameof(LahsoLatitude)) && source.LahsoLatitude != null)
+            LahsoLatitude = source.LahsoLatitude;
+        if (limitToProperties.Contains(nameof(LahsoLatDecimal)) && source.LahsoLatDecimal != null)
+            LahsoLatDecimal = source.LahsoLatDecimal;
+        if (limitToProperties.Contains(nameof(LahsoLongitude)) && source.LahsoLongitude != null)
+            LahsoLongitude = source.LahsoLongitude;
+        if (limitToProperties.Contains(nameof(LahsoLongDecimal)) && source.LahsoLongDecimal != null)
+            LahsoLongDecimal = source.LahsoLongDecimal;
+        if (limitToProperties.Contains(nameof(LahsoPositionSource)) && source.LahsoPositionSource != null)
+            LahsoPositionSource = source.LahsoPositionSource;
+        if (limitToProperties.Contains(nameof(LahsoPositionDate)) && source.LahsoPositionDate != null)
+            LahsoPositionDate = source.LahsoPositionDate;
     }
 }
