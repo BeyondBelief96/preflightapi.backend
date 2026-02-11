@@ -195,10 +195,20 @@
       "dataType": "int",
       "description": "Airport acreage."
     },
+    "COMPUTER_ID": {
+      "entityProperty": "ComputerId",
+      "dataType": "string",
+      "description": "Computer identifier assigned to the airport."
+    },
     "RESP_ARTCC_ID": {
       "entityProperty": "RespArtccId",
       "dataType": "string",
       "description": "Responsible ARTCC identifier."
+    },
+    "ARTCC_NAME": {
+      "entityProperty": "ArtccName",
+      "dataType": "string",
+      "description": "Name of the responsible ARTCC."
     },
     "FSS_ON_ARPT_FLAG": {
       "entityProperty": "FssOnArptFlag",
@@ -215,6 +225,31 @@
       "entityProperty": "FssName",
       "dataType": "string",
       "description": "Flight Service Station name."
+    },
+    "PHONE_NO": {
+      "entityProperty": "FssPhoneNumber",
+      "dataType": "string",
+      "description": "FSS local phone number."
+    },
+    "TOLL_FREE_NO": {
+      "entityProperty": "TollFreeNumber",
+      "dataType": "string",
+      "description": "FSS toll-free phone number."
+    },
+    "ALT_FSS_ID": {
+      "entityProperty": "AltFssId",
+      "dataType": "string",
+      "description": "Alternate Flight Service Station identifier."
+    },
+    "ALT_FSS_NAME": {
+      "entityProperty": "AltFssName",
+      "dataType": "string",
+      "description": "Alternate Flight Service Station name."
+    },
+    "ALT_TOLL_FREE_NO": {
+      "entityProperty": "AltTollFreeNumber",
+      "dataType": "string",
+      "description": "Alternate FSS toll-free phone number."
     },
     "NOTAM_ID": {
       "entityProperty": "NotamId",
@@ -432,6 +467,26 @@
       "entityProperty": "Cta",
       "dataType": "string",
       "description": "Cold Temperature Airport correction value in Celsius."
+    },
+    "FAR_139_TYPE_CODE": {
+      "entityProperty": "Far139TypeCode",
+      "dataType": "string",
+      "description": "FAR Part 139 airport certification type code."
+    },
+    "FAR_139_CARRIER_SER_CODE": {
+      "entityProperty": "Far139CarrierSerCode",
+      "dataType": "string",
+      "description": "FAR Part 139 carrier service code."
+    },
+    "ARFF_CERT_TYPE_DATE": {
+      "entityProperty": "ArffCertTypeDate",
+      "dataType": "date",
+      "description": "ARFF certification type and date."
+    },
+    "ASP_ANLYS_DTRM_CODE": {
+      "entityProperty": "AspAnalysisDtrmCode",
+      "dataType": "string",
+      "description": "Airport safety analysis determination code."
     }
   }
 }

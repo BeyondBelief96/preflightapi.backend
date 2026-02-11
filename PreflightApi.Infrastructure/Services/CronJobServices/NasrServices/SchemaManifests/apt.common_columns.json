@@ -1,0 +1,14 @@
+{
+  "$schema": "nasr-common-columns-v1",
+  "dataset": "APT",
+  "description": "COMMON TO ALL columns present in every CSV file within the FAA NASR APT dataset (APT_BASE, APT_ATT, APT_CON, APT_RWY, APT_RWY_END). These columns are defined in the DATA LAYOUT PDF under the 'COMMON_TO_ALL' section and carry the same values across all sub-files for a given facility.",
+  "columns": [
+    "EFF_DATE",
+    "SITE_NO",
+    "SITE_TYPE_CODE",
+    "STATE_CODE",
+    "ARPT_ID",
+    "CITY",
+    "COUNTRY_CODE"
+  ]
+}

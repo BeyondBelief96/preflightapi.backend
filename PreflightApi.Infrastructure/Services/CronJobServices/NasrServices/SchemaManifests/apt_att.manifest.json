@@ -45,6 +45,11 @@
       "dataType": "string",
       "description": "Two-letter country code."
     },
+    "SKED_SEQ_NO": {
+      "entityProperty": "SkedSeqNo",
+      "dataType": "int",
+      "description": "Attendance Schedule Sequence Number."
+    },
     "MONTH": {
       "entityProperty": "AttendanceMonth",
       "dataType": "string",

@@ -66,10 +66,16 @@ public static class AirportMapper
 
             // ATC & Communication
             RespArtccId = airport.RespArtccId,
+            ArtccName = airport.ArtccName,
             TwrTypeCode = airport.TwrTypeCode,
             FssOnAirport = ParseBool(airport.FssOnArptFlag),
             FssId = airport.FssId,
             FssName = airport.FssName,
+            FssPhoneNumber = airport.FssPhoneNumber,
+            TollFreeNumber = airport.TollFreeNumber,
+            AltFssId = airport.AltFssId,
+            AltFssName = airport.AltFssName,
+            AltTollFreeNumber = airport.AltTollFreeNumber,
             NotamId = airport.NotamId,
             NotamAvailable = ParseBool(airport.NotamFlag),
 
@@ -113,8 +119,16 @@ public static class AirportMapper
             MinOpNetwork = airport.MinOpNetwork,
             UserFeeFlag = airport.UserFeeFlag,
             Cta = airport.Cta,
+            ComputerId = airport.ComputerId,
+
+            // Certification
+            Far139TypeCode = airport.Far139TypeCode,
+            Far139CarrierSerCode = airport.Far139CarrierSerCode,
+            ArffCertTypeDate = airport.ArffCertTypeDate,
+            AspAnalysisDtrmCode = airport.AspAnalysisDtrmCode,
 
             // Attendance
+            SkedSeqNo = airport.SkedSeqNo,
             AttendanceMonth = airport.AttendanceMonth,
             AttendanceDay = airport.AttendanceDay,
             AttendanceHours = airport.AttendanceHours,

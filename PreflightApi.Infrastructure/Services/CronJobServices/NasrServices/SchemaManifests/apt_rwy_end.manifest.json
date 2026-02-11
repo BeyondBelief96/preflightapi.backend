@@ -28,7 +28,7 @@
       "dataType": "int",
       "description": "True heading of the runway to the nearest degree."
     },
-    "APCH_TYPE_CODE": {
+    "ILS_TYPE": {
       "entityProperty": "ApproachType",
       "dataType": "string",
       "description": "Instrument Landing System type.",
@@ -40,13 +40,13 @@
       "description": "Right-hand traffic pattern in effect.",
       "enumeratedValues": ["Y", "N"]
     },
-    "RWY_MKG_TYPE_CODE": {
+    "RWY_MARKING_TYPE_CODE": {
       "entityProperty": "RunwayMarkingsType",
       "dataType": "string",
       "description": "Runway markings type.",
       "enumeratedValues": ["PIR", "NPI", "BSC", "NRS", "NSTD", "BUOY", "STOL", "NONE"]
     },
-    "RWY_MKG_COND": {
+    "RWY_MARKING_COND": {
       "entityProperty": "RunwayMarkingsCondition",
       "dataType": "string",
       "description": "Runway markings condition.",
@@ -77,22 +77,22 @@
       "dataType": "decimal",
       "description": "Visual glide path angle in hundredths of degrees."
     },
-    "DSPLCD_THR_LAT_DECIMAL": {
+    "LAT_DISPLACED_THR_DECIMAL": {
       "entityProperty": "DisplacedThresholdLatDecimal",
       "dataType": "decimal",
       "description": "Latitude of displaced threshold in decimal degrees."
     },
-    "DSPLCD_THR_LONG_DECIMAL": {
+    "LONG_DISPLACED_THR_DECIMAL": {
       "entityProperty": "DisplacedThresholdLongDecimal",
       "dataType": "decimal",
       "description": "Longitude of displaced threshold in decimal degrees."
     },
-    "DSPLCD_THR_ELEV": {
+    "DISPLACED_THR_ELEV": {
       "entityProperty": "DisplacedThresholdElev",
       "dataType": "decimal",
       "description": "Elevation at displaced threshold in feet MSL."
     },
-    "DSPLCD_THR_LEN": {
+    "DISPLACED_THR_LEN": {
       "entityProperty": "DisplacedThresholdLength",
       "dataType": "int",
       "description": "Displaced threshold length in feet."
@@ -112,13 +112,13 @@
         "PNIL", "PNIR", "NSTD", "PVT", "VAS", "NONE", "N"
       ]
     },
-    "RVR_EQUIP_CODE": {
+    "RWY_VISUAL_RANGE_EQUIP_CODE": {
       "entityProperty": "RunwayVisualRangeEquipment",
       "dataType": "string",
       "description": "Runway Visual Range equipment location.",
       "enumeratedValues": ["T", "M", "R", "N", "TM", "TR", "MR", "TMR"]
     },
-    "RVV_EQUIP_FLAG": {
+    "RWY_VSBY_VALUE_EQUIP_FLAG": {
       "entityProperty": "RunwayVisibilityValueEquipment",
       "dataType": "boolean",
       "description": "Runway Visibility Value equipment installed.",
@@ -152,36 +152,255 @@
       "description": "Touchdown zone lights installed.",
       "enumeratedValues": ["Y", "N"]
     },
-    "CNTL_OBJ_DESC": {
+    "OBSTN_TYPE": {
       "entityProperty": "ControllingObjectDescription",
       "dataType": "string",
       "description": "Controlling object description (type of obstacle)."
     },
-    "CNTL_OBJ_MKD_LGT": {
+    "OBSTN_MRKD_CODE": {
       "entityProperty": "ControllingObjectMarkedLighted",
       "dataType": "string",
       "description": "Controlling object marked/lighted status.",
       "enumeratedValues": ["M", "L", "ML", "NONE"]
     },
-    "CNTL_OBJ_SLOPE": {
+    "OBSTN_CLNC_SLOPE": {
       "entityProperty": "ControllingObjectClearanceSlope",
       "dataType": "int",
       "description": "Controlling object clearance slope ratio N:1."
     },
-    "CNTL_OBJ_HGT": {
+    "OBSTN_HGT": {
       "entityProperty": "ControllingObjectHeightAboveRunway",
       "dataType": "int",
       "description": "Controlling object height above runway end in feet AGL."
     },
-    "CNTL_OBJ_DIST": {
+    "DIST_FROM_THR": {
       "entityProperty": "ControllingObjectDistanceFromRunway",
       "dataType": "int",
       "description": "Controlling object distance from runway end in feet."
     },
-    "CNTL_OBJ_OFFSET": {
+    "CNTRLN_OFFSET": {
       "entityProperty": "ControllingObjectCenterlineOffset",
       "dataType": "string",
       "description": "Controlling object centerline offset distance in feet."
+    },
+    "RWY_END_LAT_DEG": {
+      "entityProperty": "RwyEndLatDeg",
+      "dataType": "int",
+      "description": "Runway end latitude degrees."
+    },
+    "RWY_END_LAT_MIN": {
+      "entityProperty": "RwyEndLatMin",
+      "dataType": "int",
+      "description": "Runway end latitude minutes."
+    },
+    "RWY_END_LAT_SEC": {
+      "entityProperty": "RwyEndLatSec",
+      "dataType": "decimal",
+      "description": "Runway end latitude seconds."
+    },
+    "RWY_END_LAT_HEMIS": {
+      "entityProperty": "RwyEndLatHemis",
+      "dataType": "string",
+      "description": "Runway end latitude hemisphere.",
+      "enumeratedValues": ["N", "S"]
+    },
+    "RWY_END_LONG_DEG": {
+      "entityProperty": "RwyEndLongDeg",
+      "dataType": "int",
+      "description": "Runway end longitude degrees."
+    },
+    "RWY_END_LONG_MIN": {
+      "entityProperty": "RwyEndLongMin",
+      "dataType": "int",
+      "description": "Runway end longitude minutes."
+    },
+    "RWY_END_LONG_SEC": {
+      "entityProperty": "RwyEndLongSec",
+      "dataType": "decimal",
+      "description": "Runway end longitude seconds."
+    },
+    "RWY_END_LONG_HEMIS": {
+      "entityProperty": "RwyEndLongHemis",
+      "dataType": "string",
+      "description": "Runway end longitude hemisphere.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "DISPLACED_THR_LAT_DEG": {
+      "entityProperty": "DisplacedThrLatDeg",
+      "dataType": "int",
+      "description": "Displaced threshold latitude degrees."
+    },
+    "DISPLACED_THR_LAT_MIN": {
+      "entityProperty": "DisplacedThrLatMin",
+      "dataType": "int",
+      "description": "Displaced threshold latitude minutes."
+    },
+    "DISPLACED_THR_LAT_SEC": {
+      "entityProperty": "DisplacedThrLatSec",
+      "dataType": "decimal",
+      "description": "Displaced threshold latitude seconds."
+    },
+    "DISPLACED_THR_LAT_HEMIS": {
+      "entityProperty": "DisplacedThrLatHemis",
+      "dataType": "string",
+      "description": "Displaced threshold latitude hemisphere.",
+      "enumeratedValues": ["N", "S"]
+    },
+    "DISPLACED_THR_LONG_DEG": {
+      "entityProperty": "DisplacedThrLongDeg",
+      "dataType": "int",
+      "description": "Displaced threshold longitude degrees."
+    },
+    "DISPLACED_THR_LONG_MIN": {
+      "entityProperty": "DisplacedThrLongMin",
+      "dataType": "int",
+      "description": "Displaced threshold longitude minutes."
+    },
+    "DISPLACED_THR_LONG_SEC": {
+      "entityProperty": "DisplacedThrLongSec",
+      "dataType": "decimal",
+      "description": "Displaced threshold longitude seconds."
+    },
+    "DISPLACED_THR_LONG_HEMIS": {
+      "entityProperty": "DisplacedThrLongHemis",
+      "dataType": "string",
+      "description": "Displaced threshold longitude hemisphere.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "FAR_PART_77_CODE": {
+      "entityProperty": "FarPart77Code",
+      "dataType": "string",
+      "description": "FAR Part 77 approach category code."
+    },
+    "CNTRLN_DIR_CODE": {
+      "entityProperty": "CenterlineDirectionCode",
+      "dataType": "string",
+      "description": "Centerline direction code."
+    },
+    "RWY_GRAD": {
+      "entityProperty": "RunwayGradient",
+      "dataType": "decimal",
+      "description": "Runway gradient as a percentage."
+    },
+    "RWY_GRAD_DIRECTION": {
+      "entityProperty": "RunwayGradientDirection",
+      "dataType": "string",
+      "description": "Runway gradient direction."
+    },
+    "RWY_END_PSN_SOURCE": {
+      "entityProperty": "RwyEndPositionSource",
+      "dataType": "string",
+      "description": "Source of runway end position information."
+    },
+    "RWY_END_PSN_DATE": {
+      "entityProperty": "RwyEndPositionDate",
+      "dataType": "date",
+      "description": "Date of runway end position information."
+    },
+    "RWY_END_ELEV_SOURCE": {
+      "entityProperty": "RwyEndElevationSource",
+      "dataType": "string",
+      "description": "Source of runway end elevation information."
+    },
+    "RWY_END_ELEV_DATE": {
+      "entityProperty": "RwyEndElevationDate",
+      "dataType": "date",
+      "description": "Date of runway end elevation information."
+    },
+    "DSPL_THR_PSN_SOURCE": {
+      "entityProperty": "DisplacedThrPositionSource",
+      "dataType": "string",
+      "description": "Source of displaced threshold position information."
+    },
+    "RWY_END_DSPL_THR_PSN_DATE": {
+      "entityProperty": "DisplacedThrPositionDate",
+      "dataType": "date",
+      "description": "Date of displaced threshold position information."
+    },
+    "DSPL_THR_ELEV_SOURCE": {
+      "entityProperty": "DisplacedThrElevationSource",
+      "dataType": "string",
+      "description": "Source of displaced threshold elevation information."
+    },
+    "RWY_END_DSPL_THR_ELEV_DATE": {
+      "entityProperty": "DisplacedThrElevationDate",
+      "dataType": "date",
+      "description": "Date of displaced threshold elevation information."
+    },
+    "TDZ_ELEV_SOURCE": {
+      "entityProperty": "TouchdownZoneElevSource",
+      "dataType": "string",
+      "description": "Source of touchdown zone elevation information."
+    },
+    "RWY_END_TDZ_ELEV_DATE": {
+      "entityProperty": "TouchdownZoneElevDate",
+      "dataType": "date",
+      "description": "Date of touchdown zone elevation information."
+    },
+    "TKOF_RUN_AVBL": {
+      "entityProperty": "TakeoffRunAvailable",
+      "dataType": "int",
+      "description": "Takeoff Run Available (TORA) in feet."
+    },
+    "TKOF_DIST_AVBL": {
+      "entityProperty": "TakeoffDistanceAvailable",
+      "dataType": "int",
+      "description": "Takeoff Distance Available (TODA) in feet."
+    },
+    "ACLT_STOP_DIST_AVBL": {
+      "entityProperty": "AccelerateStopDistAvailable",
+      "dataType": "int",
+      "description": "Accelerate-Stop Distance Available (ASDA) in feet."
+    },
+    "LNDG_DIST_AVBL": {
+      "entityProperty": "LandingDistanceAvailable",
+      "dataType": "int",
+      "description": "Landing Distance Available (LDA) in feet."
+    },
+    "LAHSO_ALD": {
+      "entityProperty": "LahsoAvailableLandingDistance",
+      "dataType": "int",
+      "description": "LAHSO available landing distance in feet."
+    },
+    "RWY_END_INTERSECT_LAHSO": {
+      "entityProperty": "LahsoIntersectingRunway",
+      "dataType": "string",
+      "description": "Intersecting runway for LAHSO operations."
+    },
+    "LAHSO_DESC": {
+      "entityProperty": "LahsoDescription",
+      "dataType": "string",
+      "description": "LAHSO hold short point description."
+    },
+    "LAHSO_LAT": {
+      "entityProperty": "LahsoLatitude",
+      "dataType": "string",
+      "description": "LAHSO hold short point latitude (DMS format)."
+    },
+    "LAT_LAHSO_DECIMAL": {
+      "entityProperty": "LahsoLatDecimal",
+      "dataType": "decimal",
+      "description": "LAHSO latitude in decimal degrees."
+    },
+    "LAHSO_LONG": {
+      "entityProperty": "LahsoLongitude",
+      "dataType": "string",
+      "description": "LAHSO hold short point longitude (DMS format)."
+    },
+    "LONG_LAHSO_DECIMAL": {
+      "entityProperty": "LahsoLongDecimal",
+      "dataType": "decimal",
+      "description": "LAHSO longitude in decimal degrees."
+    },
+    "LAHSO_PSN_SOURCE": {
+      "entityProperty": "LahsoPositionSource",
+      "dataType": "string",
+      "description": "Source of LAHSO position information."
+    },
+    "RWY_END_LAHSO_PSN_DATE": {
+      "entityProperty": "LahsoPositionDate",
+      "dataType": "date",
+      "description": "Date of LAHSO position information."
     }
   }
 }

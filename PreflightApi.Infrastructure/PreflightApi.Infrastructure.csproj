@@ -53,6 +53,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Services\CronJobServices\NasrServices\SchemaManifests\*.manifest.json" />
+    <EmbeddedResource Include="Services\CronJobServices\NasrServices\SchemaManifests\*.common_columns.json" />
   </ItemGroup>
 
 </Project>

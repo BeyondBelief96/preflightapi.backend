@@ -37,7 +37,7 @@
         "GRASS", "METAL", "NSTD", "OIL&CHIP", "PSP", "SAND", "SOD", "STEEL", "TRTD", "WOOD"
       ]
     },
-    "SURFACE_TREATMENT_CODE": {
+    "TREATMENT_CODE": {
       "entityProperty": "SurfaceTreatmentCode",
       "dataType": "string",
       "description": "Runway surface treatment.",
@@ -69,10 +69,45 @@
       "dataType": "int",
       "description": "Weight-bearing capacity for dual tandem wheel gear, in pounds."
     },
-    "GROSS_WT_DDT": {
+    "GROSS_WT_DDTW": {
       "entityProperty": "WeightBearingDoubleDualTandem",
       "dataType": "int",
       "description": "Weight-bearing capacity for double dual tandem wheel gear, in pounds."
+    },
+    "COND": {
+      "entityProperty": "SurfaceCondition",
+      "dataType": "string",
+      "description": "Runway surface condition."
+    },
+    "PAVEMENT_TYPE_CODE": {
+      "entityProperty": "PavementTypeCode",
+      "dataType": "string",
+      "description": "Pavement type code."
+    },
+    "SUBGRADE_STRENGTH_CODE": {
+      "entityProperty": "SubgradeStrengthCode",
+      "dataType": "string",
+      "description": "Subgrade strength code."
+    },
+    "TIRE_PRES_CODE": {
+      "entityProperty": "TirePressureCode",
+      "dataType": "string",
+      "description": "Tire pressure code."
+    },
+    "DTRM_METHOD_CODE": {
+      "entityProperty": "DeterminationMethodCode",
+      "dataType": "string",
+      "description": "Determination method code for pavement strength."
+    },
+    "RWY_LEN_SOURCE": {
+      "entityProperty": "RunwayLengthSource",
+      "dataType": "string",
+      "description": "Source of runway length information."
+    },
+    "LENGTH_SOURCE_DATE": {
+      "entityProperty": "LengthSourceDate",
+      "dataType": "date",
+      "description": "Date of runway length source information."
     }
   }
 }

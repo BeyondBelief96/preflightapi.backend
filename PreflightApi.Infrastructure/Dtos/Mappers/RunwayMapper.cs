@@ -21,6 +21,13 @@ public static class RunwayMapper
             WeightBearingDualWheel = runway.WeightBearingDualWheel,
             WeightBearingDualTandem = runway.WeightBearingDualTandem,
             WeightBearingDoubleDualTandem = runway.WeightBearingDoubleDualTandem,
+            SurfaceCondition = runway.SurfaceCondition,
+            PavementTypeCode = runway.PavementTypeCode,
+            SubgradeStrengthCode = runway.SubgradeStrengthCode,
+            TirePressureCode = runway.TirePressureCode,
+            DeterminationMethodCode = runway.DeterminationMethodCode,
+            RunwayLengthSource = runway.RunwayLengthSource,
+            LengthSourceDate = runway.LengthSourceDate,
             RunwayEnds = runway.RunwayEnds?.Select(ToDto).ToList() ?? new List<RunwayEndDto>()
         };
     }
@@ -58,7 +65,62 @@ public static class RunwayMapper
             ControllingObjectClearanceSlope = runwayEnd.ControllingObjectClearanceSlope,
             ControllingObjectHeightAboveRunway = runwayEnd.ControllingObjectHeightAboveRunway,
             ControllingObjectDistanceFromRunway = runwayEnd.ControllingObjectDistanceFromRunway,
-            ControllingObjectCenterlineOffset = runwayEnd.ControllingObjectCenterlineOffset
+            ControllingObjectCenterlineOffset = runwayEnd.ControllingObjectCenterlineOffset,
+
+            // DMS Coordinates - Runway End
+            RwyEndLatDeg = runwayEnd.RwyEndLatDeg,
+            RwyEndLatMin = runwayEnd.RwyEndLatMin,
+            RwyEndLatSec = runwayEnd.RwyEndLatSec,
+            RwyEndLatHemis = runwayEnd.RwyEndLatHemis,
+            RwyEndLongDeg = runwayEnd.RwyEndLongDeg,
+            RwyEndLongMin = runwayEnd.RwyEndLongMin,
+            RwyEndLongSec = runwayEnd.RwyEndLongSec,
+            RwyEndLongHemis = runwayEnd.RwyEndLongHemis,
+
+            // DMS Coordinates - Displaced Threshold
+            DisplacedThrLatDeg = runwayEnd.DisplacedThrLatDeg,
+            DisplacedThrLatMin = runwayEnd.DisplacedThrLatMin,
+            DisplacedThrLatSec = runwayEnd.DisplacedThrLatSec,
+            DisplacedThrLatHemis = runwayEnd.DisplacedThrLatHemis,
+            DisplacedThrLongDeg = runwayEnd.DisplacedThrLongDeg,
+            DisplacedThrLongMin = runwayEnd.DisplacedThrLongMin,
+            DisplacedThrLongSec = runwayEnd.DisplacedThrLongSec,
+            DisplacedThrLongHemis = runwayEnd.DisplacedThrLongHemis,
+
+            // Codes & Gradient
+            FarPart77Code = runwayEnd.FarPart77Code,
+            CenterlineDirectionCode = runwayEnd.CenterlineDirectionCode,
+            RunwayGradient = runwayEnd.RunwayGradient,
+            RunwayGradientDirection = runwayEnd.RunwayGradientDirection,
+
+            // Source/Date Metadata
+            RwyEndPositionSource = runwayEnd.RwyEndPositionSource,
+            RwyEndPositionDate = runwayEnd.RwyEndPositionDate,
+            RwyEndElevationSource = runwayEnd.RwyEndElevationSource,
+            RwyEndElevationDate = runwayEnd.RwyEndElevationDate,
+            DisplacedThrPositionSource = runwayEnd.DisplacedThrPositionSource,
+            DisplacedThrPositionDate = runwayEnd.DisplacedThrPositionDate,
+            DisplacedThrElevationSource = runwayEnd.DisplacedThrElevationSource,
+            DisplacedThrElevationDate = runwayEnd.DisplacedThrElevationDate,
+            TouchdownZoneElevSource = runwayEnd.TouchdownZoneElevSource,
+            TouchdownZoneElevDate = runwayEnd.TouchdownZoneElevDate,
+
+            // Declared Distances
+            TakeoffRunAvailable = runwayEnd.TakeoffRunAvailable,
+            TakeoffDistanceAvailable = runwayEnd.TakeoffDistanceAvailable,
+            AccelerateStopDistAvailable = runwayEnd.AccelerateStopDistAvailable,
+            LandingDistanceAvailable = runwayEnd.LandingDistanceAvailable,
+
+            // LAHSO
+            LahsoAvailableLandingDistance = runwayEnd.LahsoAvailableLandingDistance,
+            LahsoIntersectingRunway = runwayEnd.LahsoIntersectingRunway,
+            LahsoDescription = runwayEnd.LahsoDescription,
+            LahsoLatitude = runwayEnd.LahsoLatitude,
+            LahsoLatDecimal = runwayEnd.LahsoLatDecimal,
+            LahsoLongitude = runwayEnd.LahsoLongitude,
+            LahsoLongDecimal = runwayEnd.LahsoLongDecimal,
+            LahsoPositionSource = runwayEnd.LahsoPositionSource,
+            LahsoPositionDate = runwayEnd.LahsoPositionDate
         };
     }
 
