@@ -1,0 +1,64 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "APT_ATT.csv",
+  "description": "Airport attendance schedule data from the FAA NASR 28-day subscription. Supplementary data merged into the Airport entity by SITE_NO.",
+  "entity": "Airport",
+  "supplementaryTo": "APT_BASE.csv",
+  "mergeKey": "SITE_NO",
+  "lastVerified": "2026-02-11",
+  "columns": {
+    "SITE_NO": {
+      "entityProperty": "SiteNo",
+      "dataType": "string",
+      "required": true,
+      "description": "Unique Site Number assigned by the FAA."
+    },
+    "EFF_DATE": {
+      "entityProperty": "EffDate",
+      "dataType": "date",
+      "required": true,
+      "description": "Effective date of the airport information."
+    },
+    "SITE_TYPE_CODE": {
+      "entityProperty": "SiteTypeCode",
+      "dataType": "string",
+      "description": "Landing facility type code.",
+      "enumeratedValues": ["A", "H", "S", "G", "U"]
+    },
+    "STATE_CODE": {
+      "entityProperty": "StateCode",
+      "dataType": "string",
+      "description": "Two-letter USPS state code."
+    },
+    "ARPT_ID": {
+      "entityProperty": "ArptId",
+      "dataType": "string",
+      "description": "FAA location identifier."
+    },
+    "CITY": {
+      "entityProperty": "City",
+      "dataType": "string",
+      "description": "Associated city name."
+    },
+    "COUNTRY_CODE": {
+      "entityProperty": "CountryCode",
+      "dataType": "string",
+      "description": "Two-letter country code."
+    },
+    "MONTH": {
+      "entityProperty": "AttendanceMonth",
+      "dataType": "string",
+      "description": "Months the facility is attended. May contain 'UNATNDD' for unattended."
+    },
+    "DAY": {
+      "entityProperty": "AttendanceDay",
+      "dataType": "string",
+      "description": "Days of the week the facility is open."
+    },
+    "HOUR": {
+      "entityProperty": "AttendanceHours",
+      "dataType": "string",
+      "description": "Hours within the day the facility is attended."
+    }
+  }
+}

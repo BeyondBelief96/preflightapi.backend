@@ -3,113 +3,192 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PreflightApi.Domain.Entities;
 
+/// <summary>
+/// Runway end data from the FAA NASR database. Sourced from APT_RWY_END CSV file in the FAA NASR 28-day subscription.
+/// Each runway typically has two runway ends (one for each direction). Ordered by SITE_NO, SITE_TYPE_CODE, RWY_ID, RWY_END_ID.
+/// </summary>
 [Table("runway_ends")]
 public class RunwayEnd : INasrEntity<RunwayEnd>
 {
+    /// <summary>System-generated unique identifier.</summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+    /// <summary>FAA NASR field: SITE_NO. Unique Site Number of the parent airport facility.</summary>
     [Column("site_no", TypeName = "varchar(9)")]
     [Required]
     public string SiteNo { get; set; } = string.Empty;
 
+    /// <summary>FAA NASR field: RWY_ID. Runway identification of the parent runway.</summary>
     [Column("runway_id_ref", TypeName = "varchar(7)")]
     [Required]
     public string RunwayIdRef { get; set; } = string.Empty;
 
+    /// <summary>Foreign key to the parent Runway entity. Populated after data sync by linking on SiteNo and RunwayIdRef.</summary>
     [Column("runway_fk")]
     public Guid? RunwayFk { get; set; }
 
+    /// <summary>FAA NASR field: RWY_END_ID. Runway end identifier (e.g., "01", "19", "09L", "27R").</summary>
     [Column("runway_end_id", TypeName = "varchar(3)")]
     [Required]
     public string RunwayEndId { get; set; } = string.Empty;
 
+    /// <summary>FAA NASR field: TRUE_ALIGNMENT. Runway end true alignment. True heading of the runway to the nearest degree.</summary>
     [Column("true_alignment")]
     public int? TrueAlignment { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: ILS_TYPE. Instrument Landing System (ILS) type.
+    /// <para>Possible values: ILS, MLS, SDF, LOCALIZER, LDA, ISMLS, ILS/DME, SDF/DME, LOC/DME, LOC/GS, LDA/DME.</para>
+    /// </summary>
     [Column("approach_type", TypeName = "varchar(10)")]
     public string? ApproachType { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RIGHT_HAND_TRAFFIC_PAT_FLAG. Whether right-hand traffic pattern is in effect for landing aircraft.
+    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// </summary>
     [Column("right_hand_traffic_pattern")]
     public bool RightHandTrafficPattern { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_MARKING_TYPE_CODE. Runway markings type.
+    /// <para>Possible values: PIR (Precision Instrument), NPI (Nonprecision Instrument), BSC (Basic),
+    /// NRS (Numbers Only), NSTD (Nonstandard), BUOY (Buoys - Seaplane Base), STOL (Short Takeoff and Landing), NONE.</para>
+    /// </summary>
     [Column("runway_markings_type", TypeName = "varchar(5)")]
     public string? RunwayMarkingsType { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_MARKING_COND. Runway markings condition.
+    /// <para>Possible values: G (Good), F (Fair), P (Poor).</para>
+    /// </summary>
     [Column("runway_markings_condition", TypeName = "varchar(1)")]
     public string? RunwayMarkingsCondition { get; set; }
 
+    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees.</summary>
     [Column("lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? LatDecimal { get; set; }
 
+    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees.</summary>
     [Column("long_decimal", TypeName = "decimal(11,8)")]
     public decimal? LongDecimal { get; set; }
 
+    /// <summary>FAA NASR field: RWY_END_ELEV. Elevation at the physical runway end in feet MSL.</summary>
     [Column("elevation", TypeName = "decimal(7,1)")]
     public decimal? Elevation { get; set; }
 
+    /// <summary>FAA NASR field: THR_CROSSING_HGT. Threshold Crossing Height in feet AGL. Height that the effective visual glide path crosses above the runway threshold.</summary>
     [Column("threshold_crossing_height", TypeName = "decimal(5,1)")]
     public decimal? ThresholdCrossingHeight { get; set; }
 
+    /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees.</summary>
     [Column("visual_glide_path_angle", TypeName = "decimal(4,2)")]
     public decimal? VisualGlidePathAngle { get; set; }
 
+    /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees.</summary>
     [Column("displaced_threshold_lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? DisplacedThresholdLatDecimal { get; set; }
 
+    /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees.</summary>
     [Column("displaced_threshold_long_decimal", TypeName = "decimal(11,8)")]
     public decimal? DisplacedThresholdLongDecimal { get; set; }
 
+    /// <summary>FAA NASR field: DISPLACED_THR_ELEV. Elevation at the displaced threshold in feet MSL.</summary>
     [Column("displaced_threshold_elev", TypeName = "decimal(7,1)")]
     public decimal? DisplacedThresholdElev { get; set; }
 
+    /// <summary>FAA NASR field: DISPLACED_THR_LEN. Displaced threshold length in feet from the runway end.</summary>
     [Column("displaced_threshold_length")]
     public int? DisplacedThresholdLength { get; set; }
 
+    /// <summary>FAA NASR field: TDZ_ELEV. Elevation at the touchdown zone in feet MSL.</summary>
     [Column("touchdown_zone_elev", TypeName = "decimal(7,1)")]
     public decimal? TouchdownZoneElev { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: VGSI_CODE. Visual Glide Slope Indicator type.
+    /// <para>Common values: S2L/S2R (SAVASI), V2L/V2R/V4L/V4R/V6L/V6R/V12/V16 (VASI),
+    /// P2L/P2R/P4L/P4R (PAPI), TRIL/TRIR (Tri-Color), PSIL/PSIR (Pulsating),
+    /// PNIL/PNIR (Panel), NSTD (Nonstandard), PVT (Private Use), VAS (Non-Specific), NONE/N.</para>
+    /// </summary>
     [Column("visual_glide_slope_indicator", TypeName = "varchar(5)")]
     public string? VisualGlideSlopeIndicator { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_VISUAL_RANGE_EQUIP_CODE. Runway Visual Range (RVR) equipment location.
+    /// Indicates location(s) at which RVR equipment is installed.
+    /// <para>Possible values: T (Touchdown), M (Midfield), R (Rollout), N (No RVR Available),
+    /// TM, TR, MR, TMR (combinations).</para>
+    /// </summary>
     [Column("runway_visual_range_equipment", TypeName = "varchar(3)")]
     public string? RunwayVisualRangeEquipment { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_VSBY_VALUE_EQUIP_FLAG. Runway Visibility Value (RVV) equipment presence.
+    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// </summary>
     [Column("runway_visibility_value_equipment")]
     public bool RunwayVisibilityValueEquipment { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: APCH_LGT_SYSTEM_CODE. Approach light system type.
+    /// <para>Possible values: AFOVRN, ALSAF, ALSF1, ALSF2, MALS, MALSF, MALSR, RAIL, SALS, SALSF,
+    /// SSALS, SSALF, SSALR, ODALS, RLLS, MIL OVRN, NSTD, NONE.</para>
+    /// </summary>
     [Column("approach_light_system", TypeName = "varchar(8)")]
     public string? ApproachLightSystem { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: RWY_END_LGTS_FLAG. Runway End Identifier Lights (REIL) availability.
+    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// </summary>
     [Column("runway_end_lights")]
     public bool RunwayEndLights { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: CNTRLN_LGTS_AVBL_FLAG. Runway centerline lights availability.
+    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// </summary>
     [Column("centerline_lights")]
     public bool CenterlineLights { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: TDZ_LGT_AVBL_FLAG. Runway end touchdown zone lights availability.
+    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// </summary>
     [Column("touchdown_zone_lights")]
     public bool TouchdownZoneLights { get; set; }
 
+    /// <summary>FAA NASR field: OBSTN_TYPE. Controlling object description (type of obstacle).</summary>
     [Column("controlling_object_description", TypeName = "varchar(11)")]
     public string? ControllingObjectDescription { get; set; }
 
+    /// <summary>
+    /// FAA NASR field: OBSTN_MRKD_CODE. Controlling object marked/lighted status.
+    /// <para>Possible values: M (Marked), L (Lighted), ML (Marked and Lighted), NONE.</para>
+    /// </summary>
     [Column("controlling_object_marked_lighted", TypeName = "varchar(4)")]
     public string? ControllingObjectMarkedLighted { get; set; }
 
+    /// <summary>FAA NASR field: OBSTN_CLNC_SLOPE. Controlling object clearance slope value, expressed as a ratio of N:1. If greater than 50:1, then 50 is entered.</summary>
     [Column("controlling_object_clearance_slope")]
     public int? ControllingObjectClearanceSlope { get; set; }
 
+    /// <summary>FAA NASR field: OBSTN_HGT. Controlling object height above the physical runway end in feet AGL.</summary>
     [Column("controlling_object_height_above_runway")]
     public int? ControllingObjectHeightAboveRunway { get; set; }
 
+    /// <summary>FAA NASR field: DIST_FROM_THR. Controlling object distance from the physical runway end in feet. Measured using the extended runway centerline to a point abeam the object.</summary>
     [Column("controlling_object_distance_from_runway")]
     public int? ControllingObjectDistanceFromRunway { get; set; }
 
+    /// <summary>FAA NASR field: CNTRLN_OFFSET. Controlling object centerline offset distance in feet. Distance that the controlling object is located away from the extended runway centerline, measured horizontally on a line perpendicular to the extended runway centerline.</summary>
     [Column("controlling_object_centerline_offset", TypeName = "varchar(7)")]
     public string? ControllingObjectCenterlineOffset { get; set; }
 
-    // Navigation property
+    /// <summary>Navigation property to the parent Runway entity.</summary>
     [ForeignKey(nameof(RunwayFk))]
     public virtual Runway? Runway { get; set; }
 

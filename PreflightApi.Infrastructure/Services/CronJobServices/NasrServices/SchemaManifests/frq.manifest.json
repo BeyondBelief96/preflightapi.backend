@@ -1,0 +1,119 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "FRQ.csv",
+  "description": "Communication frequency data from the FAA NASR 28-day subscription. Contains radio frequencies for ATC facilities, towers, approach/departure control, and other aviation communication services.",
+  "entity": "CommunicationFrequency",
+  "lastVerified": "2026-02-11",
+  "columns": {
+    "FACILITY": {
+      "entityProperty": "FacilityCode",
+      "dataType": "string",
+      "description": "FAA facility identifier code for the communication facility."
+    },
+    "EFF_DATE": {
+      "entityProperty": "EffectiveDate",
+      "dataType": "date",
+      "required": true,
+      "description": "Effective date of the frequency record."
+    },
+    "FAC_NAME": {
+      "entityProperty": "FacilityName",
+      "dataType": "string",
+      "description": "Name of the communication facility."
+    },
+    "FACILITY_TYPE": {
+      "entityProperty": "FacilityType",
+      "dataType": "string",
+      "required": true,
+      "description": "Type of facility.",
+      "enumeratedValues": ["ATCT", "TRACON", "ARTCC", "FSS", "CTAF"]
+    },
+    "ARTCC_OR_FSS_ID": {
+      "entityProperty": "ArtccOrFssId",
+      "dataType": "string",
+      "description": "Associated ARTCC or FSS identifier."
+    },
+    "CPDLC": {
+      "entityProperty": "Cpdlc",
+      "dataType": "string",
+      "description": "Controller-Pilot Data Link Communications information."
+    },
+    "TOWER_HRS": {
+      "entityProperty": "TowerHours",
+      "dataType": "string",
+      "description": "Tower operating hours."
+    },
+    "SERVICED_FACILITY": {
+      "entityProperty": "ServicedFacility",
+      "dataType": "string",
+      "required": true,
+      "description": "FAA identifier of the facility being serviced."
+    },
+    "SERVICED_FAC_NAME": {
+      "entityProperty": "ServicedFacilityName",
+      "dataType": "string",
+      "description": "Name of the facility being serviced."
+    },
+    "SERVICED_SITE_TYPE": {
+      "entityProperty": "ServicedSiteType",
+      "dataType": "string",
+      "description": "Site type of the serviced facility.",
+      "enumeratedValues": ["AIRPORT", "HELIPORT"]
+    },
+    "LAT_DECIMAL": {
+      "entityProperty": "Latitude",
+      "dataType": "decimal",
+      "description": "Latitude of the serviced facility in decimal degrees."
+    },
+    "LONG_DECIMAL": {
+      "entityProperty": "Longitude",
+      "dataType": "decimal",
+      "description": "Longitude of the serviced facility in decimal degrees."
+    },
+    "SERVICED_CITY": {
+      "entityProperty": "ServicedCity",
+      "dataType": "string",
+      "description": "City of the serviced facility."
+    },
+    "SERVICED_STATE": {
+      "entityProperty": "ServicedState",
+      "dataType": "string",
+      "description": "Two-letter state code of the serviced facility."
+    },
+    "SERVICED_COUNTRY": {
+      "entityProperty": "ServicedCountry",
+      "dataType": "string",
+      "description": "Two-letter country code of the serviced facility."
+    },
+    "TOWER_OR_COMM_CALL": {
+      "entityProperty": "TowerOrCommCall",
+      "dataType": "string",
+      "description": "Tower or communications call sign."
+    },
+    "PRIMARY_APPROACH_RADIO_CALL": {
+      "entityProperty": "PrimaryApproachRadioCall",
+      "dataType": "string",
+      "description": "Primary approach control radio call sign."
+    },
+    "FREQ": {
+      "entityProperty": "Frequency",
+      "dataType": "string",
+      "description": "Radio frequency in MHz."
+    },
+    "SECTORIZATION": {
+      "entityProperty": "Sectorization",
+      "dataType": "string",
+      "description": "Sectorization or coverage area description."
+    },
+    "FREQ_USE": {
+      "entityProperty": "FrequencyUse",
+      "dataType": "string",
+      "description": "Intended use of the frequency."
+    },
+    "REMARK": {
+      "entityProperty": "Remark",
+      "dataType": "string",
+      "description": "Free-form remark text."
+    }
+  }
+}
