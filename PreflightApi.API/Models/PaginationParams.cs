@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PreflightApi.API.Models;
@@ -14,5 +16,7 @@ public class PaginationParams
 
     /// <summary>Maximum number of items to return per page. Minimum 1, maximum 500, default 100.</summary>
     [FromQuery(Name = "limit")]
+    [Range(1, 500)]
+    [DefaultValue(100)]
     public int Limit { get; set; } = 100;
 }
