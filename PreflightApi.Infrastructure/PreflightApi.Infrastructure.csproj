@@ -51,4 +51,8 @@
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Services\CronJobServices\NasrServices\SchemaManifests\*.manifest.json" />
+  </ItemGroup>
+
 </Project>

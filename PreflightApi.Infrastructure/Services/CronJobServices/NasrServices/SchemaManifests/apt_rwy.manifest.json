@@ -1,0 +1,78 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "APT_RWY.csv",
+  "description": "Runway data from the FAA NASR 28-day subscription. Ordered by SITE_NO, SITE_TYPE_CODE, RWY_ID.",
+  "entity": "Runway",
+  "lastVerified": "2026-02-11",
+  "columns": {
+    "SITE_NO": {
+      "entityProperty": "SiteNo",
+      "dataType": "string",
+      "required": true,
+      "description": "Unique Site Number of the parent airport facility."
+    },
+    "RWY_ID": {
+      "entityProperty": "RunwayId",
+      "dataType": "string",
+      "required": true,
+      "description": "Runway identification (e.g., 01/19, 09L/27R, H1)."
+    },
+    "RWY_LEN": {
+      "entityProperty": "Length",
+      "dataType": "int",
+      "description": "Physical runway length to the nearest foot."
+    },
+    "RWY_WIDTH": {
+      "entityProperty": "Width",
+      "dataType": "int",
+      "description": "Physical runway width to the nearest foot."
+    },
+    "SURFACE_TYPE_CODE": {
+      "entityProperty": "SurfaceTypeCode",
+      "dataType": "string",
+      "description": "Runway surface type.",
+      "enumeratedValues": [
+        "CONC", "ASPH", "SNOW", "ICE", "MATS", "TREATED", "GRAVEL", "TURF", "DIRT",
+        "PEM", "ROOF-TOP", "WATER", "ALUMINUM", "BRICK", "CALICHE", "CORAL", "DECK",
+        "GRASS", "METAL", "NSTD", "OIL&CHIP", "PSP", "SAND", "SOD", "STEEL", "TRTD", "WOOD"
+      ]
+    },
+    "SURFACE_TREATMENT_CODE": {
+      "entityProperty": "SurfaceTreatmentCode",
+      "dataType": "string",
+      "description": "Runway surface treatment.",
+      "enumeratedValues": ["GRVD", "PFC", "AFSC", "RFSC", "WC", "NONE"]
+    },
+    "PCN": {
+      "entityProperty": "PavementClassification",
+      "dataType": "string",
+      "description": "Pavement Classification Number per FAA AC 150/5335-5."
+    },
+    "RWY_LGT_CODE": {
+      "entityProperty": "EdgeLightIntensity",
+      "dataType": "string",
+      "description": "Runway lights edge intensity.",
+      "enumeratedValues": ["HIGH", "MED", "LOW", "FLD", "NSTD", "PERI", "STRB", "NONE"]
+    },
+    "GROSS_WT_SW": {
+      "entityProperty": "WeightBearingSingleWheel",
+      "dataType": "int",
+      "description": "Weight-bearing capacity for single wheel gear, in pounds."
+    },
+    "GROSS_WT_DW": {
+      "entityProperty": "WeightBearingDualWheel",
+      "dataType": "int",
+      "description": "Weight-bearing capacity for dual wheel gear, in pounds."
+    },
+    "GROSS_WT_DTW": {
+      "entityProperty": "WeightBearingDualTandem",
+      "dataType": "int",
+      "description": "Weight-bearing capacity for dual tandem wheel gear, in pounds."
+    },
+    "GROSS_WT_DDT": {
+      "entityProperty": "WeightBearingDoubleDualTandem",
+      "dataType": "int",
+      "description": "Weight-bearing capacity for double dual tandem wheel gear, in pounds."
+    }
+  }
+}
