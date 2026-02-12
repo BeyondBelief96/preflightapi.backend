@@ -1,4 +1,5 @@
 using PreflightApi.Infrastructure.Dtos.Notam;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 
 namespace PreflightApi.Infrastructure.Interfaces;
 
@@ -42,4 +43,15 @@ public interface INotamService
     /// <param name="ct">Cancellation token</param>
     /// <returns>The NOTAM if found, null otherwise</returns>
     Task<NotamDto?> GetNotamByNmsIdAsync(string nmsId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Searches NOTAMs across all locations using filter criteria with cursor-based pagination.
+    /// At least one filter must be provided.
+    /// </summary>
+    /// <param name="filters">NMS query filters (at least one required)</param>
+    /// <param name="cursor">Opaque cursor for pagination (null for first page)</param>
+    /// <param name="limit">Maximum items per page</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated response containing matching NOTAMs</returns>
+    Task<PaginatedResponse<NotamDto>> SearchNotamsAsync(NotamFilterDto filters, string? cursor = null, int limit = 100, CancellationToken ct = default);
 }

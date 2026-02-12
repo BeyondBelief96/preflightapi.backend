@@ -135,18 +135,10 @@ builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
 builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();
 
-// NOTAM Services
-builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
+// NOTAM Services (DB-backed, synced by Azure Functions)
 builder.Services.AddScoped<INotamService, NotamService>();
 
 builder.Services.AddHttpClient();
-
-// Configure NMS API HttpClient with extended timeout
-builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
-{
-    var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
-    client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
-});
 
 var app = builder.Build();
 

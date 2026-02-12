@@ -13,6 +13,7 @@ using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Services.CronJobServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
+using PreflightApi.Infrastructure.Services.NotamServices;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 
@@ -46,6 +47,7 @@ builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
 
 // Register settings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
+builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
 
 // Register services
 builder.Services.AddScoped<IFaaPublicationCycleService, FaaPublicationCycleService>();
@@ -63,6 +65,9 @@ builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFreq
 builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
 builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();
+builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
+builder.Services.AddScoped<INotamDeltaSyncCronService, NotamDeltaSyncCronService>();
+builder.Services.AddScoped<INotamInitialLoadCronService, NotamInitialLoadCronService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddResilientHttpClients();
 
@@ -70,6 +75,13 @@ builder.Services.AddResilientHttpClients();
 builder.Services.AddHttpClient("ArcGis", client =>
 {
     client.Timeout = TimeSpan.FromMinutes(10);
+});
+
+// Configure HttpClient for NMS API with configurable timeout
+builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
+{
+    var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
+    client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
 });
 
 // Register database context

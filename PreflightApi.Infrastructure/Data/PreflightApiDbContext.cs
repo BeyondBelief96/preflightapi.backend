@@ -40,6 +40,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Obstacle> Obstacles => Set<Obstacle>();
 
+        public virtual DbSet<Notam> Notams => Set<Notam>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
