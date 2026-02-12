@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Xml.Linq;
 using PreflightApi.Domain.Entities;
-using PreflightApi.Domain.ValueObjects.Airsigmets;
+using PreflightApi.Domain.ValueObjects.Sigmets;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
@@ -11,15 +11,15 @@ using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
 {
-    public class AirsigmetCronService : IAviationWeatherService<Airsigmet>
+    public class SigmetCronService : IAviationWeatherService<Sigmet>
     {
-        private readonly ILogger<AirsigmetCronService> _logger;
+        private readonly ILogger<SigmetCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
-        private const string AirsigmetUrl = "https://aviationweather.gov/data/cache/airsigmets.cache.xml.gz";
+        private const string SigmetUrl = "https://aviationweather.gov/data/cache/airsigmets.cache.xml.gz";
 
-        public AirsigmetCronService(
-            ILogger<AirsigmetCronService> logger,
+        public SigmetCronService(
+            ILogger<SigmetCronService> logger,
             IHttpClientFactory httpClientFactory,
             PreflightApiDbContext dbContext)
         {
@@ -32,32 +32,32 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         {
             try
             {
-                _logger.LogInformation("Starting AIRSIGMET data fetch and storage");
-                var xmlData = await FetchAirsigmetXmlDataAsync(cancellationToken);
+                _logger.LogInformation("Starting SIGMET data fetch and storage");
+                var xmlData = await FetchSigmetXmlDataAsync(cancellationToken);
 
                 if (xmlData == null)
                 {
-                    _logger.LogInformation("No AIRSIGMET data available from API (204 No Content)");
-                    await PurgeExpiredAirsigmetsAsync(cancellationToken);
+                    _logger.LogInformation("No SIGMET data available from API (204 No Content)");
+                    await PurgeExpiredSigmetsAsync(cancellationToken);
                     return;
                 }
 
-                var airsigmetData = ParseAirsigmetXmlData(xmlData);
-                await UpdateOrCreateAirsigmetsAsync(airsigmetData, cancellationToken);
-                await PurgeExpiredAirsigmetsAsync(cancellationToken);
-                _logger.LogInformation("Completed AIRSIGMET data update");
+                var sigmetData = ParseSigmetXmlData(xmlData);
+                await UpdateOrCreateSigmetsAsync(sigmetData, cancellationToken);
+                await PurgeExpiredSigmetsAsync(cancellationToken);
+                _logger.LogInformation("Completed SIGMET data update");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching AIRSIGMET data");
+                _logger.LogError(ex, "Error fetching SIGMET data");
                 throw;
             }
         }
 
-        private async Task<string?> FetchAirsigmetXmlDataAsync(CancellationToken cancellationToken)
+        private async Task<string?> FetchSigmetXmlDataAsync(CancellationToken cancellationToken)
         {
             using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
-            using var response = await client.GetAsync(AirsigmetUrl, cancellationToken);
+            using var response = await client.GetAsync(SigmetUrl, cancellationToken);
 
             switch (response.StatusCode)
             {
@@ -76,11 +76,11 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     return null;
 
                 case HttpStatusCode.BadRequest:
-                    _logger.LogError("Aviation Weather API returned 400 Bad Request for AIRSIGMET data");
+                    _logger.LogError("Aviation Weather API returned 400 Bad Request for SIGMET data");
                     throw new HttpRequestException("Aviation Weather API returned 400 Bad Request - invalid parameters or URL");
 
                 case HttpStatusCode.NotFound:
-                    _logger.LogError("Aviation Weather API returned 404 Not Found for AIRSIGMET endpoint");
+                    _logger.LogError("Aviation Weather API returned 404 Not Found for SIGMET endpoint");
                     throw new HttpRequestException("Aviation Weather API endpoint not found (404)");
 
                 case HttpStatusCode.TooManyRequests:
@@ -102,46 +102,46 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             }
         }
 
-        private IEnumerable<Airsigmet> ParseAirsigmetXmlData(string xmlData)
+        private IEnumerable<Sigmet> ParseSigmetXmlData(string xmlData)
         {
-            var airsigmets = new List<Airsigmet>();
+            var sigmets = new List<Sigmet>();
             var doc = XDocument.Parse(xmlData);
-            var airsigmetElements = doc.Descendants("AIRSIGMET");
+            var sigmetElements = doc.Descendants("AIRSIGMET");
 
             // Validate schema on first element
-            var firstElement = airsigmetElements.FirstOrDefault();
+            var firstElement = sigmetElements.FirstOrDefault();
             if (firstElement != null)
             {
-                var validationResult = AvWxSchemaValidator.ValidateElement("airsigmet", firstElement);
+                var validationResult = AvWxSchemaValidator.ValidateElement("sigmet", firstElement);
                 if (validationResult.HasDrift)
                 {
                     if (validationResult.MissingElements.Count > 0)
-                        _logger.LogError("Schema drift detected in AIRSIGMET XML: missing expected elements: {Elements}",
+                        _logger.LogError("Schema drift detected in SIGMET XML: missing expected elements: {Elements}",
                             string.Join(", ", validationResult.MissingElements));
                     if (validationResult.UnexpectedElements.Count > 0)
-                        _logger.LogWarning("Schema drift detected in AIRSIGMET XML: unexpected new elements: {Elements}",
+                        _logger.LogWarning("Schema drift detected in SIGMET XML: unexpected new elements: {Elements}",
                             string.Join(", ", validationResult.UnexpectedElements));
                     if (validationResult.MissingAttributes.Count > 0)
-                        _logger.LogError("Schema drift detected in AIRSIGMET XML: missing expected attributes: {Attributes}",
+                        _logger.LogError("Schema drift detected in SIGMET XML: missing expected attributes: {Attributes}",
                             string.Join(", ", validationResult.MissingAttributes));
                     if (validationResult.UnexpectedAttributes.Count > 0)
-                        _logger.LogWarning("Schema drift detected in AIRSIGMET XML: unexpected new attributes: {Attributes}",
+                        _logger.LogWarning("Schema drift detected in SIGMET XML: unexpected new attributes: {Attributes}",
                             string.Join(", ", validationResult.UnexpectedAttributes));
                 }
             }
 
-            foreach (var element in airsigmetElements)
+            foreach (var element in sigmetElements)
             {
                 try
                 {
-                    airsigmets.Add(new Airsigmet
+                    sigmets.Add(new Sigmet
                     {
                         RawText = element.Element("raw_text")?.Value,
                         ValidTimeFrom = element.Element("valid_time_from")?.Value,
                         ValidTimeTo = element.Element("valid_time_to")?.Value,
                         MovementDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("movement_dir_degrees")?.Value),
                         MovementSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("movement_spd_kt")?.Value),
-                        AirsigmetType = element.Element("airsigmet_type")?.Value,
+                        SigmetType = element.Element("airsigmet_type")?.Value,
                         Altitude = ParseAltitude(element.Element("altitude")),
                         Hazard = ParseHazard(element.Element("hazard")),
                         Areas = ParseAreas(element.Elements("area"))
@@ -149,48 +149,48 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to parse AIRSIGMET element");
+                    _logger.LogWarning(ex, "Failed to parse SIGMET element");
                 }
             }
 
-            return airsigmets;
+            return sigmets;
         }
 
-        private static AirsigmetAltitude? ParseAltitude(XElement? element)
+        private static SigmetAltitude? ParseAltitude(XElement? element)
         {
             if (element == null) return null;
 
-            return new AirsigmetAltitude
+            return new SigmetAltitude
             {
                 MinFtMsl = ParsingUtilities.ParseNullableInt(element.Attribute("min_ft_msl")?.Value),
                 MaxFtMsl = ParsingUtilities.ParseNullableInt(element.Attribute("max_ft_msl")?.Value)
             };
         }
 
-        private static AirsigmetHazard? ParseHazard(XElement? element)
+        private static SigmetHazard? ParseHazard(XElement? element)
         {
             if (element == null) return null;
 
-            return new AirsigmetHazard
+            return new SigmetHazard
             {
                 Type = element.Attribute("type")?.Value,
                 Severity = element.Attribute("severity")?.Value
             };
         }
 
-        private static List<AirsigmetArea>? ParseAreas(IEnumerable<XElement> elements)
+        private static List<SigmetArea>? ParseAreas(IEnumerable<XElement> elements)
         {
             var areas = elements.Select(areaElement =>
             {
                 var points = areaElement.Elements("point")
-                    .Select(pointElement => new AirsigmetPoint
+                    .Select(pointElement => new SigmetPoint
                     {
                         Longitude = ParsingUtilities.ParseFloat(pointElement.Element("longitude")?.Value ?? "0"),
                         Latitude = ParsingUtilities.ParseFloat(pointElement.Element("latitude")?.Value ?? "0")
                     })
                     .ToList();
 
-                return new AirsigmetArea
+                return new SigmetArea
                 {
                     NumPoints = ParsingUtilities.ParseInt(areaElement.Attribute("num_points")?.Value ?? "0"),
                     Points = points
@@ -200,37 +200,37 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             return areas.Any() ? areas : null;
         }
 
-        private async Task UpdateOrCreateAirsigmetsAsync(IEnumerable<Airsigmet> airsigmets, CancellationToken cancellationToken)
+        private async Task UpdateOrCreateSigmetsAsync(IEnumerable<Sigmet> sigmets, CancellationToken cancellationToken)
         {
-            var airsigmetsList = airsigmets.ToList();
-            var validTimeFroms = airsigmetsList
+            var sigmetsList = sigmets.ToList();
+            var validTimeFroms = sigmetsList
                 .Where(a => a.ValidTimeFrom != null)
                 .Select(a => a.ValidTimeFrom!)
                 .Distinct()
                 .ToList();
 
-            // Remove existing AIRSIGMETs that overlap with incoming data
-            // (ValidTimeFrom is not unique — multiple AIRSIGMETs can share the same start time)
-            var deleted = await _dbContext.Airsigmets
+            // Remove existing SIGMETs that overlap with incoming data
+            // (ValidTimeFrom is not unique — multiple SIGMETs can share the same start time)
+            var deleted = await _dbContext.Sigmets
                 .Where(a => a.ValidTimeFrom != null && validTimeFroms.Contains(a.ValidTimeFrom))
                 .ExecuteDeleteAsync(cancellationToken);
 
             if (deleted > 0)
-                _logger.LogDebug("Removed {Count} existing AIRSIGMETs for replacement", deleted);
+                _logger.LogDebug("Removed {Count} existing SIGMETs for replacement", deleted);
 
-            await _dbContext.Airsigmets.AddRangeAsync(airsigmetsList, cancellationToken);
+            await _dbContext.Sigmets.AddRangeAsync(sigmetsList, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task PurgeExpiredAirsigmetsAsync(CancellationToken cancellationToken)
+        private async Task PurgeExpiredSigmetsAsync(CancellationToken cancellationToken)
         {
             var currentTime = DateTime.UtcNow.ToString("O");
 
-            var result = await _dbContext.Airsigmets
+            var result = await _dbContext.Sigmets
                 .Where(a => a.ValidTimeTo != null && a.ValidTimeTo.CompareTo(currentTime) < 0)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            _logger.LogInformation("Purged {Count} expired AIRSIGMETs", result);
+            _logger.LogInformation("Purged {Count} expired SIGMETs", result);
         }
     }
 }

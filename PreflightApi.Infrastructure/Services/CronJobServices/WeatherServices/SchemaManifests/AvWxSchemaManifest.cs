@@ -118,7 +118,7 @@ public static class AvWxSchemaManifestLoader
 
     /// <summary>
     /// Loads a single aviation weather schema manifest by weather type name
-    /// (e.g., "metar", "taf", "pirep", "airsigmet", "gairmet").
+    /// (e.g., "metar", "taf", "pirep", "sigmet", "gairmet").
     /// </summary>
     public static AvWxSchemaManifest? LoadByWeatherType(string weatherType)
     {

@@ -16,7 +16,7 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Pirep> Pireps => Set<Pirep>();
 
-        public virtual DbSet<Airsigmet> Airsigmets => Set<Airsigmet>();
+        public virtual DbSet<Sigmet> Sigmets => Set<Sigmet>();
 
         public virtual DbSet<GAirmet> GAirmets => Set<GAirmet>();
 

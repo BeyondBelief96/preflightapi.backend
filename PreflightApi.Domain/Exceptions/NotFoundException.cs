@@ -102,3 +102,14 @@ public class RunwayNotFoundException : NotFoundException
     {
     }
 }
+
+/// <summary>
+/// Exception thrown when a NOTAM cannot be found by NMS ID.
+/// </summary>
+public class NotamNotFoundException : NotFoundException
+{
+    public NotamNotFoundException(string nmsId)
+        : base(ErrorCodes.NotamNotFound, $"NOTAM was not found with NMS ID '{nmsId}'.")
+    {
+    }
+}

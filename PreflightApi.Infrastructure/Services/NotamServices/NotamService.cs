@@ -19,6 +19,7 @@ public class NotamService : INotamService
 
     private const string CacheKeyPrefixLocation = "notam:location:";
     private const string CacheKeyPrefixRadius = "notam:radius:";
+    private const string CacheKeyPrefixNmsId = "notam:nmsid:";
 
     public NotamService(
         INmsApiClient nmsApiClient,
@@ -32,7 +33,7 @@ public class NotamService : INotamService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<NotamResponseDto> GetNotamsForAirportAsync(string icaoCodeOrIdent, CancellationToken ct = default)
+    public async Task<NotamResponseDto> GetNotamsForAirportAsync(string icaoCodeOrIdent, NotamFilterDto? filters = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(icaoCodeOrIdent))
         {
@@ -40,7 +41,7 @@ public class NotamService : INotamService
         }
 
         var normalizedIdent = icaoCodeOrIdent.ToUpperInvariant().Trim();
-        var cacheKey = $"{CacheKeyPrefixLocation}{normalizedIdent}";
+        var cacheKey = BuildCacheKey($"{CacheKeyPrefixLocation}{normalizedIdent}", filters);
 
         _logger.LogInformation("Getting NOTAMs for airport: {Identifier}", normalizedIdent);
 
@@ -49,7 +50,7 @@ public class NotamService : INotamService
             entry.SlidingExpiration = TimeSpan.FromMinutes(_settings.CacheDurationMinutes);
 
             _logger.LogDebug("Cache miss for {CacheKey}, fetching from NMS API", cacheKey);
-            return await _nmsApiClient.GetNotamsByLocationAsync(normalizedIdent, ct);
+            return await _nmsApiClient.GetNotamsByLocationAsync(normalizedIdent, filters, ct);
         });
 
         return new NotamResponseDto
@@ -61,7 +62,7 @@ public class NotamService : INotamService
         };
     }
 
-    public async Task<NotamResponseDto> GetNotamsByRadiusAsync(double lat, double lon, double radiusNm, CancellationToken ct = default)
+    public async Task<NotamResponseDto> GetNotamsByRadiusAsync(double lat, double lon, double radiusNm, NotamFilterDto? filters = null, CancellationToken ct = default)
     {
         if (radiusNm <= 0)
         {
@@ -74,7 +75,7 @@ public class NotamService : INotamService
         }
 
         // Normalize coordinates for cache key (4 decimal places gives ~11m precision)
-        var cacheKey = $"{CacheKeyPrefixRadius}{lat:F4}:{lon:F4}:{radiusNm:F1}";
+        var cacheKey = BuildCacheKey($"{CacheKeyPrefixRadius}{lat:F4}:{lon:F4}:{radiusNm:F1}", filters);
 
         _logger.LogInformation("Getting NOTAMs within {Radius}nm of {Lat}, {Lon}", radiusNm, lat, lon);
 
@@ -83,7 +84,7 @@ public class NotamService : INotamService
             entry.SlidingExpiration = TimeSpan.FromMinutes(_settings.CacheDurationMinutes);
 
             _logger.LogDebug("Cache miss for {CacheKey}, fetching from NMS API", cacheKey);
-            return await _nmsApiClient.GetNotamsByRadiusAsync(lat, lon, radiusNm, ct);
+            return await _nmsApiClient.GetNotamsByRadiusAsync(lat, lon, radiusNm, filters, ct);
         });
 
         return new NotamResponseDto
@@ -117,6 +118,26 @@ public class NotamService : INotamService
         return await GetNotamsForAirportIdentifiersAsync(request, ct);
     }
 
+    public async Task<NotamDto?> GetNotamByNmsIdAsync(string nmsId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(nmsId))
+        {
+            throw new ArgumentException("NMS ID cannot be null or empty", nameof(nmsId));
+        }
+
+        var cacheKey = $"{CacheKeyPrefixNmsId}{nmsId}";
+
+        _logger.LogInformation("Getting NOTAM by NMS ID: {NmsId}", nmsId);
+
+        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromMinutes(_settings.CacheDurationMinutes);
+
+            _logger.LogDebug("Cache miss for {CacheKey}, fetching from NMS API", cacheKey);
+            return await _nmsApiClient.GetNotamByNmsIdAsync(nmsId, ct);
+        });
+    }
+
     private async Task<NotamResponseDto> GetNotamsForRoutePointsAsync(NotamQueryByRouteRequest request, CancellationToken ct)
     {
         ValidateRoutePoints(request.RoutePoints, request.CorridorRadiusNm);
@@ -135,13 +156,13 @@ public class NotamService : INotamService
                 {
                     if (point.IsAirport)
                     {
-                        var response = await GetNotamsForAirportAsync(point.AirportIdentifier!, ct);
+                        var response = await GetNotamsForAirportAsync(point.AirportIdentifier!, request.Filters, ct);
                         return (Index: index, Point: point, Notams: response.Notams, Error: (Exception?)null);
                     }
                     else
                     {
                         var radius = GetWaypointRadius(point, request.CorridorRadiusNm);
-                        var response = await GetNotamsByRadiusAsync(point.Latitude!.Value, point.Longitude!.Value, radius, ct);
+                        var response = await GetNotamsByRadiusAsync(point.Latitude!.Value, point.Longitude!.Value, radius, request.Filters, ct);
                         return (Index: index, Point: point, Notams: response.Notams, Error: (Exception?)null);
                     }
                 }
@@ -198,7 +219,7 @@ public class NotamService : INotamService
             {
                 try
                 {
-                    var response = await GetNotamsForAirportAsync(ident, ct);
+                    var response = await GetNotamsForAirportAsync(ident, request.Filters, ct);
                     return (Identifier: ident, Notams: response.Notams, Error: (Exception?)null);
                 }
                 catch (Exception ex)
@@ -238,6 +259,15 @@ public class NotamService : INotamService
             RetrievedAt = DateTime.UtcNow,
             QueryLocation = routeDescription
         };
+    }
+
+    private static string BuildCacheKey(string baseKey, NotamFilterDto? filters)
+    {
+        if (filters == null || !filters.HasFilters)
+            return baseKey;
+
+        // Record GetHashCode() provides value-based hashing
+        return $"{baseKey}:f{filters.GetHashCode()}";
     }
 
     private void ValidateRoutePoints(List<RoutePointDto> routePoints, double? corridorRadiusNm)

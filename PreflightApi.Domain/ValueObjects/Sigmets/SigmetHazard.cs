@@ -1,6 +1,6 @@
-namespace PreflightApi.Domain.ValueObjects.Airsigmets
+namespace PreflightApi.Domain.ValueObjects.Sigmets
 {
-    public class AirsigmetHazard
+    public class SigmetHazard
     {
         /// <summary>
         /// The hazard: TURB, ICE, IFR, CONVECTIVE, ASH, MTN OBSCN
@@ -8,7 +8,7 @@ namespace PreflightApi.Domain.ValueObjects.Airsigmets
         public string? Type { get; set; }
 
         /// <summary>
-        /// The severity: LGT, LT-MOD, MOD (AIRMET), MOD-SEV, SEV (SIGMET)
+        /// The severity: MOD-SEV, SEV (SIGMET)
         /// </summary>
         public string? Severity { get; set; }
     }

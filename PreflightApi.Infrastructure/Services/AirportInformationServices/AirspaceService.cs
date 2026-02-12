@@ -56,7 +56,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
                 var upperCities = cities.Select(c => c.ToUpperInvariant()).ToArray();
                 var query = _context.Airspaces
-                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpperInvariant()));
+                    .Where(a => a.City != null && upperCities.Contains(a.City.ToUpper()));
 
                 return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
             }
@@ -143,7 +143,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces
-                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpperInvariant()))
+                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
                     .ToListAsync();
 
                 return airspaces.Select(AirspaceMapper.ToDto);
@@ -163,7 +163,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.SpecialUseAirspaces
-                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpperInvariant()))
+                    .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
                     .ToListAsync();
 
                 return airspaces.Select(AirspaceMapper.ToDto);

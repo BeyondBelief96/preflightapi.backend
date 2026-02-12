@@ -9,7 +9,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides access to METAR (Meteorological Aerodrome Report) observations.
+/// Provides access to decoded METAR (Meteorological Aerodrome Report) aviation weather observations.
 /// METARs are routine weather observations from airport weather stations, updated approximately every hour.
 /// METAR data is also used by the E6B endpoints to automatically calculate crosswind and density altitude for airports.
 /// </summary>

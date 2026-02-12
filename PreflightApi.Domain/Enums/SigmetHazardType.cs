@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace PreflightApi.Domain.Enums;
 
 /// <summary>
-/// AIRSIGMET hazard types
+/// SIGMET hazard types
 /// </summary>
-public enum AirsigmetHazardType
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum SigmetHazardType
 {
     /// <summary>
     /// Convective activity (thunderstorms)

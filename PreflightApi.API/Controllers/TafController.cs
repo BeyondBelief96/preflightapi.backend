@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides access to TAF (Terminal Aerodrome Forecast) data.
+/// Provides access to decoded TAF (Terminal Aerodrome Forecast) products.
 /// TAFs are weather forecasts for airports, typically covering a 24-30 hour period with forecast periods
 /// describing expected wind, visibility, sky conditions, and weather phenomena. TAFs are issued
 /// approximately every 6 hours for airports with weather reporting capabilities.

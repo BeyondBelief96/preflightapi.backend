@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
@@ -12,7 +13,7 @@ namespace PreflightApi.API.Controllers;
 /// NOTAMs contain time-critical aeronautical information about airport closures, airspace restrictions,
 /// runway conditions, navigation aid outages, and other flight safety hazards. NOTAMs are returned as
 /// GeoJSON Features with geographic geometry and detailed properties including effective dates, text content,
-/// and plain-English translations. Query by airport, geographic radius, or along a flight route.
+/// and plain-English translations. Query by airport, geographic radius, along a flight route, or by NMS ID.
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]
@@ -21,20 +22,50 @@ namespace PreflightApi.API.Controllers;
 public class NotamController(INotamService notamService)
     : ControllerBase
 {
+    private static readonly HashSet<string> ValidClassifications = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "INTERNATIONAL", "MILITARY", "LOCAL_MILITARY", "DOMESTIC", "FDC"
+    };
+
+    private static readonly HashSet<string> ValidFeatures = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "RWY", "TWY", "APRON", "AD", "OBST", "NAV", "COM", "SVC", "AIRSPACE",
+        "ODP", "SID", "STAR", "CHART", "DATA", "DVA", "IAP", "VFP", "ROUTE", "SPECIAL", "SECURITY"
+    };
+
+    private static readonly Regex FreeTextPattern = new(@"^[ /\.\-\(\)\w]{1,80}$", RegexOptions.Compiled);
+    private static readonly Regex NmsIdPattern = new(@"^\d{16}$", RegexOptions.Compiled);
+
     /// <summary>
     /// Gets NOTAMs for a specific airport
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <param name="classification">NOTAM classification filter (INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC)</param>
+    /// <param name="feature">NOTAM feature type filter (RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY)</param>
+    /// <param name="freeText">Free text search within NOTAM text (max 80 chars)</param>
+    /// <param name="effectiveStartDate">Effective start date filter (ISO 8601). Must be paired with effectiveEndDate.</param>
+    /// <param name="effectiveEndDate">Effective end date filter (ISO 8601). Must be paired with effectiveStartDate.</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>NOTAMs for the specified airport</returns>
+    /// <remarks>
+    /// **FAA NMS Usage Limits:** The upstream FAA NOTAM Management System enforces rate limits on data consumers.
+    /// Delta queries are limited to 1 request per 3 minutes; bulk pulls to 1 per 24 hours. More frequent use
+    /// requires FAA approval and will result in rate limit errors. This API caches NOTAM responses for 5 minutes
+    /// to help stay within these limits. These limits are set by the FAA, not by this API.
+    /// </remarks>
     /// <response code="200">Returns the NOTAMs</response>
-    /// <response code="400">If the identifier is invalid</response>
+    /// <response code="400">If the identifier or filters are invalid</response>
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsForAirport(
         string icaoCodeOrIdent,
+        [FromQuery] string? classification,
+        [FromQuery] string? feature,
+        [FromQuery] string? freeText,
+        [FromQuery] string? effectiveStartDate,
+        [FromQuery] string? effectiveEndDate,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(icaoCodeOrIdent))
@@ -42,7 +73,10 @@ public class NotamController(INotamService notamService)
             throw new ValidationException("icaoCodeOrIdent", "Airport identifier is required");
         }
 
-        var result = await notamService.GetNotamsForAirportAsync(icaoCodeOrIdent, ct);
+        var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate);
+        ValidateFilters(filters);
+
+        var result = await notamService.GetNotamsForAirportAsync(icaoCodeOrIdent, filters, ct);
         return Ok(result);
     }
 
@@ -52,10 +86,21 @@ public class NotamController(INotamService notamService)
     /// <param name="latitude">Latitude in decimal degrees</param>
     /// <param name="longitude">Longitude in decimal degrees</param>
     /// <param name="radiusNm">Radius in nautical miles (max 100)</param>
+    /// <param name="classification">NOTAM classification filter (INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC)</param>
+    /// <param name="feature">NOTAM feature type filter (RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY)</param>
+    /// <param name="freeText">Free text search within NOTAM text (max 80 chars)</param>
+    /// <param name="effectiveStartDate">Effective start date filter (ISO 8601). Must be paired with effectiveEndDate.</param>
+    /// <param name="effectiveEndDate">Effective end date filter (ISO 8601). Must be paired with effectiveStartDate.</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>NOTAMs within the specified radius</returns>
+    /// <remarks>
+    /// **FAA NMS Usage Limits:** The upstream FAA NOTAM Management System enforces rate limits on data consumers.
+    /// Delta queries are limited to 1 request per 3 minutes; bulk pulls to 1 per 24 hours. More frequent use
+    /// requires FAA approval and will result in rate limit errors. This API caches NOTAM responses for 5 minutes
+    /// to help stay within these limits. These limits are set by the FAA, not by this API.
+    /// </remarks>
     /// <response code="200">Returns the NOTAMs</response>
-    /// <response code="400">If parameters are invalid</response>
+    /// <response code="400">If parameters or filters are invalid</response>
     [HttpGet("radius")]
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -64,6 +109,11 @@ public class NotamController(INotamService notamService)
         [FromQuery] double latitude,
         [FromQuery] double longitude,
         [FromQuery] double radiusNm,
+        [FromQuery] string? classification,
+        [FromQuery] string? feature,
+        [FromQuery] string? freeText,
+        [FromQuery] string? effectiveStartDate,
+        [FromQuery] string? effectiveEndDate,
         CancellationToken ct)
     {
         if (latitude < -90 || latitude > 90)
@@ -81,7 +131,10 @@ public class NotamController(INotamService notamService)
             throw new ValidationException("radiusNm", "Radius must be between 0 and 100 nautical miles");
         }
 
-        var result = await notamService.GetNotamsByRadiusAsync(latitude, longitude, radiusNm, ct);
+        var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate);
+        ValidateFilters(filters);
+
+        var result = await notamService.GetNotamsByRadiusAsync(latitude, longitude, radiusNm, filters, ct);
         return Ok(result);
     }
 
@@ -98,6 +151,8 @@ public class NotamController(INotamService notamService)
     ///
     /// If both are provided, RoutePoints takes precedence.
     ///
+    /// Optional NMS filters can be included in the request body via the "filters" property.
+    ///
     /// Example RoutePoints request:
     /// ```json
     /// {
@@ -107,9 +162,15 @@ public class NotamController(INotamService notamService)
     ///     { "latitude": 30.1, "longitude": -97.6, "radiusNm": 15 },
     ///     { "airportIdentifier": "KAUS" }
     ///   ],
-    ///   "corridorRadiusNm": 25
+    ///   "corridorRadiusNm": 25,
+    ///   "filters": { "classification": "DOMESTIC", "feature": "RWY" }
     /// }
     /// ```
+    ///
+    /// **FAA NMS Usage Limits:** The upstream FAA NOTAM Management System enforces rate limits on data consumers.
+    /// Delta queries are limited to 1 request per 3 minutes; bulk pulls to 1 per 24 hours. More frequent use
+    /// requires FAA approval and will result in rate limit errors. This API caches NOTAM responses for 5 minutes
+    /// to help stay within these limits. These limits are set by the FAA, not by this API.
     /// </remarks>
     /// <response code="200">Returns the NOTAMs</response>
     /// <response code="400">If the request is invalid</response>
@@ -140,8 +201,107 @@ public class NotamController(INotamService notamService)
             ValidateRoutePoints(request.RoutePoints);
         }
 
+        // Validate filters if provided
+        ValidateFilters(request.Filters);
+
         var result = await notamService.GetNotamsForRouteAsync(request, ct);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Gets a single NOTAM by its NMS ID
+    /// </summary>
+    /// <param name="nmsId">16-digit NMS NOTAM identifier</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The NOTAM if found</returns>
+    /// <remarks>
+    /// **FAA NMS Usage Limits:** The upstream FAA NOTAM Management System enforces rate limits on data consumers.
+    /// Delta queries are limited to 1 request per 3 minutes; bulk pulls to 1 per 24 hours. More frequent use
+    /// requires FAA approval and will result in rate limit errors. This API caches NOTAM responses for 5 minutes
+    /// to help stay within these limits. These limits are set by the FAA, not by this API.
+    /// </remarks>
+    /// <response code="200">Returns the NOTAM</response>
+    /// <response code="400">If the NMS ID format is invalid</response>
+    /// <response code="404">If the NOTAM is not found</response>
+    [HttpGet("id/{nmsId}")]
+    [ProducesResponseType(typeof(NotamDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<NotamDto>> GetNotamByNmsId(
+        string nmsId,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(nmsId))
+        {
+            throw new ValidationException("nmsId", "NMS ID is required");
+        }
+
+        if (!NmsIdPattern.IsMatch(nmsId))
+        {
+            throw new ValidationException("nmsId", "NMS ID must be a 16-digit number");
+        }
+
+        var notam = await notamService.GetNotamByNmsIdAsync(nmsId, ct);
+
+        if (notam == null)
+        {
+            throw new NotamNotFoundException(nmsId);
+        }
+
+        return Ok(notam);
+    }
+
+    private static NotamFilterDto? BuildFilters(
+        string? classification, string? feature, string? freeText,
+        string? effectiveStartDate, string? effectiveEndDate)
+    {
+        if (classification == null && feature == null && freeText == null &&
+            effectiveStartDate == null && effectiveEndDate == null)
+        {
+            return null;
+        }
+
+        return new NotamFilterDto
+        {
+            Classification = classification,
+            Feature = feature,
+            FreeText = freeText,
+            EffectiveStartDate = effectiveStartDate,
+            EffectiveEndDate = effectiveEndDate
+        };
+    }
+
+    private static void ValidateFilters(NotamFilterDto? filters)
+    {
+        if (filters == null)
+            return;
+
+        if (filters.Classification != null && !ValidClassifications.Contains(filters.Classification))
+        {
+            throw new ValidationException("classification",
+                $"Invalid classification '{filters.Classification}'. Valid values: {string.Join(", ", ValidClassifications)}");
+        }
+
+        if (filters.Feature != null && !ValidFeatures.Contains(filters.Feature))
+        {
+            throw new ValidationException("feature",
+                $"Invalid feature '{filters.Feature}'. Valid values: {string.Join(", ", ValidFeatures)}");
+        }
+
+        if (filters.FreeText != null && !FreeTextPattern.IsMatch(filters.FreeText))
+        {
+            throw new ValidationException("freeText",
+                "Free text must be 1-80 characters and contain only letters, digits, spaces, and /.-()");
+        }
+
+        var hasStart = filters.EffectiveStartDate != null;
+        var hasEnd = filters.EffectiveEndDate != null;
+        if (hasStart != hasEnd)
+        {
+            throw new ValidationException("effectiveStartDate",
+                "effectiveStartDate and effectiveEndDate must both be provided or both omitted");
+        }
     }
 
     private static void ValidateRoutePoints(List<RoutePointDto> routePoints)

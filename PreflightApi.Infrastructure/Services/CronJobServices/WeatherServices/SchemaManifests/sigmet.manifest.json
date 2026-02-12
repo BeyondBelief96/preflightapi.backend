@@ -1,7 +1,7 @@
 {
   "$schema": "avwx-schema-manifest-v1",
   "xmlRootElement": "AIRSIGMET",
-  "entity": "Airsigmet",
+  "entity": "Sigmet",
   "lastVerified": "2026-02-11",
   "elements": {
     "raw_text": {
@@ -10,7 +10,7 @@
       "required": false,
       "openApiProperty": "rawAirSigmet",
       "captured": true,
-      "description": "Raw AIRSIGMET text"
+      "description": "Raw SIGMET text"
     },
     "valid_time_from": {
       "entityProperty": "ValidTimeFrom",
@@ -45,12 +45,12 @@
       "description": "Hazard movement speed in knots"
     },
     "airsigmet_type": {
-      "entityProperty": "AirsigmetType",
+      "entityProperty": "SigmetType",
       "dataType": "string",
       "required": false,
       "openApiProperty": "airSigmetType",
       "captured": true,
-      "description": "Product type: SIGMET, AIRMET, OUTLOOK"
+      "description": "Product type: SIGMET or OUTLOOK"
     }
   },
   "nestedElements": {
