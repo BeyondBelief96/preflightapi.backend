@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Taf;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -138,6 +139,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var tafs = new List<Taf>();
             var doc = XDocument.Parse(xmlData);
             var tafElements = doc.Descendants("TAF");
+
+            // Validate schema on first element
+            var firstElement = tafElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("taf", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in TAF XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in TAF XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in TAF XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in TAF XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
 
             foreach (var element in tafElements)
             {

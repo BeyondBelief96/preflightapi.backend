@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Airsigmets;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -107,6 +108,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var doc = XDocument.Parse(xmlData);
             var airsigmetElements = doc.Descendants("AIRSIGMET");
 
+            // Validate schema on first element
+            var firstElement = airsigmetElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("airsigmet", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in AIRSIGMET XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in AIRSIGMET XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in AIRSIGMET XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in AIRSIGMET XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
+
             foreach (var element in airsigmetElements)
             {
                 try
@@ -117,7 +140,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         ValidTimeFrom = element.Element("valid_time_from")?.Value,
                         ValidTimeTo = element.Element("valid_time_to")?.Value,
                         MovementDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("movement_dir_degrees")?.Value),
-                        MovementSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("movement_speed_kt")?.Value),
+                        MovementSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("movement_spd_kt")?.Value),
                         AirsigmetType = element.Element("airsigmet_type")?.Value,
                         Altitude = ParseAltitude(element.Element("altitude")),
                         Hazard = ParseHazard(element.Element("hazard")),

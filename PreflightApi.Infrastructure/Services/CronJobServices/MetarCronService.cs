@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Metar;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -138,6 +139,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var metars = new List<Metar>();
             var doc = XDocument.Parse(xmlData);
             var metarElements = doc.Descendants("METAR");
+
+            // Validate schema on first element
+            var firstElement = metarElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("metar", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in METAR XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in METAR XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in METAR XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in METAR XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
 
             foreach (var element in metarElements)
             {

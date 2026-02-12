@@ -78,38 +78,6 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             }
         }
 
-        public async Task<PaginatedResponse<MetarDto>> GetMetarsByState(string stateCode, string? cursor = null, int limit = 100)
-        {
-            try
-            {
-                _logger.LogInformation("Retrieving METARs for state: {StateCode}, cursor: {Cursor}, limit: {Limit}",
-                    stateCode, cursor, limit);
-
-                if (string.IsNullOrWhiteSpace(stateCode))
-                {
-                    throw new ArgumentException("State code cannot be null or empty", nameof(stateCode));
-                }
-
-                var upperStateCode = stateCode.ToUpperInvariant();
-                var query = _context.Metars
-                    .Where(m => _context.Airports.Any(a =>
-                        a.StateCode == upperStateCode &&
-                        (a.IcaoId == m.StationId ||
-                         (m.StationId != null &&
-                          m.StationId.Length > 1 &&
-                          (m.StationId.StartsWith("K") || m.StationId.StartsWith("P")) &&
-                          a.ArptId == m.StationId.Substring(1)) ||
-                         a.ArptId == m.StationId)));
-
-                return await query.ToPaginatedAsync(m => m.Id, MetarMapper.ToDto, cursor, limit);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving METARs for state: {StateCode}", stateCode);
-                throw;
-            }
-        }
-
         public async Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor = null, int limit = 100)
         {
             try

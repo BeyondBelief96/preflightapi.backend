@@ -11,7 +11,7 @@ namespace PreflightApi.API.Controllers;
 /// <summary>
 /// Provides access to METAR (Meteorological Aerodrome Report) observations.
 /// METARs are routine weather observations from airport weather stations, updated approximately every hour.
-/// METAR data is also used by the Performance endpoints to automatically calculate crosswind and density altitude for airports.
+/// METAR data is also used by the E6B endpoints to automatically calculate crosswind and density altitude for airports.
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]
@@ -37,47 +37,34 @@ public class MetarController(IMetarService metarService) : ControllerBase
     }
 
     /// <summary>
-    /// Gets METARs for all airports in a state
-    /// </summary>
-    /// <param name="stateCode">Two-letter state code (e.g., TX, CA)</param>
-    /// <param name="pagination">Cursor-based pagination parameters</param>
-    /// <returns>Paginated list of METARs for airports in the state</returns>
-    /// <response code="200">Returns the paginated METARs</response>
-    [HttpGet("state/{stateCode}")]
-    [ProducesResponseType(typeof(PaginatedResponse<MetarDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByState(
-        string stateCode,
-        [FromQuery] PaginationParams pagination)
-    {
-        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await metarService.GetMetarsByState(stateCode, pagination.Cursor, pagination.Limit));
-    }
-
-    /// <summary>
-    /// Gets METARs for all airports across multiple states
+    /// Gets METARs for airports in one or more states
     /// </summary>
     /// <remarks>
     /// Pass state codes as a single comma-separated query parameter:
-    /// <code>GET /api/v1/metars/by-states?stateCodes=TX,OK,LA</code>
+    /// <code>
+    /// GET /api/v1/metars?state=TX         — METARs for Texas airports
+    /// GET /api/v1/metars?state=TX,OK,LA   — METARs for multiple states
+    /// </code>
     /// </remarks>
-    /// <param name="stateCodes">Comma-separated two-letter state codes (e.g., TX,OK,LA). Must contain at least one code.</param>
+    /// <param name="state">Comma-separated two-letter state codes (e.g., TX or TX,OK,LA)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of METARs for airports in the specified states</returns>
     /// <response code="200">Returns the paginated METARs</response>
-    /// <response code="400">If the state codes parameter is empty</response>
-    [HttpGet("by-states")]
+    /// <response code="400">If the state parameter is empty</response>
+    [HttpGet]
     [ProducesResponseType(typeof(PaginatedResponse<MetarDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByStates(
-        [FromQuery] string stateCodes,
+    public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByState(
+        [FromQuery] string state,
         [FromQuery] PaginationParams pagination)
     {
-        if (string.IsNullOrWhiteSpace(stateCodes))
-            throw new ValidationException("stateCodes", "State codes are required");
+        if (string.IsNullOrWhiteSpace(state))
+            throw new ValidationException("state", "At least one state code is required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        var stateCodeArray = stateCodes.Split(',')
+        var stateCodeArray = state.Split(',')
             .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
             .ToArray();
 
         return Ok(await metarService.GetMetarsByStates(stateCodeArray, pagination.Cursor, pagination.Limit));

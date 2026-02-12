@@ -19,7 +19,7 @@ public class GAirmetFunction
     }
 
     [Function("GAirmetFunction")]
-    public async Task Run([TimerTrigger("0 */30 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+    public async Task Run([TimerTrigger("0 */30 * * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
     {
         _logger.LogInformation("G-AIRMET Function executed at: {Time}", DateTime.UtcNow);
         var sw = Stopwatch.StartNew();

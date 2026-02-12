@@ -1,0 +1,324 @@
+{
+  "$schema": "avwx-schema-manifest-v1",
+  "xmlRootElement": "METAR",
+  "entity": "Metar",
+  "lastVerified": "2026-02-11",
+  "elements": {
+    "raw_text": {
+      "entityProperty": "RawText",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "rawOb",
+      "captured": true,
+      "description": "Raw METAR observation text"
+    },
+    "station_id": {
+      "entityProperty": "StationId",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "icaoId",
+      "captured": true,
+      "description": "ICAO station identifier"
+    },
+    "observation_time": {
+      "entityProperty": "ObservationTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "reportTime",
+      "captured": true,
+      "description": "ISO 8601 observation time"
+    },
+    "latitude": {
+      "entityProperty": "Latitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lat",
+      "captured": true,
+      "description": "Station latitude in decimal degrees"
+    },
+    "longitude": {
+      "entityProperty": "Longitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lon",
+      "captured": true,
+      "description": "Station longitude in decimal degrees"
+    },
+    "temp_c": {
+      "entityProperty": "TempC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "temp",
+      "captured": true,
+      "description": "Temperature in Celsius"
+    },
+    "dewpoint_c": {
+      "entityProperty": "DewpointC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "dewp",
+      "captured": true,
+      "description": "Dew point in Celsius"
+    },
+    "wind_dir_degrees": {
+      "entityProperty": "WindDirDegrees",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "wdir",
+      "captured": true,
+      "description": "Wind direction in degrees true or VRB"
+    },
+    "wind_speed_kt": {
+      "entityProperty": "WindSpeedKt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "wspd",
+      "captured": true,
+      "description": "Wind speed in knots"
+    },
+    "wind_gust_kt": {
+      "entityProperty": "WindGustKt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "wgst",
+      "captured": true,
+      "description": "Wind gust speed in knots"
+    },
+    "visibility_statute_mi": {
+      "entityProperty": "VisibilityStatuteMi",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "visib",
+      "captured": true,
+      "description": "Visibility in statute miles"
+    },
+    "altim_in_hg": {
+      "entityProperty": "AltimInHg",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "altim",
+      "captured": true,
+      "description": "Altimeter setting in inches of mercury"
+    },
+    "sea_level_pressure_mb": {
+      "entityProperty": "SeaLevelPressureMb",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "slp",
+      "captured": true,
+      "description": "Sea level pressure in millibars"
+    },
+    "wx_string": {
+      "entityProperty": "WxString",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "wxString",
+      "captured": true,
+      "description": "Weather phenomena string"
+    },
+    "flight_category": {
+      "entityProperty": "FlightCategory",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "fltcat",
+      "captured": true,
+      "description": "Flight category: VFR, MVFR, IFR, LIFR"
+    },
+    "three_hr_pressure_tendency_mb": {
+      "entityProperty": "ThreeHrPressureTendencyMb",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": null,
+      "captured": true,
+      "description": "3-hour pressure tendency in millibars"
+    },
+    "maxT_c": {
+      "entityProperty": "MaxTC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "maxt",
+      "captured": true,
+      "description": "Maximum temperature in Celsius"
+    },
+    "minT_c": {
+      "entityProperty": "MinTC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "mint",
+      "captured": true,
+      "description": "Minimum temperature in Celsius"
+    },
+    "maxT24hr_c": {
+      "entityProperty": "MaxT24hrC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "maxt24",
+      "captured": true,
+      "description": "24-hour maximum temperature in Celsius"
+    },
+    "minT24hr_c": {
+      "entityProperty": "MinT24hrC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "mint24",
+      "captured": true,
+      "description": "24-hour minimum temperature in Celsius"
+    },
+    "precip_in": {
+      "entityProperty": "PrecipIn",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "precip",
+      "captured": true,
+      "description": "1-hour precipitation in inches"
+    },
+    "pcp3hr_in": {
+      "entityProperty": "Pcp3hrIn",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "pcp3hr",
+      "captured": true,
+      "description": "3-hour precipitation in inches"
+    },
+    "pcp6hr_in": {
+      "entityProperty": "Pcp6hrIn",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "pcp6hr",
+      "captured": true,
+      "description": "6-hour precipitation in inches"
+    },
+    "pcp24hr_in": {
+      "entityProperty": "Pcp24hrIn",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "pcp24hr",
+      "captured": true,
+      "description": "24-hour precipitation in inches"
+    },
+    "snow_in": {
+      "entityProperty": "SnowIn",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "snew",
+      "captured": true,
+      "description": "Snow depth in inches"
+    },
+    "vert_vis_ft": {
+      "entityProperty": "VertVisFt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "vertVis",
+      "captured": true,
+      "description": "Vertical visibility in feet"
+    },
+    "metar_type": {
+      "entityProperty": "MetarType",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "metarType",
+      "captured": true,
+      "description": "METAR type: METAR, SPECI, SYNOP, BUOY, CMAN"
+    },
+    "elevation_m": {
+      "entityProperty": "ElevationM",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "elev",
+      "captured": true,
+      "description": "Station elevation in meters"
+    }
+  },
+  "nestedElements": {
+    "quality_control_flags": {
+      "description": "Quality control flags container element",
+      "elements": {
+        "corrected": {
+          "entityProperty": "QualityControlFlags.Corrected",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Corrected observation flag"
+        },
+        "auto": {
+          "entityProperty": "QualityControlFlags.Auto",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "auto",
+          "captured": true,
+          "description": "Fully automated observation flag"
+        },
+        "auto_station": {
+          "entityProperty": "QualityControlFlags.AutoStation",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Automated station type flag"
+        },
+        "maintenance_indicator_on": {
+          "entityProperty": "QualityControlFlags.MaintenanceIndicatorOn",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Station maintenance indicator"
+        },
+        "no_signal": {
+          "entityProperty": "QualityControlFlags.NoSignal",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "No signal indicator"
+        },
+        "lightning_sensor_off": {
+          "entityProperty": "QualityControlFlags.LightningSensorOff",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Lightning sensor offline flag"
+        },
+        "freezing_rain_sensor_off": {
+          "entityProperty": "QualityControlFlags.FreezingRainSensorOff",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Freezing rain sensor offline flag"
+        },
+        "present_weather_sensor_off": {
+          "entityProperty": "QualityControlFlags.PresentWeatherSensorOff",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Present weather sensor offline flag"
+        }
+      }
+    },
+    "sky_condition": {
+      "description": "Sky condition layer (repeating element, uses attributes)",
+      "attributes": {
+        "sky_cover": {
+          "entityProperty": "SkyCondition.SkyCover",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "cover",
+          "captured": true,
+          "description": "Sky cover type: SKC, CLR, FEW, SCT, BKN, OVC"
+        },
+        "cloud_base_ft_agl": {
+          "entityProperty": "SkyCondition.CloudBaseFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "base",
+          "captured": true,
+          "description": "Cloud base height in feet AGL"
+        }
+      }
+    }
+  }
+}
