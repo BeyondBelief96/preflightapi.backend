@@ -171,18 +171,20 @@ public class NotamDeltaSyncCronService : INotamDeltaSyncCronService
     {
         var now = DateTime.UtcNow;
 
-        var expiredNotams = await _dbContext.Notams
-            .Where(n => n.EffectiveEnd != null && n.EffectiveEnd < now)
+        var staleNotams = await _dbContext.Notams
+            .Where(n =>
+                (n.CancelationDate != null && n.CancelationDate <= now) || // Manually cancelled
+                (n.EffectiveEnd != null && n.EffectiveEnd < now))          // Naturally expired
             .ToListAsync(ct);
 
-        if (expiredNotams.Count > 0)
+        if (staleNotams.Count > 0)
         {
-            _dbContext.Notams.RemoveRange(expiredNotams);
+            _dbContext.Notams.RemoveRange(staleNotams);
             await _dbContext.SaveChangesAsync(ct);
-            _logger.LogInformation("Purged {Count} expired NOTAMs", expiredNotams.Count);
+            _logger.LogInformation("Purged {Count} stale NOTAMs (expired or cancelled)", staleNotams.Count);
         }
 
-        return expiredNotams.Count;
+        return staleNotams.Count;
     }
 
     private static DateTime? ParseDateTime(string? value)

@@ -285,7 +285,8 @@ public class NotamService : INotamService
     {
         var now = DateTime.UtcNow;
         return query
-            .Where(n => n.EffectiveEnd == null || n.EffectiveEnd > now); // Not expired (null = PERM)
+            .Where(n => n.CancelationDate == null || n.CancelationDate > now) // Not manually cancelled
+            .Where(n => n.EffectiveEnd == null || n.EffectiveEnd > now);      // Not expired (null = PERM)
     }
 
     private static IQueryable<Domain.Entities.Notam> ApplyFilters(IQueryable<Domain.Entities.Notam> query, NotamFilterDto? filters)

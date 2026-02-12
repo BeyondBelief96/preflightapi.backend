@@ -89,12 +89,12 @@ public class NotamInitialLoadCronServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadAllClassificationsAsync_ShouldNotPurgeCancelledNotamWithFutureEffectiveEnd()
+    public async Task LoadAllClassificationsAsync_ShouldPurgeCancelledNotamWithPastCancelationDate()
     {
-        // Arrange — cancelled but effectiveEnd is still in the future
+        // Arrange — cancelled (cancelationDate in past) even though effectiveEnd is future
         _dbContext.Notams.Add(new Domain.Entities.Notam
         {
-            NmsId = "CANCELLED_FUTURE",
+            NmsId = "CANCELLED_PAST",
             Location = "DFW",
             NotamType = "N",
             CancelationDate = DateTime.UtcNow.AddHours(-1),
@@ -110,9 +110,10 @@ public class NotamInitialLoadCronServiceTests : IDisposable
         // Act
         await _service.LoadAllClassificationsAsync();
 
-        // Assert — cancelled NOTAM kept (effectiveEnd still future), active inserted
+        // Assert — cancelled NOTAM purged, only the new active one remains
         var remaining = await _dbContext.Notams.ToListAsync();
-        remaining.Should().HaveCount(2);
+        remaining.Should().HaveCount(1);
+        remaining[0].NmsId.Should().Be("NMS_ACTIVE");
     }
 
     [Fact]

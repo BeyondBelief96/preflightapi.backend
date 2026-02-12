@@ -115,19 +115,36 @@ public class NotamServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetNotamsForAirportAsync_ShouldIncludeNotamsWithCancelationDate()
+    public async Task GetNotamsForAirportAsync_ShouldExcludeCancelledNotams()
     {
-        // Arrange — cancellation date means cancellation was issued, but NOTAM is still
-        // returned until its effective end passes (purge handles actual removal)
+        // Arrange — cancellation date in the past means NOTAM was manually terminated
         SeedNotams(
             CreateNotamEntity("0000000000000001", "DFW", "KDFW"),
-            CreateNotamEntity("0000000000000002", "DFW", "KDFW", cancelationDate: DateTime.UtcNow)
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW",
+                cancelationDate: DateTime.UtcNow.AddHours(-1)) // cancelled an hour ago
         );
 
         // Act
         var result = await _service.GetNotamsForAirportAsync("KDFW");
 
-        // Assert
+        // Assert — only the active NOTAM is returned
+        result.Notams.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetNotamsForAirportAsync_ShouldIncludeNotamsWithFutureCancelationDate()
+    {
+        // Arrange — cancellation date in the future (edge case: scheduled but not yet effective)
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW",
+                cancelationDate: DateTime.UtcNow.AddHours(1)) // not yet cancelled
+        );
+
+        // Act
+        var result = await _service.GetNotamsForAirportAsync("KDFW");
+
+        // Assert — both returned since cancellation hasn't taken effect
         result.Notams.Should().HaveCount(2);
     }
 
@@ -678,15 +695,15 @@ public class NotamServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SearchNotamsAsync_ShouldExcludeExpiredNotams_ButIncludeCancelled()
+    public async Task SearchNotamsAsync_ShouldExcludeCancelledAndExpiredNotams()
     {
         // Arrange
         SeedNotams(
             CreateNotamEntity("0000000000000001", "DFW", "KDFW", classification: "DOMESTIC"),
             CreateNotamEntity("0000000000000002", "AUS", "KAUS", classification: "DOMESTIC",
-                cancelationDate: DateTime.UtcNow), // cancelled but not expired — still returned
+                cancelationDate: DateTime.UtcNow.AddHours(-1)), // manually cancelled — excluded
             CreateNotamEntity("0000000000000003", "ORD", "KORD", classification: "DOMESTIC",
-                effectiveEnd: DateTime.UtcNow.AddHours(-1)) // expired — excluded
+                effectiveEnd: DateTime.UtcNow.AddHours(-1)) // naturally expired — excluded
         );
 
         var filters = new NotamFilterDto { Classification = "DOMESTIC" };
@@ -694,8 +711,8 @@ public class NotamServiceTests : IDisposable
         // Act
         var result = await _service.SearchNotamsAsync(filters);
 
-        // Assert — 2 returned: active + cancelled-but-not-expired; expired is excluded
-        result.Data.Should().HaveCount(2);
+        // Assert — only the active NOTAM is returned
+        result.Data.Should().HaveCount(1);
     }
 
     [Fact]

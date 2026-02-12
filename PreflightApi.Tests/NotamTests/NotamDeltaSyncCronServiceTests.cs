@@ -230,9 +230,9 @@ public class NotamDeltaSyncCronServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task PurgeExpiredAsync_ShouldNotRemoveCancelledNotamWithFutureEffectiveEnd()
+    public async Task PurgeExpiredAsync_ShouldRemoveCancelledNotamEvenWithFutureEffectiveEnd()
     {
-        // Arrange — cancelled but effectiveEnd is still in the future
+        // Arrange — cancelled (cancelationDate in past) even though effectiveEnd is still future
         _dbContext.Notams.Add(new Domain.Entities.Notam
         {
             NmsId = "CANCELLED_FUTURE",
@@ -248,7 +248,32 @@ public class NotamDeltaSyncCronServiceTests : IDisposable
         // Act
         var purgedCount = await _service.PurgeExpiredAsync();
 
-        // Assert — still in DB (effectiveEnd hasn't passed), but excluded from API by CancelationDate filter
+        // Assert — purged because cancellation has taken effect
+        purgedCount.Should().Be(1);
+        var remaining = await _dbContext.Notams.ToListAsync();
+        remaining.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task PurgeExpiredAsync_ShouldNotRemoveNotamWithFutureCancelationDate()
+    {
+        // Arrange — cancellation date is in the future (hasn't taken effect yet)
+        _dbContext.Notams.Add(new Domain.Entities.Notam
+        {
+            NmsId = "CANCEL_PENDING",
+            Location = "DFW",
+            NotamType = "N",
+            CancelationDate = DateTime.UtcNow.AddHours(1),
+            EffectiveEnd = DateTime.UtcNow.AddDays(5),
+            SyncedAt = DateTime.UtcNow,
+            FeatureJson = "{}"
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var purgedCount = await _service.PurgeExpiredAsync();
+
+        // Assert — not purged, cancellation hasn't taken effect
         purgedCount.Should().Be(0);
         var remaining = await _dbContext.Notams.ToListAsync();
         remaining.Should().HaveCount(1);

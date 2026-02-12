@@ -20,9 +20,10 @@ namespace PreflightApi.API.Controllers;
 /// <remarks>
 /// NOTAM data is synced from the FAA NMS system every 3 minutes via background delta sync,
 /// with a full refresh daily.
-/// Expired NOTAMs (effective end in the past) are automatically excluded from query results
+/// Expired NOTAMs (effective end in the past) and cancelled NOTAMs (cancellation date in the past)
+/// are automatically excluded from query results
 /// (except <c>GET id/{nmsId}</c>, which returns any NOTAM regardless of status).
-/// Permanent NOTAMs (no expiration date) remain active indefinitely.
+/// Permanent NOTAMs (no expiration date) remain active indefinitely until manually cancelled.
 /// </remarks>
 [ApiVersion("1.0")]
 [ApiController]
