@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Pireps;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -110,6 +111,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var pireps = new List<Pirep>();
             var doc = XDocument.Parse(xmlData);
             var pirepElements = doc.Descendants("AircraftReport");
+
+            // Validate schema on first element
+            var firstElement = pirepElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("pirep", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in PIREP XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in PIREP XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in PIREP XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in PIREP XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
 
             foreach (var element in pirepElements)
             {
