@@ -14,14 +14,14 @@ public class AvWxSchemaManifestLoaderTests
 
         manifests.Should().HaveCount(5);
         manifests.Select(m => m.Entity).Should().BeEquivalentTo(
-            new[] { "Metar", "Taf", "Pirep", "Airsigmet", "GAirmet" });
+            new[] { "Metar", "Taf", "Pirep", "Sigmet", "GAirmet" });
     }
 
     [Theory]
     [InlineData("metar", "METAR", "Metar")]
     [InlineData("taf", "TAF", "Taf")]
     [InlineData("pirep", "AircraftReport", "Pirep")]
-    [InlineData("airsigmet", "AIRSIGMET", "Airsigmet")]
+    [InlineData("sigmet", "AIRSIGMET", "Sigmet")]
     [InlineData("gairmet", "GAIRMET", "GAirmet")]
     public void LoadByWeatherType_ShouldLoadCorrectManifest(string weatherType, string expectedRoot, string expectedEntity)
     {
@@ -114,9 +114,9 @@ public class AvWxSchemaManifestLoaderTests
     }
 
     [Fact]
-    public void AirsigmetManifest_ShouldHaveHazardAndAltitudeAttributes()
+    public void SigmetManifest_ShouldHaveHazardAndAltitudeAttributes()
     {
-        var manifest = AvWxSchemaManifestLoader.LoadByWeatherType("airsigmet");
+        var manifest = AvWxSchemaManifestLoader.LoadByWeatherType("sigmet");
 
         manifest.Should().NotBeNull();
         manifest!.NestedElements.Should().ContainKey("hazard");
@@ -366,7 +366,7 @@ public class AvWxSchemaValidatorTests
     }
 
     [Fact]
-    public void ValidateElement_ShouldWorkWithAirsigmetXml()
+    public void ValidateElement_ShouldWorkWithSigmetXml()
     {
         var xml = XElement.Parse(@"
             <AIRSIGMET>
@@ -386,7 +386,7 @@ public class AvWxSchemaValidatorTests
                 </area>
             </AIRSIGMET>");
 
-        var result = AvWxSchemaValidator.ValidateElement("airsigmet", xml);
+        var result = AvWxSchemaValidator.ValidateElement("sigmet", xml);
 
         result.HasDrift.Should().BeFalse();
     }

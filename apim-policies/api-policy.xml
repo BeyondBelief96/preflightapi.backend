@@ -23,7 +23,7 @@
 			// E6B GET endpoints use live METAR: 2 min
 			if (path.Contains("/e6b/")) { return 120; }
 			// Forecast weather, NOTAMs: 5 min
-			if (path.Contains("/tafs") || path.Contains("/airsigmets") || path.Contains("/g-airmets")) { return 300; }
+			if (path.Contains("/tafs") || path.Contains("/sigmets") || path.Contains("/g-airmets")) { return 300; }
 			if (path.Contains("/notams")) { return 300; }
 			// Winds aloft: 5 min
 			if (path.Contains("/navlog/winds-aloft")) { return 300; }

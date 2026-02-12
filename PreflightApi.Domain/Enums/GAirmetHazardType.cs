@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace PreflightApi.Domain.Enums;
 
 /// <summary>
 /// G-AIRMET hazard types
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum GAirmetHazardType
 {
     // SIERRA hazards (IFR/Mountain Obscuration)

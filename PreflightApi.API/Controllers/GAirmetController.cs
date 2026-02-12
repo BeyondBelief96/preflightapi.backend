@@ -9,11 +9,12 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides access to G-AIRMETs (Graphical AIRMETs) — graphical weather advisories issued by the Aviation Weather Center.
-/// G-AIRMETs are organized by product type: SIERRA (IFR/mountain obscuration), TANGO (turbulence/wind shear/surface winds),
-/// and ZULU (icing/freezing level). They can also be queried by specific hazard type (e.g., ICE, TURB_LO, IFR).
-/// Each advisory includes the hazard, severity, altitude range, and geographic polygon of the affected area.
-/// G-AIRMETs are issued every 3 hours with forecasts at 0, 3, 6, 9, and 12 hour intervals.
+/// Provides access to decoded G-AIRMETs (Graphical AIRMETs) for the contiguous United States — graphical weather
+/// advisories issued by the Aviation Weather Center. G-AIRMETs are organized by product type: SIERRA
+/// (IFR/mountain obscuration), TANGO (turbulence/wind shear/surface winds), and ZULU (icing/freezing level).
+/// They can also be queried by specific hazard type (e.g., ICE, TURB_LO, IFR). Each advisory includes the
+/// hazard, severity, altitude range, and geographic polygon of the affected area. G-AIRMETs are issued every
+/// 3 hours with forecasts at 0, 3, 6, 9, and 12 hour intervals.
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]

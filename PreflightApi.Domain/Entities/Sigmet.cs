@@ -1,18 +1,18 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using PreflightApi.Domain.ValueObjects.Airsigmets;
+using PreflightApi.Domain.ValueObjects.Sigmets;
 
 namespace PreflightApi.Domain.Entities
 {
-    [Table("airsigmet")]
-    public class Airsigmet
+    [Table("sigmet")]
+    public class Sigmet
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         /// <summary>
-        /// Raw text of AIRSIGMET
+        /// Raw text of SIGMET
         /// </summary>
         [Column("raw_text")]
         public string? RawText { get; set; }
@@ -33,7 +33,7 @@ namespace PreflightApi.Domain.Entities
         /// The bottom and/or top levels the product is valid for in feet above mean sea level
         /// </summary>
         [Column("altitude", TypeName = "jsonb")]
-        public AirsigmetAltitude? Altitude { get; set; }
+        public SigmetAltitude? Altitude { get; set; }
 
         /// <summary>
         /// The movement direction of the hazard area in degrees
@@ -51,18 +51,18 @@ namespace PreflightApi.Domain.Entities
         /// The hazard type and severity
         /// </summary>
         [Column("hazard", TypeName = "jsonb")]
-        public AirsigmetHazard? Hazard { get; set; }
+        public SigmetHazard? Hazard { get; set; }
 
         /// <summary>
-        /// The type of product: SIGMET, AIRMET, OUTLOOK
+        /// The type of product: SIGMET or OUTLOOK
         /// </summary>
-        [Column("airsigmet_type")]
-        public string? AirsigmetType { get; set; }
+        [Column("sigmet_type")]
+        public string? SigmetType { get; set; }
 
         /// <summary>
         /// The area or line given in latitude, longitude points
         /// </summary>
         [Column("area", TypeName = "jsonb")]
-        public List<AirsigmetArea>? Areas { get; set; }
+        public List<SigmetArea>? Areas { get; set; }
     }
 }

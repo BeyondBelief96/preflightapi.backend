@@ -1,9 +1,9 @@
-namespace PreflightApi.Domain.ValueObjects.Airsigmets
+namespace PreflightApi.Domain.ValueObjects.Sigmets
 {
     /// <summary>
-    /// Altitude range for an AIRMET or SIGMET advisory.
+    /// Altitude range for a SIGMET advisory.
     /// </summary>
-    public class AirsigmetAltitude
+    public class SigmetAltitude
     {
         /// <summary>Minimum altitude in feet MSL for the advisory area.</summary>
         public int? MinFtMsl { get; set; }

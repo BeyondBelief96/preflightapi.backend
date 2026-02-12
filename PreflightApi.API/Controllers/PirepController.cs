@@ -6,10 +6,10 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides access to PIREPs (Pilot Reports) — real-time weather observations reported by pilots in flight.
-/// PIREPs contain firsthand reports of turbulence, icing, sky conditions, visibility, and other flight conditions
-/// at specific altitudes and locations. Unlike METARs (ground-based), PIREPs describe conditions aloft.
-/// Report types are UA (routine) or UUA (urgent, indicating severe conditions).
+/// Provides access to PIREPs (Pilot Reports) issued in PIREP or AIREP format — real-time weather observations
+/// reported by pilots in flight. PIREPs contain firsthand reports of turbulence, icing, sky conditions,
+/// visibility, and other flight conditions at specific altitudes and locations. Unlike METARs (ground-based),
+/// PIREPs describe conditions aloft. Report types are UA (routine) or UUA (urgent, indicating severe conditions).
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]
