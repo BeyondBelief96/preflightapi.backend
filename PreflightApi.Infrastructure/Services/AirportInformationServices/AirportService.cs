@@ -40,12 +40,12 @@ namespace PreflightApi.Infrastructure.Services
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    var searchUpper = search.ToUpperInvariant();
+                    var searchUpper = search.ToUpper();
                     query = query.Where(a =>
-                        (a.IcaoId != null && a.IcaoId.ToUpperInvariant().StartsWith(searchUpper)) ||
-                        (a.ArptId != null && a.ArptId.ToUpperInvariant().StartsWith(searchUpper)) ||
-                        (a.ArptName != null && a.ArptName.ToUpperInvariant().Contains(searchUpper)) ||
-                        (a.City != null && a.City.ToUpperInvariant().Contains(searchUpper)));
+                        (a.IcaoId != null && a.IcaoId.ToUpper().StartsWith(searchUpper)) ||
+                        (a.ArptId != null && a.ArptId.ToUpper().StartsWith(searchUpper)) ||
+                        (a.ArptName != null && a.ArptName.ToUpper().Contains(searchUpper)) ||
+                        (a.City != null && a.City.ToUpper().Contains(searchUpper)));
                 }
 
                 return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
