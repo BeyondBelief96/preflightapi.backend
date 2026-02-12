@@ -5,6 +5,15 @@
 		<set-header name="X-Api-Gateway-Secret" exists-action="override">
 			<value>{{apim-gateway-secret}}</value>
 		</set-header>
+		<!-- Cap total outbound NMS calls across all users (FAA rate limit protection) -->
+		<choose>
+			<when condition="@(context.Request.Url.Path.ToLower().Contains("/notams"))">
+				<rate-limit-by-key calls="15" renewal-period="180"
+					counter-key="@("nms-backend-global")"
+					remaining-calls-header-name="X-NMS-RateLimit-Remaining"
+					retry-after-header-name="X-NMS-Retry-After" />
+			</when>
+		</choose>
 		<!-- Determine cache duration based on endpoint -->
 		<set-variable name="cacheDuration" value="@{
 			if (context.Request.Method != "GET") { return 0; }

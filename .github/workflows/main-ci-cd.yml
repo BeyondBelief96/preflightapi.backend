@@ -169,6 +169,28 @@ jobs:
       - name: Restart API
         run: az webapp restart --name ${{ env.API_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
 
+      - name: Wait for API to start
+        run: |
+          echo "Waiting for API to become healthy..."
+          for i in $(seq 1 30); do
+            if curl -sf "https://${{ env.API_APP_NAME }}.azurewebsites.net/swagger/v1/swagger.json" -o /dev/null; then
+              echo "API is ready"
+              break
+            fi
+            echo "Attempt $i/30 — waiting 10s..."
+            sleep 10
+          done
+
+      - name: Import OpenAPI spec into APIM
+        run: >
+          az apim api import
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --service-name ${{ env.APIM_SERVICE_NAME }}
+          --api-id preflightapi
+          --path ""
+          --specification-format OpenApiJson
+          --specification-url "https://${{ env.API_APP_NAME }}.azurewebsites.net/swagger/v1/swagger.json"
+
       # Deploy Functions
       - name: Download Functions zip
         uses: actions/download-artifact@v4

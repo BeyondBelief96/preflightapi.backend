@@ -38,7 +38,7 @@ public class NotamServiceTests
     {
         // Arrange
         var expectedNotams = CreateSampleNotamList("KDFW");
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(expectedNotams);
 
         // Act
@@ -55,7 +55,7 @@ public class NotamServiceTests
     public async Task GetNotamsForAirportAsync_ShouldNormalizeIdentifier()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW"));
 
         // Act
@@ -63,7 +63,7 @@ public class NotamServiceTests
 
         // Assert
         result.QueryLocation.Should().Be("KDFW");
-        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class NotamServiceTests
     {
         // Arrange
         var expectedNotams = CreateSampleNotamList("KDFW");
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(expectedNotams);
 
         // Act
@@ -80,7 +80,7 @@ public class NotamServiceTests
         await _service.GetNotamsForAirportAsync("KDFW");
 
         // Assert - API should only be called once due to caching
-        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class NotamServiceTests
     {
         // Arrange
         var expectedNotams = CreateSampleNotamList("NEARBY");
-        _nmsApiClient.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(expectedNotams);
 
         // Act
@@ -139,9 +139,9 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_ShouldAggregateNotams_FromMultipleAirports()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW", "NOTAM-DFW-1", "NOTAM-DFW-2"));
-        _nmsApiClient.GetNotamsByLocationAsync("KORD", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KORD", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KORD", "NOTAM-ORD-1", "NOTAM-ORD-2"));
 
         var request = new NotamQueryByRouteRequest
@@ -173,9 +173,9 @@ public class NotamServiceTests
             CreateNotam("NOTAM-ORD-ONLY", "KORD")
         };
 
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(dfwNotams);
-        _nmsApiClient.GetNotamsByLocationAsync("KORD", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KORD", null, Arg.Any<CancellationToken>())
             .Returns(ordNotams);
 
         var request = new NotamQueryByRouteRequest
@@ -194,11 +194,11 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_ShouldContinue_WhenOneAirportFails()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW"));
-        _nmsApiClient.GetNotamsByLocationAsync("KORD", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KORD", null, Arg.Any<CancellationToken>())
             .Returns<List<NotamDto>>(_ => throw new HttpRequestException("API unavailable"));
-        _nmsApiClient.GetNotamsByLocationAsync("KLAX", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KLAX", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KLAX"));
 
         var request = new NotamQueryByRouteRequest
@@ -248,9 +248,9 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldReturnNotams_ForWaypointsOnly()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT1", "NOTAM-WPT1-1", "NOTAM-WPT1-2"));
-        _nmsApiClient.GetNotamsByRadiusAsync(30.1, -97.6, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.1, -97.6, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT2", "NOTAM-WPT2-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -276,9 +276,9 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldReturnNotams_ForAirportsOnly()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW", "NOTAM-DFW-1", "NOTAM-DFW-2"));
-        _nmsApiClient.GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KAUS", "NOTAM-AUS-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -303,11 +303,11 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldReturnNotams_ForInterleavedAirportsAndWaypoints()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW", "NOTAM-DFW-1"));
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
-        _nmsApiClient.GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KAUS", "NOTAM-AUS-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -334,7 +334,7 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldUsePerWaypointRadius()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 15.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 15.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -350,14 +350,14 @@ public class NotamServiceTests
         await _service.GetNotamsForRouteAsync(request);
 
         // Assert - Should use point-specific radius (15) not corridor radius (25)
-        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 15.0, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 15.0, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldFallbackToCorridorRadius()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 30.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 30.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -373,14 +373,14 @@ public class NotamServiceTests
         await _service.GetNotamsForRouteAsync(request);
 
         // Assert - Should use corridor radius (30)
-        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 30.0, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 30.0, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldFallbackToSettingsRadius()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -396,14 +396,14 @@ public class NotamServiceTests
         await _service.GetNotamsForRouteAsync(request);
 
         // Assert - Should use settings default (25)
-        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldFormatUnnamedWaypointCoordinates()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByRadiusAsync(30.1234, -97.5678, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.1234, -97.5678, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -426,7 +426,7 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldFormatNegativeLatitude()
     {
         // Arrange - Southern hemisphere location
-        _nmsApiClient.GetNotamsByRadiusAsync(-33.9465, 18.6017, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(-33.9465, 18.6017, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT", "NOTAM-WPT-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -449,13 +449,13 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldDeduplicateAcrossAirportsAndWaypoints()
     {
         // Arrange - Airport and waypoint return same NOTAM
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(new List<NotamDto>
             {
                 CreateNotam("NOTAM-SHARED", "KDFW"),
                 CreateNotam("NOTAM-DFW-ONLY", "KDFW")
             });
-        _nmsApiClient.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(new List<NotamDto>
             {
                 CreateNotam("NOTAM-SHARED", "NEARBY"), // Duplicate
@@ -583,7 +583,7 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_TakesPrecedence_OverAirportIdentifiers()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KAUS", "NOTAM-AUS-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -600,19 +600,19 @@ public class NotamServiceTests
 
         // Assert
         result.QueryLocation.Should().Be("KAUS");
-        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>());
-        await _nmsApiClient.DidNotReceive().GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>());
+        await _nmsApiClient.DidNotReceive().GetNotamsByLocationAsync("KDFW", Arg.Any<NotamFilterDto>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetNotamsForRouteAsync_RoutePoints_ShouldContinue_WhenOnePointFails()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW", "NOTAM-DFW-1"));
-        _nmsApiClient.GetNotamsByRadiusAsync(30.0, -97.0, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.0, -97.0, 25.0, null, Arg.Any<CancellationToken>())
             .Returns<List<NotamDto>>(_ => throw new HttpRequestException("API unavailable"));
-        _nmsApiClient.GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KAUS", "NOTAM-AUS-1"));
 
         var request = new NotamQueryByRouteRequest
@@ -639,13 +639,13 @@ public class NotamServiceTests
     public async Task GetNotamsForRouteAsync_RoutePoints_PreservesOrderInRouteDescription()
     {
         // Arrange
-        _nmsApiClient.GetNotamsByLocationAsync("KDFW", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KDFW", "NOTAM-1"));
-        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.4082, -97.8538, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT1", "NOTAM-2"));
-        _nmsApiClient.GetNotamsByRadiusAsync(30.1, -97.6, 25.0, Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByRadiusAsync(30.1, -97.6, 25.0, null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("WPT2", "NOTAM-3"));
-        _nmsApiClient.GetNotamsByLocationAsync("KAUS", Arg.Any<CancellationToken>())
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", null, Arg.Any<CancellationToken>())
             .Returns(CreateSampleNotamList("KAUS", "NOTAM-4"));
 
         var request = new NotamQueryByRouteRequest
@@ -665,6 +665,191 @@ public class NotamServiceTests
 
         // Assert
         result.QueryLocation.Should().Be("KDFW -> Lake Travis -> 30.1000N, 97.6000W -> KAUS");
+    }
+
+    #endregion
+
+    #region Filter Tests
+
+    [Fact]
+    public async Task GetNotamsForAirportAsync_ShouldPassFiltersToClient()
+    {
+        // Arrange
+        var filters = new NotamFilterDto { Classification = "DOMESTIC", Feature = "RWY" };
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW"));
+
+        // Act
+        await _service.GetNotamsForAirportAsync("KDFW", filters);
+
+        // Assert
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamsByRadiusAsync_ShouldPassFiltersToClient()
+    {
+        // Arrange
+        var filters = new NotamFilterDto { Classification = "FDC" };
+        _nmsApiClient.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("NEARBY"));
+
+        // Act
+        await _service.GetNotamsByRadiusAsync(32.897, -97.038, 25.0, filters);
+
+        // Assert
+        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(32.897, -97.038, 25.0, filters, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamsForAirportAsync_ShouldUseDifferentCacheKeys_ForDifferentFilters()
+    {
+        // Arrange
+        var filtersA = new NotamFilterDto { Classification = "DOMESTIC" };
+        var filtersB = new NotamFilterDto { Classification = "FDC" };
+
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filtersA, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW", "NOTAM-DOM-1"));
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filtersB, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW", "NOTAM-FDC-1"));
+
+        // Act
+        var resultA = await _service.GetNotamsForAirportAsync("KDFW", filtersA);
+        var resultB = await _service.GetNotamsForAirportAsync("KDFW", filtersB);
+
+        // Assert - Both should call through to client (different cache keys)
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filtersA, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filtersB, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamsForAirportAsync_ShouldCacheFilteredResults()
+    {
+        // Arrange
+        var filters = new NotamFilterDto { Classification = "DOMESTIC" };
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW"));
+
+        // Act
+        await _service.GetNotamsForAirportAsync("KDFW", filters);
+        await _service.GetNotamsForAirportAsync("KDFW", filters);
+
+        // Assert - Should only call once due to caching
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamsForRouteAsync_ShouldPassFiltersFromRequestBody()
+    {
+        // Arrange
+        var filters = new NotamFilterDto { Feature = "RWY" };
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW", "NOTAM-1"));
+        _nmsApiClient.GetNotamsByLocationAsync("KAUS", filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KAUS", "NOTAM-2"));
+
+        var request = new NotamQueryByRouteRequest
+        {
+            AirportIdentifiers = ["KDFW", "KAUS"],
+            Filters = filters
+        };
+
+        // Act
+        await _service.GetNotamsForRouteAsync(request);
+
+        // Assert - Filters should be threaded through to each airport query
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KAUS", filters, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamsForRouteAsync_RoutePoints_ShouldPassFiltersFromRequestBody()
+    {
+        // Arrange
+        var filters = new NotamFilterDto { Classification = "DOMESTIC" };
+        _nmsApiClient.GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("KDFW", "NOTAM-1"));
+        _nmsApiClient.GetNotamsByRadiusAsync(30.0, -97.0, 25.0, filters, Arg.Any<CancellationToken>())
+            .Returns(CreateSampleNotamList("WPT", "NOTAM-2"));
+
+        var request = new NotamQueryByRouteRequest
+        {
+            RoutePoints =
+            [
+                new RoutePointDto { AirportIdentifier = "KDFW" },
+                new RoutePointDto { Latitude = 30.0, Longitude = -97.0 }
+            ],
+            CorridorRadiusNm = 25,
+            Filters = filters
+        };
+
+        // Act
+        await _service.GetNotamsForRouteAsync(request);
+
+        // Assert
+        await _nmsApiClient.Received(1).GetNotamsByLocationAsync("KDFW", filters, Arg.Any<CancellationToken>());
+        await _nmsApiClient.Received(1).GetNotamsByRadiusAsync(30.0, -97.0, 25.0, filters, Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region NMS ID Tests
+
+    [Fact]
+    public async Task GetNotamByNmsIdAsync_ShouldReturnNotam_WhenFound()
+    {
+        // Arrange
+        var expectedNotam = CreateNotam("1234567890123456", "KDFW");
+        _nmsApiClient.GetNotamByNmsIdAsync("1234567890123456", Arg.Any<CancellationToken>())
+            .Returns(expectedNotam);
+
+        // Act
+        var result = await _service.GetNotamByNmsIdAsync("1234567890123456");
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be("1234567890123456");
+    }
+
+    [Fact]
+    public async Task GetNotamByNmsIdAsync_ShouldReturnNull_WhenNotFound()
+    {
+        // Arrange
+        _nmsApiClient.GetNotamByNmsIdAsync("9999999999999999", Arg.Any<CancellationToken>())
+            .Returns((NotamDto?)null);
+
+        // Act
+        var result = await _service.GetNotamByNmsIdAsync("9999999999999999");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetNotamByNmsIdAsync_ShouldCacheResult()
+    {
+        // Arrange
+        var expectedNotam = CreateNotam("1234567890123456", "KDFW");
+        _nmsApiClient.GetNotamByNmsIdAsync("1234567890123456", Arg.Any<CancellationToken>())
+            .Returns(expectedNotam);
+
+        // Act
+        await _service.GetNotamByNmsIdAsync("1234567890123456");
+        await _service.GetNotamByNmsIdAsync("1234567890123456");
+
+        // Assert - Should only call client once
+        await _nmsApiClient.Received(1).GetNotamByNmsIdAsync("1234567890123456", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetNotamByNmsIdAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    {
+        // Act
+        Func<Task> act = async () => await _service.GetNotamByNmsIdAsync("");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*cannot be null or empty*");
     }
 
     #endregion

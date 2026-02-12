@@ -1,0 +1,269 @@
+{
+  "$schema": "nms-geojson-schema-manifest-v1",
+  "description": "Expected GeoJSON Feature structure for FAA NMS NOTAM responses",
+  "lastVerified": "2026-02-11",
+  "topLevelProperties": {
+    "type": {
+      "dataType": "string",
+      "required": true,
+      "description": "GeoJSON type, always 'Feature'"
+    },
+    "id": {
+      "dataType": "string",
+      "required": true,
+      "description": "Unique NOTAM feature identifier"
+    },
+    "geometry": {
+      "dataType": "object",
+      "required": true,
+      "description": "GeoJSON geometry (Point, Polygon, or GeometryCollection)"
+    },
+    "properties": {
+      "dataType": "object",
+      "required": true,
+      "description": "Feature properties containing coreNOTAMData"
+    }
+  },
+  "nestedObjects": {
+    "geometry": {
+      "description": "GeoJSON geometry object",
+      "properties": {
+        "type": {
+          "dataType": "string",
+          "required": true,
+          "description": "Geometry type (Point, Polygon, GeometryCollection)"
+        },
+        "coordinates": {
+          "dataType": "array",
+          "required": false,
+          "description": "Coordinate array (absent for GeometryCollection)"
+        },
+        "geometries": {
+          "dataType": "array",
+          "required": false,
+          "description": "Child geometries for GeometryCollection type"
+        }
+      }
+    },
+    "properties": {
+      "description": "Feature properties wrapper",
+      "properties": {
+        "coreNOTAMData": {
+          "dataType": "object",
+          "required": true,
+          "description": "Core NOTAM data envelope"
+        }
+      }
+    },
+    "properties.coreNOTAMData": {
+      "description": "Core NOTAM data containing event, detail, and translations",
+      "properties": {
+        "notamEvent": {
+          "dataType": "object",
+          "required": false,
+          "description": "NOTAM event metadata"
+        },
+        "notam": {
+          "dataType": "object",
+          "required": true,
+          "description": "NOTAM detail fields"
+        },
+        "notamTranslation": {
+          "dataType": "array",
+          "required": false,
+          "description": "NOTAM text translations"
+        }
+      }
+    },
+    "properties.coreNOTAMData.notamEvent": {
+      "description": "NOTAM event metadata",
+      "properties": {
+        "encoding": {
+          "dataType": "string",
+          "required": false,
+          "description": "Encoding format"
+        },
+        "scenario": {
+          "dataType": "string",
+          "required": false,
+          "description": "Event scenario"
+        }
+      }
+    },
+    "properties.coreNOTAMData.notam": {
+      "description": "Core NOTAM detail fields",
+      "properties": {
+        "id": {
+          "dataType": "string",
+          "required": true,
+          "description": "Unique 16-digit NMS identifier"
+        },
+        "number": {
+          "dataType": "string",
+          "required": true,
+          "description": "NOTAM number (e.g., 01/123)"
+        },
+        "series": {
+          "dataType": "string",
+          "required": false,
+          "description": "ICAO series code"
+        },
+        "year": {
+          "dataType": "string",
+          "required": false,
+          "description": "NOTAM year"
+        },
+        "type": {
+          "dataType": "string",
+          "required": true,
+          "description": "NOTAM type (N, R, C)"
+        },
+        "issued": {
+          "dataType": "string",
+          "required": true,
+          "description": "Issuance timestamp (ISO 8601)"
+        },
+        "affectedFir": {
+          "dataType": "string",
+          "required": false,
+          "description": "Affected FIR/ARTCC"
+        },
+        "selectionCode": {
+          "dataType": "string",
+          "required": false,
+          "description": "Q-code selection code"
+        },
+        "traffic": {
+          "dataType": "string",
+          "required": false,
+          "description": "Traffic type (I, V, IV)"
+        },
+        "purpose": {
+          "dataType": "string",
+          "required": false,
+          "description": "Purpose code"
+        },
+        "scope": {
+          "dataType": "string",
+          "required": false,
+          "description": "Scope (A, E, W)"
+        },
+        "minimumFl": {
+          "dataType": "string",
+          "required": false,
+          "description": "Minimum flight level"
+        },
+        "maximumFl": {
+          "dataType": "string",
+          "required": false,
+          "description": "Maximum flight level"
+        },
+        "location": {
+          "dataType": "string",
+          "required": true,
+          "description": "Domestic location identifier"
+        },
+        "icaoLocation": {
+          "dataType": "string",
+          "required": false,
+          "description": "ICAO location identifier"
+        },
+        "effectiveStart": {
+          "dataType": "string",
+          "required": true,
+          "description": "Effective start timestamp (ISO 8601)"
+        },
+        "effectiveEnd": {
+          "dataType": "string",
+          "required": false,
+          "description": "Effective end timestamp (ISO 8601)"
+        },
+        "estimated": {
+          "dataType": "string",
+          "required": false,
+          "description": "Whether end time is estimated"
+        },
+        "text": {
+          "dataType": "string",
+          "required": true,
+          "description": "NOTAM text content"
+        },
+        "classification": {
+          "dataType": "string",
+          "required": true,
+          "description": "Classification (INTERNATIONAL, MILITARY, etc.)"
+        },
+        "cancelationDate": {
+          "dataType": "string",
+          "required": false,
+          "description": "Cancellation date timestamp"
+        },
+        "accountId": {
+          "dataType": "string",
+          "required": false,
+          "description": "Accountability ID"
+        },
+        "lastUpdated": {
+          "dataType": "string",
+          "required": false,
+          "description": "Last updated timestamp"
+        },
+        "schedule": {
+          "dataType": "string",
+          "required": false,
+          "description": "Schedule string"
+        },
+        "lowerLimit": {
+          "dataType": "string",
+          "required": false,
+          "description": "Lower altitude limit"
+        },
+        "upperLimit": {
+          "dataType": "string",
+          "required": false,
+          "description": "Upper altitude limit"
+        },
+        "coordinates": {
+          "dataType": "string",
+          "required": false,
+          "description": "ICAO coordinates string"
+        },
+        "radius": {
+          "dataType": "string",
+          "required": false,
+          "description": "Radius in nautical miles"
+        }
+      }
+    },
+    "properties.coreNOTAMData.notamTranslation[]": {
+      "description": "NOTAM translation entry (validated against first array element)",
+      "properties": {
+        "type": {
+          "dataType": "string",
+          "required": true,
+          "description": "Translation type (LOCAL_FORMAT, ICAO)"
+        },
+        "simpleText": {
+          "dataType": "string",
+          "required": false,
+          "description": "Plain English translation"
+        },
+        "domestic_message": {
+          "dataType": "string",
+          "required": false,
+          "description": "Domestic format message"
+        },
+        "icao_message": {
+          "dataType": "string",
+          "required": false,
+          "description": "ICAO format message"
+        },
+        "formattedText": {
+          "dataType": "string",
+          "required": false,
+          "description": "Formatted text (HTML or rich text)"
+        }
+      }
+    }
+  }
+}

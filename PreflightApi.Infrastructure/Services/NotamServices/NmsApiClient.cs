@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PreflightApi.Infrastructure.Dtos.Notam;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.NotamServices.SchemaManifests;
 using PreflightApi.Infrastructure.Settings;
 
 namespace PreflightApi.Infrastructure.Services.NotamServices;
@@ -25,6 +26,8 @@ public class NmsApiClient : INmsApiClient
     private DateTime _tokenExpiresAt = DateTime.MinValue;
     private const int TokenRefreshBufferSeconds = 60;
 
+    private bool _schemaValidated;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -40,7 +43,7 @@ public class NmsApiClient : INmsApiClient
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<List<NotamDto>> GetNotamsByLocationAsync(string location, CancellationToken ct = default)
+    public async Task<List<NotamDto>> GetNotamsByLocationAsync(string location, NotamFilterDto? filters = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(location))
         {
@@ -50,11 +53,12 @@ public class NmsApiClient : INmsApiClient
         _logger.LogInformation("Fetching NOTAMs for location: {Location}", location);
 
         var url = $"{_settings.BaseUrl}/v1/notams?location={Uri.EscapeDataString(location.ToUpperInvariant())}";
+        url = AppendFilters(url, filters);
 
         return await ExecuteWithAuthAsync(url, ct);
     }
 
-    public async Task<List<NotamDto>> GetNotamsByRadiusAsync(double lat, double lon, double radiusNm, CancellationToken ct = default)
+    public async Task<List<NotamDto>> GetNotamsByRadiusAsync(double lat, double lon, double radiusNm, NotamFilterDto? filters = null, CancellationToken ct = default)
     {
         if (radiusNm <= 0 || radiusNm > 100)
         {
@@ -64,8 +68,47 @@ public class NmsApiClient : INmsApiClient
         _logger.LogInformation("Fetching NOTAMs within {Radius}nm of {Lat}, {Lon}", radiusNm, lat, lon);
 
         var url = $"{_settings.BaseUrl}/v1/notams?latitude={lat:F6}&longitude={lon:F6}&radius={radiusNm:F1}";
+        url = AppendFilters(url, filters);
 
         return await ExecuteWithAuthAsync(url, ct);
+    }
+
+    public async Task<NotamDto?> GetNotamByNmsIdAsync(string nmsId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(nmsId))
+        {
+            throw new ArgumentException("NMS ID cannot be null or empty", nameof(nmsId));
+        }
+
+        _logger.LogInformation("Fetching NOTAM by NMS ID: {NmsId}", nmsId);
+
+        var url = $"{_settings.BaseUrl}/v1/notams?nmsId={Uri.EscapeDataString(nmsId)}";
+        var notams = await ExecuteWithAuthAsync(url, ct);
+
+        return notams.FirstOrDefault();
+    }
+
+    private static string AppendFilters(string url, NotamFilterDto? filters)
+    {
+        if (filters == null || !filters.HasFilters)
+            return url;
+
+        if (filters.Classification != null)
+            url += $"&classification={Uri.EscapeDataString(filters.Classification)}";
+
+        if (filters.Feature != null)
+            url += $"&feature={Uri.EscapeDataString(filters.Feature)}";
+
+        if (filters.FreeText != null)
+            url += $"&freeText={Uri.EscapeDataString(filters.FreeText)}";
+
+        if (filters.EffectiveStartDate != null && filters.EffectiveEndDate != null)
+        {
+            url += $"&effectiveStartDate={Uri.EscapeDataString(filters.EffectiveStartDate)}";
+            url += $"&effectiveEndDate={Uri.EscapeDataString(filters.EffectiveEndDate)}";
+        }
+
+        return url;
     }
 
     private async Task<List<NotamDto>> ExecuteWithAuthAsync(string url, CancellationToken ct)
@@ -111,6 +154,8 @@ public class NmsApiClient : INmsApiClient
             if (root.TryGetProperty("data", out var data) &&
                 data.TryGetProperty("geojson", out var geojson))
             {
+                ValidateSchemaIfNeeded(geojson);
+
                 var notams = new List<NotamDto>();
                 foreach (var feature in geojson.EnumerateArray())
                 {
@@ -126,6 +171,8 @@ public class NmsApiClient : INmsApiClient
             // Fallback: GeoJSON FeatureCollection format
             if (root.TryGetProperty("features", out var features))
             {
+                ValidateSchemaIfNeeded(features);
+
                 var notams = new List<NotamDto>();
                 foreach (var feature in features.EnumerateArray())
                 {
@@ -141,6 +188,8 @@ public class NmsApiClient : INmsApiClient
             // If it's a single feature (unlikely but handle it)
             if (root.TryGetProperty("type", out var type) && type.GetString() == "Feature")
             {
+                ValidateSingleFeatureIfNeeded(root);
+
                 var notam = JsonSerializer.Deserialize<NotamDto>(content, JsonOptions);
                 return notam != null ? [notam] : [];
             }
@@ -152,6 +201,44 @@ public class NmsApiClient : INmsApiClient
         {
             _logger.LogError(ex, "Failed to parse NMS API response");
             throw new InvalidOperationException("Failed to parse NMS API response", ex);
+        }
+    }
+
+    private void ValidateSchemaIfNeeded(JsonElement arrayElement)
+    {
+        if (_schemaValidated)
+            return;
+
+        var firstFeature = arrayElement.EnumerateArray().FirstOrDefault();
+        if (firstFeature.ValueKind == JsonValueKind.Object)
+        {
+            ValidateSingleFeatureIfNeeded(firstFeature);
+        }
+    }
+
+    private void ValidateSingleFeatureIfNeeded(JsonElement feature)
+    {
+        if (_schemaValidated)
+            return;
+
+        _schemaValidated = true;
+
+        var validationResult = NmsSchemaValidator.ValidateFeature(feature);
+        if (!validationResult.HasDrift)
+            return;
+
+        if (validationResult.MissingProperties.Count > 0)
+        {
+            _logger.LogError(
+                "NMS GeoJSON schema drift detected — missing required properties: {MissingProperties}",
+                string.Join(", ", validationResult.MissingProperties));
+        }
+
+        if (validationResult.UnexpectedProperties.Count > 0)
+        {
+            _logger.LogWarning(
+                "NMS GeoJSON schema drift detected — unexpected properties: {UnexpectedProperties}",
+                string.Join(", ", validationResult.UnexpectedProperties));
         }
     }
 

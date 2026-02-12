@@ -28,4 +28,9 @@ public record NotamQueryByRouteRequest
     /// Whether to include NOTAMs from corridor sampling points between route points (future feature)
     /// </summary>
     public bool IncludeCorridorNotams { get; init; } = false;
+
+    /// <summary>
+    /// Optional NMS query filters applied to all route point queries.
+    /// </summary>
+    public NotamFilterDto? Filters { get; init; }
 }
