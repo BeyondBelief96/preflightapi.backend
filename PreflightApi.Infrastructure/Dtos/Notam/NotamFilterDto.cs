@@ -1,34 +1,38 @@
 namespace PreflightApi.Infrastructure.Dtos.Notam;
 
 /// <summary>
-/// Optional NMS query filters for narrowing NOTAM results.
+/// Optional filters for narrowing NOTAM query results. All filters are combinable — when
+/// multiple filters are provided, results must match all of them (AND logic).
 /// </summary>
 public record NotamFilterDto
 {
     /// <summary>
-    /// NOTAM classification filter.
-    /// Valid values: INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC
+    /// Filter by NOTAM classification.
+    /// Valid values: INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC.
     /// </summary>
     public string? Classification { get; init; }
 
     /// <summary>
-    /// NOTAM feature type filter.
-    /// Valid values: RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY
+    /// Filter by NOTAM feature type (the aeronautical feature the NOTAM applies to).
+    /// Valid values: RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY.
     /// </summary>
     public string? Feature { get; init; }
 
     /// <summary>
-    /// Free text search within NOTAM text. Max 80 characters, pattern: ^[ /.\-\(\)\w]{1,80}$
+    /// Case-insensitive text search within the NOTAM text field (e.g., "CLOSED", "RWY 18/36").
+    /// Max 80 characters. Allowed characters: letters, digits, spaces, and /.-().
     /// </summary>
     public string? FreeText { get; init; }
 
     /// <summary>
-    /// Effective start date filter (ISO 8601). Must be paired with EffectiveEndDate.
+    /// Only include NOTAMs with an effective start on or after this date (ISO 8601).
+    /// Must be paired with EffectiveEndDate.
     /// </summary>
     public string? EffectiveStartDate { get; init; }
 
     /// <summary>
-    /// Effective end date filter (ISO 8601). Must be paired with EffectiveStartDate.
+    /// Only include NOTAMs with an effective end on or before this date (ISO 8601).
+    /// Must be paired with EffectiveStartDate.
     /// </summary>
     public string? EffectiveEndDate { get; init; }
 

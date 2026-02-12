@@ -35,4 +35,22 @@ public interface INmsApiClient
     /// <param name="ct">Cancellation token</param>
     /// <returns>The NOTAM if found, null otherwise</returns>
     Task<NotamDto?> GetNotamByNmsIdAsync(string nmsId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets NOTAMs created, updated, or canceled since a given timestamp (delta sync).
+    /// Limited to a 24-hour window by the FAA.
+    /// </summary>
+    /// <param name="lastUpdatedDate">Fetch NOTAMs updated since this UTC timestamp</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of NOTAMs updated since the timestamp</returns>
+    Task<List<NotamDto>> GetNotamsByLastUpdatedDateAsync(DateTime lastUpdatedDate, CancellationToken ct = default);
+
+    /// <summary>
+    /// Downloads all active NOTAMs across all classifications via the /v1/notams/il bulk endpoint.
+    /// Returns a redirect to a compressed file containing the complete NOTAM dataset.
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of all active NOTAMs</returns>
+    Task<List<NotamDto>> GetAllNotamsInitialLoadAsync(CancellationToken ct = default);
+
 }

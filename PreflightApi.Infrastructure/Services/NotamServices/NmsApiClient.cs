@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -88,6 +89,70 @@ public class NmsApiClient : INmsApiClient
         return notams.FirstOrDefault();
     }
 
+    public async Task<List<NotamDto>> GetNotamsByLastUpdatedDateAsync(DateTime lastUpdatedDate, CancellationToken ct = default)
+    {
+        var isoDate = lastUpdatedDate.ToString("O");
+        _logger.LogInformation("Fetching NOTAMs updated since {LastUpdatedDate}", isoDate);
+
+        var url = $"{_settings.BaseUrl}/v1/notams?lastUpdatedDate={Uri.EscapeDataString(isoDate)}&nmsResponseFormat=GEOJSON";
+
+        return await ExecuteWithAuthAsync(url, ct);
+    }
+
+    public async Task<List<NotamDto>> GetAllNotamsInitialLoadAsync(CancellationToken ct = default)
+    {
+        _logger.LogInformation("Fetching initial load of all NOTAMs via /v1/notams/il");
+
+        // Step 1: Request content URL via /v1/notams/il?allowRedirect=false
+        // Returns { "status": "Success", "data": { "url": "/nmsapi/v1/content/{token}" } }
+        var url = $"{_settings.BaseUrl}/v1/notams/il?allowRedirect=false";
+        var responseContent = await ExecuteRawWithAuthAsync(url, ct);
+
+        // Step 2: Parse the response to extract the content URL
+        using var doc = JsonDocument.Parse(responseContent);
+        var root = doc.RootElement;
+
+        string? contentPath = null;
+        if (root.TryGetProperty("data", out var data) &&
+            data.TryGetProperty("url", out var urlElement))
+        {
+            contentPath = urlElement.GetString();
+        }
+
+        if (string.IsNullOrEmpty(contentPath))
+        {
+            _logger.LogWarning("No content URL in initial load response, attempting direct parse");
+            return ParseGeoJsonResponse(responseContent);
+        }
+
+        // Step 3: Download the compressed file from the content URL (requires same Bearer auth)
+        // Content path format: "/nmsapi/v1/content/{token}" or "/v1/content/{token}"
+        string contentUrl;
+        if (contentPath.StartsWith("http"))
+            contentUrl = contentPath;
+        else if (contentPath.StartsWith("/nmsapi/"))
+            contentUrl = $"{_settings.AuthBaseUrl}{contentPath}";
+        else
+            contentUrl = $"{_settings.BaseUrl}{contentPath}";
+
+        _logger.LogInformation("Downloading bulk NOTAM data from {ContentUrl}", contentUrl);
+
+        var bulkContent = await ExecuteRawWithAuthAsync(contentUrl, ct);
+
+        _logger.LogInformation("Parsing initial load data ({ContentLength} chars)", bulkContent.Length);
+
+        // Initial load returns AIXM XML (SOAP-wrapped), not GeoJSON
+        var trimmed = bulkContent.TrimStart();
+        if (trimmed.StartsWith("<?xml", StringComparison.Ordinal) ||
+            trimmed.StartsWith("<soap:", StringComparison.Ordinal))
+        {
+            _logger.LogInformation("Detected AIXM XML format in initial load response");
+            return AixmNotamParser.Parse(bulkContent, _logger);
+        }
+
+        return ParseGeoJsonResponse(bulkContent);
+    }
+
     private static string AppendFilters(string url, NotamFilterDto? filters)
     {
         if (filters == null || !filters.HasFilters)
@@ -113,6 +178,12 @@ public class NmsApiClient : INmsApiClient
 
     private async Task<List<NotamDto>> ExecuteWithAuthAsync(string url, CancellationToken ct)
     {
+        var responseContent = await ExecuteRawWithAuthAsync(url, ct);
+        return ParseGeoJsonResponse(responseContent);
+    }
+
+    private async Task<string> ExecuteRawWithAuthAsync(string url, CancellationToken ct)
+    {
         var token = await GetAccessTokenAsync(ct);
         var client = _httpClientFactory.CreateClient("NmsApi");
 
@@ -123,10 +194,12 @@ public class NmsApiClient : INmsApiClient
 
         var response = await client.SendAsync(request, ct);
 
-        // If we get 401, force token refresh and retry once
+        // If we get 401, log the response body for debugging, then force token refresh and retry once
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            _logger.LogWarning("Received 401, forcing token refresh and retrying");
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
+            _logger.LogWarning("Received 401 from {Url}. Response: {ErrorBody}", url, errorBody);
+
             token = await ForceRefreshTokenAsync(ct);
 
             request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -139,8 +212,20 @@ public class NmsApiClient : INmsApiClient
 
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(ct);
-        return ParseGeoJsonResponse(responseContent);
+        // Always buffer bytes first — the NMS content endpoint returns GZip data
+        // even with Content-Type: application/json, so we detect by magic bytes (0x1F 0x8B).
+        var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+
+        if (bytes.Length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B)
+        {
+            _logger.LogDebug("Detected GZip magic bytes, decompressing response from {Url}", url);
+            await using var ms = new MemoryStream(bytes);
+            await using var gzipStream = new GZipStream(ms, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzipStream);
+            return await reader.ReadToEndAsync(ct);
+        }
+
+        return Encoding.UTF8.GetString(bytes);
     }
 
     private List<NotamDto> ParseGeoJsonResponse(string content)

@@ -37,7 +37,14 @@ public class NmsSettings
     public double DefaultRouteCorridorRadiusNm { get; init; } = 25;
 
     /// <summary>
-    /// Request timeout in seconds for NMS API calls
+    /// Request timeout in seconds for NMS API calls.
+    /// Set higher for initial load bulk downloads (default 120s).
     /// </summary>
-    public int RequestTimeoutSeconds { get; init; } = 30;
+    public int RequestTimeoutSeconds { get; init; } = 120;
+
+    /// <summary>
+    /// Delta sync interval in minutes. The delta query fetches NOTAMs updated within this window
+    /// plus a 1-minute overlap to avoid gaps.
+    /// </summary>
+    public int DeltaSyncIntervalMinutes { get; init; } = 3;
 }

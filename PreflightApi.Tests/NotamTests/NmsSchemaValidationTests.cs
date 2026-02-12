@@ -30,7 +30,7 @@ public class NmsSchemaManifestLoaderTests
         manifest.TopLevelProperties.Should().ContainKey("properties");
 
         manifest.TopLevelProperties["type"].Required.Should().BeTrue();
-        manifest.TopLevelProperties["id"].Required.Should().BeTrue();
+        manifest.TopLevelProperties["id"].Required.Should().BeFalse();
         manifest.TopLevelProperties["geometry"].Required.Should().BeTrue();
         manifest.TopLevelProperties["properties"].Required.Should().BeTrue();
     }
@@ -131,8 +131,8 @@ public class NmsSchemaValidatorTests
         var result = NmsSchemaValidator.ValidateFeature(json);
 
         result.HasDrift.Should().BeTrue();
-        result.MissingProperties.Should().Contain("id");
         result.MissingProperties.Should().Contain("geometry");
+        result.MissingProperties.Should().NotContain("id"); // id is optional (absent in initial load)
     }
 
     [Fact]

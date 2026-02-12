@@ -10,8 +10,8 @@
     },
     "id": {
       "dataType": "string",
-      "required": true,
-      "description": "Unique NOTAM feature identifier"
+      "required": false,
+      "description": "Unique NOTAM feature identifier (absent in initial load data)"
     },
     "geometry": {
       "dataType": "object",
@@ -96,7 +96,7 @@
         "id": {
           "dataType": "string",
           "required": true,
-          "description": "Unique 16-digit NMS identifier"
+          "description": "Unique NMS identifier (numeric string)"
         },
         "number": {
           "dataType": "string",
@@ -115,7 +115,7 @@
         },
         "type": {
           "dataType": "string",
-          "required": true,
+          "required": false,
           "description": "NOTAM type (N, R, C)"
         },
         "issued": {
