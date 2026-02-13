@@ -1,17 +1,20 @@
 @description('Azure region for all resources')
 param location string
 
-@description('Base name prefix for resources')
-param baseName string
+@description('App Service Plan name')
+param planName string
 
-@description('Environment tag (test, prod)')
-param environment string
+@description('Web App name')
+param webAppName string
 
-@description('App Service Plan SKU name (e.g., B2)')
+@description('App Service Plan SKU name (e.g., B1)')
 param skuName string = 'B1'
 
 @description('App Service Plan SKU tier (e.g., Basic)')
 param skuTier string = 'Basic'
+
+@description('Environment (test, prod)')
+param environment string
 
 @description('Application Insights connection string')
 param appInsightsConnectionString string
@@ -39,33 +42,12 @@ param airportDiagramsContainerName string
 param chartSupplementsContainerName string
 
 @secure()
-@description('NOAA API key for weather services')
-param noaaApiKey string
-
-@description('NMS API base URL')
-param nmsBaseUrl string
-
-@description('NMS OAuth2 auth base URL')
-param nmsAuthBaseUrl string
-
-@secure()
-@description('NMS OAuth2 client ID')
-param nmsClientId string
-
-@secure()
-@description('NMS OAuth2 client secret')
-param nmsClientSecret string
-
-@secure()
 @description('APIM-to-API shared secret for gateway validation')
 param gatewaySecret string
 
-var appServicePlanName = 'asp-${baseName}-api-${environment}'
-var webAppName = 'preflightapi-${baseName}-web-api-${environment}'
-
 // App Service Plan (Linux)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: appServicePlanName
+  name: planName
   location: location
   kind: 'linux'
   sku: {
@@ -136,26 +118,6 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'CloudStorage__ChartSupplementsContainerName'
           value: chartSupplementsContainerName
-        }
-        {
-          name: 'NOAASettings__NOAAApiKey'
-          value: noaaApiKey
-        }
-        {
-          name: 'NmsSettings__BaseUrl'
-          value: nmsBaseUrl
-        }
-        {
-          name: 'NmsSettings__AuthBaseUrl'
-          value: nmsAuthBaseUrl
-        }
-        {
-          name: 'NmsSettings__ClientId'
-          value: nmsClientId
-        }
-        {
-          name: 'NmsSettings__ClientSecret'
-          value: nmsClientSecret
         }
         {
           name: 'GatewaySecret'

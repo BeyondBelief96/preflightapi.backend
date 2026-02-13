@@ -1,11 +1,8 @@
 @description('Azure region for all resources')
 param location string
 
-@description('Base name prefix for resources')
-param baseName string
-
-@description('Environment tag (test, prod)')
-param environment string
+@description('API Management service name')
+param apimName string
 
 @description('APIM publisher email')
 param publisherEmail string
@@ -13,20 +10,18 @@ param publisherEmail string
 @description('APIM publisher name')
 param publisherName string = 'PreflightApi'
 
-@description('APIM SKU (Developer, Basic, Standard, Premium)')
-param skuName string = 'Developer'
+@description('APIM SKU name (Developer, BasicV2, StandardV2, etc.)')
+param skuName string = 'BasicV2'
 
 @description('APIM SKU capacity')
 param skuCapacity int = 1
 
-@description('Backend Web App hostname (e.g., preflightapi-eastus-web-api-prod.azurewebsites.net)')
+@description('Backend Web App hostname (e.g., was-eastus-preflightapi-prd.azurewebsites.net)')
 param backendWebAppHostName string
 
 @secure()
 @description('APIM-to-API shared secret for gateway validation')
 param gatewaySecret string
-
-var apimName = '${baseName}-apim-service-${environment}'
 
 // API Management Service
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' = {

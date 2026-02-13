@@ -1,11 +1,8 @@
-@description('Azure region for all resources')
+@description('Azure region for the PostgreSQL server')
 param location string
 
-@description('Base name prefix for resources')
-param baseName string
-
-@description('Environment tag (test, prod)')
-param environment string
+@description('PostgreSQL flexible server name')
+param serverName string
 
 @description('PostgreSQL administrator login')
 param administratorLogin string
@@ -13,6 +10,9 @@ param administratorLogin string
 @secure()
 @description('PostgreSQL administrator password')
 param administratorPassword string
+
+@description('PostgreSQL database name')
+param databaseName string = 'preflightapi'
 
 @description('PostgreSQL SKU name (e.g., Standard_B1ms)')
 param skuName string = 'Standard_B1ms'
@@ -24,12 +24,10 @@ param skuTier string = 'Burstable'
 param storageSizeGB int = 32
 
 @description('PostgreSQL major version')
-param version string = '15'
+param version string = '16'
 
 @description('Allow Azure services to access the server')
 param allowAzureServices bool = true
-
-var serverName = 'pgsql-${baseName}-${environment}'
 
 // PostgreSQL Flexible Server
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
@@ -56,12 +54,22 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
   }
 }
 
-// Enable PostGIS extension
+// Database
+resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' = {
+  parent: postgresServer
+  name: databaseName
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
+  }
+}
+
+// Enable PostGIS and PostGIS Topology extensions
 resource postgisConfig 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
   parent: postgresServer
   name: 'azure.extensions'
   properties: {
-    value: 'POSTGIS'
+    value: 'POSTGIS,POSTGIS_TOPOLOGY'
     source: 'user-override'
   }
 }

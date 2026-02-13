@@ -5,14 +5,14 @@
     "_generator": {
       "name": "bicep",
       "version": "0.40.2.10011",
-      "templateHash": "622506590653940429"
+      "templateHash": "5938602708772211031"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
       "metadata": {
-        "description": "Azure region for all resources"
+        "description": "Primary Azure region for resources"
       }
     },
     "environment": {
@@ -23,6 +23,91 @@
       ],
       "metadata": {
         "description": "Environment name (test, prod)"
+      }
+    },
+    "resourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group name"
+      }
+    },
+    "logAnalyticsName": {
+      "type": "string",
+      "metadata": {
+        "description": "Log Analytics workspace name"
+      }
+    },
+    "appInsightsName": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Insights resource name"
+      }
+    },
+    "postgresServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "PostgreSQL flexible server name"
+      }
+    },
+    "postgresLocation": {
+      "type": "string",
+      "defaultValue": "[parameters('location')]",
+      "metadata": {
+        "description": "Azure region for PostgreSQL (can differ from primary location)"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage account name for blob data (globally unique, 3-24 lowercase alphanumeric)"
+      }
+    },
+    "airportDiagramsContainerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Airport diagrams blob container name"
+      }
+    },
+    "chartSupplementsContainerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Chart supplements blob container name"
+      }
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "metadata": {
+        "description": "App Service Plan name for the API"
+      }
+    },
+    "webAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "Web App name for the API"
+      }
+    },
+    "functionsPlanName": {
+      "type": "string",
+      "metadata": {
+        "description": "Function App Flex Consumption plan name"
+      }
+    },
+    "functionAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "Function App name"
+      }
+    },
+    "functionsStorageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage account name for Functions runtime (AzureWebJobsStorage)"
+      }
+    },
+    "apimServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "API Management service name"
       }
     },
     "dbAdminLogin": {
@@ -65,17 +150,11 @@
         "description": "PostgreSQL storage size in GB"
       }
     },
-    "dbLocation": {
+    "dbVersion": {
       "type": "string",
-      "defaultValue": "[parameters('location')]",
+      "defaultValue": "16",
       "metadata": {
-        "description": "Azure region for the PostgreSQL server (defaults to location if not specified)"
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "Storage account name for blob data (must be globally unique)"
+        "description": "PostgreSQL major version"
       }
     },
     "storageSkuName": {
@@ -89,14 +168,14 @@
       "type": "string",
       "defaultValue": "B1",
       "metadata": {
-        "description": "App Service Plan SKU name for API"
+        "description": "App Service Plan SKU name"
       }
     },
     "apiSkuTier": {
       "type": "string",
       "defaultValue": "Basic",
       "metadata": {
-        "description": "App Service Plan SKU tier for API"
+        "description": "App Service Plan SKU tier"
       }
     },
     "apimPublisherEmail": {
@@ -107,27 +186,40 @@
     },
     "apimSkuName": {
       "type": "string",
-      "defaultValue": "Developer",
+      "defaultValue": "BasicV2",
       "metadata": {
-        "description": "APIM SKU (Developer, Basic, Standard, Premium)"
+        "description": "APIM SKU name (Developer, BasicV2, StandardV2, etc.)"
+      }
+    },
+    "apimSkuCapacity": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "APIM SKU capacity"
       }
     },
     "noaaApiKey": {
       "type": "securestring",
       "metadata": {
-        "description": "NOAA API key for weather services"
+        "description": "NOAA API key for weather data synchronization (used by Functions)"
+      }
+    },
+    "gatewaySecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "APIM-to-API shared secret for gateway validation"
       }
     },
     "nmsBaseUrl": {
       "type": "string",
       "metadata": {
-        "description": "NMS API base URL (staging or production)"
+        "description": "NMS API base URL"
       }
     },
     "nmsAuthBaseUrl": {
       "type": "string",
       "metadata": {
-        "description": "NMS OAuth2 auth base URL (staging or production)"
+        "description": "NMS OAuth2 auth base URL"
       }
     },
     "nmsClientId": {
@@ -142,54 +234,33 @@
         "description": "NMS OAuth2 client secret"
       }
     },
-    "gatewaySecret": {
-      "type": "securestring",
-      "metadata": {
-        "description": "APIM-to-API shared secret for gateway validation"
-      }
-    },
-    "githubOrganization": {
+    "clerkAuthority": {
       "type": "string",
-      "defaultValue": "BeyondBelief96",
+      "defaultValue": "",
       "metadata": {
-        "description": "GitHub organization or username (for OIDC federated credentials)"
+        "description": "Clerk JWT authority URL (leave empty to omit from app settings)"
       }
     },
-    "githubRepository": {
+    "githubDeploymentPrincipalId": {
       "type": "string",
-      "defaultValue": "preflightapi.backend",
+      "defaultValue": "",
       "metadata": {
-        "description": "GitHub repository name (for OIDC federated credentials)"
-      }
-    },
-    "githubBranches": {
-      "type": "array",
-      "defaultValue": [
-        "main",
-        "develop"
-      ],
-      "metadata": {
-        "description": "Branches to create federated credentials for"
+        "description": "Object ID of the GitHub deployment service principal"
       }
     }
-  },
-  "variables": {
-    "baseName": "[format('preflightapi-{0}', parameters('location'))]",
-    "resourceGroupName": "[format('rg-{0}-{1}', variables('baseName'), parameters('environment'))]",
-    "regionShortName": "[parameters('location')]"
   },
   "resources": [
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2024-03-01",
-      "name": "[variables('resourceGroupName')]",
+      "name": "[parameters('resourceGroupName')]",
       "location": "[parameters('location')]"
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('monitoring-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -199,11 +270,11 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "baseName": {
-            "value": "[variables('baseName')]"
+          "logAnalyticsName": {
+            "value": "[parameters('logAnalyticsName')]"
           },
-          "environment": {
-            "value": "[parameters('environment')]"
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
           }
         },
         "template": {
@@ -213,7 +284,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "3319132822458696326"
+              "templateHash": "4692277009119192766"
             }
           },
           "parameters": {
@@ -223,16 +294,16 @@
                 "description": "Azure region for all resources"
               }
             },
-            "baseName": {
+            "logAnalyticsName": {
               "type": "string",
               "metadata": {
-                "description": "Base name prefix for resources"
+                "description": "Log Analytics workspace name"
               }
             },
-            "environment": {
+            "appInsightsName": {
               "type": "string",
               "metadata": {
-                "description": "Environment tag (test, prod)"
+                "description": "Application Insights resource name"
               }
             }
           },
@@ -240,7 +311,7 @@
             {
               "type": "Microsoft.OperationalInsights/workspaces",
               "apiVersion": "2023-09-01",
-              "name": "[format('log-{0}-{1}', parameters('baseName'), parameters('environment'))]",
+              "name": "[parameters('logAnalyticsName')]",
               "location": "[parameters('location')]",
               "properties": {
                 "sku": {
@@ -252,16 +323,16 @@
             {
               "type": "Microsoft.Insights/components",
               "apiVersion": "2020-02-02",
-              "name": "[format('appi-{0}-{1}', parameters('baseName'), parameters('environment'))]",
+              "name": "[parameters('appInsightsName')]",
               "location": "[parameters('location')]",
               "kind": "web",
               "properties": {
                 "Application_Type": "web",
-                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('baseName'), parameters('environment')))]",
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]",
                 "RetentionInDays": 90
               },
               "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('baseName'), parameters('environment')))]"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]"
               ]
             }
           ],
@@ -271,34 +342,34 @@
               "metadata": {
                 "description": "Application Insights connection string"
               },
-              "value": "[reference(resourceId('Microsoft.Insights/components', format('appi-{0}-{1}', parameters('baseName'), parameters('environment'))), '2020-02-02').ConnectionString]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString]"
             },
             "appInsightsInstrumentationKey": {
               "type": "string",
               "metadata": {
                 "description": "Application Insights instrumentation key"
               },
-              "value": "[reference(resourceId('Microsoft.Insights/components', format('appi-{0}-{1}', parameters('baseName'), parameters('environment'))), '2020-02-02').InstrumentationKey]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').InstrumentationKey]"
             },
             "logAnalyticsWorkspaceId": {
               "type": "string",
               "metadata": {
                 "description": "Log Analytics workspace ID"
               },
-              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('baseName'), parameters('environment')))]"
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('postgresql-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -306,19 +377,19 @@
         "mode": "Incremental",
         "parameters": {
           "location": {
-            "value": "[parameters('dbLocation')]"
+            "value": "[parameters('postgresLocation')]"
           },
-          "baseName": {
-            "value": "[variables('baseName')]"
-          },
-          "environment": {
-            "value": "[parameters('environment')]"
+          "serverName": {
+            "value": "[parameters('postgresServerName')]"
           },
           "administratorLogin": {
             "value": "[parameters('dbAdminLogin')]"
           },
           "administratorPassword": {
             "value": "[parameters('dbAdminPassword')]"
+          },
+          "databaseName": {
+            "value": "[parameters('databaseName')]"
           },
           "skuName": {
             "value": "[parameters('dbSkuName')]"
@@ -328,6 +399,9 @@
           },
           "storageSizeGB": {
             "value": "[parameters('dbStorageSizeGB')]"
+          },
+          "version": {
+            "value": "[parameters('dbVersion')]"
           }
         },
         "template": {
@@ -337,26 +411,20 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "10833691319204259506"
+              "templateHash": "4714620231165228872"
             }
           },
           "parameters": {
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Azure region for all resources"
+                "description": "Azure region for the PostgreSQL server"
               }
             },
-            "baseName": {
+            "serverName": {
               "type": "string",
               "metadata": {
-                "description": "Base name prefix for resources"
-              }
-            },
-            "environment": {
-              "type": "string",
-              "metadata": {
-                "description": "Environment tag (test, prod)"
+                "description": "PostgreSQL flexible server name"
               }
             },
             "administratorLogin": {
@@ -369,6 +437,13 @@
               "type": "securestring",
               "metadata": {
                 "description": "PostgreSQL administrator password"
+              }
+            },
+            "databaseName": {
+              "type": "string",
+              "defaultValue": "preflightapi",
+              "metadata": {
+                "description": "PostgreSQL database name"
               }
             },
             "skuName": {
@@ -394,7 +469,7 @@
             },
             "version": {
               "type": "string",
-              "defaultValue": "15",
+              "defaultValue": "16",
               "metadata": {
                 "description": "PostgreSQL major version"
               }
@@ -407,14 +482,11 @@
               }
             }
           },
-          "variables": {
-            "serverName": "[format('pgsql-{0}-{1}', parameters('baseName'), parameters('environment'))]"
-          },
           "resources": [
             {
               "type": "Microsoft.DBforPostgreSQL/flexibleServers",
               "apiVersion": "2024-08-01",
-              "name": "[variables('serverName')]",
+              "name": "[parameters('serverName')]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "[parameters('skuName')]",
@@ -437,28 +509,40 @@
               }
             },
             {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+              "apiVersion": "2024-08-01",
+              "name": "[format('{0}/{1}', parameters('serverName'), parameters('databaseName'))]",
+              "properties": {
+                "charset": "UTF8",
+                "collation": "en_US.utf8"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+              ]
+            },
+            {
               "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
               "apiVersion": "2024-08-01",
-              "name": "[format('{0}/{1}', variables('serverName'), 'azure.extensions')]",
+              "name": "[format('{0}/{1}', parameters('serverName'), 'azure.extensions')]",
               "properties": {
-                "value": "POSTGIS",
+                "value": "POSTGIS,POSTGIS_TOPOLOGY",
                 "source": "user-override"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('serverName'))]"
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
               ]
             },
             {
               "condition": "[parameters('allowAzureServices')]",
               "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
               "apiVersion": "2024-08-01",
-              "name": "[format('{0}/{1}', variables('serverName'), 'AllowAllAzureServicesAndResourcesWithinAzureIps')]",
+              "name": "[format('{0}/{1}', parameters('serverName'), 'AllowAllAzureServicesAndResourcesWithinAzureIps')]",
               "properties": {
                 "startIpAddress": "0.0.0.0",
                 "endIpAddress": "0.0.0.0"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('serverName'))]"
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
               ]
             }
           ],
@@ -468,34 +552,34 @@
               "metadata": {
                 "description": "PostgreSQL server fully qualified domain name"
               },
-              "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('serverName')), '2024-08-01').fullyQualifiedDomainName]"
+              "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName')), '2024-08-01').fullyQualifiedDomainName]"
             },
             "serverName": {
               "type": "string",
               "metadata": {
                 "description": "PostgreSQL server name"
               },
-              "value": "[variables('serverName')]"
+              "value": "[parameters('serverName')]"
             },
             "serverId": {
               "type": "string",
               "metadata": {
                 "description": "PostgreSQL server resource ID"
               },
-              "value": "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('serverName'))]"
+              "value": "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('storage-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -505,17 +589,17 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "regionShortName": {
-            "value": "[variables('regionShortName')]"
-          },
-          "environment": {
-            "value": "[parameters('environment')]"
-          },
           "storageAccountName": {
             "value": "[parameters('storageAccountName')]"
           },
           "skuName": {
             "value": "[parameters('storageSkuName')]"
+          },
+          "airportDiagramsContainerName": {
+            "value": "[parameters('airportDiagramsContainerName')]"
+          },
+          "chartSupplementsContainerName": {
+            "value": "[parameters('chartSupplementsContainerName')]"
           }
         },
         "template": {
@@ -525,7 +609,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "15519744274077943865"
+              "templateHash": "7482837630224598740"
             }
           },
           "parameters": {
@@ -533,18 +617,6 @@
               "type": "string",
               "metadata": {
                 "description": "Azure region for all resources"
-              }
-            },
-            "regionShortName": {
-              "type": "string",
-              "metadata": {
-                "description": "Region short name for container naming (e.g., eastus)"
-              }
-            },
-            "environment": {
-              "type": "string",
-              "metadata": {
-                "description": "Environment tag (test, prod)"
               }
             },
             "storageAccountName": {
@@ -558,6 +630,18 @@
               "defaultValue": "Standard_LRS",
               "metadata": {
                 "description": "Storage account SKU"
+              }
+            },
+            "airportDiagramsContainerName": {
+              "type": "string",
+              "metadata": {
+                "description": "Airport diagrams blob container name"
+              }
+            },
+            "chartSupplementsContainerName": {
+              "type": "string",
+              "metadata": {
+                "description": "Chart supplements blob container name"
               }
             }
           },
@@ -589,7 +673,7 @@
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', format('preflightapi-airport-diagrams-{0}-{1}', parameters('regionShortName'), parameters('environment')))]",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('airportDiagramsContainerName'))]",
               "properties": {
                 "publicAccess": "None"
               },
@@ -600,7 +684,7 @@
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', format('preflightapi-chart-supplements-{0}-{1}', parameters('regionShortName'), parameters('environment')))]",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('chartSupplementsContainerName'))]",
               "properties": {
                 "publicAccess": "None"
               },
@@ -629,27 +713,27 @@
               "metadata": {
                 "description": "Airport diagrams container name"
               },
-              "value": "[format('preflightapi-airport-diagrams-{0}-{1}', parameters('regionShortName'), parameters('environment'))]"
+              "value": "[parameters('airportDiagramsContainerName')]"
             },
             "chartSupplementsContainerName": {
               "type": "string",
               "metadata": {
                 "description": "Chart supplements container name"
               },
-              "value": "[format('preflightapi-chart-supplements-{0}-{1}', parameters('regionShortName'), parameters('environment'))]"
+              "value": "[parameters('chartSupplementsContainerName')]"
             }
           }
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('app-service-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -659,11 +743,11 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "baseName": {
-            "value": "[variables('baseName')]"
+          "planName": {
+            "value": "[parameters('appServicePlanName')]"
           },
-          "environment": {
-            "value": "[parameters('environment')]"
+          "webAppName": {
+            "value": "[parameters('webAppName')]"
           },
           "skuName": {
             "value": "[parameters('apiSkuName')]"
@@ -671,11 +755,14 @@
           "skuTier": {
             "value": "[parameters('apiSkuTier')]"
           },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
           },
           "databaseHost": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
           },
           "databaseName": {
             "value": "[parameters('databaseName')]"
@@ -687,28 +774,13 @@
             "value": "[parameters('dbAdminPassword')]"
           },
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
           },
           "airportDiagramsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
           },
           "chartSupplementsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
-          },
-          "noaaApiKey": {
-            "value": "[parameters('noaaApiKey')]"
-          },
-          "nmsBaseUrl": {
-            "value": "[parameters('nmsBaseUrl')]"
-          },
-          "nmsAuthBaseUrl": {
-            "value": "[parameters('nmsAuthBaseUrl')]"
-          },
-          "nmsClientId": {
-            "value": "[parameters('nmsClientId')]"
-          },
-          "nmsClientSecret": {
-            "value": "[parameters('nmsClientSecret')]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
           },
           "gatewaySecret": {
             "value": "[parameters('gatewaySecret')]"
@@ -721,7 +793,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "10659317540243103161"
+              "templateHash": "1873978144254666020"
             }
           },
           "parameters": {
@@ -731,23 +803,23 @@
                 "description": "Azure region for all resources"
               }
             },
-            "baseName": {
+            "planName": {
               "type": "string",
               "metadata": {
-                "description": "Base name prefix for resources"
+                "description": "App Service Plan name"
               }
             },
-            "environment": {
+            "webAppName": {
               "type": "string",
               "metadata": {
-                "description": "Environment tag (test, prod)"
+                "description": "Web App name"
               }
             },
             "skuName": {
               "type": "string",
               "defaultValue": "B1",
               "metadata": {
-                "description": "App Service Plan SKU name (e.g., B2)"
+                "description": "App Service Plan SKU name (e.g., B1)"
               }
             },
             "skuTier": {
@@ -755,6 +827,12 @@
               "defaultValue": "Basic",
               "metadata": {
                 "description": "App Service Plan SKU tier (e.g., Basic)"
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "Environment (test, prod)"
               }
             },
             "appInsightsConnectionString": {
@@ -805,36 +883,6 @@
                 "description": "Chart supplements blob container name"
               }
             },
-            "noaaApiKey": {
-              "type": "securestring",
-              "metadata": {
-                "description": "NOAA API key for weather services"
-              }
-            },
-            "nmsBaseUrl": {
-              "type": "string",
-              "metadata": {
-                "description": "NMS API base URL"
-              }
-            },
-            "nmsAuthBaseUrl": {
-              "type": "string",
-              "metadata": {
-                "description": "NMS OAuth2 auth base URL"
-              }
-            },
-            "nmsClientId": {
-              "type": "securestring",
-              "metadata": {
-                "description": "NMS OAuth2 client ID"
-              }
-            },
-            "nmsClientSecret": {
-              "type": "securestring",
-              "metadata": {
-                "description": "NMS OAuth2 client secret"
-              }
-            },
             "gatewaySecret": {
               "type": "securestring",
               "metadata": {
@@ -842,15 +890,11 @@
               }
             }
           },
-          "variables": {
-            "appServicePlanName": "[format('asp-{0}-api-{1}', parameters('baseName'), parameters('environment'))]",
-            "webAppName": "[format('preflightapi-{0}-web-api-{1}', parameters('baseName'), parameters('environment'))]"
-          },
           "resources": [
             {
               "type": "Microsoft.Web/serverfarms",
               "apiVersion": "2023-12-01",
-              "name": "[variables('appServicePlanName')]",
+              "name": "[parameters('planName')]",
               "location": "[parameters('location')]",
               "kind": "linux",
               "sku": {
@@ -864,13 +908,13 @@
             {
               "type": "Microsoft.Web/sites",
               "apiVersion": "2023-12-01",
-              "name": "[variables('webAppName')]",
+              "name": "[parameters('webAppName')]",
               "location": "[parameters('location')]",
               "identity": {
                 "type": "SystemAssigned"
               },
               "properties": {
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
                 "httpsOnly": true,
                 "siteConfig": {
                   "linuxFxVersion": "DOTNETCORE|8.0",
@@ -923,26 +967,6 @@
                       "value": "[parameters('chartSupplementsContainerName')]"
                     },
                     {
-                      "name": "NOAASettings__NOAAApiKey",
-                      "value": "[parameters('noaaApiKey')]"
-                    },
-                    {
-                      "name": "NmsSettings__BaseUrl",
-                      "value": "[parameters('nmsBaseUrl')]"
-                    },
-                    {
-                      "name": "NmsSettings__AuthBaseUrl",
-                      "value": "[parameters('nmsAuthBaseUrl')]"
-                    },
-                    {
-                      "name": "NmsSettings__ClientId",
-                      "value": "[parameters('nmsClientId')]"
-                    },
-                    {
-                      "name": "NmsSettings__ClientSecret",
-                      "value": "[parameters('nmsClientSecret')]"
-                    },
-                    {
                       "name": "GatewaySecret",
                       "value": "[parameters('gatewaySecret')]"
                     },
@@ -966,7 +990,7 @@
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+                "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]"
               ]
             }
           ],
@@ -976,51 +1000,51 @@
               "metadata": {
                 "description": "Web App name"
               },
-              "value": "[variables('webAppName')]"
+              "value": "[parameters('webAppName')]"
             },
             "webAppHostName": {
               "type": "string",
               "metadata": {
                 "description": "Web App default hostname"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', variables('webAppName')), '2023-12-01').defaultHostName]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2023-12-01').defaultHostName]"
             },
             "webAppPrincipalId": {
               "type": "string",
               "metadata": {
                 "description": "Web App system-assigned managed identity principal ID"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', variables('webAppName')), '2023-12-01', 'full').identity.principalId]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2023-12-01', 'full').identity.principalId]"
             },
             "webAppId": {
               "type": "string",
               "metadata": {
                 "description": "Web App resource ID"
               },
-              "value": "[resourceId('Microsoft.Web/sites', variables('webAppName'))]"
+              "value": "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
             },
             "appServicePlanName": {
               "type": "string",
               "metadata": {
                 "description": "App Service Plan name"
               },
-              "value": "[variables('appServicePlanName')]"
+              "value": "[parameters('planName')]"
             }
           }
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('function-app-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -1030,17 +1054,20 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "baseName": {
-            "value": "[variables('baseName')]"
+          "planName": {
+            "value": "[parameters('functionsPlanName')]"
           },
-          "environment": {
-            "value": "[parameters('environment')]"
+          "functionAppName": {
+            "value": "[parameters('functionAppName')]"
+          },
+          "functionsStorageName": {
+            "value": "[parameters('functionsStorageName')]"
           },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
           },
           "databaseHost": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
           },
           "databaseName": {
             "value": "[parameters('databaseName')]"
@@ -1052,13 +1079,34 @@
             "value": "[parameters('dbAdminPassword')]"
           },
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
           },
           "airportDiagramsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
           },
           "chartSupplementsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
+          },
+          "nmsBaseUrl": {
+            "value": "[parameters('nmsBaseUrl')]"
+          },
+          "nmsAuthBaseUrl": {
+            "value": "[parameters('nmsAuthBaseUrl')]"
+          },
+          "nmsClientId": {
+            "value": "[parameters('nmsClientId')]"
+          },
+          "nmsClientSecret": {
+            "value": "[parameters('nmsClientSecret')]"
+          },
+          "noaaApiKey": {
+            "value": "[parameters('noaaApiKey')]"
+          },
+          "gatewaySecret": {
+            "value": "[parameters('gatewaySecret')]"
+          },
+          "clerkAuthority": {
+            "value": "[parameters('clerkAuthority')]"
           }
         },
         "template": {
@@ -1068,7 +1116,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "13119853329023787048"
+              "templateHash": "1428046727572454119"
             }
           },
           "parameters": {
@@ -1078,16 +1126,22 @@
                 "description": "Azure region for all resources"
               }
             },
-            "baseName": {
+            "planName": {
               "type": "string",
               "metadata": {
-                "description": "Base name prefix for resources"
+                "description": "Function App Flex Consumption plan name"
               }
             },
-            "environment": {
+            "functionAppName": {
               "type": "string",
               "metadata": {
-                "description": "Environment tag (test, prod)"
+                "description": "Function App name"
+              }
+            },
+            "functionsStorageName": {
+              "type": "string",
+              "metadata": {
+                "description": "Storage account name for Functions runtime (AzureWebJobsStorage)"
               }
             },
             "appInsightsConnectionString": {
@@ -1137,18 +1191,59 @@
               "metadata": {
                 "description": "Chart supplements blob container name"
               }
+            },
+            "nmsBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "NMS API base URL"
+              }
+            },
+            "nmsAuthBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "NMS OAuth2 auth base URL"
+              }
+            },
+            "nmsClientId": {
+              "type": "securestring",
+              "metadata": {
+                "description": "NMS OAuth2 client ID"
+              }
+            },
+            "nmsClientSecret": {
+              "type": "securestring",
+              "metadata": {
+                "description": "NMS OAuth2 client secret"
+              }
+            },
+            "noaaApiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "NOAA API key for weather data synchronization"
+              }
+            },
+            "gatewaySecret": {
+              "type": "securestring",
+              "metadata": {
+                "description": "APIM-to-API shared secret for gateway validation"
+              }
+            },
+            "clerkAuthority": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Clerk JWT authority URL (leave empty to omit)"
+              }
             }
           },
           "variables": {
-            "functionAppName": "[format('az-func-{0}-{1}', parameters('baseName'), parameters('environment'))]",
-            "functionsPlanName": "[format('asp-{0}-func-{1}', parameters('baseName'), parameters('environment'))]",
-            "functionsStorageName": "[format('st{0}fn{1}', replace(parameters('baseName'), '-', ''), parameters('environment'))]"
+            "clerkSettings": "[if(empty(parameters('clerkAuthority')), createArray(), createArray(createObject('name', 'ClerkSettings__Authority', 'value', parameters('clerkAuthority')), createObject('name', 'ClerkSettings__RequireAuthenticationInDevelopment', 'value', 'true')))]"
           },
           "resources": [
             {
               "type": "Microsoft.Storage/storageAccounts",
               "apiVersion": "2023-05-01",
-              "name": "[variables('functionsStorageName')]",
+              "name": "[parameters('functionsStorageName')]",
               "location": "[parameters('location')]",
               "kind": "StorageV2",
               "sku": {
@@ -1163,7 +1258,7 @@
             {
               "type": "Microsoft.Web/serverfarms",
               "apiVersion": "2023-12-01",
-              "name": "[variables('functionsPlanName')]",
+              "name": "[parameters('planName')]",
               "location": "[parameters('location')]",
               "kind": "functionapp",
               "sku": {
@@ -1177,72 +1272,23 @@
             {
               "type": "Microsoft.Web/sites",
               "apiVersion": "2023-12-01",
-              "name": "[variables('functionAppName')]",
+              "name": "[parameters('functionAppName')]",
               "location": "[parameters('location')]",
               "kind": "functionapp,linux",
               "identity": {
                 "type": "SystemAssigned"
               },
               "properties": {
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionsPlanName'))]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
                 "httpsOnly": true,
                 "siteConfig": {
                   "minTlsVersion": "1.2",
-                  "appSettings": [
-                    {
-                      "name": "AzureWebJobsStorage",
-                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageName')), '2023-05-01').keys[0].value)]"
-                    },
-                    {
-                      "name": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
-                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageName')), '2023-05-01').keys[0].value)]"
-                    },
-                    {
-                      "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                      "value": "[parameters('appInsightsConnectionString')]"
-                    },
-                    {
-                      "name": "Database__Host",
-                      "value": "[parameters('databaseHost')]"
-                    },
-                    {
-                      "name": "Database__Database",
-                      "value": "[parameters('databaseName')]"
-                    },
-                    {
-                      "name": "Database__Username",
-                      "value": "[parameters('databaseUsername')]"
-                    },
-                    {
-                      "name": "Database__Password",
-                      "value": "[parameters('databasePassword')]"
-                    },
-                    {
-                      "name": "Database__Port",
-                      "value": "5432"
-                    },
-                    {
-                      "name": "CloudStorage__UseManagedIdentity",
-                      "value": "true"
-                    },
-                    {
-                      "name": "CloudStorage__AccountName",
-                      "value": "[parameters('storageAccountName')]"
-                    },
-                    {
-                      "name": "CloudStorage__AirportDiagramsContainerName",
-                      "value": "[parameters('airportDiagramsContainerName')]"
-                    },
-                    {
-                      "name": "CloudStorage__ChartSupplementsContainerName",
-                      "value": "[parameters('chartSupplementsContainerName')]"
-                    }
-                  ]
+                  "appSettings": "[concat(createArray(createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'DEPLOYMENT_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', parameters('appInsightsConnectionString')), createObject('name', 'Database__Host', 'value', parameters('databaseHost')), createObject('name', 'Database__Database', 'value', parameters('databaseName')), createObject('name', 'Database__Username', 'value', parameters('databaseUsername')), createObject('name', 'Database__Password', 'value', parameters('databasePassword')), createObject('name', 'Database__Port', 'value', '5432'), createObject('name', 'CloudStorage__UseManagedIdentity', 'value', 'true'), createObject('name', 'CloudStorage__AccountName', 'value', parameters('storageAccountName')), createObject('name', 'CloudStorage__AirportDiagramsContainerName', 'value', parameters('airportDiagramsContainerName')), createObject('name', 'CloudStorage__ChartSupplementsContainerName', 'value', parameters('chartSupplementsContainerName')), createObject('name', 'NmsSettings__BaseUrl', 'value', parameters('nmsBaseUrl')), createObject('name', 'NmsSettings__AuthBaseUrl', 'value', parameters('nmsAuthBaseUrl')), createObject('name', 'NmsSettings__ClientId', 'value', parameters('nmsClientId')), createObject('name', 'NmsSettings__ClientSecret', 'value', parameters('nmsClientSecret')), createObject('name', 'NOAASettings__NOAAApiKey', 'value', parameters('noaaApiKey')), createObject('name', 'GatewaySecret', 'value', parameters('gatewaySecret'))), variables('clerkSettings'))]"
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('functionsPlanName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageName'))]"
+                "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName'))]"
               ]
             }
           ],
@@ -1252,51 +1298,51 @@
               "metadata": {
                 "description": "Function App name"
               },
-              "value": "[variables('functionAppName')]"
+              "value": "[parameters('functionAppName')]"
             },
             "functionAppHostName": {
               "type": "string",
               "metadata": {
                 "description": "Function App default hostname"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-12-01').defaultHostName]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01').defaultHostName]"
             },
             "functionAppPrincipalId": {
               "type": "string",
               "metadata": {
                 "description": "Function App system-assigned managed identity principal ID"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-12-01', 'full').identity.principalId]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]"
             },
             "functionAppId": {
               "type": "string",
               "metadata": {
                 "description": "Function App resource ID"
               },
-              "value": "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
+              "value": "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
             },
             "functionsStorageAccountName": {
               "type": "string",
               "metadata": {
                 "description": "Functions storage account name"
               },
-              "value": "[variables('functionsStorageName')]"
+              "value": "[parameters('functionsStorageName')]"
             }
           }
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('apim-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -1306,11 +1352,8 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "baseName": {
-            "value": "[variables('baseName')]"
-          },
-          "environment": {
-            "value": "[parameters('environment')]"
+          "apimName": {
+            "value": "[parameters('apimServiceName')]"
           },
           "publisherEmail": {
             "value": "[parameters('apimPublisherEmail')]"
@@ -1318,8 +1361,14 @@
           "skuName": {
             "value": "[parameters('apimSkuName')]"
           },
+          "skuCapacity": {
+            "value": "[parameters('apimSkuCapacity')]"
+          },
           "backendWebAppHostName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppHostName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppHostName.value]"
+          },
+          "gatewaySecret": {
+            "value": "[parameters('gatewaySecret')]"
           }
         },
         "template": {
@@ -1329,7 +1378,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "9667915989506673198"
+              "templateHash": "13446647792596344465"
             }
           },
           "parameters": {
@@ -1339,16 +1388,10 @@
                 "description": "Azure region for all resources"
               }
             },
-            "baseName": {
+            "apimName": {
               "type": "string",
               "metadata": {
-                "description": "Base name prefix for resources"
-              }
-            },
-            "environment": {
-              "type": "string",
-              "metadata": {
-                "description": "Environment tag (test, prod)"
+                "description": "API Management service name"
               }
             },
             "publisherEmail": {
@@ -1366,9 +1409,9 @@
             },
             "skuName": {
               "type": "string",
-              "defaultValue": "Developer",
+              "defaultValue": "BasicV2",
               "metadata": {
-                "description": "APIM SKU (Developer, Basic, Standard, Premium)"
+                "description": "APIM SKU name (Developer, BasicV2, StandardV2, etc.)"
               }
             },
             "skuCapacity": {
@@ -1381,18 +1424,27 @@
             "backendWebAppHostName": {
               "type": "string",
               "metadata": {
-                "description": "Backend Web App hostname (e.g., preflightapi-eastus-web-api-prod.azurewebsites.net)"
+                "description": "Backend Web App hostname (e.g., was-eastus-preflightapi-prd.azurewebsites.net)"
+              }
+            },
+            "gatewaySecret": {
+              "type": "securestring",
+              "metadata": {
+                "description": "APIM-to-API shared secret for gateway validation"
               }
             }
           },
           "variables": {
-            "apimName": "[format('{0}-apim-service-{1}', parameters('baseName'), parameters('environment'))]"
+            "$fxv#0": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"override\">\r\n\t\t\t<value>{{apim-gateway-secret}}</value>\r\n\t\t</set-header>\r\n\t\t<!-- Cap total outbound NMS calls across all users (FAA rate limit protection) -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Request.Url.Path.ToLower().Contains(\"/notams\"))\">\r\n\t\t\t\t<rate-limit-by-key calls=\"15\" renewal-period=\"180\"\r\n\t\t\t\t\tcounter-key=\"@(\"nms-backend-global\")\"\r\n\t\t\t\t\tremaining-calls-header-name=\"X-NMS-RateLimit-Remaining\"\r\n\t\t\t\t\tretry-after-header-name=\"X-NMS-Retry-After\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t\t<!-- Determine cache duration based on endpoint -->\r\n\t\t<set-variable name=\"cacheDuration\" value=\"@{\r\n\t\t\tif (context.Request.Method != \"GET\") { return 0; }\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\t// Real-time weather: 2 min\r\n\t\t\tif (path.Contains(\"/metars\") || path.Contains(\"/pireps\")) { return 120; }\r\n\t\t\t// E6B GET endpoints use live METAR: 2 min\r\n\t\t\tif (path.Contains(\"/e6b/\")) { return 120; }\r\n\t\t\t// Forecast weather, NOTAMs: 5 min\r\n\t\t\tif (path.Contains(\"/tafs\") || path.Contains(\"/sigmets\") || path.Contains(\"/g-airmets\")) { return 300; }\r\n\t\t\tif (path.Contains(\"/notams\")) { return 300; }\r\n\t\t\t// Winds aloft: 5 min\r\n\t\t\tif (path.Contains(\"/navlog/winds-aloft\")) { return 300; }\r\n\t\t\t// Presigned URLs: 10 min\r\n\t\t\tif (path.Contains(\"/airport-diagrams\") || path.Contains(\"/chart-supplements\")) { return 600; }\r\n\t\t\t// NASR/static data: 15 min\r\n\t\t\tif (path.Contains(\"/airports\") || path.Contains(\"/communication-frequencies\")) { return 900; }\r\n\t\t\tif (path.Contains(\"/airspaces\") || path.Contains(\"/obstacles\")) { return 900; }\r\n\t\t\treturn 0;\r\n\t\t}\" />\r\n\t\t<!-- Apply cache lookup for cacheable GET requests -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@((int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\">\r\n\t\t\t\t\t<vary-by-query-parameter>*</vary-by-query-parameter>\r\n\t\t\t\t</cache-lookup>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t\t<!-- Strip the secret header from the response so it's never exposed to callers -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"delete\" />\r\n\t\t<!-- Store response in cache if cacheable -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cacheDuration\") && (int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-store duration=\"@((int)context.Variables[\"cacheDuration\"])\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#1": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"10\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"500\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- Endpoint gating: Free tier only allows basic weather and airports -->\r\n\t\t<set-variable name=\"is-allowed\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar allowedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/metars\",\r\n\t\t\t\t\"/api/v1/tafs\",\r\n\t\t\t\t\"/api/v1/airports\",\r\n\t\t\t\t\"/api/v1/communication-frequencies\"\r\n\t\t\t};\r\n\t\t\treturn allowedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Free tier. Please upgrade to Starter or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#2": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"150000\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->\r\n\t\t<set-variable name=\"is-blocked\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar blockedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/navlog\",\r\n\t\t\t\t\"/api/v1/notams\",\r\n\t\t\t\t\"/api/v1/airport-diagrams\",\r\n\t\t\t\t\"/api/v1/chart-supplements\",\r\n\t\t\t\t\"/api/v1/e6b\"\r\n\t\t\t};\r\n\t\t\treturn blockedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Starter tier. Please upgrade to Commercial or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#3": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"300\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"750000\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- No endpoint gating: Professional tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n"
           },
           "resources": [
             {
               "type": "Microsoft.ApiManagement/service",
               "apiVersion": "2024-05-01",
-              "name": "[variables('apimName')]",
+              "name": "[parameters('apimName')]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "[parameters('skuName')]",
@@ -1407,9 +1459,22 @@
               }
             },
             {
+              "type": "Microsoft.ApiManagement/service/namedValues",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'apim-gateway-secret')]",
+              "properties": {
+                "displayName": "apim-gateway-secret",
+                "value": "[parameters('gatewaySecret')]",
+                "secret": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
               "type": "Microsoft.ApiManagement/service/apis",
               "apiVersion": "2024-05-01",
-              "name": "[format('{0}/{1}', variables('apimName'), 'preflightapi')]",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'preflightapi')]",
               "properties": {
                 "displayName": "PreflightApi",
                 "path": "",
@@ -1424,7 +1489,128 @@
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/policies",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'preflightapi', 'policy')]",
+              "properties": {
+                "format": "rawxml",
+                "value": "[variables('$fxv#0')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('apimName'), 'apim-gateway-secret')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'student-pilot')]",
+              "properties": {
+                "displayName": "Student Pilot",
+                "description": "Free tier — basic weather and airport data",
+                "subscriptionRequired": true,
+                "approvalRequired": false,
+                "state": "published"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/apis",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'student-pilot', 'preflightapi')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'student-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/policies",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'student-pilot', 'policy')]",
+              "properties": {
+                "format": "rawxml",
+                "value": "[variables('$fxv#1')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'student-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'private-pilot')]",
+              "properties": {
+                "displayName": "Private Pilot",
+                "description": "Starter tier — weather, airports, airspace, and more",
+                "subscriptionRequired": true,
+                "approvalRequired": false,
+                "state": "published"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/apis",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'private-pilot', 'preflightapi')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'private-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/policies",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'private-pilot', 'policy')]",
+              "properties": {
+                "format": "rawxml",
+                "value": "[variables('$fxv#2')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'private-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'commercial-pilot')]",
+              "properties": {
+                "displayName": "Commercial Pilot",
+                "description": "Professional tier — full access to all endpoints",
+                "subscriptionRequired": true,
+                "approvalRequired": false,
+                "state": "published"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/apis",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'commercial-pilot', 'preflightapi')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'commercial-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/policies",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'commercial-pilot', 'policy')]",
+              "properties": {
+                "format": "rawxml",
+                "value": "[variables('$fxv#3')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'commercial-pilot')]"
               ]
             }
           ],
@@ -1434,166 +1620,35 @@
               "metadata": {
                 "description": "APIM service name"
               },
-              "value": "[variables('apimName')]"
+              "value": "[parameters('apimName')]"
             },
             "apimGatewayUrl": {
               "type": "string",
               "metadata": {
                 "description": "APIM gateway URL"
               },
-              "value": "[reference(resourceId('Microsoft.ApiManagement/service', variables('apimName')), '2024-05-01').gatewayUrl]"
+              "value": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimName')), '2024-05-01').gatewayUrl]"
             },
             "apimId": {
               "type": "string",
               "metadata": {
                 "description": "APIM resource ID"
               },
-              "value": "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+              "value": "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
-      "name": "[format('github-identity-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "baseName": {
-            "value": "[variables('baseName')]"
-          },
-          "environment": {
-            "value": "[parameters('environment')]"
-          },
-          "githubOrganization": {
-            "value": "[parameters('githubOrganization')]"
-          },
-          "githubRepository": {
-            "value": "[parameters('githubRepository')]"
-          },
-          "branches": {
-            "value": "[parameters('githubBranches')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "15883639171628752729"
-            }
-          },
-          "parameters": {
-            "location": {
-              "type": "string",
-              "metadata": {
-                "description": "Azure region for the managed identity"
-              }
-            },
-            "baseName": {
-              "type": "string",
-              "metadata": {
-                "description": "Base name for resource naming"
-              }
-            },
-            "environment": {
-              "type": "string",
-              "metadata": {
-                "description": "Environment name (test, prod)"
-              }
-            },
-            "githubOrganization": {
-              "type": "string",
-              "metadata": {
-                "description": "GitHub organization or username"
-              }
-            },
-            "githubRepository": {
-              "type": "string",
-              "metadata": {
-                "description": "GitHub repository name"
-              }
-            },
-            "branches": {
-              "type": "array",
-              "defaultValue": [
-                "main",
-                "develop"
-              ],
-              "metadata": {
-                "description": "Branches to create federated credentials for"
-              }
-            }
-          },
-          "resources": [
-            {
-              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-              "apiVersion": "2023-01-31",
-              "name": "[format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))]",
-              "location": "[parameters('location')]"
-            },
-            {
-              "copy": {
-                "name": "federatedCredentials",
-                "count": "[length(parameters('branches'))]"
-              },
-              "type": "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials",
-              "apiVersion": "2023-01-31",
-              "name": "[format('{0}/{1}', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment')), format('github-{0}', replace(parameters('branches')[copyIndex()], '/', '-')))]",
-              "properties": {
-                "issuer": "https://token.actions.githubusercontent.com",
-                "subject": "[format('repo:{0}/{1}:ref:refs/heads/{2}', parameters('githubOrganization'), parameters('githubRepository'), parameters('branches')[copyIndex()])]",
-                "audiences": [
-                  "api://AzureADTokenExchange"
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment')))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "principalId": {
-              "type": "string",
-              "metadata": {
-                "description": "Principal (object) ID of the managed identity — use for RBAC role assignments"
-              },
-              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))), '2023-01-31').principalId]"
-            },
-            "clientId": {
-              "type": "string",
-              "metadata": {
-                "description": "Client ID of the managed identity — use as AZURE_CLIENT_ID in GitHub Actions"
-              },
-              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-github-{1}', parameters('baseName'), parameters('environment'))), '2023-01-31').clientId]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "[format('role-assignments-{0}', parameters('environment'))]",
-      "resourceGroup": "[variables('resourceGroupName')]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -1601,16 +1656,16 @@
         "mode": "Incremental",
         "parameters": {
           "webAppPrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppPrincipalId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppPrincipalId.value]"
           },
           "functionAppPrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppPrincipalId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppPrincipalId.value]"
           },
           "storageAccountId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountId.value]"
           },
           "githubDeploymentPrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment'))), '2025-04-01').outputs.principalId.value]"
+            "value": "[parameters('githubDeploymentPrincipalId')]"
           }
         },
         "template": {
@@ -1692,11 +1747,10 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('resourceGroupName'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
       ]
     }
   ],
@@ -1706,84 +1760,77 @@
       "metadata": {
         "description": "Resource group name"
       },
-      "value": "[variables('resourceGroupName')]"
+      "value": "[parameters('resourceGroupName')]"
     },
     "postgresServerFqdn": {
       "type": "string",
       "metadata": {
         "description": "PostgreSQL server FQDN"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
     },
     "postgresServerName": {
       "type": "string",
       "metadata": {
         "description": "PostgreSQL server name"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverName.value]"
     },
     "webAppName": {
       "type": "string",
       "metadata": {
         "description": "Web App name"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppName.value]"
     },
     "webAppHostName": {
       "type": "string",
       "metadata": {
         "description": "Web App hostname"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppHostName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppHostName.value]"
     },
     "functionAppName": {
       "type": "string",
       "metadata": {
         "description": "Function App name"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppName.value]"
     },
     "functionAppHostName": {
       "type": "string",
       "metadata": {
         "description": "Function App hostname"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppHostName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppHostName.value]"
     },
     "storageAccountName": {
       "type": "string",
       "metadata": {
         "description": "Storage account name"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
     },
     "apimGatewayUrl": {
       "type": "string",
       "metadata": {
         "description": "APIM gateway URL"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimGatewayUrl.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimGatewayUrl.value]"
     },
     "apimServiceName": {
       "type": "string",
       "metadata": {
         "description": "APIM service name"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimName.value]"
     },
     "appInsightsConnectionString": {
       "type": "string",
       "metadata": {
         "description": "Application Insights connection string"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
-    },
-    "githubDeploymentClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "GitHub deployment identity client ID — set as AZURE_CLIENT_ID secret in GitHub"
-      },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', format('github-identity-{0}', parameters('environment'))), '2025-04-01').outputs.clientId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
     }
   }
 }

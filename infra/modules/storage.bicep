@@ -1,17 +1,17 @@
 @description('Azure region for all resources')
 param location string
 
-@description('Region short name for container naming (e.g., eastus)')
-param regionShortName string
-
-@description('Environment tag (test, prod)')
-param environment string
-
 @description('Storage account name (must be globally unique, 3-24 lowercase alphanumeric)')
 param storageAccountName string
 
 @description('Storage account SKU')
 param skuName string = 'Standard_LRS'
+
+@description('Airport diagrams blob container name')
+param airportDiagramsContainerName string
+
+@description('Chart supplements blob container name')
+param chartSupplementsContainerName string
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -38,7 +38,7 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01
 // Airport Diagrams container
 resource airportDiagramsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobServices
-  name: 'preflightapi-airport-diagrams-${regionShortName}-${environment}'
+  name: airportDiagramsContainerName
   properties: {
     publicAccess: 'None'
   }
@@ -47,7 +47,7 @@ resource airportDiagramsContainer 'Microsoft.Storage/storageAccounts/blobService
 // Chart Supplements container
 resource chartSupplementsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobServices
-  name: 'preflightapi-chart-supplements-${regionShortName}-${environment}'
+  name: chartSupplementsContainerName
   properties: {
     publicAccess: 'None'
   }

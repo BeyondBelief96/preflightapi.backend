@@ -25,34 +25,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreflightApi.Azure.Functions", "PreflightApi.Azure.Functions\PreflightApi.Azure.Functions.csproj", "{BC682116-D837-42B6-821D-D887982B638D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9385-4741-8876-47ABEBFA992E}"
-	ProjectSection(SolutionItems) = preProject
-		docs\azure-cost-optimization-scaling-guide.md = docs\azure-cost-optimization-scaling-guide.md
-		docs\azure-functions-improvement-plan.md = docs\azure-functions-improvement-plan.md
-		docs\nasr-phase1-implementation-plan.md = docs\nasr-phase1-implementation-plan.md
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
-	ProjectSection(SolutionItems) = preProject
-		infra\main.bicep = infra\main.bicep
-		infra\main.json = infra\main.json
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{6E50947F-9F17-4FE3-B017-BE38774A996A}"
-	ProjectSection(SolutionItems) = preProject
-		infra\modules\apim.bicep = infra\modules\apim.bicep
-		infra\modules\app-service.bicep = infra\modules\app-service.bicep
-		infra\modules\function-app.bicep = infra\modules\function-app.bicep
-		infra\modules\monitoring.bicep = infra\modules\monitoring.bicep
-		infra\modules\postgresql.bicep = infra\modules\postgresql.bicep
-		infra\modules\role-assignments.bicep = infra\modules\role-assignments.bicep
-		infra\modules\storage.bicep = infra\modules\storage.bicep
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "parameters", "parameters", "{CCE5402C-67B8-4B04-A5B0-A05A0DC2FDC4}"
-	ProjectSection(SolutionItems) = preProject
-		infra\parameters\prod.bicepparam = infra\parameters\prod.bicepparam
-		infra\parameters\test.bicepparam = infra\parameters\test.bicepparam
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apim-policies", "apim-policies", "{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9}"
 	ProjectSection(SolutionItems) = preProject
@@ -64,7 +42,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apim-policies", "apim-polic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{8F5BA337-9853-4AF3-9C64-50FF5F1FFE58}"
 	ProjectSection(SolutionItems) = preProject
-		.dockerignore = .dockerignore
 		docker-compose.local.yml = docker-compose.local.yml
 		Dockerfile.local = Dockerfile.local
 	EndProjectSection

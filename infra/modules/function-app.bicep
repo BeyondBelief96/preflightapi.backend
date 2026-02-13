@@ -1,11 +1,14 @@
 @description('Azure region for all resources')
 param location string
 
-@description('Base name prefix for resources')
-param baseName string
+@description('Function App Flex Consumption plan name')
+param planName string
 
-@description('Environment tag (test, prod)')
-param environment string
+@description('Function App name')
+param functionAppName string
+
+@description('Storage account name for Functions runtime (AzureWebJobsStorage)')
+param functionsStorageName string
 
 @description('Application Insights connection string')
 param appInsightsConnectionString string
@@ -32,9 +35,30 @@ param airportDiagramsContainerName string
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
 
-var functionAppName = 'az-func-${baseName}-${environment}'
-var functionsPlanName = 'asp-${baseName}-func-${environment}'
-var functionsStorageName = 'st${replace(baseName, '-', '')}fn${environment}'
+@description('NMS API base URL')
+param nmsBaseUrl string
+
+@description('NMS OAuth2 auth base URL')
+param nmsAuthBaseUrl string
+
+@secure()
+@description('NMS OAuth2 client ID')
+param nmsClientId string
+
+@secure()
+@description('NMS OAuth2 client secret')
+param nmsClientSecret string
+
+@secure()
+@description('NOAA API key for weather data synchronization')
+param noaaApiKey string
+
+@secure()
+@description('APIM-to-API shared secret for gateway validation')
+param gatewaySecret string
+
+@description('Clerk JWT authority URL (leave empty to omit)')
+param clerkAuthority string = ''
 
 // Storage Account for Azure Functions (AzureWebJobsStorage)
 resource functionsStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -53,7 +77,7 @@ resource functionsStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 
 // Flex Consumption Plan
 resource functionsPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: functionsPlanName
+  name: planName
   location: location
   kind: 'functionapp'
   sku: {
@@ -64,6 +88,93 @@ resource functionsPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     reserved: true // Required for Linux
   }
 }
+
+// Build app settings — conditionally include Clerk settings
+var baseAppSettings = [
+  {
+    name: 'AzureWebJobsStorage'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
+  }
+  {
+    name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
+  }
+  {
+    name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+    value: appInsightsConnectionString
+  }
+  {
+    name: 'Database__Host'
+    value: databaseHost
+  }
+  {
+    name: 'Database__Database'
+    value: databaseName
+  }
+  {
+    name: 'Database__Username'
+    value: databaseUsername
+  }
+  {
+    name: 'Database__Password'
+    value: databasePassword
+  }
+  {
+    name: 'Database__Port'
+    value: '5432'
+  }
+  {
+    name: 'CloudStorage__UseManagedIdentity'
+    value: 'true'
+  }
+  {
+    name: 'CloudStorage__AccountName'
+    value: storageAccountName
+  }
+  {
+    name: 'CloudStorage__AirportDiagramsContainerName'
+    value: airportDiagramsContainerName
+  }
+  {
+    name: 'CloudStorage__ChartSupplementsContainerName'
+    value: chartSupplementsContainerName
+  }
+  {
+    name: 'NmsSettings__BaseUrl'
+    value: nmsBaseUrl
+  }
+  {
+    name: 'NmsSettings__AuthBaseUrl'
+    value: nmsAuthBaseUrl
+  }
+  {
+    name: 'NmsSettings__ClientId'
+    value: nmsClientId
+  }
+  {
+    name: 'NmsSettings__ClientSecret'
+    value: nmsClientSecret
+  }
+  {
+    name: 'NOAASettings__NOAAApiKey'
+    value: noaaApiKey
+  }
+  {
+    name: 'GatewaySecret'
+    value: gatewaySecret
+  }
+]
+
+var clerkSettings = empty(clerkAuthority) ? [] : [
+  {
+    name: 'ClerkSettings__Authority'
+    value: clerkAuthority
+  }
+  {
+    name: 'ClerkSettings__RequireAuthenticationInDevelopment'
+    value: 'true'
+  }
+]
 
 // Function App
 resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
@@ -78,56 +189,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     httpsOnly: true
     siteConfig: {
       minTlsVersion: '1.2'
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
-        }
-        {
-          name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${functionsStorage.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionsStorage.listKeys().keys[0].value}'
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsightsConnectionString
-        }
-        {
-          name: 'Database__Host'
-          value: databaseHost
-        }
-        {
-          name: 'Database__Database'
-          value: databaseName
-        }
-        {
-          name: 'Database__Username'
-          value: databaseUsername
-        }
-        {
-          name: 'Database__Password'
-          value: databasePassword
-        }
-        {
-          name: 'Database__Port'
-          value: '5432'
-        }
-        {
-          name: 'CloudStorage__UseManagedIdentity'
-          value: 'true'
-        }
-        {
-          name: 'CloudStorage__AccountName'
-          value: storageAccountName
-        }
-        {
-          name: 'CloudStorage__AirportDiagramsContainerName'
-          value: airportDiagramsContainerName
-        }
-        {
-          name: 'CloudStorage__ChartSupplementsContainerName'
-          value: chartSupplementsContainerName
-        }
-      ]
+      appSettings: concat(baseAppSettings, clerkSettings)
     }
   }
 }
