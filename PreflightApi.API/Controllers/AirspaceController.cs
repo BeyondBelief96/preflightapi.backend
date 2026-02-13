@@ -115,12 +115,19 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets airspaces by ICAO codes or FAA identifiers
+    /// Gets controlled airspaces associated with specific airports by ICAO code or FAA identifier.
+    ///
+    /// <para>
+    /// Returns all controlled airspace boundaries (Class B, C, D) associated with the given airport
+    /// identifiers. Each result includes the airspace classification, altitude limits, and boundary
+    /// geometry. Pass multiple identifiers as a comma-separated list to retrieve airspaces for
+    /// several airports in a single request.
+    /// </para>
     /// </summary>
-    /// <param name="icaoOrIdents">Comma-separated ICAO codes or identifiers</param>
-    /// <returns>Airspaces matching the specified identifiers</returns>
+    /// <param name="icaoOrIdents">Comma-separated ICAO codes or FAA identifiers (e.g., <c>KDFW,KORD,KJFK</c>)</param>
+    /// <returns>All controlled airspaces matching the specified identifiers</returns>
     /// <response code="200">Returns the matching airspaces</response>
-    /// <response code="400">If the identifiers parameter is empty</response>
+    /// <response code="400">The identifiers parameter is empty</response>
     [HttpGet("by-icao-or-idents")]
     [ProducesResponseType(typeof(IEnumerable<AirspaceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

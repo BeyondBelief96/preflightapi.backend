@@ -23,10 +23,18 @@ namespace PreflightApi.API.Controllers;
 public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
 {
     /// <summary>
-    /// Gets all current G-AIRMETs (Graphical AIRMETs)
+    /// Gets all current G-AIRMET advisories across all product types and hazards.
+    ///
+    /// <para>
+    /// Returns every active G-AIRMET regardless of product type (SIERRA, TANGO, ZULU) or hazard type.
+    /// Each advisory includes the hazard, severity, affected altitude range, forecast valid time,
+    /// and a geographic polygon defining the affected area. Use the
+    /// <c>GET /product/{product}</c> or <c>GET /hazard/{hazardType}</c> endpoints to filter
+    /// by specific product or hazard type.
+    /// </para>
     /// </summary>
-    /// <returns>All active G-AIRMET advisories</returns>
-    /// <response code="200">Returns the list of G-AIRMETs</response>
+    /// <returns>All active G-AIRMET advisories with hazard details and geographic boundaries</returns>
+    /// <response code="200">Returns the list of all current G-AIRMETs</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<GAirmetDto>>> GetAllGAirmets()

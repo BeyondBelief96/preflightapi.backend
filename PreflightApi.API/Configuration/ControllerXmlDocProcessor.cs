@@ -105,7 +105,8 @@ public class ControllerXmlDocProcessor : IDocumentProcessor
 
     /// <summary>
     /// Converts an XML documentation element to markdown, handling inline elements
-    /// like &lt;para&gt;, &lt;b&gt;, &lt;c&gt;, &lt;see&gt;, and &lt;seealso&gt;.
+    /// like &lt;para&gt;, &lt;b&gt;/&lt;strong&gt;, &lt;i&gt;/&lt;em&gt;, &lt;c&gt;, &lt;code&gt;,
+    /// &lt;see&gt;, &lt;seealso&gt;, and &lt;list&gt; with &lt;item&gt;/&lt;term&gt;/&lt;description&gt;.
     /// </summary>
     private static string ConvertXmlDocToMarkdown(XElement element)
     {
@@ -136,11 +137,13 @@ public class ControllerXmlDocProcessor : IDocumentProcessor
                             sb.Append("\n\n");
                             break;
                         case "b":
+                        case "strong":
                             sb.Append("**");
                             sb.Append(ConvertNodes(el.Nodes()));
                             sb.Append("**");
                             break;
                         case "i":
+                        case "em":
                             sb.Append('*');
                             sb.Append(ConvertNodes(el.Nodes()));
                             sb.Append('*');
@@ -171,6 +174,35 @@ public class ControllerXmlDocProcessor : IDocumentProcessor
                             {
                                 sb.Append(el.Value);
                             }
+                            break;
+                        case "list":
+                            sb.Append("\n\n");
+                            foreach (var item in el.Elements("item"))
+                            {
+                                var term = item.Element("term");
+                                var desc = item.Element("description");
+                                sb.Append("\n\n- ");
+                                if (term != null)
+                                {
+                                    sb.Append("**");
+                                    sb.Append(ConvertNodes(term.Nodes()));
+                                    sb.Append("**");
+                                    if (desc != null)
+                                    {
+                                        sb.Append(" — ");
+                                        sb.Append(ConvertNodes(desc.Nodes()));
+                                    }
+                                }
+                                else if (desc != null)
+                                {
+                                    sb.Append(ConvertNodes(desc.Nodes()));
+                                }
+                                else
+                                {
+                                    sb.Append(ConvertNodes(item.Nodes()));
+                                }
+                            }
+                            sb.Append("\n\n");
                             break;
                         default:
                             // Unknown element — just include its inner content
