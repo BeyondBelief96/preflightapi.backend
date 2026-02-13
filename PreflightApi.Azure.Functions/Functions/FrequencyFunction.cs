@@ -23,6 +23,7 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("FrequencyFunction")]
+        [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
         public async Task Run([TimerTrigger("0 0 1 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Frequency Function executed at: {Time}", DateTime.UtcNow);

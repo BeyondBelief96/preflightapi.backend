@@ -7,17 +7,65 @@ using PreflightApi.Infrastructure.Interfaces;
 namespace PreflightApi.API.Controllers;
 
 /// <summary>
-/// Provides E6B flight computer calculations for VFR pilots, including crosswind components,
-/// density altitude, wind triangle, true airspeed, cloud base estimation, and pressure altitude.
-/// Airport-based calculations automatically use the latest METAR data for wind, temperature, and altimeter settings.
-/// Manual calculation endpoints allow you to provide your own parameters.
+/// Provides E6B flight computer calculations for VFR pilots.
+///
 /// <para>
-/// <b>DISCLAIMER:</b> These calculations are intended for PRE-FLIGHT planning purposes only and must not
-/// be used for in-flight navigation. Results are approximations based on the ICAO Standard
+/// Each calculation is available in two forms:
+/// </para>
+///
+/// <list type="bullet">
+///   <item>
+///     <term>Airport-based</term>
+///     <description>
+///       Automatically pulls wind, temperature, and altimeter data from the airport's latest METAR
+///       observation. Some airport-based endpoints accept optional overrides for "what if" scenarios.
+///     </description>
+///   </item>
+///   <item>
+///     <term>Manual</term>
+///     <description>
+///       You provide all input values directly. Useful for any location, hypothetical conditions,
+///       or when METAR data is not available.
+///     </description>
+///   </item>
+/// </list>
+///
+/// <para><strong>Available Calculations</strong></para>
+/// <list type="bullet">
+///   <item>
+///     <term>Crosswind</term>
+///     <description>Headwind and crosswind components for runway selection</description>
+///   </item>
+///   <item>
+///     <term>Density Altitude</term>
+///     <description>Pressure altitude corrected for non-standard temperature</description>
+///   </item>
+///   <item>
+///     <term>Wind Triangle</term>
+///     <description>True heading, ground speed, and wind correction angle from course/wind data</description>
+///   </item>
+///   <item>
+///     <term>True Airspeed</term>
+///     <description>TAS from calibrated airspeed, pressure altitude, and temperature</description>
+///   </item>
+/// </list>
+/// <list type="bullet">
+///   <item>
+///     <term>Cloud Base</term>
+///     <description>Estimated ceiling height from temperature/dewpoint spread</description>
+///   </item>
+///   <item>
+///     <term>Pressure Altitude</term>
+///     <description>Altitude corrected from field elevation and current altimeter setting</description>
+///   </item>
+/// </list>
+///
+/// <para>
+/// <strong>DISCLAIMER:</strong> These calculations are intended for PRE-FLIGHT planning purposes only
+/// and must not be used for in-flight navigation. Results are approximations based on the ICAO Standard
 /// Atmosphere (ISA) model, which assumes mid-latitude atmospheric conditions. The actual tropopause
-/// altitude varies from ~26,000 ft at the poles to ~55,000 ft at the equator, and real atmospheric
-/// conditions differ from the ISA model. Always verify against certified instruments and official
-/// flight planning tools.
+/// altitude varies from ~26,000 ft at the poles to ~55,000 ft at the equator. Always verify against
+/// certified instruments and official flight planning tools.
 /// </para>
 /// </summary>
 [ApiVersion("1.0")]
@@ -28,15 +76,40 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     : ControllerBase
 {
     /// <summary>
-    /// Calculates crosswind and headwind components for all runways at an airport using the latest METAR wind data.
-    /// Returns components for each runway end and recommends the best runway (lowest crosswind with a headwind).
-    /// Requires the airport to have a current METAR with wind data and at least one runway with heading information.
+    /// Calculates crosswind and headwind components for every runway at an airport using live METAR wind data.
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
-    /// <returns>Crosswind data for all runway ends with recommended runway</returns>
-    /// <response code="200">Returns crosswind data for all runways</response>
-    /// <response code="400">If METAR is missing required wind data</response>
-    /// <response code="404">If the airport or METAR is not found</response>
+    /// <remarks>
+    /// <para>
+    /// Fetches the airport's latest METAR observation and computes wind components for each runway end.
+    /// The response includes a <c>RecommendedRunway</c> — the runway end with the lowest crosswind
+    /// that also has a headwind (not a tailwind).
+    /// </para>
+    ///
+    /// <para><strong>Sign Conventions</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>CrosswindKt</c> — positive = wind from the right, negative = wind from the left</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>HeadwindKt</c> — positive = headwind (favorable), negative = tailwind (unfavorable)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// If the METAR reports variable wind (VRB), <c>IsVariableWind</c> is true and crosswind components
+    /// are calculated using the full wind speed for all runway ends.
+    /// If gusts are reported, separate <c>GustCrosswindKt</c> and <c>GustHeadwindKt</c> fields show the
+    /// worst-case gust components.
+    /// </para>
+    /// </remarks>
+    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <returns>
+    /// Crosswind data for every runway end at the airport, the METAR wind conditions used,
+    /// and the recommended runway identifier.
+    /// </returns>
+    /// <response code="200">Returns crosswind data for all runways with a recommended runway</response>
+    /// <response code="400">The METAR is missing wind direction or wind speed data</response>
+    /// <response code="404">The airport was not found, or no current METAR is available for this airport</response>
     [HttpGet("crosswind/{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(AirportCrosswindResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -49,13 +122,35 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     }
 
     /// <summary>
-    /// Calculates crosswind and headwind components using manually provided wind and runway heading values.
-    /// Useful when you want to calculate components for specific conditions rather than using live METAR data.
+    /// Calculates crosswind and headwind components from manually provided wind and runway heading values.
     /// </summary>
-    /// <param name="request">Wind direction (degrees), wind speed (knots), optional gust speed (knots), and runway heading (magnetic degrees)</param>
-    /// <returns>Calculated crosswind and headwind components in knots (positive crosswind = from right, positive headwind = headwind)</returns>
-    /// <response code="200">Returns calculated crosswind components</response>
-    /// <response code="400">If the request parameters are invalid</response>
+    /// <remarks>
+    /// <para>
+    /// Provide wind direction, wind speed, and a runway heading to compute the headwind and crosswind
+    /// components. Optionally include a gust speed to also compute gust components.
+    /// </para>
+    ///
+    /// <para><strong>Sign Conventions</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>CrosswindKt</c> — positive = wind from the right, negative = wind from the left</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>HeadwindKt</c> — positive = headwind (favorable), negative = tailwind (unfavorable)</description>
+    ///   </item>
+    /// </list>
+    /// </remarks>
+    /// <param name="request">
+    /// <c>WindDirectionDegrees</c> (0-360, or null for variable),
+    /// <c>WindSpeedKt</c> (knots),
+    /// <c>WindGustKt</c> (knots, optional),
+    /// <c>RunwayHeadingDegrees</c> (magnetic degrees, 0-360).
+    /// </param>
+    /// <returns>
+    /// Crosswind and headwind components in knots, plus gust components if gust speed was provided.
+    /// </returns>
+    /// <response code="200">Returns the calculated crosswind and headwind components</response>
+    /// <response code="400">The request parameters are invalid (e.g., wind speed is negative)</response>
     [HttpPost("crosswind/calculate")]
     [ProducesResponseType(typeof(CrosswindCalculationResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -67,21 +162,45 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     }
 
     /// <summary>
-    /// Calculates density altitude for an airport using the latest METAR temperature and altimeter data.
-    /// Optionally override the temperature or altimeter setting (e.g., for "what if" scenarios).
-    /// Returns density altitude, pressure altitude, ISA temperature, and temperature deviation.
+    /// Calculates density altitude for an airport using live METAR data with optional overrides.
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
-    /// <param name="request">Optional overrides: temperatureCelsiusOverride and/or altimeterInHgOverride. If not provided, values are taken from the latest METAR.</param>
-    /// <returns>Density altitude, pressure altitude, ISA temperature, and deviation from standard</returns>
-    /// <response code="200">Returns density altitude data</response>
-    /// <response code="400">If METAR is missing required data and no override provided</response>
-    /// <response code="404">If the airport or METAR is not found</response>
     /// <remarks>
-    /// Density altitude is calculated using the ISA (International Standard Atmosphere) model approximation:
-    /// DA = PA + 120 × (OAT − ISA_temp). Real atmospheric density varies with humidity, local pressure
-    /// patterns, and non-standard lapse rates that this model does not account for.
+    /// <para>
+    /// Fetches the airport's latest METAR to obtain temperature and altimeter setting, then computes
+    /// density altitude using the ISA model. You can optionally override either value via query parameters
+    /// for "what if" scenarios (e.g., "what would density altitude be if the temperature reached 40°C?").
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>DensityAltitudeFt</c> — the effective altitude the aircraft "feels" based on air density</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>PressureAltitudeFt</c> — field elevation corrected for non-standard pressure</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>IsaTemperatureCelsius</c> — the standard (ISA) temperature expected at this pressure altitude</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>TemperatureDeviationCelsius</c> — how far the actual temperature deviates from ISA (positive = hotter than standard)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <em>Formula:</em> <c>DA = PA + 120 * (OAT - ISA_temp)</c>. This does not account for humidity,
+    /// local pressure patterns, or non-standard lapse rates.
+    /// </para>
     /// </remarks>
+    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="request">
+    /// Optional query parameters: <c>temperatureCelsiusOverride</c> and/or <c>altimeterInHgOverride</c>.
+    /// If omitted, values are taken from the latest METAR.
+    /// </param>
+    /// <returns>Density altitude, pressure altitude, ISA temperature, temperature deviation, and the METAR data used</returns>
+    /// <response code="200">Returns density altitude data for the airport</response>
+    /// <response code="400">The METAR is missing temperature or altimeter data and no override was provided</response>
+    /// <response code="404">The airport was not found, or no current METAR is available</response>
     [HttpGet("density-altitude/{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(DensityAltitudeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -97,18 +216,43 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     }
 
     /// <summary>
-    /// Calculates density altitude using manually provided field elevation, altimeter setting, and temperature.
-    /// Useful for any location or for calculating with non-current weather conditions.
+    /// Calculates density altitude from manually provided field elevation, altimeter setting, and temperature.
     /// </summary>
-    /// <param name="request">Field elevation (feet MSL), altimeter setting (inches of mercury), and temperature (degrees Celsius)</param>
-    /// <returns>Density altitude, pressure altitude, ISA temperature, and deviation from standard</returns>
-    /// <response code="200">Returns calculated density altitude</response>
-    /// <response code="400">If the request parameters are invalid</response>
     /// <remarks>
-    /// Density altitude is calculated using the ISA (International Standard Atmosphere) model approximation:
-    /// DA = PA + 120 × (OAT − ISA_temp). Real atmospheric density varies with humidity, local pressure
-    /// patterns, and non-standard lapse rates that this model does not account for.
+    /// <para>
+    /// Provide your own values instead of relying on METAR data. Useful for any location, for planning
+    /// with forecast temperatures, or when METAR data is not available.
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>DensityAltitudeFt</c> — the effective altitude the aircraft "feels" based on air density</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>PressureAltitudeFt</c> — field elevation corrected for non-standard pressure</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>IsaTemperatureCelsius</c> — the standard (ISA) temperature expected at this pressure altitude</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>TemperatureDeviationCelsius</c> — how far the actual temperature deviates from ISA (positive = hotter than standard)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <em>Formula:</em> <c>DA = PA + 120 * (OAT - ISA_temp)</c>. This does not account for humidity,
+    /// local pressure patterns, or non-standard lapse rates.
+    /// </para>
     /// </remarks>
+    /// <param name="request">
+    /// <c>FieldElevationFt</c> (feet MSL),
+    /// <c>AltimeterInHg</c> (inches of mercury),
+    /// <c>TemperatureCelsius</c> (degrees Celsius).
+    /// </param>
+    /// <returns>Density altitude, pressure altitude, ISA temperature, and temperature deviation</returns>
+    /// <response code="200">Returns the calculated density altitude</response>
+    /// <response code="400">The request parameters are invalid</response>
     [HttpPost("density-altitude/calculate")]
     [ProducesResponseType(typeof(DensityAltitudeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -120,14 +264,57 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     }
 
     /// <summary>
-    /// Calculates true heading and ground speed using the wind triangle.
-    /// Given true course, true airspeed, wind direction, and wind speed, returns the wind correction angle,
-    /// true heading, ground speed, and headwind/crosswind components.
+    /// Solves the wind triangle to compute true heading and ground speed.
     /// </summary>
-    /// <param name="request">True course (degrees), TAS (knots), wind direction (degrees), wind speed (knots)</param>
-    /// <returns>True heading, ground speed, WCA, and wind components</returns>
-    /// <response code="200">Returns wind triangle calculation results</response>
-    /// <response code="400">If the request parameters are invalid</response>
+    /// <remarks>
+    /// <para>
+    /// Given your desired true course, true airspeed, and the wind conditions, this calculates the heading
+    /// you need to fly to stay on course and your resulting ground speed.
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description>
+    ///       <c>TrueHeadingDegrees</c> — the heading to fly (true course + wind correction angle)
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>GroundSpeedKt</c> — your speed over the ground after accounting for wind
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>WindCorrectionAngleDegrees</c> — the crab angle needed to stay on course
+    ///       (positive = correct to the right, negative = correct to the left)
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>HeadwindComponentKt</c> — positive = headwind, negative = tailwind
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>CrosswindComponentKt</c> — positive = from the right, negative = from the left
+    ///     </description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// Wind direction is the direction the wind is blowing <em>from</em> (standard meteorological convention).
+    /// </para>
+    /// </remarks>
+    /// <param name="request">
+    /// <c>TrueCourseDegrees</c> (0-360),
+    /// <c>TrueAirspeedKt</c> (knots, must be greater than 0),
+    /// <c>WindDirectionDegrees</c> (0-360, direction wind blows from),
+    /// <c>WindSpeedKt</c> (knots).
+    /// </param>
+    /// <returns>True heading, ground speed, wind correction angle, and headwind/crosswind components</returns>
+    /// <response code="200">Returns the wind triangle solution</response>
+    /// <response code="400">The request parameters are invalid (e.g., TAS is zero or negative)</response>
     [HttpPost("wind-triangle/calculate")]
     [ProducesResponseType(typeof(WindTriangleResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -140,20 +327,42 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates true airspeed (TAS) from calibrated airspeed, pressure altitude, and outside air temperature.
-    /// Uses the full compressible isentropic flow conversion (CAS → impact pressure → Mach → TAS),
-    /// accurate from sea level through FL410+ including above the tropopause (36,089 ft).
-    /// Also returns density altitude and Mach number at the given conditions.
-    /// Reference: ICAO Doc 7488 (Standard Atmosphere), isentropic flow relations.
     /// </summary>
-    /// <param name="request">Calibrated airspeed (knots), pressure altitude (feet), OAT (°C)</param>
-    /// <returns>True airspeed, density altitude, and Mach number</returns>
-    /// <response code="200">Returns TAS calculation results</response>
-    /// <response code="400">If the request parameters are invalid</response>
     /// <remarks>
-    /// This calculation assumes the ISA tropopause at 36,089 ft. The real tropopause varies from
-    /// ~26,000 ft near the poles to ~55,000 ft near the equator. Pressure ratio and temperature
-    /// model transitions at this boundary affect TAS accuracy at high altitudes in non-mid-latitude regions.
+    /// <para>
+    /// Uses the full compressible isentropic flow conversion (CAS to impact pressure to Mach to TAS),
+    /// accurate from sea level through FL410+ including above the ISA tropopause at 36,089 ft.
+    /// This is more accurate than the simplified <c>CAS / sqrt(sigma)</c> formula, which diverges
+    /// significantly at higher altitudes.
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>TrueAirspeedKt</c> — the aircraft's actual speed through the air mass (knots)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>DensityAltitudeFt</c> — density altitude at the given conditions (feet)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>MachNumber</c> — the aircraft's speed as a fraction of the local speed of sound</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <em>Note:</em> The ISA tropopause is modeled at 36,089 ft. The real tropopause varies from
+    /// ~26,000 ft near the poles to ~55,000 ft near the equator, which affects accuracy at high
+    /// altitudes in non-mid-latitude regions.
+    /// </para>
     /// </remarks>
+    /// <param name="request">
+    /// <c>CalibratedAirspeedKt</c> (knots, must be greater than 0),
+    /// <c>PressureAltitudeFt</c> (feet, can be negative),
+    /// <c>OutsideAirTemperatureCelsius</c> (degrees Celsius).
+    /// </param>
+    /// <returns>True airspeed (knots), density altitude (feet), and Mach number</returns>
+    /// <response code="200">Returns the TAS calculation</response>
+    /// <response code="400">The request parameters are invalid (e.g., CAS is zero or negative)</response>
     [HttpPost("true-airspeed/calculate")]
     [ProducesResponseType(typeof(TrueAirspeedResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -165,18 +374,37 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     }
 
     /// <summary>
-    /// Estimates cloud base height AGL from surface temperature and dewpoint.
-    /// Uses the standard spread × 400 formula (equivalent to spread / 2.5 × 1000).
+    /// Estimates cloud base height AGL from surface temperature and dewpoint spread.
     /// </summary>
-    /// <param name="request">Surface temperature (°C) and dewpoint (°C)</param>
-    /// <returns>Estimated cloud base in feet AGL and temperature/dewpoint spread</returns>
-    /// <response code="200">Returns cloud base estimation</response>
-    /// <response code="400">If dewpoint exceeds temperature</response>
     /// <remarks>
-    /// This estimation uses the average dry adiabatic lapse rate (~3°C/1000 ft) and dewpoint lapse
-    /// rate (~0.5°C/1000 ft) to approximate the lifting condensation level. Actual cloud bases vary
-    /// with humidity profiles, inversions, and local convective conditions.
+    /// <para>
+    /// Uses the standard pilot rule of thumb: <c>cloud base (ft AGL) = (temperature - dewpoint) * 400</c>.
+    /// This approximates the lifting condensation level based on the average dry adiabatic lapse rate
+    /// (~3°C/1000 ft) and dewpoint lapse rate (~0.5°C/1000 ft).
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>EstimatedCloudBaseFtAgl</c> — estimated height of the cloud base above ground level (feet)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>TemperatureDewpointSpreadCelsius</c> — the difference between temperature and dewpoint (degrees Celsius)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <em>Note:</em> Actual cloud bases vary with humidity profiles, inversions, and local convective
+    /// conditions. A small spread (less than 3°C) generally indicates a high likelihood of low ceilings or fog.
+    /// </para>
     /// </remarks>
+    /// <param name="request">
+    /// <c>TemperatureCelsius</c> (surface temperature in °C) and
+    /// <c>DewpointCelsius</c> (dewpoint in °C, must be less than or equal to the temperature).
+    /// </param>
+    /// <returns>Estimated cloud base in feet AGL and the temperature/dewpoint spread</returns>
+    /// <response code="200">Returns the cloud base estimation</response>
+    /// <response code="400">The dewpoint exceeds the temperature, which is physically invalid</response>
     [HttpPost("cloud-base/calculate")]
     [ProducesResponseType(typeof(CloudBaseResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -189,17 +417,40 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates pressure altitude from field elevation and altimeter setting.
-    /// PA = field elevation + (29.92 − altimeter) × 1000.
     /// </summary>
-    /// <param name="request">Field elevation (feet MSL) and altimeter setting (inHg)</param>
-    /// <returns>Pressure altitude and altimeter correction in feet</returns>
-    /// <response code="200">Returns pressure altitude calculation</response>
-    /// <response code="400">If the altimeter setting is out of range</response>
     /// <remarks>
-    /// This uses the standard altimetry relationship from the ICAO Standard Atmosphere. The 1 inHg ≈ 1000 ft
-    /// approximation is most accurate near sea level and diverges slightly at higher altitudes and extreme
-    /// altimeter settings.
+    /// <para>
+    /// Pressure altitude is the altitude in the standard atmosphere where the pressure equals the
+    /// current pressure at your location. It is the starting point for density altitude, TAS,
+    /// and performance chart calculations.
+    /// </para>
+    ///
+    /// <para>
+    /// <em>Formula:</em> <c>PA = FieldElevation + (29.92 - Altimeter) * 1000</c>
+    /// </para>
+    ///
+    /// <para><strong>Response Fields</strong></para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>PressureAltitudeFt</c> — the calculated pressure altitude (feet)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>AltimeterCorrectionFt</c> — the deviation from standard pressure expressed in feet (positive = lower pressure than standard, negative = higher)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <em>Note:</em> The 1 inHg = 1000 ft approximation is most accurate near sea level and diverges
+    /// slightly at higher elevations and extreme altimeter settings.
+    /// </para>
     /// </remarks>
+    /// <param name="request">
+    /// <c>FieldElevationFt</c> (feet MSL) and
+    /// <c>AltimeterInHg</c> (inches of mercury, must be between 25.0 and 35.0).
+    /// </param>
+    /// <returns>Pressure altitude and altimeter correction in feet</returns>
+    /// <response code="200">Returns the pressure altitude calculation</response>
+    /// <response code="400">The altimeter setting is outside the valid range (25.0 - 35.0 inHg)</response>
     [HttpPost("pressure-altitude/calculate")]
     [ProducesResponseType(typeof(PressureAltitudeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

@@ -23,6 +23,7 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("AirportDiagramFunction")]
+        [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
         public async Task Run([TimerTrigger("0 0 5 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Airport Diagram Function executed at: {Time}", DateTime.UtcNow);

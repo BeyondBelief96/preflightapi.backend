@@ -84,14 +84,14 @@ public class ControllerXmlDocProcessor : IDocumentProcessor
 
             if (summaryElement != null)
             {
-                var summaryText = ConvertXmlDocToMarkdown(summaryElement);
+                var summaryText = XmlDocMarkdownConverter.ConvertXmlDocToMarkdown(summaryElement);
                 if (!string.IsNullOrWhiteSpace(summaryText))
                     parts.Add(summaryText);
             }
 
             if (remarksElement != null)
             {
-                var remarksText = ConvertXmlDocToMarkdown(remarksElement);
+                var remarksText = XmlDocMarkdownConverter.ConvertXmlDocToMarkdown(remarksElement);
                 if (!string.IsNullOrWhiteSpace(remarksText))
                     parts.Add(remarksText);
             }
@@ -101,85 +101,5 @@ public class ControllerXmlDocProcessor : IDocumentProcessor
         }
 
         return descriptions;
-    }
-
-    /// <summary>
-    /// Converts an XML documentation element to markdown, handling inline elements
-    /// like &lt;para&gt;, &lt;b&gt;, &lt;c&gt;, &lt;see&gt;, and &lt;seealso&gt;.
-    /// </summary>
-    private static string ConvertXmlDocToMarkdown(XElement element)
-    {
-        var result = ConvertNodes(element.Nodes());
-        // Normalize whitespace within each paragraph, preserving paragraph breaks
-        var paragraphs = result.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
-        var normalized = paragraphs.Select(p =>
-            string.Join(" ", p.Split(default(char[]), StringSplitOptions.RemoveEmptyEntries)));
-        return string.Join("\n\n", normalized);
-    }
-
-    private static string ConvertNodes(IEnumerable<XNode> nodes)
-    {
-        var sb = new System.Text.StringBuilder();
-        foreach (var node in nodes)
-        {
-            switch (node)
-            {
-                case XText text:
-                    sb.Append(text.Value);
-                    break;
-                case XElement el:
-                    switch (el.Name.LocalName)
-                    {
-                        case "para":
-                            sb.Append("\n\n");
-                            sb.Append(ConvertNodes(el.Nodes()));
-                            sb.Append("\n\n");
-                            break;
-                        case "b":
-                            sb.Append("**");
-                            sb.Append(ConvertNodes(el.Nodes()));
-                            sb.Append("**");
-                            break;
-                        case "i":
-                            sb.Append('*');
-                            sb.Append(ConvertNodes(el.Nodes()));
-                            sb.Append('*');
-                            break;
-                        case "c":
-                            sb.Append('`');
-                            sb.Append(el.Value);
-                            sb.Append('`');
-                            break;
-                        case "code":
-                            sb.Append("\n\n```\n");
-                            sb.Append(el.Value.Trim());
-                            sb.Append("\n```\n\n");
-                            break;
-                        case "see":
-                        case "seealso":
-                            var cref = el.Attribute("cref")?.Value;
-                            if (cref != null)
-                            {
-                                // Strip prefix (T:, M:, P:, F:) and namespace
-                                var name = cref.Contains(':') ? cref[(cref.IndexOf(':') + 1)..] : cref;
-                                var shortName = name.Contains('.') ? name[(name.LastIndexOf('.') + 1)..] : name;
-                                sb.Append('`');
-                                sb.Append(shortName);
-                                sb.Append('`');
-                            }
-                            else
-                            {
-                                sb.Append(el.Value);
-                            }
-                            break;
-                        default:
-                            // Unknown element — just include its inner content
-                            sb.Append(ConvertNodes(el.Nodes()));
-                            break;
-                    }
-                    break;
-            }
-        }
-        return sb.ToString();
     }
 }

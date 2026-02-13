@@ -1,17 +1,27 @@
+// ─── Standalone Module ────────────────────────────────────────────────────────
+// Creates a user-assigned managed identity with GitHub OIDC federated credentials.
+// This module is NOT wired into main.bicep by default — both PRD and TST use
+// existing App Registrations (service principals) for GitHub Actions OIDC.
+//
+// Use this module standalone for new environments:
+//   az deployment group create \
+//     --resource-group <rg-name> \
+//     --template-file modules/github-identity.bicep \
+//     --parameters identityName=id-preflightapi-github-prod ...
+//
+// Then set the output principalId as GITHUB_DEPLOYMENT_PRINCIPAL_ID in .env.
+
 @description('Azure region for the managed identity')
 param location string
 
-@description('Base name for resource naming')
-param baseName string
-
-@description('Environment name (test, prod)')
-param environment string
+@description('Name for the managed identity resource')
+param identityName string
 
 @description('GitHub organization or username')
-param githubOrganization string
+param githubOrganization string = 'BeyondBelief96'
 
 @description('GitHub repository name')
-param githubRepository string
+param githubRepository string = 'preflightapi.backend'
 
 @description('Branches to create federated credentials for')
 param branches array = [
@@ -22,7 +32,7 @@ param branches array = [
 // ─── User-Assigned Managed Identity ──────────────────────────────────────────
 
 resource githubIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-${baseName}-github-${environment}'
+  name: identityName
   location: location
 }
 

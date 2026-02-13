@@ -21,10 +21,18 @@ namespace PreflightApi.API.Controllers;
 public class SigmetController(ISigmetService sigmetService) : ControllerBase
 {
     /// <summary>
-    /// Gets all current domestic SIGMETs
+    /// Gets all current domestic SIGMET advisories across all hazard types.
     /// </summary>
-    /// <returns>All active SIGMET advisories</returns>
-    /// <response code="200">Returns the list of SIGMETs</response>
+    /// <remarks>
+    /// <para>
+    /// Returns every active domestic SIGMET regardless of hazard type. Each advisory includes the
+    /// hazard (convective activity, severe turbulence, severe icing, IFR conditions, or mountain
+    /// obscuration), severity, affected altitude range, and a geographic polygon defining the affected area.
+    /// Use the <c>GET /hazard/{hazardType}</c> endpoint to filter by a specific hazard type.
+    /// </para>
+    /// </remarks>
+    /// <returns>All active domestic SIGMET advisories with hazard details and geographic boundaries</returns>
+    /// <response code="200">Returns the list of all current domestic SIGMETs</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<SigmetDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<SigmetDto>>> GetAllSigmets()

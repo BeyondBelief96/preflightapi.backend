@@ -1,15 +1,15 @@
 @description('Azure region for all resources')
 param location string
 
-@description('Base name prefix for resources')
-param baseName string
+@description('Log Analytics workspace name')
+param logAnalyticsName string
 
-@description('Environment tag (test, prod)')
-param environment string
+@description('Application Insights resource name')
+param appInsightsName string
 
 // Log Analytics Workspace
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: 'log-${baseName}-${environment}'
+  name: logAnalyticsName
   location: location
   properties: {
     sku: {
@@ -21,7 +21,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 
 // Application Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'appi-${baseName}-${environment}'
+  name: appInsightsName
   location: location
   kind: 'web'
   properties: {
