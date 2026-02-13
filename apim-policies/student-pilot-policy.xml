@@ -1,0 +1,38 @@
+<policies>
+	<inbound>
+		<base />
+		<rate-limit-by-key calls="10" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" />
+		<quota-by-key calls="500" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
+		<!-- Endpoint gating: Free tier only allows basic weather and airports -->
+		<set-variable name="is-allowed" value="@{
+			var path = context.Request.Url.Path.ToLower();
+			var allowedPrefixes = new[] {
+				"/api/v1/metars",
+				"/api/v1/tafs",
+				"/api/v1/airports",
+				"/api/v1/communication-frequencies"
+			};
+			return allowedPrefixes.Any(p => path.StartsWith(p));
+		}" />
+		<choose>
+			<when condition="@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))">
+				<return-response>
+					<set-status code="403" reason="Forbidden" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-body>{"error": "This endpoint is not available on the Free tier. Please upgrade to Starter or higher."}</set-body>
+				</return-response>
+			</when>
+		</choose>
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+	</outbound>
+	<on-error>
+		<base />
+	</on-error>
+</policies>

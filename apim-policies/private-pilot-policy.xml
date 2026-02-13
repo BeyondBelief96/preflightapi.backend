@@ -1,0 +1,39 @@
+<policies>
+	<inbound>
+		<base />
+		<rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" />
+		<quota-by-key calls="150000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
+		<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->
+		<set-variable name="is-blocked" value="@{
+			var path = context.Request.Url.Path.ToLower();
+			var blockedPrefixes = new[] {
+				"/api/v1/navlog",
+				"/api/v1/notams",
+				"/api/v1/airport-diagrams",
+				"/api/v1/chart-supplements",
+				"/api/v1/e6b"
+			};
+			return blockedPrefixes.Any(p => path.StartsWith(p));
+		}" />
+		<choose>
+			<when condition="@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))">
+				<return-response>
+					<set-status code="403" reason="Forbidden" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-body>{"error": "This endpoint is not available on the Starter tier. Please upgrade to Commercial or higher."}</set-body>
+				</return-response>
+			</when>
+		</choose>
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+	</outbound>
+	<on-error>
+		<base />
+	</on-error>
+</policies>

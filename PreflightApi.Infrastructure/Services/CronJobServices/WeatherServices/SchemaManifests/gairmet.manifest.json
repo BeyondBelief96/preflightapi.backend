@@ -1,0 +1,166 @@
+{
+  "$schema": "avwx-schema-manifest-v1",
+  "xmlRootElement": "GAIRMET",
+  "entity": "GAirmet",
+  "lastVerified": "2026-02-11",
+  "elements": {
+    "receipt_time": {
+      "entityProperty": "ReceiptTime",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "receiptTime",
+      "captured": true,
+      "description": "ISO 8601 receipt time"
+    },
+    "issue_time": {
+      "entityProperty": "IssueTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "issueTime",
+      "captured": true,
+      "description": "ISO 8601 issuance time"
+    },
+    "expire_time": {
+      "entityProperty": "ExpireTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "expireTime",
+      "captured": true,
+      "description": "ISO 8601 expiration time"
+    },
+    "valid_time": {
+      "entityProperty": "ValidTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "validTime",
+      "captured": true,
+      "description": "ISO 8601 forecast valid time"
+    },
+    "product": {
+      "entityProperty": "Product",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "product",
+      "captured": true,
+      "description": "Product type: SIERRA, TANGO, ZULU"
+    },
+    "tag": {
+      "entityProperty": "Tag",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "tag",
+      "captured": true,
+      "description": "Forecast component tag"
+    },
+    "roughly_the_number_of_hours_between_the_issue_time_and_the_valid_time": {
+      "entityProperty": "ForecastHour",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "forecastHour",
+      "captured": true,
+      "description": "Hours between issue time and valid time"
+    },
+    "geometry_type": {
+      "entityProperty": "GeometryType",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "geomType",
+      "captured": true,
+      "description": "Geometry type: AREA or LINE"
+    },
+    "due_to": {
+      "entityProperty": "DueTo",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "dueTo",
+      "captured": true,
+      "description": "Cause description"
+    }
+  },
+  "nestedElements": {
+    "hazard": {
+      "description": "Hazard type and severity (uses attributes)",
+      "attributes": {
+        "type": {
+          "entityProperty": "HazardType",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "hazard",
+          "captured": true,
+          "description": "Hazard type: MT_OBSC, TURB, ICE, IFR, etc."
+        },
+        "severity": {
+          "entityProperty": "HazardSeverity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "severity",
+          "captured": true,
+          "description": "Hazard severity level"
+        }
+      }
+    },
+    "altitude": {
+      "description": "Altitude range (repeating, uses attributes)",
+      "attributes": {
+        "min_ft_msl": {
+          "entityProperty": "Altitude.MinFtMsl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "altLow",
+          "captured": true,
+          "description": "Minimum altitude (number, SFC, or FZL)"
+        },
+        "max_ft_msl": {
+          "entityProperty": "Altitude.MaxFtMsl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "altHi",
+          "captured": true,
+          "description": "Maximum altitude in feet MSL"
+        },
+        "level_ft_msl": {
+          "entityProperty": "Altitude.LevelFtMsl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "level",
+          "captured": true,
+          "description": "Single-level altitude for freezing level lines"
+        }
+      }
+    },
+    "fzl_altitude": {
+      "description": "Freezing level altitude range (child elements)",
+      "elements": {
+        "min_ft_msl": {
+          "entityProperty": "FzlAltitude.MinFtMsl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "fzlLow",
+          "captured": true,
+          "description": "Minimum freezing level"
+        },
+        "max_ft_msl": {
+          "entityProperty": "FzlAltitude.MaxFtMsl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "fzlHi",
+          "captured": true,
+          "description": "Maximum freezing level"
+        }
+      }
+    },
+    "area": {
+      "description": "Geographic polygon boundary (with point child elements)",
+      "attributes": {
+        "num_points": {
+          "entityProperty": "Area.NumPoints",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Number of boundary polygon points"
+        }
+      }
+    }
+  }
+}

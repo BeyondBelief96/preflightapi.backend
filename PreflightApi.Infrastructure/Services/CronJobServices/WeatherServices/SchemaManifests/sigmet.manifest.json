@@ -1,0 +1,113 @@
+{
+  "$schema": "avwx-schema-manifest-v1",
+  "xmlRootElement": "AIRSIGMET",
+  "entity": "Sigmet",
+  "lastVerified": "2026-02-11",
+  "elements": {
+    "raw_text": {
+      "entityProperty": "RawText",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "rawAirSigmet",
+      "captured": true,
+      "description": "Raw SIGMET text"
+    },
+    "valid_time_from": {
+      "entityProperty": "ValidTimeFrom",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "validTimeFrom",
+      "captured": true,
+      "description": "Advisory validity period start"
+    },
+    "valid_time_to": {
+      "entityProperty": "ValidTimeTo",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "validTimeTo",
+      "captured": true,
+      "description": "Advisory validity period end"
+    },
+    "movement_dir_degrees": {
+      "entityProperty": "MovementDirDegrees",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "movementDir",
+      "captured": true,
+      "description": "Hazard movement direction in degrees"
+    },
+    "movement_spd_kt": {
+      "entityProperty": "MovementSpeedKt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "movementSpd",
+      "captured": true,
+      "description": "Hazard movement speed in knots"
+    },
+    "airsigmet_type": {
+      "entityProperty": "SigmetType",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "airSigmetType",
+      "captured": true,
+      "description": "Product type: SIGMET or OUTLOOK"
+    }
+  },
+  "nestedElements": {
+    "altitude": {
+      "description": "Altitude range for the advisory (uses attributes)",
+      "attributes": {
+        "min_ft_msl": {
+          "entityProperty": "Altitude.MinFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "altLow",
+          "captured": true,
+          "description": "Minimum altitude in feet MSL"
+        },
+        "max_ft_msl": {
+          "entityProperty": "Altitude.MaxFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "altHi",
+          "captured": true,
+          "description": "Maximum altitude in feet MSL"
+        }
+      }
+    },
+    "hazard": {
+      "description": "Hazard type and severity (uses attributes)",
+      "attributes": {
+        "type": {
+          "entityProperty": "Hazard.Type",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "hazard",
+          "captured": true,
+          "description": "Hazard type: TURB, ICE, IFR, CONVECTIVE, ASH, MTN OBSCN"
+        },
+        "severity": {
+          "entityProperty": "Hazard.Severity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "severity",
+          "captured": true,
+          "description": "Hazard severity"
+        }
+      }
+    },
+    "area": {
+      "description": "Geographic polygon boundary (repeating, with point child elements)",
+      "attributes": {
+        "num_points": {
+          "entityProperty": "Area.NumPoints",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Number of boundary polygon points"
+        }
+      }
+    }
+  }
+}

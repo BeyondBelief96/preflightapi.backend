@@ -1,23 +1,23 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
-using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
 
 namespace PreflightApi.Azure.Functions.Functions
 {
     public class AirportFunction
     {
-        private readonly AirportCronService _airportService;
-        private readonly RunwayCronService _runwayService;
-        private readonly RunwayEndCronService _runwayEndService;
+        private readonly IAirportCronService _airportService;
+        private readonly IRunwayCronService _runwayService;
+        private readonly IRunwayEndCronService _runwayEndService;
         private readonly IFaaPublicationCycleService _publicationService;
         private readonly ILogger<AirportFunction> _logger;
 
         public AirportFunction(
-            AirportCronService airportService,
-            RunwayCronService runwayService,
-            RunwayEndCronService runwayEndService,
+            IAirportCronService airportService,
+            IRunwayCronService runwayService,
+            IRunwayEndCronService runwayEndService,
             IFaaPublicationCycleService publicationService,
             ILoggerFactory loggerFactory)
         {
@@ -29,9 +29,9 @@ namespace PreflightApi.Azure.Functions.Functions
         }
 
         [Function("AirportFunction")]
-        public async Task Run([TimerTrigger("0 0 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 0 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
-            _logger.LogInformation($"Airport Function executed at: {DateTime.UtcNow}");
+            _logger.LogInformation("Airport Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
             try
@@ -40,6 +40,7 @@ namespace PreflightApi.Azure.Functions.Functions
 
                 if (await _publicationService.ShouldRunUpdateAsync(PublicationType.NasrSubscription_Airport, currentDate))
                 {
+                    var sw = Stopwatch.StartNew();
                     _logger.LogInformation("Starting airport data update process");
 
                     // Process airports first (APT_BASE.csv, APT_ATT.csv, APT_CON.csv)
@@ -59,16 +60,15 @@ namespace PreflightApi.Azure.Functions.Functions
                     _logger.LogInformation("Runway end linking completed");
 
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);
-                    _logger.LogInformation("Airport data update completed successfully");
+                    _logger.LogInformation("Airport data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 }
                 else
                 {
                     _logger.LogInformation("No airport data update needed at this time");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "An error occurred while updating airport data");
                 throw;
             }
         }

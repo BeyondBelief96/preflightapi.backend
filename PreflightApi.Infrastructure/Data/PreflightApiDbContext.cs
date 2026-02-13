@@ -16,7 +16,7 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Pirep> Pireps => Set<Pirep>();
 
-        public virtual DbSet<Airsigmet> Airsigmets => Set<Airsigmet>();
+        public virtual DbSet<Sigmet> Sigmets => Set<Sigmet>();
 
         public virtual DbSet<GAirmet> GAirmets => Set<GAirmet>();
 
@@ -39,6 +39,8 @@ namespace PreflightApi.Infrastructure.Data
         public virtual DbSet<RunwayEnd> RunwayEnds => Set<RunwayEnd>();
 
         public virtual DbSet<Obstacle> Obstacles => Set<Obstacle>();
+
+        public virtual DbSet<Notam> Notams => Set<Notam>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

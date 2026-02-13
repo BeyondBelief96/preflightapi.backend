@@ -7,20 +7,34 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides VFR cross-country flight planning tools including full navigation log calculation,
+/// bearing/distance computation, and winds aloft data. The navigation log calculates course, heading,
+/// ground speed, time, and fuel for each leg while accounting for wind and magnetic variation.
+/// The navlog response also identifies airspaces and obstacles along the route — use the returned
+/// IDs with the Airspace and Obstacle endpoints to retrieve full details.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/navlog")]
+[Tags("Navigation Log")]
 public class NavlogController(INavlogService navlogService)
     : ControllerBase
 {
     /// <summary>
-    /// Calculates a complete navigation log for a flight
+    /// Calculates a complete VFR navigation log for a cross-country flight. Provide an ordered list of
+    /// waypoints and aircraft performance data (airspeeds, climb/descent rates, fuel burn rates).
+    /// The response includes per-leg calculations (true/magnetic course, heading, ground speed, distance,
+    /// time, fuel burn, wind data) and identifiers for airspaces and obstacles along the route.
+    /// Use the returned AirspaceGlobalIds with <c>GET /api/v1/airspaces/by-global-ids</c>,
+    /// SpecialUseAirspaceGlobalIds with <c>GET /api/v1/airspaces/special-use/by-global-ids</c>,
+    /// and ObstacleOasNumbers with <c>POST /api/v1/obstacles/by-oas-numbers</c> to get full details.
     /// </summary>
-    /// <param name="request">Navigation log request including waypoints and aircraft performance settings</param>
-    /// <returns>Complete navigation log with leg calculations</returns>
+    /// <param name="request">Navigation log request including ordered waypoints, aircraft performance data, cruising altitude, and departure time</param>
+    /// <returns>Complete navigation log with per-leg calculations and en-route airspace/obstacle references</returns>
     /// <response code="200">Returns the calculated navigation log</response>
-    /// <response code="400">If the request data is invalid</response>
-    /// <response code="404">If the aircraft performance profile is not found</response>
+    /// <response code="400">If the request data is invalid (e.g., fewer than 2 waypoints)</response>
+    /// <response code="503">If an external service (magnetic variation or winds aloft) is unavailable</response>
     [HttpPost("calculate")]
     [ProducesResponseType(typeof(NavlogResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -33,12 +47,16 @@ public class NavlogController(INavlogService navlogService)
     }
 
     /// <summary>
-    /// Calculates bearing and distance between two points
+    /// Calculates the great-circle bearing and distance between two geographic points.
+    /// Returns true course, magnetic course (adjusted for local magnetic variation), and
+    /// distance in nautical miles. Useful for quick point-to-point calculations without
+    /// a full navigation log.
     /// </summary>
-    /// <param name="request">Start and end points for the calculation</param>
-    /// <returns>True course, magnetic course, and distance between the points</returns>
+    /// <param name="request">Start and end point coordinates (latitude/longitude in decimal degrees)</param>
+    /// <returns>True course, magnetic course (degrees), and great-circle distance (nautical miles)</returns>
     /// <response code="200">Returns the bearing and distance calculation</response>
-    /// <response code="400">If the request data is invalid</response>
+    /// <response code="400">If the coordinates are invalid</response>
+    /// <response code="503">If the magnetic variation service is unavailable</response>
     [HttpPost("bearing-and-distance")]
     [ProducesResponseType(typeof(BearingAndDistanceResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -51,12 +69,16 @@ public class NavlogController(INavlogService navlogService)
     }
 
     /// <summary>
-    /// Gets winds aloft data for a specific forecast period
+    /// Gets winds aloft (FB) forecast data for all reporting sites across the US.
+    /// Returns wind direction, speed, and temperature at standard altitude levels (3000, 6000, 9000, 12000,
+    /// 18000, 24000, 30000, 34000, 39000 ft MSL) for each reporting site. This is the raw forecast data
+    /// that the navlog calculator uses internally to compute wind-corrected headings and ground speeds.
     /// </summary>
-    /// <param name="forecast">Forecast period (6, 12, or 24 hours)</param>
-    /// <returns>Winds aloft data for the specified forecast period</returns>
+    /// <param name="forecast">Forecast period in hours: 6, 12, or 24</param>
+    /// <returns>Winds aloft forecast data with wind/temperature at each altitude level for all reporting sites</returns>
     /// <response code="200">Returns the winds aloft data</response>
-    /// <response code="400">If the forecast period is invalid</response>
+    /// <response code="400">If the forecast period is not 6, 12, or 24</response>
+    /// <response code="503">If the winds aloft data source is unavailable</response>
     [HttpGet("winds-aloft/{forecast}")]
     [ProducesResponseType(typeof(WindsAloftDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

@@ -52,7 +52,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 var dateString = FaaPublicationDateUtils.FormatDateForAirportDiagrams(currentPublicationDate);
                 var regions = new[] { "A", "B", "C", "D", "E" };
 
-                await DeleteExistingFilesAsync(cancellationToken);
+                // Track all uploaded blob names so we can clean up stale ones after
+                var uploadedBlobNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var region in regions)
                 {
@@ -63,7 +64,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         faaUrl,
                         region);
 
-                    using var client = _httpClientFactory.CreateClient();
+                    using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
                     using var response = await client.GetStreamAsync(faaUrl, cancellationToken);
                     using var zipArchive = new ZipArchive(response);
 
@@ -86,8 +87,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     // Examples: 00500AD.PDF, 00500ADROGERSLAKEBED.PDF, 00500ADROSAMONDLAKEBED.PDF
                     var airportDiagramPattern = new Regex(@"^\d{5}AD.*\.PDF$", RegexOptions.IgnoreCase);
                     var pdfEntries = zipArchive.Entries.Where(e => airportDiagramPattern.IsMatch(e.Name));
-                    await UploadPdfsToStorageAsync(pdfEntries, cancellationToken);
+                    var uploaded = await UploadPdfsToStorageAsync(pdfEntries, cancellationToken);
+                    foreach (var name in uploaded) uploadedBlobNames.Add(name);
                 }
+
+                // Clean up stale blobs that aren't in the new publication cycle
+                await DeleteStaleBlobsAsync(uploadedBlobNames, cancellationToken);
 
                 _logger.LogInformation("Completed airport diagram processing.");
             }
@@ -98,34 +103,40 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             }
         }
 
-        private async Task DeleteExistingFilesAsync(CancellationToken cancellationToken)
+        private async Task DeleteStaleBlobsAsync(HashSet<string> uploadedBlobNames, CancellationToken cancellationToken)
         {
             var containerName = _cloudStorageSettings.AirportDiagramsContainerName;
 
             try
             {
                 var existingBlobs = await _cloudStorageService.ListBlobsAsync(containerName);
+                var staleBlobs = existingBlobs
+                    .Where(b => !uploadedBlobNames.Contains(b))
+                    .ToList();
 
-                _logger.LogInformation("Found {Count} existing airport diagrams in storage", existingBlobs.Count);
-
-                if (existingBlobs.Count > 0)
+                if (staleBlobs.Count > 0)
                 {
-                    // DeleteBlobsAsync handles batching internally (256 per batch for Azure)
-                    await _cloudStorageService.DeleteBlobsAsync(containerName, existingBlobs);
-                    _logger.LogInformation("Deleted {Count} existing airport diagrams from storage", existingBlobs.Count);
+                    await _cloudStorageService.DeleteBlobsAsync(containerName, staleBlobs);
+                    _logger.LogInformation("Deleted {StaleCount} stale airport diagrams from storage (kept {KeptCount})",
+                        staleBlobs.Count, uploadedBlobNames.Count);
+                }
+                else
+                {
+                    _logger.LogInformation("No stale airport diagrams to clean up");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting existing files from container: {ContainerName}", containerName);
+                _logger.LogError(ex, "Error deleting stale blobs from container: {ContainerName}", containerName);
                 throw;
             }
         }
 
-        private async Task UploadPdfsToStorageAsync(IEnumerable<ZipArchiveEntry> pdfEntries, CancellationToken cancellationToken)
+        private async Task<List<string>> UploadPdfsToStorageAsync(IEnumerable<ZipArchiveEntry> pdfEntries, CancellationToken cancellationToken)
         {
             const int batchSize = 50; // Process 50 PDFs at a time to avoid memory issues
             var containerName = _cloudStorageSettings.AirportDiagramsContainerName;
+            var uploadedNames = new List<string>();
 
             try
             {
@@ -150,12 +161,14 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     {
                         await _cloudStorageService.UploadBlobsAsync(containerName, blobs);
                         uploadedCount += blobs.Count;
+                        uploadedNames.AddRange(blobs.Select(b => b.BlobName));
                         _logger.LogInformation("Uploaded batch of {BatchCount} airport diagrams ({UploadedCount}/{TotalCount})",
                             blobs.Count, uploadedCount, totalCount);
                     }
                 }
 
                 _logger.LogInformation("Completed uploading {Count} airport diagrams to storage", uploadedCount);
+                return uploadedNames;
             }
             catch (Exception ex)
             {

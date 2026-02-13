@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Taf;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -40,14 +41,43 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     return;
                 }
 
-                var tafData = ParseTafXmlData(xmlData, cancellationToken);
+                var tafData = ParseTafXmlData(xmlData, cancellationToken).ToList();
 
+                // Load all existing TAFs in a single query
+                var stationIds = tafData.Select(t => t.StationId).Distinct().ToList();
+                var existingTafs = await _dbContext.Tafs
+                    .Where(t => stationIds.Contains(t.StationId))
+                    .ToDictionaryAsync(t => t.StationId!, cancellationToken);
+
+                var errorCount = 0;
                 foreach (var taf in tafData)
                 {
-                    await UpdateOrCreateTafAsync(taf, cancellationToken);
+                    try
+                    {
+                        if (existingTafs.TryGetValue(taf.StationId!, out var existing))
+                        {
+                            if (existing.RawText != taf.RawText)
+                                UpdateTafFields(existing, taf);
+                        }
+                        else
+                        {
+                            await _dbContext.Tafs.AddAsync(taf, cancellationToken);
+                            existingTafs[taf.StationId!] = taf;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        _logger.LogWarning(ex, "Failed to process TAF for station {StationId}", taf.StationId);
+                    }
                 }
 
-                _logger.LogInformation("Completed TAF data update");
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                if (errorCount > 0)
+                    _logger.LogWarning("Completed TAF data update with {ErrorCount} record errors", errorCount);
+                else
+                    _logger.LogInformation("Completed TAF data update");
             }
             catch (Exception ex)
             {
@@ -58,7 +88,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchTafXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(TafUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -70,7 +100,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         System.IO.Compression.CompressionMode.Decompress))
                     using (var reader = new StreamReader(decompressedStream))
                     {
-                        return await reader.ReadToEndAsync(cancellationToken);
+                        var content = await reader.ReadToEndAsync(cancellationToken);
+                        return string.IsNullOrWhiteSpace(content) ? null : content;
                     }
 
                 case HttpStatusCode.NoContent:
@@ -108,6 +139,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var tafs = new List<Taf>();
             var doc = XDocument.Parse(xmlData);
             var tafElements = doc.Descendants("TAF");
+
+            // Validate schema on first element
+            var firstElement = tafElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("taf", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in TAF XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in TAF XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in TAF XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in TAF XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
 
             foreach (var element in tafElements)
             {
@@ -218,40 +271,18 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             }).ToList();
         }
 
-        private async Task UpdateOrCreateTafAsync(Taf taf, CancellationToken cancellationToken)
+        private static void UpdateTafFields(Taf existing, Taf taf)
         {
-            var existingTaf = await _dbContext.Tafs
-                .FirstOrDefaultAsync(t => t.StationId == taf.StationId, cancellationToken);
-
-            if (existingTaf != null)
-            {
-                if (existingTaf.RawText != taf.RawText)
-                {
-                    _logger.LogDebug("Updating existing TAF for station {StationId}", taf.StationId);
-                    existingTaf.RawText = taf.RawText;
-                    existingTaf.IssueTime = taf.IssueTime;
-                    existingTaf.BulletinTime = taf.BulletinTime;
-                    existingTaf.ValidTimeFrom = taf.ValidTimeFrom;
-                    existingTaf.ValidTimeTo = taf.ValidTimeTo;
-                    existingTaf.Remarks = taf.Remarks;
-                    existingTaf.Latitude = taf.Latitude;
-                    existingTaf.Longitude = taf.Longitude;
-                    existingTaf.ElevationM = taf.ElevationM;
-                    existingTaf.Forecast = taf.Forecast;
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-                else
-                {
-                    _logger.LogDebug("No changes for TAF station {StationId}", taf.StationId);
-                }
-            }
-            else
-            {
-                _logger.LogDebug("Creating new TAF for station {StationId}", taf.StationId);
-                await _dbContext.Tafs.AddAsync(taf, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
+            existing.RawText = taf.RawText;
+            existing.IssueTime = taf.IssueTime;
+            existing.BulletinTime = taf.BulletinTime;
+            existing.ValidTimeFrom = taf.ValidTimeFrom;
+            existing.ValidTimeTo = taf.ValidTimeTo;
+            existing.Remarks = taf.Remarks;
+            existing.Latitude = taf.Latitude;
+            existing.Longitude = taf.Longitude;
+            existing.ElevationM = taf.ElevationM;
+            existing.Forecast = taf.Forecast;
         }
     }
 }

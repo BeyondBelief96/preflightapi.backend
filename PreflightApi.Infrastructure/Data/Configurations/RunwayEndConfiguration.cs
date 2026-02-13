@@ -15,44 +15,13 @@ public class RunwayEndConfiguration : IEntityTypeConfiguration<RunwayEnd>
 
         // Required fields
         builder.Property(e => e.SiteNo)
-            .IsRequired()
-            .HasMaxLength(9);
+            .IsRequired();
 
         builder.Property(e => e.RunwayIdRef)
-            .IsRequired()
-            .HasMaxLength(7);
+            .IsRequired();
 
         builder.Property(e => e.RunwayEndId)
-            .IsRequired()
-            .HasMaxLength(3);
-
-        // Optional fields with max lengths
-        builder.Property(e => e.ApproachType)
-            .HasMaxLength(10);
-
-        builder.Property(e => e.RunwayMarkingsType)
-            .HasMaxLength(5);
-
-        builder.Property(e => e.RunwayMarkingsCondition)
-            .HasMaxLength(1);
-
-        builder.Property(e => e.VisualGlideSlopeIndicator)
-            .HasMaxLength(5);
-
-        builder.Property(e => e.RunwayVisualRangeEquipment)
-            .HasMaxLength(3);
-
-        builder.Property(e => e.ApproachLightSystem)
-            .HasMaxLength(8);
-
-        builder.Property(e => e.ControllingObjectDescription)
-            .HasMaxLength(11);
-
-        builder.Property(e => e.ControllingObjectMarkedLighted)
-            .HasMaxLength(4);
-
-        builder.Property(e => e.ControllingObjectCenterlineOffset)
-            .HasMaxLength(7);
+            .IsRequired();
 
         // Decimal precision for coordinates and elevations
         builder.Property(e => e.LatDecimal)
@@ -81,6 +50,21 @@ public class RunwayEndConfiguration : IEntityTypeConfiguration<RunwayEnd>
 
         builder.Property(e => e.TouchdownZoneElev)
             .HasColumnType("decimal(7,1)");
+
+        // DMS Coordinates - Runway End
+        builder.Property(e => e.RwyEndLatSec).HasColumnType("decimal(6,2)");
+        builder.Property(e => e.RwyEndLongSec).HasColumnType("decimal(6,2)");
+
+        // DMS Coordinates - Displaced Threshold
+        builder.Property(e => e.DisplacedThrLatSec).HasColumnType("decimal(6,2)");
+        builder.Property(e => e.DisplacedThrLongSec).HasColumnType("decimal(6,2)");
+
+        // Codes & Gradient
+        builder.Property(e => e.RunwayGradient).HasColumnType("decimal(5,2)");
+
+        // LAHSO
+        builder.Property(e => e.LahsoLatDecimal).HasColumnType("decimal(10,8)");
+        builder.Property(e => e.LahsoLongDecimal).HasColumnType("decimal(11,8)");
 
         // Relationship to Runway is configured in RunwayConfiguration
 

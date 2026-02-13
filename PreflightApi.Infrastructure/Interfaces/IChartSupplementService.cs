@@ -4,5 +4,5 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface IChartSupplementService
 {
-    Task<ChartSupplementUrlDto> GetChartSupplementUrlByAirportCode(string icaoCodeOrIdent);
+    Task<ChartSupplementsResponseDto> GetChartSupplementsByAirportCode(string icaoCodeOrIdent);
 }

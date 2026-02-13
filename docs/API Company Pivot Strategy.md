@@ -503,18 +503,20 @@ Server functions that wrap the APIM Management REST API:
 
 ### Milestone 1: API Cleanup & APIM Setup (Weeks 1-2)
 
+> **Note:** All current work is against the **test resource group** (`rg-preflightapi-eastus-test`). Production resources (`rg-preflightapi-eastus-prd`) have not been provisioned yet. Many of these steps (APIM setup, products, policies, App Service, database) will need to be repeated for the production environment before launch. CI/CD is structured with environment-specific variables to support this.
+
 - [x] Remove user-specific features (Aircraft, Flight, WeightBalance, Stripe)
 - [x] Refactor NavlogService to accept inline performance data
 - [x] Remove Auth0 JWT authentication from API
 - [x] Remove remaining auth code from API (Clerk handlers, CORS middleware)
 - [x] API versioning — prefix all data routes with `/v1/`
 - [x] Add cursor-based pagination to all list endpoints
-- [ ] Deploy API to Azure App Service
-- [ ] Deploy APIM instance (Developer tier for testing)
-- [ ] Import API into APIM from OpenAPI spec
-- [ ] Configure APIM Products (Free, Developer, Professional, Enterprise)
-- [ ] Set up APIM rate limit and quota policies per product
-- [ ] Restrict API to only accept traffic from APIM (IP whitelist or VNET)
+- [x] Deploy API to Azure App Service
+- [x] Deploy APIM instance (Developer tier for testing)
+- [x] Import API into APIM from OpenAPI spec
+- [x] Configure APIM Products (Free, Starter, Professional)
+- [x] Set up APIM rate limit, quota, and endpoint gating policies per product
+- [x] Restrict API to only accept traffic from APIM (gateway secret header validation)
 
 ### Milestone 2: Infrastructure (Weeks 3-4)
 
@@ -527,25 +529,42 @@ Server functions that wrap the APIM Management REST API:
 
 ### Milestone 3: Frontend — Management Portal (Weeks 5-7)
 
-- [ ] Build landing page and marketing content
-- [ ] Build pricing page with tier comparison
-- [ ] Implement Clerk authentication (signup/login for portal)
-- [ ] Build APIM integration service (server functions calling APIM Management API)
-- [ ] Build Stripe integration (checkout, webhooks, customer portal)
-- [ ] Build provisioning flow: Clerk signup → Stripe subscription → APIM subscription → API keys
-- [ ] Build dashboard: API keys page (view, copy, regenerate)
-- [ ] Build dashboard: Usage page (APIM analytics)
-- [ ] Build dashboard: Billing page (Stripe Customer Portal embed)
-- [ ] Build API documentation pages
+- [x] Build landing page and marketing content
+- [x] Build pricing page with tier comparison
+- [x] Implement Clerk authentication (signup/login for portal)
+- [x] Build APIM integration service (server functions calling APIM Management API)
+- [x] Build Stripe integration (checkout, webhooks, customer portal)
+- [x] Build provisioning flow: Clerk signup → Stripe subscription → APIM subscription → API keys
+- [x] Build dashboard: API keys page (view, copy, regenerate)
+- [x] Build dashboard: Usage page (APIM analytics)
+- [x] Build dashboard: Billing page (Stripe Customer Portal embed)
+- [x] Build API documentation pages
 - [ ] Build webhook handlers (Clerk user events, Stripe billing events)
 
 ### Milestone 4: Launch Prep (Weeks 8-9)
 
+- [ ] Provision production Azure resource group and resources
+  - [ ] Production App Service (API)
+  - [ ] Production Function App (cron jobs)
+  - [ ] Production APIM instance (Standard tier for SLA)
+  - [ ] Production PostgreSQL Flexible Server with read replica
+  - [ ] Production Azure Blob Storage
+  - [ ] Production Key Vault
+- [ ] Configure database read/write split
+  - [ ] Cron jobs (Azure Functions) write to the primary database
+  - [ ] API (App Service behind APIM) reads from read replica(s)
+  - [ ] Configure separate connection strings per application
+- [ ] Import API and deploy APIM products/policies to production (same policy files, production env vars)
+- [ ] Configure APIM gateway secret for production
+  - [ ] Generate a new secret (do NOT reuse the test secret)
+  - [ ] Create APIM Named Value `apim-gateway-secret` in production APIM instance
+  - [ ] Set `GatewaySecret` app setting on production App Service
+  - [ ] The `api-policy.xml` injects the header automatically — no policy changes needed
+- [ ] Set up production CI/CD workflow (`main-ci-cd.yml` with production resource names and credentials)
 - [ ] Terms of Service and legal docs
 - [ ] Set up status page (e.g., Atlassian Statuspage)
 - [ ] Write code examples in Python, JavaScript, cURL
 - [ ] Create getting-started guides for common use cases
-- [ ] Upgrade APIM to Standard tier (production SLA)
 - [ ] Configure Azure App Service auto-scaling
 - [ ] Beta launch with select customers
 
@@ -556,7 +575,7 @@ Server functions that wrap the APIM Management REST API:
 - [ ] Batch/bulk endpoints for high-volume customers
 - [ ] SDKs in popular languages (Python, JavaScript, Go)
 - [ ] Geographic expansion (international aviation data)
-- [ ] Set up PostgreSQL read replica (when scale demands)
+- [ ] Scale read replicas as demand grows
 
 ---
 

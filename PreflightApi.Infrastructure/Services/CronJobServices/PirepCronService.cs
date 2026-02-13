@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Pireps;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -59,7 +60,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchPirepXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(PirepUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -71,7 +72,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         System.IO.Compression.CompressionMode.Decompress))
                     using (var reader = new StreamReader(decompressedStream))
                     {
-                        return await reader.ReadToEndAsync(cancellationToken);
+                        var content = await reader.ReadToEndAsync(cancellationToken);
+                        return string.IsNullOrWhiteSpace(content) ? null : content;
                     }
 
                 case HttpStatusCode.NoContent:
@@ -110,31 +112,60 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var doc = XDocument.Parse(xmlData);
             var pirepElements = doc.Descendants("AircraftReport");
 
+            // Validate schema on first element
+            var firstElement = pirepElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("pirep", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in PIREP XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in PIREP XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in PIREP XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in PIREP XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
+
             foreach (var element in pirepElements)
             {
-                var pirep = new Pirep
+                try
                 {
-                    ReceiptTime = element.Element("receipt_time")?.Value,
-                    ObservationTime = element.Element("observation_time")?.Value,
-                    QualityControlFlags = ParseQualityControlFlags(element.Element("quality_control_flags")),
-                    AircraftRef = element.Element("aircraft_ref")?.Value,
-                    Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
-                    Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
-                    AltitudeFtMsl = ParsingUtilities.ParseNullableInt(element.Element("altitude_ft_msl")?.Value),
-                    SkyConditions = ParseSkyConditions(element.Elements("sky_condition")),
-                    TurbulenceConditions = ParseTurbulenceConditions(element.Elements("turbulence_condition")),
-                    IcingConditions = ParseIcingConditions(element.Elements("icing_condition")),
-                    VisibilityStatuteMi = ParsingUtilities.ParseNullableInt(element.Element("visibility_statute_mi")?.Value),
-                    WxString = element.Element("wx_string")?.Value,
-                    TempC = ParsingUtilities.ParseNullableFloat(element.Element("temp_c")?.Value),
-                    WindDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("wind_dir_degrees")?.Value),
-                    WindSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_speed_kt")?.Value),
-                    VertGustKt = ParsingUtilities.ParseNullableInt(element.Element("vert_gust_kt")?.Value),
-                    ReportType = element.Element("report_type")?.Value,
-                    RawText = element.Element("raw_text")?.Value
-                };
+                    var pirep = new Pirep
+                    {
+                        ReceiptTime = element.Element("receipt_time")?.Value,
+                        ObservationTime = element.Element("observation_time")?.Value,
+                        QualityControlFlags = ParseQualityControlFlags(element.Element("quality_control_flags")),
+                        AircraftRef = element.Element("aircraft_ref")?.Value,
+                        Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
+                        Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
+                        AltitudeFtMsl = ParsingUtilities.ParseNullableInt(element.Element("altitude_ft_msl")?.Value),
+                        SkyConditions = ParseSkyConditions(element.Elements("sky_condition")),
+                        TurbulenceConditions = ParseTurbulenceConditions(element.Elements("turbulence_condition")),
+                        IcingConditions = ParseIcingConditions(element.Elements("icing_condition")),
+                        VisibilityStatuteMi = ParsingUtilities.ParseNullableInt(element.Element("visibility_statute_mi")?.Value),
+                        WxString = element.Element("wx_string")?.Value,
+                        TempC = ParsingUtilities.ParseNullableFloat(element.Element("temp_c")?.Value),
+                        WindDirDegrees = ParsingUtilities.ParseNullableInt(element.Element("wind_dir_degrees")?.Value),
+                        WindSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_speed_kt")?.Value),
+                        VertGustKt = ParsingUtilities.ParseNullableInt(element.Element("vert_gust_kt")?.Value),
+                        ReportType = element.Element("report_type")?.Value,
+                        RawText = element.Element("raw_text")?.Value
+                    };
 
-                pireps.Add(pirep);
+                    pireps.Add(pirep);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse PIREP element");
+                }
             }
 
             return pireps;

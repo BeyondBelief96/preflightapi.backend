@@ -27,6 +27,7 @@ public static class ErrorCodes
     public const string WeatherDataMissing = "WEATHER_DATA_MISSING";
 
     // NOTAMs
+    public const string NotamNotFound = "NOTAM_NOT_FOUND";
     public const string NotamServiceUnavailable = "NOTAM_SERVICE_UNAVAILABLE";
 
     // Chart Supplements

@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.GAirmets;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -57,7 +58,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchGAirmetXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(GAirmetUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -69,7 +70,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         System.IO.Compression.CompressionMode.Decompress))
                     using (var reader = new StreamReader(decompressedStream))
                     {
-                        return await reader.ReadToEndAsync(cancellationToken);
+                        var content = await reader.ReadToEndAsync(cancellationToken);
+                        return string.IsNullOrWhiteSpace(content) ? null : content;
                     }
 
                 case HttpStatusCode.NoContent:
@@ -104,31 +106,63 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private IEnumerable<GAirmet> ParseGAirmetXmlData(string xmlData)
         {
+            var gairmets = new List<GAirmet>();
             var doc = XDocument.Parse(xmlData);
             var gairmetElements = doc.Descendants("GAIRMET");
 
-            return gairmetElements.Select(element =>
+            // Validate schema on first element
+            var firstElement = gairmetElements.FirstOrDefault();
+            if (firstElement != null)
             {
-                var hazardElement = element.Element("hazard");
-
-                return new GAirmet
+                var validationResult = AvWxSchemaValidator.ValidateElement("gairmet", firstElement);
+                if (validationResult.HasDrift)
                 {
-                    ReceiptTime = ParseDateTime(element.Element("receipt_time")?.Value),
-                    IssueTime = ParseDateTime(element.Element("issue_time")?.Value),
-                    ExpireTime = ParseDateTime(element.Element("expire_time")?.Value),
-                    ValidTime = ParseDateTime(element.Element("valid_time")?.Value),
-                    Product = element.Element("product")?.Value ?? string.Empty,
-                    Tag = element.Element("tag")?.Value,
-                    ForecastHour = ParsingUtilities.ParseInt(
-                        element.Element("roughly_the_number_of_hours_between_the_issue_time_and_the_valid_time")?.Value ?? "0"),
-                    HazardType = hazardElement?.Attribute("type")?.Value,
-                    HazardSeverity = hazardElement?.Attribute("severity")?.Value,
-                    GeometryType = element.Element("geometry_type")?.Value,
-                    DueTo = element.Element("due_to")?.Value,
-                    Altitudes = ParseAltitudes(element),
-                    Area = ParseArea(element.Element("area"))
-                };
-            }).ToList();
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in G-AIRMET XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in G-AIRMET XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in G-AIRMET XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in G-AIRMET XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
+
+            foreach (var element in gairmetElements)
+            {
+                try
+                {
+                    var hazardElement = element.Element("hazard");
+
+                    gairmets.Add(new GAirmet
+                    {
+                        ReceiptTime = ParseDateTime(element.Element("receipt_time")?.Value),
+                        IssueTime = ParseDateTime(element.Element("issue_time")?.Value),
+                        ExpireTime = ParseDateTime(element.Element("expire_time")?.Value),
+                        ValidTime = ParseDateTime(element.Element("valid_time")?.Value),
+                        Product = element.Element("product")?.Value ?? string.Empty,
+                        Tag = element.Element("tag")?.Value,
+                        ForecastHour = ParsingUtilities.ParseInt(
+                            element.Element("roughly_the_number_of_hours_between_the_issue_time_and_the_valid_time")?.Value ?? "0"),
+                        HazardType = hazardElement?.Attribute("type")?.Value,
+                        HazardSeverity = hazardElement?.Attribute("severity")?.Value,
+                        GeometryType = element.Element("geometry_type")?.Value,
+                        DueTo = element.Element("due_to")?.Value,
+                        Altitudes = ParseAltitudes(element),
+                        Area = ParseArea(element.Element("area"))
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse G-AIRMET element");
+                }
+            }
+
+            return gairmets;
         }
 
         private static DateTime ParseDateTime(string? value)

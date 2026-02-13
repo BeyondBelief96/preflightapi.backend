@@ -4,13 +4,14 @@
     "logging": {
         "logLevel": {
             "default": "Information",
-            "Host.Results": "Error",
+            "Host.Results": "Information",
             "Function": "Information",
             "Host.Aggregator": "Trace"
         },
         "applicationInsights": {
             "samplingSettings": {
-                "isEnabled": true
+                "isEnabled": true,
+                "excludedTypes": "Exception;Request"
             },
             "enableLiveMetricsFilters": true
         }

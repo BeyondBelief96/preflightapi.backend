@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
@@ -25,7 +26,7 @@ namespace PreflightApi.Azure.Functions.Functions
         [Function("AirspaceFunction")]
         public async Task Run([TimerTrigger("0 0 2 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
-            _logger.LogInformation($"Airspace Function executed at: {DateTime.UtcNow}");
+            _logger.LogInformation("Airspace Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
             try
@@ -34,19 +35,19 @@ namespace PreflightApi.Azure.Functions.Functions
 
                 if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Airspaces, currentDate))
                 {
+                    var sw = Stopwatch.StartNew();
                     _logger.LogInformation("Starting airspace update process");
                     await _airspaceService.UpdateAirspacesAsync(cancellationToken);
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Airspaces, currentDate);
-                    _logger.LogInformation("Airspace update completed successfully");
+                    _logger.LogInformation("Airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 }
                 else
                 {
                     _logger.LogInformation("No airspace update needed at this time");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error executing airspace update job");
                 throw;
             }
         }

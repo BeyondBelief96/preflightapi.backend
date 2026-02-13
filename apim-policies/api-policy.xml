@@ -1,0 +1,63 @@
+<policies>
+	<inbound>
+		<base />
+		<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->
+		<set-header name="X-Api-Gateway-Secret" exists-action="override">
+			<value>{{apim-gateway-secret}}</value>
+		</set-header>
+		<!-- Cap total outbound NMS calls across all users (FAA rate limit protection) -->
+		<choose>
+			<when condition="@(context.Request.Url.Path.ToLower().Contains("/notams"))">
+				<rate-limit-by-key calls="15" renewal-period="180"
+					counter-key="@("nms-backend-global")"
+					remaining-calls-header-name="X-NMS-RateLimit-Remaining"
+					retry-after-header-name="X-NMS-Retry-After" />
+			</when>
+		</choose>
+		<!-- Determine cache duration based on endpoint -->
+		<set-variable name="cacheDuration" value="@{
+			if (context.Request.Method != "GET") { return 0; }
+			var path = context.Request.Url.Path.ToLower();
+			// Real-time weather: 2 min
+			if (path.Contains("/metars") || path.Contains("/pireps")) { return 120; }
+			// E6B GET endpoints use live METAR: 2 min
+			if (path.Contains("/e6b/")) { return 120; }
+			// Forecast weather, NOTAMs: 5 min
+			if (path.Contains("/tafs") || path.Contains("/sigmets") || path.Contains("/g-airmets")) { return 300; }
+			if (path.Contains("/notams")) { return 300; }
+			// Winds aloft: 5 min
+			if (path.Contains("/navlog/winds-aloft")) { return 300; }
+			// Presigned URLs: 10 min
+			if (path.Contains("/airport-diagrams") || path.Contains("/chart-supplements")) { return 600; }
+			// NASR/static data: 15 min
+			if (path.Contains("/airports") || path.Contains("/communication-frequencies")) { return 900; }
+			if (path.Contains("/airspaces") || path.Contains("/obstacles")) { return 900; }
+			return 0;
+		}" />
+		<!-- Apply cache lookup for cacheable GET requests -->
+		<choose>
+			<when condition="@((int)context.Variables["cacheDuration"] > 0)">
+				<cache-lookup vary-by-developer="false" vary-by-developer-groups="false">
+					<vary-by-query-parameter>*</vary-by-query-parameter>
+				</cache-lookup>
+			</when>
+		</choose>
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+		<!-- Strip the secret header from the response so it's never exposed to callers -->
+		<set-header name="X-Api-Gateway-Secret" exists-action="delete" />
+		<!-- Store response in cache if cacheable -->
+		<choose>
+			<when condition="@(context.Variables.ContainsKey("cacheDuration") && (int)context.Variables["cacheDuration"] > 0)">
+				<cache-store duration="@((int)context.Variables["cacheDuration"])" />
+			</when>
+		</choose>
+	</outbound>
+	<on-error>
+		<base />
+	</on-error>
+</policies>

@@ -18,7 +18,7 @@ namespace PreflightApi.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
@@ -27,7 +27,7 @@ namespace PreflightApi.Infrastructure.Migrations
             modelBuilder.Entity("PreflightApi.Domain.Entities.Airport", b =>
                 {
                     b.Property<string>("SiteNo")
-                        .HasColumnType("varchar(9)")
+                        .HasColumnType("text")
                         .HasColumnName("site_no");
 
                     b.Property<int?>("Acreage")
@@ -35,135 +35,163 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("acreage");
 
                     b.Property<string>("ActivationDate")
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("activation_date");
 
                     b.Property<string>("AdoCode")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("ado_code");
 
                     b.Property<string>("AirframeRepairSerCode")
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("airframe_repair_ser_code");
 
+                    b.Property<string>("AltFssId")
+                        .HasColumnType("text")
+                        .HasColumnName("alt_fss_id");
+
+                    b.Property<string>("AltFssName")
+                        .HasColumnType("text")
+                        .HasColumnName("alt_fss_name");
+
+                    b.Property<string>("AltTollFreeNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("alt_toll_free_number");
+
+                    b.Property<DateTime?>("ArffCertTypeDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("arff_cert_type_date");
+
                     b.Property<string>("ArptElevSource")
-                        .HasColumnType("varchar(16)")
+                        .HasColumnType("text")
                         .HasColumnName("arpt_elev_source");
 
                     b.Property<string>("ArptId")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("arpt_id");
 
                     b.Property<string>("ArptName")
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("arpt_name");
 
                     b.Property<string>("ArptPsnSource")
-                        .HasColumnType("varchar(16)")
+                        .HasColumnType("text")
                         .HasColumnName("arpt_psn_source");
 
                     b.Property<string>("ArptStatus")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("arpt_status");
 
+                    b.Property<string>("ArtccName")
+                        .HasColumnType("text")
+                        .HasColumnName("artcc_name");
+
+                    b.Property<string>("AspAnalysisDtrmCode")
+                        .HasColumnType("text")
+                        .HasColumnName("asp_analysis_dtrm_code");
+
                     b.Property<string>("AttendanceDay")
-                        .HasColumnType("varchar(16)")
+                        .HasColumnType("text")
                         .HasColumnName("attendance_day");
 
                     b.Property<string>("AttendanceHours")
-                        .HasColumnType("varchar(40)")
+                        .HasColumnType("text")
                         .HasColumnName("attendance_hours");
 
                     b.Property<string>("AttendanceMonth")
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("attendance_month");
 
                     b.Property<string>("BcnLensColor")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("bcn_lens_color");
 
                     b.Property<string>("BcnLgtSked")
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("bcn_lgt_sked");
 
                     b.Property<string>("BottledOxyType")
-                        .HasColumnType("varchar(8)")
+                        .HasColumnType("text")
                         .HasColumnName("bottled_oxy_type");
 
                     b.Property<string>("BulkOxyType")
-                        .HasColumnType("varchar(8)")
+                        .HasColumnType("text")
                         .HasColumnName("bulk_oxy_type");
 
                     b.Property<string>("ChartName")
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("text")
                         .HasColumnName("chart_name");
 
                     b.Property<string>("City")
-                        .HasColumnType("varchar(40)")
+                        .HasColumnType("text")
                         .HasColumnName("city");
 
+                    b.Property<string>("ComputerId")
+                        .HasColumnType("text")
+                        .HasColumnName("computer_id");
+
                     b.Property<string>("ContactAddress1")
-                        .HasColumnType("varchar(35)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_address1");
 
                     b.Property<string>("ContactAddress2")
-                        .HasColumnType("varchar(35)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_address2");
 
                     b.Property<string>("ContactCity")
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_city");
 
                     b.Property<string>("ContactName")
-                        .HasColumnType("varchar(35)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_name");
 
                     b.Property<string>("ContactPhoneNumber")
-                        .HasColumnType("varchar(16)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_phone_number");
 
                     b.Property<string>("ContactState")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_state");
 
                     b.Property<string>("ContactTitle")
-                        .HasColumnType("varchar(10)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_title");
 
                     b.Property<string>("ContactZipCode")
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_zip_code");
 
                     b.Property<string>("ContactZipPlusFour")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("contact_zip_plus_four");
 
                     b.Property<string>("ContrFuelAvbl")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("contr_fuel_avbl");
 
                     b.Property<string>("CountryCode")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("country_code");
 
                     b.Property<string>("CountyAssocState")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("county_assoc_state");
 
                     b.Property<string>("CountyName")
-                        .HasColumnType("varchar(21)")
+                        .HasColumnType("text")
                         .HasColumnName("county_name");
 
                     b.Property<string>("Cta")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("cta");
 
                     b.Property<string>("CustomsFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("customs_flag");
 
                     b.Property<string>("DirectionCode")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("direction_code");
 
                     b.Property<decimal?>("DistCityToAirport")
@@ -179,7 +207,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("elev");
 
                     b.Property<string>("ElevMethodCode")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("elev_method_code");
 
                     b.Property<DateTime?>("ElevationSrcDate")
@@ -187,39 +215,51 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("elevation_src_date");
 
                     b.Property<string>("FacilityUseCode")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("facility_use_code");
 
+                    b.Property<string>("Far139CarrierSerCode")
+                        .HasColumnType("text")
+                        .HasColumnName("far_139_carrier_ser_code");
+
+                    b.Property<string>("Far139TypeCode")
+                        .HasColumnType("text")
+                        .HasColumnName("far_139_type_code");
+
                     b.Property<string>("FssId")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("fss_id");
 
                     b.Property<string>("FssName")
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("text")
                         .HasColumnName("fss_name");
 
                     b.Property<string>("FssOnArptFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("fss_on_arpt_flag");
 
+                    b.Property<string>("FssPhoneNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("fss_phone_number");
+
                     b.Property<string>("FuelTypes")
-                        .HasColumnType("varchar(40)")
+                        .HasColumnType("text")
                         .HasColumnName("fuel_types");
 
                     b.Property<string>("IcaoId")
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("icao_id");
 
                     b.Property<string>("InspectMethodCode")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("inspect_method_code");
 
                     b.Property<string>("InspectorCode")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("inspector_code");
 
                     b.Property<string>("JointUseFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("joint_use_flag");
 
                     b.Property<DateTime?>("LastInfoResponse")
@@ -239,7 +279,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("lat_deg");
 
                     b.Property<string>("LatHemis")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("lat_hemis");
 
                     b.Property<int?>("LatMin")
@@ -251,15 +291,15 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("lat_sec");
 
                     b.Property<string>("LgtSked")
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("lgt_sked");
 
                     b.Property<string>("LndgFeeFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("lndg_fee_flag");
 
                     b.Property<string>("LndgRightsFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("lndg_rights_flag");
 
                     b.Property<decimal?>("LongDecimal")
@@ -271,7 +311,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("long_deg");
 
                     b.Property<string>("LongHemis")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("long_hemis");
 
                     b.Property<int?>("LongMin")
@@ -283,7 +323,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("long_sec");
 
                     b.Property<string>("MagHemis")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("mag_hemis");
 
                     b.Property<decimal?>("MagVarn")
@@ -295,35 +335,35 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("mag_varn_year");
 
                     b.Property<string>("MedicalUseFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("medical_use_flag");
 
                     b.Property<string>("MilLndgFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("mil_lndg_flag");
 
                     b.Property<string>("MinOpNetwork")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("min_op_network");
 
                     b.Property<string>("NaspCode")
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("nasp_code");
 
                     b.Property<string>("NotamFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("notam_flag");
 
                     b.Property<string>("NotamId")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("notam_id");
 
                     b.Property<string>("OtherServices")
-                        .HasColumnType("varchar(110)")
+                        .HasColumnType("text")
                         .HasColumnName("other_services");
 
                     b.Property<string>("OwnershipTypeCode")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("ownership_type_code");
 
                     b.Property<DateTime?>("PositionSrcDate")
@@ -331,24 +371,23 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("position_src_date");
 
                     b.Property<string>("PwrPlantRepairSer")
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("pwr_plant_repair_ser");
 
                     b.Property<string>("RegionCode")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("region_code");
 
                     b.Property<string>("RespArtccId")
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("resp_artcc_id");
 
                     b.Property<string>("SegCircleMkrFlag")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("seg_circle_mkr_flag");
 
                     b.Property<string>("SiteTypeCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("site_type_code");
 
                     b.Property<int?>("SkedSeqNo")
@@ -356,43 +395,47 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("sked_seq_no");
 
                     b.Property<string>("StateCode")
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("state_code");
 
                     b.Property<string>("StateName")
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("text")
                         .HasColumnName("state_name");
 
                     b.Property<string>("SurveyMethodCode")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("survey_method_code");
+
+                    b.Property<string>("TollFreeNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("toll_free_number");
 
                     b.Property<int?>("Tpa")
                         .HasColumnType("integer")
                         .HasColumnName("tpa");
 
                     b.Property<string>("TrnsStrgBuoyFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("trns_strg_buoy_flag");
 
                     b.Property<string>("TrnsStrgHgrFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("trns_strg_hgr_flag");
 
                     b.Property<string>("TrnsStrgTieFlag")
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("trns_strg_tie_flag");
 
                     b.Property<string>("TwrTypeCode")
-                        .HasColumnType("varchar(12)")
+                        .HasColumnType("text")
                         .HasColumnName("twr_type_code");
 
                     b.Property<string>("UserFeeFlag")
-                        .HasColumnType("varchar(26)")
+                        .HasColumnType("text")
                         .HasColumnName("user_fee_flag");
 
                     b.Property<string>("WindIndcrFlag")
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("wind_indcr_flag");
 
                     b.HasKey("SiteNo");
@@ -458,61 +501,6 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.HasIndex("IcaoIdent");
 
                     b.ToTable("airport_diagrams", (string)null);
-                });
-
-            modelBuilder.Entity("PreflightApi.Domain.Entities.Airsigmet", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AirsigmetType")
-                        .HasColumnType("text")
-                        .HasColumnName("airsigmet_type");
-
-                    b.Property<string>("Altitude")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("altitude");
-
-                    b.Property<string>("Areas")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("area");
-
-                    b.Property<string>("Hazard")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("hazard");
-
-                    b.Property<int?>("MovementDirDegrees")
-                        .HasColumnType("integer")
-                        .HasColumnName("movement_dir_degrees");
-
-                    b.Property<int?>("MovementSpeedKt")
-                        .HasColumnType("integer")
-                        .HasColumnName("movement_speed_kt");
-
-                    b.Property<string>("RawText")
-                        .HasColumnType("text")
-                        .HasColumnName("raw_text");
-
-                    b.Property<string>("ValidTimeFrom")
-                        .HasColumnType("text")
-                        .HasColumnName("valid_time_from");
-
-                    b.Property<string>("ValidTimeTo")
-                        .HasColumnType("text")
-                        .HasColumnName("valid_time_to");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AirsigmetType");
-
-                    b.HasIndex("ValidTimeFrom");
-
-                    b.HasIndex("ValidTimeTo");
-
-                    b.ToTable("airsigmet");
                 });
 
             modelBuilder.Entity("PreflightApi.Domain.Entities.Airspace", b =>
@@ -755,6 +743,14 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.HasIndex("AirportCode");
 
                     b.HasIndex("NavigationalAidName");
+
+                    b.HasIndex("FileName", "AirportCode")
+                        .IsUnique()
+                        .HasFilter("\"airport_code\" IS NOT NULL");
+
+                    b.HasIndex("FileName", "NavigationalAidName")
+                        .IsUnique()
+                        .HasFilter("\"navigational_aid_name\" IS NOT NULL AND \"airport_code\" IS NULL");
 
                     b.ToTable("chart_supplement");
                 });
@@ -1187,31 +1183,109 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.ToTable("metar");
                 });
 
+            modelBuilder.Entity("PreflightApi.Domain.Entities.Notam", b =>
+                {
+                    b.Property<string>("NmsId")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("nms_id");
+
+                    b.Property<DateTime?>("CancelationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelation_date");
+
+                    b.Property<string>("Classification")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("classification");
+
+                    b.Property<DateTime?>("EffectiveEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_end");
+
+                    b.Property<DateTime?>("EffectiveStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_start");
+
+                    b.Property<string>("FeatureJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("feature_json");
+
+                    b.Property<Geometry>("Geometry")
+                        .HasColumnType("geometry(Geometry, 4326)")
+                        .HasColumnName("geometry");
+
+                    b.Property<string>("IcaoLocation")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("icao_location");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_updated");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("location");
+
+                    b.Property<string>("NotamType")
+                        .HasMaxLength(5)
+                        .HasColumnType("varchar(5)")
+                        .HasColumnName("notam_type");
+
+                    b.Property<DateTime>("SyncedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("synced_at");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.HasKey("NmsId");
+
+                    b.HasIndex("CancelationDate");
+
+                    b.HasIndex("Classification");
+
+                    b.HasIndex("EffectiveEnd");
+
+                    b.HasIndex("EffectiveStart");
+
+                    b.HasIndex("Geometry");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Geometry"), "gist");
+
+                    b.HasIndex("IcaoLocation");
+
+                    b.HasIndex("LastUpdated");
+
+                    b.HasIndex("Location");
+
+                    b.ToTable("notams", (string)null);
+                });
+
             modelBuilder.Entity("PreflightApi.Domain.Entities.Obstacle", b =>
                 {
                     b.Property<string>("OasNumber")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
+                        .HasColumnType("text")
                         .HasColumnName("oas_number");
 
                     b.Property<string>("Action")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("action");
 
                     b.Property<string>("CityName")
-                        .HasMaxLength(16)
-                        .HasColumnType("varchar(16)")
+                        .HasColumnType("text")
                         .HasColumnName("city_name");
 
                     b.Property<string>("CountryId")
-                        .HasMaxLength(2)
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("country_id");
 
                     b.Property<string>("FaaStudyNumber")
-                        .HasMaxLength(14)
-                        .HasColumnType("varchar(14)")
+                        .HasColumnType("text")
                         .HasColumnName("faa_study_number");
 
                     b.Property<int?>("HeightAgl")
@@ -1223,13 +1297,11 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("height_amsl");
 
                     b.Property<string>("HorizontalAccuracy")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("horizontal_accuracy");
 
                     b.Property<string>("JulianDate")
-                        .HasMaxLength(7)
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("julian_date");
 
                     b.Property<decimal?>("LatDecimal")
@@ -1241,8 +1313,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("lat_degrees");
 
                     b.Property<string>("LatHemisphere")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("lat_hemisphere");
 
                     b.Property<int?>("LatMinutes")
@@ -1254,8 +1325,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("lat_seconds");
 
                     b.Property<string>("Lighting")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("lighting");
 
                     b.Property<Point>("Location")
@@ -1271,8 +1341,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("long_degrees");
 
                     b.Property<string>("LongHemisphere")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("long_hemisphere");
 
                     b.Property<int?>("LongMinutes")
@@ -1284,25 +1353,21 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("long_seconds");
 
                     b.Property<string>("MarkIndicator")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("mark_indicator");
 
                     b.Property<string>("OasCode")
                         .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("oas_code");
 
                     b.Property<string>("ObstacleNumber")
                         .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("varchar(6)")
+                        .HasColumnType("text")
                         .HasColumnName("obstacle_number");
 
                     b.Property<string>("ObstacleType")
-                        .HasMaxLength(18)
-                        .HasColumnType("varchar(18)")
+                        .HasColumnType("text")
                         .HasColumnName("obstacle_type");
 
                     b.Property<int?>("Quantity")
@@ -1310,18 +1375,15 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("quantity");
 
                     b.Property<string>("StateId")
-                        .HasMaxLength(2)
-                        .HasColumnType("varchar(2)")
+                        .HasColumnType("text")
                         .HasColumnName("state_id");
 
                     b.Property<string>("VerificationStatus")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("verification_status");
 
                     b.Property<string>("VerticalAccuracy")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("vertical_accuracy");
 
                     b.HasKey("OasNumber");
@@ -1441,41 +1503,63 @@ namespace PreflightApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("DeterminationMethodCode")
+                        .HasColumnType("text")
+                        .HasColumnName("determination_method_code");
+
                     b.Property<string>("EdgeLightIntensity")
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("edge_light_intensity");
 
                     b.Property<int?>("Length")
                         .HasColumnType("integer")
                         .HasColumnName("length");
 
+                    b.Property<DateTime?>("LengthSourceDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("length_source_date");
+
                     b.Property<string>("PavementClassification")
-                        .HasMaxLength(11)
-                        .HasColumnType("varchar(11)")
+                        .HasColumnType("text")
                         .HasColumnName("pavement_classification");
+
+                    b.Property<string>("PavementTypeCode")
+                        .HasColumnType("text")
+                        .HasColumnName("pavement_type_code");
 
                     b.Property<string>("RunwayId")
                         .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_id");
+
+                    b.Property<string>("RunwayLengthSource")
+                        .HasColumnType("text")
+                        .HasColumnName("runway_length_source");
 
                     b.Property<string>("SiteNo")
                         .IsRequired()
-                        .HasMaxLength(9)
-                        .HasColumnType("varchar(9)")
+                        .HasColumnType("text")
                         .HasColumnName("site_no");
 
+                    b.Property<string>("SubgradeStrengthCode")
+                        .HasColumnType("text")
+                        .HasColumnName("subgrade_strength_code");
+
+                    b.Property<string>("SurfaceCondition")
+                        .HasColumnType("text")
+                        .HasColumnName("surface_condition");
+
                     b.Property<string>("SurfaceTreatmentCode")
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("surface_treatment_code");
 
                     b.Property<string>("SurfaceTypeCode")
-                        .HasMaxLength(12)
-                        .HasColumnType("varchar(12)")
+                        .HasColumnType("text")
                         .HasColumnName("surface_type_code");
+
+                    b.Property<string>("TirePressureCode")
+                        .HasColumnType("text")
+                        .HasColumnName("tire_pressure_code");
 
                     b.Property<int?>("WeightBearingDoubleDualTandem")
                         .HasColumnType("integer")
@@ -1517,23 +1601,28 @@ namespace PreflightApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("AccelerateStopDistAvailable")
+                        .HasColumnType("integer")
+                        .HasColumnName("accelerate_stop_dist_available");
+
                     b.Property<string>("ApproachLightSystem")
-                        .HasMaxLength(8)
-                        .HasColumnType("varchar(8)")
+                        .HasColumnType("text")
                         .HasColumnName("approach_light_system");
 
                     b.Property<string>("ApproachType")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
+                        .HasColumnType("text")
                         .HasColumnName("approach_type");
+
+                    b.Property<string>("CenterlineDirectionCode")
+                        .HasColumnType("text")
+                        .HasColumnName("centerline_direction_code");
 
                     b.Property<bool>("CenterlineLights")
                         .HasColumnType("boolean")
                         .HasColumnName("centerline_lights");
 
                     b.Property<string>("ControllingObjectCenterlineOffset")
-                        .HasMaxLength(7)
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("controlling_object_centerline_offset");
 
                     b.Property<int?>("ControllingObjectClearanceSlope")
@@ -1541,8 +1630,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("controlling_object_clearance_slope");
 
                     b.Property<string>("ControllingObjectDescription")
-                        .HasMaxLength(11)
-                        .HasColumnType("varchar(11)")
+                        .HasColumnType("text")
                         .HasColumnName("controlling_object_description");
 
                     b.Property<int?>("ControllingObjectDistanceFromRunway")
@@ -1554,9 +1642,56 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("controlling_object_height_above_runway");
 
                     b.Property<string>("ControllingObjectMarkedLighted")
-                        .HasMaxLength(4)
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("controlling_object_marked_lighted");
+
+                    b.Property<DateTime?>("DisplacedThrElevationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("displaced_thr_elevation_date");
+
+                    b.Property<string>("DisplacedThrElevationSource")
+                        .HasColumnType("text")
+                        .HasColumnName("displaced_thr_elevation_source");
+
+                    b.Property<int?>("DisplacedThrLatDeg")
+                        .HasColumnType("integer")
+                        .HasColumnName("displaced_thr_lat_deg");
+
+                    b.Property<string>("DisplacedThrLatHemis")
+                        .HasColumnType("text")
+                        .HasColumnName("displaced_thr_lat_hemis");
+
+                    b.Property<int?>("DisplacedThrLatMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("displaced_thr_lat_min");
+
+                    b.Property<decimal?>("DisplacedThrLatSec")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("displaced_thr_lat_sec");
+
+                    b.Property<int?>("DisplacedThrLongDeg")
+                        .HasColumnType("integer")
+                        .HasColumnName("displaced_thr_long_deg");
+
+                    b.Property<string>("DisplacedThrLongHemis")
+                        .HasColumnType("text")
+                        .HasColumnName("displaced_thr_long_hemis");
+
+                    b.Property<int?>("DisplacedThrLongMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("displaced_thr_long_min");
+
+                    b.Property<decimal?>("DisplacedThrLongSec")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("displaced_thr_long_sec");
+
+                    b.Property<DateTime?>("DisplacedThrPositionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("displaced_thr_position_date");
+
+                    b.Property<string>("DisplacedThrPositionSource")
+                        .HasColumnType("text")
+                        .HasColumnName("displaced_thr_position_source");
 
                     b.Property<decimal?>("DisplacedThresholdElev")
                         .HasColumnType("decimal(7,1)")
@@ -1578,6 +1713,50 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("decimal(7,1)")
                         .HasColumnName("elevation");
 
+                    b.Property<string>("FarPart77Code")
+                        .HasColumnType("text")
+                        .HasColumnName("far_part_77_code");
+
+                    b.Property<int?>("LahsoAvailableLandingDistance")
+                        .HasColumnType("integer")
+                        .HasColumnName("lahso_available_landing_distance");
+
+                    b.Property<string>("LahsoDescription")
+                        .HasColumnType("text")
+                        .HasColumnName("lahso_description");
+
+                    b.Property<string>("LahsoIntersectingRunway")
+                        .HasColumnType("text")
+                        .HasColumnName("lahso_intersecting_runway");
+
+                    b.Property<decimal?>("LahsoLatDecimal")
+                        .HasColumnType("decimal(10,8)")
+                        .HasColumnName("lahso_lat_decimal");
+
+                    b.Property<string>("LahsoLatitude")
+                        .HasColumnType("text")
+                        .HasColumnName("lahso_latitude");
+
+                    b.Property<decimal?>("LahsoLongDecimal")
+                        .HasColumnType("decimal(11,8)")
+                        .HasColumnName("lahso_long_decimal");
+
+                    b.Property<string>("LahsoLongitude")
+                        .HasColumnType("text")
+                        .HasColumnName("lahso_longitude");
+
+                    b.Property<DateTime?>("LahsoPositionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lahso_position_date");
+
+                    b.Property<string>("LahsoPositionSource")
+                        .HasColumnType("text")
+                        .HasColumnName("lahso_position_source");
+
+                    b.Property<int?>("LandingDistanceAvailable")
+                        .HasColumnType("integer")
+                        .HasColumnName("landing_distance_available");
+
                     b.Property<decimal?>("LatDecimal")
                         .HasColumnType("decimal(10,8)")
                         .HasColumnName("lat_decimal");
@@ -1592,8 +1771,7 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.Property<string>("RunwayEndId")
                         .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_end_id");
 
                     b.Property<bool>("RunwayEndLights")
@@ -1604,20 +1782,25 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("runway_fk");
 
+                    b.Property<decimal?>("RunwayGradient")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("runway_gradient");
+
+                    b.Property<string>("RunwayGradientDirection")
+                        .HasColumnType("text")
+                        .HasColumnName("runway_gradient_direction");
+
                     b.Property<string>("RunwayIdRef")
                         .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("varchar(7)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_id_ref");
 
                     b.Property<string>("RunwayMarkingsCondition")
-                        .HasMaxLength(1)
-                        .HasColumnType("varchar(1)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_markings_condition");
 
                     b.Property<string>("RunwayMarkingsType")
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_markings_type");
 
                     b.Property<bool>("RunwayVisibilityValueEquipment")
@@ -1625,15 +1808,69 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("runway_visibility_value_equipment");
 
                     b.Property<string>("RunwayVisualRangeEquipment")
-                        .HasMaxLength(3)
-                        .HasColumnType("varchar(3)")
+                        .HasColumnType("text")
                         .HasColumnName("runway_visual_range_equipment");
+
+                    b.Property<DateTime?>("RwyEndElevationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rwy_end_elevation_date");
+
+                    b.Property<string>("RwyEndElevationSource")
+                        .HasColumnType("text")
+                        .HasColumnName("rwy_end_elevation_source");
+
+                    b.Property<int?>("RwyEndLatDeg")
+                        .HasColumnType("integer")
+                        .HasColumnName("rwy_end_lat_deg");
+
+                    b.Property<string>("RwyEndLatHemis")
+                        .HasColumnType("text")
+                        .HasColumnName("rwy_end_lat_hemis");
+
+                    b.Property<int?>("RwyEndLatMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("rwy_end_lat_min");
+
+                    b.Property<decimal?>("RwyEndLatSec")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("rwy_end_lat_sec");
+
+                    b.Property<int?>("RwyEndLongDeg")
+                        .HasColumnType("integer")
+                        .HasColumnName("rwy_end_long_deg");
+
+                    b.Property<string>("RwyEndLongHemis")
+                        .HasColumnType("text")
+                        .HasColumnName("rwy_end_long_hemis");
+
+                    b.Property<int?>("RwyEndLongMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("rwy_end_long_min");
+
+                    b.Property<decimal?>("RwyEndLongSec")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("rwy_end_long_sec");
+
+                    b.Property<DateTime?>("RwyEndPositionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rwy_end_position_date");
+
+                    b.Property<string>("RwyEndPositionSource")
+                        .HasColumnType("text")
+                        .HasColumnName("rwy_end_position_source");
 
                     b.Property<string>("SiteNo")
                         .IsRequired()
-                        .HasMaxLength(9)
-                        .HasColumnType("varchar(9)")
+                        .HasColumnType("text")
                         .HasColumnName("site_no");
+
+                    b.Property<int?>("TakeoffDistanceAvailable")
+                        .HasColumnType("integer")
+                        .HasColumnName("takeoff_distance_available");
+
+                    b.Property<int?>("TakeoffRunAvailable")
+                        .HasColumnType("integer")
+                        .HasColumnName("takeoff_run_available");
 
                     b.Property<decimal?>("ThresholdCrossingHeight")
                         .HasColumnType("decimal(5,1)")
@@ -1642,6 +1879,14 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.Property<decimal?>("TouchdownZoneElev")
                         .HasColumnType("decimal(7,1)")
                         .HasColumnName("touchdown_zone_elev");
+
+                    b.Property<DateTime?>("TouchdownZoneElevDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("touchdown_zone_elev_date");
+
+                    b.Property<string>("TouchdownZoneElevSource")
+                        .HasColumnType("text")
+                        .HasColumnName("touchdown_zone_elev_source");
 
                     b.Property<bool>("TouchdownZoneLights")
                         .HasColumnType("boolean")
@@ -1656,8 +1901,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("visual_glide_path_angle");
 
                     b.Property<string>("VisualGlideSlopeIndicator")
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("visual_glide_slope_indicator");
 
                     b.HasKey("Id");
@@ -1672,6 +1916,61 @@ namespace PreflightApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("runway_ends", (string)null);
+                });
+
+            modelBuilder.Entity("PreflightApi.Domain.Entities.Sigmet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Altitude")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("altitude");
+
+                    b.Property<string>("Areas")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("area");
+
+                    b.Property<string>("Hazard")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("hazard");
+
+                    b.Property<int?>("MovementDirDegrees")
+                        .HasColumnType("integer")
+                        .HasColumnName("movement_dir_degrees");
+
+                    b.Property<int?>("MovementSpeedKt")
+                        .HasColumnType("integer")
+                        .HasColumnName("movement_speed_kt");
+
+                    b.Property<string>("RawText")
+                        .HasColumnType("text")
+                        .HasColumnName("raw_text");
+
+                    b.Property<string>("SigmetType")
+                        .HasColumnType("text")
+                        .HasColumnName("sigmet_type");
+
+                    b.Property<string>("ValidTimeFrom")
+                        .HasColumnType("text")
+                        .HasColumnName("valid_time_from");
+
+                    b.Property<string>("ValidTimeTo")
+                        .HasColumnType("text")
+                        .HasColumnName("valid_time_to");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SigmetType");
+
+                    b.HasIndex("ValidTimeFrom");
+
+                    b.HasIndex("ValidTimeTo");
+
+                    b.ToTable("sigmet");
                 });
 
             modelBuilder.Entity("PreflightApi.Domain.Entities.SpecialUseAirspace", b =>

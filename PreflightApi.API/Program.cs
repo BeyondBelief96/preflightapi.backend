@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Asp.Versioning;
-using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.Extensions.Options;
@@ -28,26 +27,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
     .AddEnvironmentVariables()
     .AddUserSecrets<Program>(optional: true, reloadOnChange: true);
-
-// Add Azure Key Vault for secrets
-var keyVaultUrl = builder.Configuration["KeyVault:Url"];
-if (!string.IsNullOrEmpty(keyVaultUrl))
-{
-    var credential = new DefaultAzureCredential();
-
-    // Map Key Vault secret names to configuration keys based on environment
-    var secretSuffix = builder.Environment.IsProduction() ? "prd" : "staging";
-    var secretMappings = new Dictionary<string, string>
-    {
-        { $"preflightapi-faa-nms-api-client-id-{secretSuffix}", "NmsSettings:ClientId" },
-        { $"preflightapi-faa-nms-api-client-secret-{secretSuffix}", "NmsSettings:ClientSecret" }
-    };
-
-    builder.Configuration.AddAzureKeyVault(
-        new Uri(keyVaultUrl),
-        credential,
-        new MappedKeyVaultSecretManager(secretMappings));
-}
 
 // Setup Logging
 builder.Logging.ClearProviders();
@@ -100,8 +79,10 @@ builder.Services.AddApiVersioning(options =>
 // Setup Swagger
 builder.Services.AddOpenApiDocument(options =>
 {
-    options.Title = "PreflightApi API";
+    options.Title = "PreflightApi";
     options.Version = "v1";
+    options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
+    options.DocumentProcessors.Add(new ControllerXmlDocProcessor());
 });
 
 // Setup Environment Variable Settings
@@ -140,7 +121,7 @@ builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddScoped<IMetarService, MetarService>();
 builder.Services.AddScoped<IPirepService, PirepService>();
 builder.Services.AddScoped<ITafService, TafService>();
-builder.Services.AddScoped<IAirsigmetService, AirsigmetService>();
+builder.Services.AddScoped<ISigmetService, SigmetService>();
 builder.Services.AddScoped<IGAirmetService, GAirmetService>();
 builder.Services.AddScoped<IAirportDiagramService, AirportDiagramService>();
 builder.Services.AddScoped<IChartSupplementService, ChartSupplementService>();  
@@ -152,20 +133,12 @@ builder.Services.AddScoped<IObstacleService, ObstacleService>();
 builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>();
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
-builder.Services.AddScoped<IPerformanceCalculatorService, PerformanceCalculatorService>();
+builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();
 
-// NOTAM Services
-builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
+// NOTAM Services (DB-backed, synced by Azure Functions)
 builder.Services.AddScoped<INotamService, NotamService>();
 
 builder.Services.AddHttpClient();
-
-// Configure NMS API HttpClient with extended timeout
-builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
-{
-    var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
-    client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
-});
 
 var app = builder.Build();
 
@@ -188,10 +161,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseGlobalExceptionHandling();
+app.UseGatewaySecretValidation();
+
+app.UseOpenApi();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseOpenApi();
     app.UseSwaggerUi();
 }
 

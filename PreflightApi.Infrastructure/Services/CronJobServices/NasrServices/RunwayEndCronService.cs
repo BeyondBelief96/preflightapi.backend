@@ -9,7 +9,7 @@ using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices.Mappings
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
 
-public class RunwayEndCronService : FaaNasrBaseService<RunwayEnd>
+public class RunwayEndCronService : FaaNasrBaseService<RunwayEnd>, IRunwayEndCronService
 {
     private readonly PreflightApiDbContext _dbContext;
     private readonly ILogger<RunwayEndCronService> _logger;

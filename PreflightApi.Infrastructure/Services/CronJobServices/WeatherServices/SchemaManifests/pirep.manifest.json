@@ -1,0 +1,286 @@
+{
+  "$schema": "avwx-schema-manifest-v1",
+  "xmlRootElement": "AircraftReport",
+  "entity": "Pirep",
+  "lastVerified": "2026-02-11",
+  "elements": {
+    "receipt_time": {
+      "entityProperty": "ReceiptTime",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "receiptTime",
+      "captured": true,
+      "description": "ISO 8601 report receipt time"
+    },
+    "observation_time": {
+      "entityProperty": "ObservationTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "obsTime",
+      "captured": true,
+      "description": "ISO 8601 observation time"
+    },
+    "aircraft_ref": {
+      "entityProperty": "AircraftRef",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "acType",
+      "captured": true,
+      "description": "Aircraft reference/identifier"
+    },
+    "latitude": {
+      "entityProperty": "Latitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lat",
+      "captured": true,
+      "description": "Report location latitude"
+    },
+    "longitude": {
+      "entityProperty": "Longitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lon",
+      "captured": true,
+      "description": "Report location longitude"
+    },
+    "altitude_ft_msl": {
+      "entityProperty": "AltitudeFtMsl",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "fltlvl",
+      "captured": true,
+      "description": "Flight altitude in feet MSL"
+    },
+    "visibility_statute_mi": {
+      "entityProperty": "VisibilityStatuteMi",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "visib",
+      "captured": true,
+      "description": "Visibility in statute miles"
+    },
+    "wx_string": {
+      "entityProperty": "WxString",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "wxString",
+      "captured": true,
+      "description": "Weather phenomena string"
+    },
+    "temp_c": {
+      "entityProperty": "TempC",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "temp",
+      "captured": true,
+      "description": "Temperature in Celsius"
+    },
+    "wind_dir_degrees": {
+      "entityProperty": "WindDirDegrees",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "wdir",
+      "captured": true,
+      "description": "Wind direction in degrees"
+    },
+    "wind_speed_kt": {
+      "entityProperty": "WindSpeedKt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "wspd",
+      "captured": true,
+      "description": "Wind speed in knots"
+    },
+    "vert_gust_kt": {
+      "entityProperty": "VertGustKt",
+      "dataType": "int",
+      "required": false,
+      "openApiProperty": "vertGust",
+      "captured": true,
+      "description": "Vertical gust speed in knots"
+    },
+    "report_type": {
+      "entityProperty": "ReportType",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "reportType",
+      "captured": true,
+      "description": "Report type: PIREP, Urgent PIREP, AIREP, AMDAR"
+    },
+    "raw_text": {
+      "entityProperty": "RawText",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "rawOb",
+      "captured": true,
+      "description": "Raw PIREP text"
+    }
+  },
+  "nestedElements": {
+    "quality_control_flags": {
+      "description": "Quality control flags for PIREP data",
+      "elements": {
+        "mid_point_assumed": {
+          "entityProperty": "QualityControlFlags.MidPointAssumed",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Location assumed as midpoint"
+        },
+        "no_time_stamp": {
+          "entityProperty": "QualityControlFlags.NoTimeStamp",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "System-assigned timestamp"
+        },
+        "flt_lvl_range": {
+          "entityProperty": "QualityControlFlags.FltLvlRange",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Flight level reported as range"
+        },
+        "above_ground_level_indicated": {
+          "entityProperty": "QualityControlFlags.AboveGroundLevelIndicated",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "AGL instead of MSL"
+        },
+        "no_flt_lvl": {
+          "entityProperty": "QualityControlFlags.NoFltLvl",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "No flight level reported"
+        },
+        "bad_location": {
+          "entityProperty": "QualityControlFlags.BadLocation",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": null,
+          "captured": true,
+          "description": "Location could not be decoded"
+        }
+      }
+    },
+    "sky_condition": {
+      "description": "Sky condition layer (repeating, uses attributes, MSL altitudes)",
+      "attributes": {
+        "sky_cover": {
+          "entityProperty": "SkyCondition.SkyCover",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "cover",
+          "captured": true,
+          "description": "Sky cover type: SKC, CLR, FEW, SCT, BKN, OVC, OVX"
+        },
+        "cloud_base_ft_msl": {
+          "entityProperty": "SkyCondition.CloudBaseFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "base",
+          "captured": true,
+          "description": "Cloud base in feet MSL"
+        },
+        "cloud_top_ft_msl": {
+          "entityProperty": "SkyCondition.CloudTopFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "top",
+          "captured": true,
+          "description": "Cloud top in feet MSL"
+        }
+      }
+    },
+    "turbulence_condition": {
+      "description": "Turbulence condition (repeating, uses attributes)",
+      "attributes": {
+        "turbulence_type": {
+          "entityProperty": "TurbulenceCondition.TurbulenceType",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "type",
+          "captured": true,
+          "description": "Turbulence type: CAT, CHOP, LLWS, MWAVE"
+        },
+        "turbulence_intensity": {
+          "entityProperty": "TurbulenceCondition.TurbulenceIntensity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "intensity",
+          "captured": true,
+          "description": "Turbulence intensity"
+        },
+        "turbulence_base_ft_msl": {
+          "entityProperty": "TurbulenceCondition.TurbulenceBaseFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "base",
+          "captured": true,
+          "description": "Turbulence bottom altitude in feet MSL"
+        },
+        "turbulence_top_ft_msl": {
+          "entityProperty": "TurbulenceCondition.TurbulenceTopFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "top",
+          "captured": true,
+          "description": "Turbulence top altitude in feet MSL"
+        },
+        "turbulence_freq": {
+          "entityProperty": "TurbulenceCondition.TurbulenceFreq",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "freq",
+          "captured": true,
+          "description": "Turbulence frequency: ISOL, OCNL, CONT"
+        }
+      }
+    },
+    "icing_condition": {
+      "description": "Icing condition (repeating, uses attributes)",
+      "attributes": {
+        "icing_type": {
+          "entityProperty": "IcingCondition.IcingType",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "type",
+          "captured": true,
+          "description": "Icing type: RIME, CLEAR, MIXED"
+        },
+        "icing_intensity": {
+          "entityProperty": "IcingCondition.IcingIntensity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "intensity",
+          "captured": true,
+          "description": "Icing intensity"
+        },
+        "icing_base_ft_msl": {
+          "entityProperty": "IcingCondition.IcingBaseFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "base",
+          "captured": true,
+          "description": "Icing bottom altitude in feet MSL"
+        },
+        "icing_top_ft_msl": {
+          "entityProperty": "IcingCondition.IcingTopFtMsl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "top",
+          "captured": true,
+          "description": "Icing top altitude in feet MSL"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,379 @@
+{
+  "$schema": "avwx-schema-manifest-v1",
+  "xmlRootElement": "TAF",
+  "entity": "Taf",
+  "lastVerified": "2026-02-11",
+  "elements": {
+    "raw_text": {
+      "entityProperty": "RawText",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "rawTAF",
+      "captured": true,
+      "description": "Raw TAF text"
+    },
+    "station_id": {
+      "entityProperty": "StationId",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "icaoId",
+      "captured": true,
+      "description": "ICAO station identifier"
+    },
+    "issue_time": {
+      "entityProperty": "IssueTime",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "issueTime",
+      "captured": true,
+      "description": "ISO 8601 TAF issuance time"
+    },
+    "bulletin_time": {
+      "entityProperty": "BulletinTime",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "bulletinTime",
+      "captured": true,
+      "description": "ISO 8601 official bulletin time"
+    },
+    "valid_time_from": {
+      "entityProperty": "ValidTimeFrom",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "validTimeFrom",
+      "captured": true,
+      "description": "ISO 8601 validity period start"
+    },
+    "valid_time_to": {
+      "entityProperty": "ValidTimeTo",
+      "dataType": "string",
+      "required": true,
+      "openApiProperty": "validTimeTo",
+      "captured": true,
+      "description": "ISO 8601 validity period end"
+    },
+    "remarks": {
+      "entityProperty": "Remarks",
+      "dataType": "string",
+      "required": false,
+      "openApiProperty": "remarks",
+      "captured": true,
+      "description": "TAF remarks"
+    },
+    "latitude": {
+      "entityProperty": "Latitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lat",
+      "captured": true,
+      "description": "Station latitude in decimal degrees"
+    },
+    "longitude": {
+      "entityProperty": "Longitude",
+      "dataType": "float",
+      "required": true,
+      "openApiProperty": "lon",
+      "captured": true,
+      "description": "Station longitude in decimal degrees"
+    },
+    "elevation_m": {
+      "entityProperty": "ElevationM",
+      "dataType": "float",
+      "required": false,
+      "openApiProperty": "elev",
+      "captured": true,
+      "description": "Station elevation in meters"
+    }
+  },
+  "nestedElements": {
+    "forecast": {
+      "description": "TAF forecast period (repeating element with child elements)",
+      "elements": {
+        "fcst_time_from": {
+          "entityProperty": "Forecast.FcstTimeFrom",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "timeFrom",
+          "captured": true,
+          "description": "Forecast period start time"
+        },
+        "fcst_time_to": {
+          "entityProperty": "Forecast.FcstTimeTo",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "timeTo",
+          "captured": true,
+          "description": "Forecast period end time"
+        },
+        "change_indicator": {
+          "entityProperty": "Forecast.ChangeIndicator",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "change",
+          "captured": true,
+          "description": "Change indicator: FM, BECMG, TEMPO, PROB"
+        },
+        "time_becoming": {
+          "entityProperty": "Forecast.TimeBecoming",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "timeBecoming",
+          "captured": true,
+          "description": "BECMG completion time"
+        },
+        "probability": {
+          "entityProperty": "Forecast.Probability",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "probability",
+          "captured": true,
+          "description": "Probability percentage (30 or 40)"
+        },
+        "wind_dir_degrees": {
+          "entityProperty": "Forecast.WindDirDegrees",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "wdir",
+          "captured": true,
+          "description": "Wind direction in degrees or VRB"
+        },
+        "wind_speed_kt": {
+          "entityProperty": "Forecast.WindSpeedKt",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "wspd",
+          "captured": true,
+          "description": "Wind speed in knots"
+        },
+        "wind_gust_kt": {
+          "entityProperty": "Forecast.WindGustKt",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "wgst",
+          "captured": true,
+          "description": "Wind gust speed in knots"
+        },
+        "wind_shear_hgt_ft_agl": {
+          "entityProperty": "Forecast.WindShearHgtFtAgl",
+          "dataType": "short",
+          "required": false,
+          "openApiProperty": "wshearHgt",
+          "captured": true,
+          "description": "Wind shear height in feet AGL"
+        },
+        "wind_shear_dir_degrees": {
+          "entityProperty": "Forecast.WindShearDirDegrees",
+          "dataType": "short",
+          "required": false,
+          "openApiProperty": "wshearDir",
+          "captured": true,
+          "description": "Wind shear direction in degrees"
+        },
+        "wind_shear_speed_kt": {
+          "entityProperty": "Forecast.WindShearSpeedKt",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "wshearSpd",
+          "captured": true,
+          "description": "Wind shear speed in knots"
+        },
+        "visibility_statute_mi": {
+          "entityProperty": "Forecast.VisibilityStatuteMi",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "visib",
+          "captured": true,
+          "description": "Visibility in statute miles"
+        },
+        "altim_in_hg": {
+          "entityProperty": "Forecast.AltimInHg",
+          "dataType": "float",
+          "required": false,
+          "openApiProperty": "altim",
+          "captured": true,
+          "description": "Altimeter setting in inches of mercury"
+        },
+        "vert_vis_ft": {
+          "entityProperty": "Forecast.VertVisFt",
+          "dataType": "short",
+          "required": false,
+          "openApiProperty": "vertVis",
+          "captured": true,
+          "description": "Vertical visibility in feet"
+        },
+        "wx_string": {
+          "entityProperty": "Forecast.WxString",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "wxString",
+          "captured": true,
+          "description": "Weather phenomena string"
+        },
+        "not_decoded": {
+          "entityProperty": "Forecast.NotDecoded",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "notDecoded",
+          "captured": true,
+          "description": "Unparsed TAF text"
+        },
+        "sky_condition": {
+          "entityProperty": "Forecast.SkyConditions",
+          "dataType": "collection",
+          "required": false,
+          "openApiProperty": "clouds",
+          "captured": true,
+          "description": "Sky condition layers within forecast (attribute-based)"
+        },
+        "turbulence_condition": {
+          "entityProperty": "Forecast.TurbulenceConditions",
+          "dataType": "collection",
+          "required": false,
+          "openApiProperty": "turb",
+          "captured": true,
+          "description": "Turbulence conditions within forecast (attribute-based)"
+        },
+        "icing_condition": {
+          "entityProperty": "Forecast.IcingConditions",
+          "dataType": "collection",
+          "required": false,
+          "openApiProperty": "icing",
+          "captured": true,
+          "description": "Icing conditions within forecast (attribute-based)"
+        },
+        "temperature": {
+          "entityProperty": "Forecast.Temperature",
+          "dataType": "collection",
+          "required": false,
+          "openApiProperty": "temp",
+          "captured": true,
+          "description": "Temperature forecasts within forecast period"
+        }
+      }
+    },
+    "sky_condition": {
+      "description": "Sky condition layer within forecast (uses attributes)",
+      "attributes": {
+        "sky_cover": {
+          "entityProperty": "SkyCondition.SkyCover",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "cover",
+          "captured": true,
+          "description": "Sky cover type: SKC, CLR, FEW, SCT, BKN, OVC"
+        },
+        "cloud_base_ft_agl": {
+          "entityProperty": "SkyCondition.CloudBaseFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "base",
+          "captured": true,
+          "description": "Cloud base in feet AGL"
+        },
+        "cloud_type": {
+          "entityProperty": "SkyCondition.CloudType",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "type",
+          "captured": true,
+          "description": "Cloud type: CB or TCU"
+        }
+      }
+    },
+    "turbulence_condition": {
+      "description": "Turbulence condition within forecast (uses attributes)",
+      "attributes": {
+        "turbulence_intensity": {
+          "entityProperty": "TurbulenceCondition.TurbulenceIntensity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "intensity",
+          "captured": true,
+          "description": "Turbulence intensity code 0-5 or X"
+        },
+        "turbulence_min_alt_ft_agl": {
+          "entityProperty": "TurbulenceCondition.TurbulenceMinAltFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "minAlt",
+          "captured": true,
+          "description": "Turbulence bottom altitude in feet AGL"
+        },
+        "turbulence_max_alt_ft_agl": {
+          "entityProperty": "TurbulenceCondition.TurbulenceMaxAltFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "maxAlt",
+          "captured": true,
+          "description": "Turbulence top altitude in feet AGL"
+        }
+      }
+    },
+    "icing_condition": {
+      "description": "Icing condition within forecast (uses attributes)",
+      "attributes": {
+        "icing_intensity": {
+          "entityProperty": "IcingCondition.IcingIntensity",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "intensity",
+          "captured": true,
+          "description": "Icing intensity code 0-9"
+        },
+        "icing_min_alt_ft_agl": {
+          "entityProperty": "IcingCondition.IcingMinAltFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "minAlt",
+          "captured": true,
+          "description": "Icing bottom altitude in feet AGL"
+        },
+        "icing_max_alt_ft_agl": {
+          "entityProperty": "IcingCondition.IcingMaxAltFtAgl",
+          "dataType": "int",
+          "required": false,
+          "openApiProperty": "maxAlt",
+          "captured": true,
+          "description": "Icing top altitude in feet AGL"
+        }
+      }
+    },
+    "temperature": {
+      "description": "Temperature forecast within forecast period (child elements)",
+      "elements": {
+        "valid_time": {
+          "entityProperty": "Temperature.ValidTime",
+          "dataType": "string",
+          "required": true,
+          "openApiProperty": "validTime",
+          "captured": true,
+          "description": "Temperature valid time"
+        },
+        "sfc_temp_c": {
+          "entityProperty": "Temperature.SfcTempC",
+          "dataType": "float",
+          "required": false,
+          "openApiProperty": "sfcTemp",
+          "captured": true,
+          "description": "Surface temperature in Celsius"
+        },
+        "max_temp_c": {
+          "entityProperty": "Temperature.MaxTempC",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "maxTemp",
+          "captured": true,
+          "description": "Maximum temperature in Celsius"
+        },
+        "min_temp_c": {
+          "entityProperty": "Temperature.MinTempC",
+          "dataType": "string",
+          "required": false,
+          "openApiProperty": "minTemp",
+          "captured": true,
+          "description": "Minimum temperature in Celsius"
+        }
+      }
+    }
+  }
+}

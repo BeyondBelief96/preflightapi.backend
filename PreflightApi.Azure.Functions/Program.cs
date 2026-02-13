@@ -7,13 +7,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PreflightApi.Domain.Entities;
-using PreflightApi.Domain.Entities;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Services.CronJobServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
+using PreflightApi.Infrastructure.Services.NotamServices;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 
@@ -33,11 +33,21 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-// Configure logging to ensure logs go to Application Insights
-builder.Logging.AddApplicationInsights();
+// ConfigureFunctionsApplicationInsights() adds a filter that defaults the Application Insights
+// logger to Warning level, which silently drops all Information/Debug logs. Remove that filter
+// so our host.json log level configuration controls what gets captured.
+// See: https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#application-insights
+builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
+{
+    var toRemove = options.Rules.FirstOrDefault(rule =>
+        rule.ProviderName == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
+    if (toRemove is not null)
+        options.Rules.Remove(toRemove);
+});
 
 // Register settings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
+builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
 
 // Register services
 builder.Services.AddScoped<IFaaPublicationCycleService, FaaPublicationCycleService>();
@@ -45,23 +55,33 @@ builder.Services.AddScoped<IChartSupplementCronService, ChartSupplementCronServi
 builder.Services.AddScoped<IAirportDiagramCronService, AirportDiagramCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Metar>, MetarCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Taf>, TafCronService>();
-builder.Services.AddScoped<IAviationWeatherService<Airsigmet>, AirsigmetCronService>();
+builder.Services.AddScoped<IAviationWeatherService<Sigmet>, SigmetCronService>();
 builder.Services.AddScoped<IAviationWeatherService<GAirmet>, GAirmetCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Pirep>, PirepCronService>();
 builder.Services.AddScoped<IAirspaceCronService<Airspace>, AirspaceCronService>();
 builder.Services.AddScoped<IAirspaceCronService<SpecialUseAirspace>, SpecialUseAirspaceCronService>();
-builder.Services.AddScoped<AirportCronService>();
-builder.Services.AddScoped<CommunicationFrequencyCronService>();
-builder.Services.AddScoped<RunwayCronService>();
-builder.Services.AddScoped<RunwayEndCronService>();
+builder.Services.AddScoped<IAirportCronService, AirportCronService>();
+builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFrequencyCronService>();
+builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
+builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();
+builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
+builder.Services.AddScoped<INotamDeltaSyncCronService, NotamDeltaSyncCronService>();
+builder.Services.AddScoped<INotamInitialLoadCronService, NotamInitialLoadCronService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
-builder.Services.AddHttpClient();
+builder.Services.AddResilientHttpClients();
 
-// Configure HttpClient for ArcGIS services with extended timeout
+// Configure HttpClient for ArcGIS services with extended timeout (has its own Polly retry in ArcGisBaseService)
 builder.Services.AddHttpClient("ArcGis", client =>
 {
     client.Timeout = TimeSpan.FromMinutes(10);
+});
+
+// Configure HttpClient for NMS API with configurable timeout
+builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
+{
+    var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
+    client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
 });
 
 // Register database context

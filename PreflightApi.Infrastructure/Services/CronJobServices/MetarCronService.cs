@@ -6,6 +6,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.Metar;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
@@ -40,14 +41,43 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     return;
                 }
 
-                var metarData = ParseMetarXmlData(xmlData, cancellationToken);
+                var metarData = ParseMetarXmlData(xmlData, cancellationToken).ToList();
 
+                // Load all existing METARs in a single query
+                var stationIds = metarData.Select(m => m.StationId).Distinct().ToList();
+                var existingMetars = await _dbContext.Metars
+                    .Where(m => stationIds.Contains(m.StationId))
+                    .ToDictionaryAsync(m => m.StationId!, cancellationToken);
+
+                var errorCount = 0;
                 foreach (var metar in metarData)
                 {
-                    await UpdateOrCreateMetarAsync(metar, cancellationToken);
+                    try
+                    {
+                        if (existingMetars.TryGetValue(metar.StationId!, out var existing))
+                        {
+                            if (existing.RawText != metar.RawText)
+                                UpdateMetarFields(existing, metar);
+                        }
+                        else
+                        {
+                            await _dbContext.Metars.AddAsync(metar, cancellationToken);
+                            existingMetars[metar.StationId!] = metar;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        _logger.LogWarning(ex, "Failed to process METAR for station {StationId}", metar.StationId);
+                    }
                 }
 
-                _logger.LogInformation("Completed METAR data update");
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                if (errorCount > 0)
+                    _logger.LogWarning("Completed METAR data update with {ErrorCount} record errors", errorCount);
+                else
+                    _logger.LogInformation("Completed METAR data update");
             }
             catch (Exception ex)
             {
@@ -58,7 +88,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
 
         private async Task<string?> FetchMetarXmlDataAsync(CancellationToken cancellationToken)
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
             using var response = await client.GetAsync(MetarUrl, cancellationToken);
 
             switch (response.StatusCode)
@@ -70,7 +100,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         System.IO.Compression.CompressionMode.Decompress))
                     using (var reader = new StreamReader(decompressedStream))
                     {
-                        return await reader.ReadToEndAsync(cancellationToken);
+                        var content = await reader.ReadToEndAsync(cancellationToken);
+                        return string.IsNullOrWhiteSpace(content) ? null : content;
                     }
 
                 case HttpStatusCode.NoContent:
@@ -108,6 +139,28 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             var metars = new List<Metar>();
             var doc = XDocument.Parse(xmlData);
             var metarElements = doc.Descendants("METAR");
+
+            // Validate schema on first element
+            var firstElement = metarElements.FirstOrDefault();
+            if (firstElement != null)
+            {
+                var validationResult = AvWxSchemaValidator.ValidateElement("metar", firstElement);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in METAR XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in METAR XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in METAR XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in METAR XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+            }
 
             foreach (var element in metarElements)
             {
@@ -149,59 +202,37 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             return metars;
         }
 
-        private async Task UpdateOrCreateMetarAsync(Metar metar, CancellationToken cancellationToken)
+        private static void UpdateMetarFields(Metar existing, Metar metar)
         {
-            var existingMetar = await _dbContext.Metars
-                .FirstOrDefaultAsync(m => m.StationId == metar.StationId, cancellationToken);
-
-            if (existingMetar != null)
-            {
-                if (existingMetar.RawText != metar.RawText)
-                {
-                    _logger.LogDebug("Updating existing METAR for station {StationId}", metar.StationId);
-                    existingMetar.RawText = metar.RawText;
-                    existingMetar.ObservationTime = metar.ObservationTime;
-                    existingMetar.Latitude = metar.Latitude;
-                    existingMetar.Longitude = metar.Longitude;
-                    existingMetar.TempC = metar.TempC;
-                    existingMetar.DewpointC = metar.DewpointC;
-                    existingMetar.WindDirDegrees = metar.WindDirDegrees;
-                    existingMetar.WindSpeedKt = metar.WindSpeedKt;
-                    existingMetar.WindGustKt = metar.WindGustKt;
-                    existingMetar.VisibilityStatuteMi = metar.VisibilityStatuteMi;
-                    existingMetar.AltimInHg = metar.AltimInHg;
-                    existingMetar.SeaLevelPressureMb = metar.SeaLevelPressureMb;
-                    existingMetar.QualityControlFlags = metar.QualityControlFlags;
-                    existingMetar.WxString = metar.WxString;
-                    existingMetar.SkyCondition = metar.SkyCondition;
-                    existingMetar.FlightCategory = metar.FlightCategory;
-                    existingMetar.ThreeHrPressureTendencyMb = metar.ThreeHrPressureTendencyMb;
-                    existingMetar.MaxTC = metar.MaxTC;
-                    existingMetar.MinTC = metar.MinTC;
-                    existingMetar.MaxT24hrC = metar.MaxT24hrC;
-                    existingMetar.MinT24hrC = metar.MinT24hrC;
-                    existingMetar.PrecipIn = metar.PrecipIn;
-                    existingMetar.Pcp3hrIn = metar.Pcp3hrIn;
-                    existingMetar.Pcp6hrIn = metar.Pcp6hrIn;
-                    existingMetar.Pcp24hrIn = metar.Pcp24hrIn;
-                    existingMetar.SnowIn = metar.SnowIn;
-                    existingMetar.VertVisFt = metar.VertVisFt;
-                    existingMetar.MetarType = metar.MetarType;
-                    existingMetar.ElevationM = metar.ElevationM;
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-                else
-                {
-                    _logger.LogDebug("No changes for METAR station {StationId}", metar.StationId);
-                }
-            }
-            else
-            {
-                _logger.LogDebug("Creating new METAR for station {StationId}", metar.StationId);
-                await _dbContext.Metars.AddAsync(metar, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
+            existing.RawText = metar.RawText;
+            existing.ObservationTime = metar.ObservationTime;
+            existing.Latitude = metar.Latitude;
+            existing.Longitude = metar.Longitude;
+            existing.TempC = metar.TempC;
+            existing.DewpointC = metar.DewpointC;
+            existing.WindDirDegrees = metar.WindDirDegrees;
+            existing.WindSpeedKt = metar.WindSpeedKt;
+            existing.WindGustKt = metar.WindGustKt;
+            existing.VisibilityStatuteMi = metar.VisibilityStatuteMi;
+            existing.AltimInHg = metar.AltimInHg;
+            existing.SeaLevelPressureMb = metar.SeaLevelPressureMb;
+            existing.QualityControlFlags = metar.QualityControlFlags;
+            existing.WxString = metar.WxString;
+            existing.SkyCondition = metar.SkyCondition;
+            existing.FlightCategory = metar.FlightCategory;
+            existing.ThreeHrPressureTendencyMb = metar.ThreeHrPressureTendencyMb;
+            existing.MaxTC = metar.MaxTC;
+            existing.MinTC = metar.MinTC;
+            existing.MaxT24hrC = metar.MaxT24hrC;
+            existing.MinT24hrC = metar.MinT24hrC;
+            existing.PrecipIn = metar.PrecipIn;
+            existing.Pcp3hrIn = metar.Pcp3hrIn;
+            existing.Pcp6hrIn = metar.Pcp6hrIn;
+            existing.Pcp24hrIn = metar.Pcp24hrIn;
+            existing.SnowIn = metar.SnowIn;
+            existing.VertVisFt = metar.VertVisFt;
+            existing.MetarType = metar.MetarType;
+            existing.ElevationM = metar.ElevationM;
         }
 
         private static MetarQualityControlFlags? ParseQualityControlFlags(XElement? element)

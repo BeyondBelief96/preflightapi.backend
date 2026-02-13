@@ -8,11 +8,25 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
 
+/// <summary>
+/// Provides access to decoded G-AIRMETs (Graphical AIRMETs) for the contiguous United States — graphical weather
+/// advisories issued by the Aviation Weather Center. G-AIRMETs are organized by product type: SIERRA
+/// (IFR/mountain obscuration), TANGO (turbulence/wind shear/surface winds), and ZULU (icing/freezing level).
+/// They can also be queried by specific hazard type (e.g., ICE, TURB_LO, IFR). Each advisory includes the
+/// hazard, severity, altitude range, and geographic polygon of the affected area. G-AIRMETs are issued every
+/// 3 hours with forecasts at 0, 3, 6, 9, and 12 hour intervals.
+/// </summary>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/g-airmets")]
+[Tags("Weather - G-AIRMETs")]
 public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
 {
+    /// <summary>
+    /// Gets all current G-AIRMETs (Graphical AIRMETs)
+    /// </summary>
+    /// <returns>All active G-AIRMET advisories</returns>
+    /// <response code="200">Returns the list of G-AIRMETs</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<GAirmetDto>>> GetAllGAirmets()
@@ -20,7 +34,14 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
         return Ok(await gairmetService.GetAllGAirmets());
     }
 
-    [HttpGet("{product}")]
+    /// <summary>
+    /// Gets G-AIRMETs filtered by product type
+    /// </summary>
+    /// <param name="product">Product type: SIERRA, TANGO, or ZULU</param>
+    /// <returns>G-AIRMETs matching the specified product type</returns>
+    /// <response code="200">Returns the filtered G-AIRMETs</response>
+    /// <response code="400">If the product type is invalid</response>
+    [HttpGet("product/{product}")]
     [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<GAirmetDto>>> GetGAirmetsByProduct(string product)
@@ -31,29 +52,13 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
         return Ok(await gairmetService.GetGAirmetsByProduct(productEnum));
     }
 
-    [HttpGet("sierra")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetSierraGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByProduct(GAirmetProduct.SIERRA));
-    }
-
-    [HttpGet("tango")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetTangoGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByProduct(GAirmetProduct.TANGO));
-    }
-
-    [HttpGet("zulu")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetZuluGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByProduct(GAirmetProduct.ZULU));
-    }
-
-    // ==================== Hazard Type Endpoints ====================
-
+    /// <summary>
+    /// Gets G-AIRMETs filtered by hazard type
+    /// </summary>
+    /// <param name="hazardType">Hazard type: MT_OBSC, IFR, TURB_LO, TURB_HI, LLWS, SFC_WIND, ICE, FZLVL, or M_FZLVL</param>
+    /// <returns>G-AIRMETs matching the specified hazard type</returns>
+    /// <response code="200">Returns the filtered G-AIRMETs</response>
+    /// <response code="400">If the hazard type is invalid</response>
     [HttpGet("hazard/{hazardType}")]
     [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -63,74 +68,5 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
             throw new ValidationException("hazardType", $"Invalid hazard type '{hazardType}'. Valid values are: MT_OBSC, IFR, TURB_LO, TURB_HI, LLWS, SFC_WIND, ICE, FZLVL, M_FZLVL");
 
         return Ok(await gairmetService.GetGAirmetsByHazardType(hazardTypeEnum));
-    }
-
-    // SIERRA Hazard Types
-
-    [HttpGet("hazard/mt-obsc")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetMtObscGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.MT_OBSC));
-    }
-
-    [HttpGet("hazard/ifr")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetIfrGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.IFR));
-    }
-
-    // TANGO Hazard Types
-
-    [HttpGet("hazard/turb-lo")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetTurbLoGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.TURB_LO));
-    }
-
-    [HttpGet("hazard/turb-hi")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetTurbHiGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.TURB_HI));
-    }
-
-    [HttpGet("hazard/llws")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetLlwsGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.LLWS));
-    }
-
-    [HttpGet("hazard/sfc-wind")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetSfcWindGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.SFC_WIND));
-    }
-
-    // ZULU Hazard Types
-
-    [HttpGet("hazard/ice")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetIceGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.ICE));
-    }
-
-    [HttpGet("hazard/fzlvl")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetFzlvlGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.FZLVL));
-    }
-
-    [HttpGet("hazard/m-fzlvl")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetMFzlvlGAirmets()
-    {
-        return Ok(await gairmetService.GetGAirmetsByHazardType(GAirmetHazardType.M_FZLVL));
     }
 }
