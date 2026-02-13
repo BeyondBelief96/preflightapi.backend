@@ -45,7 +45,8 @@ public class NavlogController(INavlogService navlogService)
 {
     /// <summary>
     /// Calculates a complete VFR navigation log for a cross-country flight.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Provide an ordered list of waypoints (minimum 2) with aircraft performance data, a cruising altitude,
     /// and a departure time. The service calculates every leg of the route and returns detailed per-leg data
@@ -132,7 +133,7 @@ public class NavlogController(INavlogService navlogService)
     ///     </description>
     ///   </item>
     /// </list>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// Navigation log request containing:
     /// <c>Waypoints</c> (ordered route points with lat/lon/altitude, minimum 2),
@@ -169,7 +170,8 @@ public class NavlogController(INavlogService navlogService)
 
     /// <summary>
     /// Calculates the great-circle bearing and distance between two geographic points.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Provide a start and end point as latitude/longitude in decimal degrees. The service computes:
     /// </para>
@@ -202,7 +204,7 @@ public class NavlogController(INavlogService navlogService)
     /// Note that this returns <em>course</em> (direction of the route), not <em>heading</em> (direction the
     /// aircraft nose points). For wind-corrected headings, use the full navigation log endpoint.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// Start and end point coordinates. All values are in decimal degrees
     /// (e.g., 36.1245 for latitude, -86.6782 for longitude).
@@ -226,7 +228,8 @@ public class NavlogController(INavlogService navlogService)
 
     /// <summary>
     /// Retrieves winds aloft (FB) forecast data for all reporting sites across the US.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Returns wind direction, wind speed, and temperature at standard altitude levels for every
     /// winds aloft reporting station in the United States. This is the same raw forecast data that
@@ -265,7 +268,7 @@ public class NavlogController(INavlogService navlogService)
     /// Wind direction is in degrees true (the direction wind is blowing <em>from</em>), speed is in knots,
     /// and temperature is in degrees Celsius.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="forecast">Forecast period in hours. Must be <c>6</c>, <c>12</c>, or <c>24</c>.</param>
     /// <returns>
     /// Winds aloft forecast containing validity times and a list of reporting sites,

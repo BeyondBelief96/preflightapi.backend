@@ -83,6 +83,7 @@ builder.Services.AddOpenApiDocument(options =>
     options.Version = "v1";
     options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
     options.DocumentProcessors.Add(new ControllerXmlDocProcessor());
+    options.OperationProcessors.Add(new OperationXmlDocProcessor());
 });
 
 // Setup Environment Variable Settings

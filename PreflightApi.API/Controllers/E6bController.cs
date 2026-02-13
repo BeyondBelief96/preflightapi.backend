@@ -77,7 +77,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 {
     /// <summary>
     /// Calculates crosswind and headwind components for every runway at an airport using live METAR wind data.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Fetches the airport's latest METAR observation and computes wind components for each runway end.
     /// The response includes a <c>RecommendedRunway</c> — the runway end with the lowest crosswind
@@ -100,7 +101,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// If gusts are reported, separate <c>GustCrosswindKt</c> and <c>GustHeadwindKt</c> fields show the
     /// worst-case gust components.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
     /// <returns>
     /// Crosswind data for every runway end at the airport, the METAR wind conditions used,
@@ -122,7 +123,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates crosswind and headwind components from manually provided wind and runway heading values.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Provide wind direction, wind speed, and a runway heading to compute the headwind and crosswind
     /// components. Optionally include a gust speed to also compute gust components.
@@ -137,7 +139,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     ///     <description><c>HeadwindKt</c> — positive = headwind (favorable), negative = tailwind (unfavorable)</description>
     ///   </item>
     /// </list>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>WindDirectionDegrees</c> (0-360, or null for variable),
     /// <c>WindSpeedKt</c> (knots),
@@ -161,7 +163,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates density altitude for an airport using live METAR data with optional overrides.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Fetches the airport's latest METAR to obtain temperature and altimeter setting, then computes
     /// density altitude using the ISA model. You can optionally override either value via query parameters
@@ -188,7 +191,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// <em>Formula:</em> <c>DA = PA + 120 * (OAT - ISA_temp)</c>. This does not account for humidity,
     /// local pressure patterns, or non-standard lapse rates.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
     /// <param name="request">
     /// Optional query parameters: <c>temperatureCelsiusOverride</c> and/or <c>altimeterInHgOverride</c>.
@@ -214,7 +217,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates density altitude from manually provided field elevation, altimeter setting, and temperature.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Provide your own values instead of relying on METAR data. Useful for any location, for planning
     /// with forecast temperatures, or when METAR data is not available.
@@ -240,7 +244,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// <em>Formula:</em> <c>DA = PA + 120 * (OAT - ISA_temp)</c>. This does not account for humidity,
     /// local pressure patterns, or non-standard lapse rates.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>FieldElevationFt</c> (feet MSL),
     /// <c>AltimeterInHg</c> (inches of mercury),
@@ -261,7 +265,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Solves the wind triangle to compute true heading and ground speed.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Given your desired true course, true airspeed, and the wind conditions, this calculates the heading
     /// you need to fly to stay on course and your resulting ground speed.
@@ -300,7 +305,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// <para>
     /// Wind direction is the direction the wind is blowing <em>from</em> (standard meteorological convention).
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>TrueCourseDegrees</c> (0-360),
     /// <c>TrueAirspeedKt</c> (knots, must be greater than 0),
@@ -322,7 +327,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates true airspeed (TAS) from calibrated airspeed, pressure altitude, and outside air temperature.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Uses the full compressible isentropic flow conversion (CAS to impact pressure to Mach to TAS),
     /// accurate from sea level through FL410+ including above the ISA tropopause at 36,089 ft.
@@ -348,7 +354,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// ~26,000 ft near the poles to ~55,000 ft near the equator, which affects accuracy at high
     /// altitudes in non-mid-latitude regions.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>CalibratedAirspeedKt</c> (knots, must be greater than 0),
     /// <c>PressureAltitudeFt</c> (feet, can be negative),
@@ -369,7 +375,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Estimates cloud base height AGL from surface temperature and dewpoint spread.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Uses the standard pilot rule of thumb: <c>cloud base (ft AGL) = (temperature - dewpoint) * 400</c>.
     /// This approximates the lifting condensation level based on the average dry adiabatic lapse rate
@@ -390,7 +397,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// <em>Note:</em> Actual cloud bases vary with humidity profiles, inversions, and local convective
     /// conditions. A small spread (less than 3°C) generally indicates a high likelihood of low ceilings or fog.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>TemperatureCelsius</c> (surface temperature in °C) and
     /// <c>DewpointCelsius</c> (dewpoint in °C, must be less than or equal to the temperature).
@@ -410,7 +417,8 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
 
     /// <summary>
     /// Calculates pressure altitude from field elevation and altimeter setting.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Pressure altitude is the altitude in the standard atmosphere where the pressure equals the
     /// current pressure at your location. It is the starting point for density altitude, TAS,
@@ -435,7 +443,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// <em>Note:</em> The 1 inHg = 1000 ft approximation is most accurate near sea level and diverges
     /// slightly at higher elevations and extreme altimeter settings.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="request">
     /// <c>FieldElevationFt</c> (feet MSL) and
     /// <c>AltimeterInHg</c> (inches of mercury, must be between 25.0 and 35.0).

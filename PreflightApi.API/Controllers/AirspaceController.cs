@@ -116,14 +116,15 @@ public class AirspaceController(IAirspaceService airspaceService)
 
     /// <summary>
     /// Gets controlled airspaces associated with specific airports by ICAO code or FAA identifier.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Returns all controlled airspace boundaries (Class B, C, D) associated with the given airport
     /// identifiers. Each result includes the airspace classification, altitude limits, and boundary
     /// geometry. Pass multiple identifiers as a comma-separated list to retrieve airspaces for
     /// several airports in a single request.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <param name="icaoOrIdents">Comma-separated ICAO codes or FAA identifiers (e.g., <c>KDFW,KORD,KJFK</c>)</param>
     /// <returns>All controlled airspaces matching the specified identifiers</returns>
     /// <response code="200">Returns the matching airspaces</response>

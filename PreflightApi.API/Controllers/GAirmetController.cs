@@ -24,7 +24,8 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
 {
     /// <summary>
     /// Gets all current G-AIRMET advisories across all product types and hazards.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Returns every active G-AIRMET regardless of product type (SIERRA, TANGO, ZULU) or hazard type.
     /// Each advisory includes the hazard, severity, affected altitude range, forecast valid time,
@@ -32,7 +33,7 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     /// <c>GET /product/{product}</c> or <c>GET /hazard/{hazardType}</c> endpoints to filter
     /// by specific product or hazard type.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <returns>All active G-AIRMET advisories with hazard details and geographic boundaries</returns>
     /// <response code="200">Returns the list of all current G-AIRMETs</response>
     [HttpGet]

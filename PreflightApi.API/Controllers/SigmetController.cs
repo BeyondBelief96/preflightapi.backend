@@ -22,14 +22,15 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
 {
     /// <summary>
     /// Gets all current domestic SIGMET advisories across all hazard types.
-    ///
+    /// </summary>
+    /// <remarks>
     /// <para>
     /// Returns every active domestic SIGMET regardless of hazard type. Each advisory includes the
     /// hazard (convective activity, severe turbulence, severe icing, IFR conditions, or mountain
     /// obscuration), severity, affected altitude range, and a geographic polygon defining the affected area.
     /// Use the <c>GET /hazard/{hazardType}</c> endpoint to filter by a specific hazard type.
     /// </para>
-    /// </summary>
+    /// </remarks>
     /// <returns>All active domestic SIGMET advisories with hazard details and geographic boundaries</returns>
     /// <response code="200">Returns the list of all current domestic SIGMETs</response>
     [HttpGet]
