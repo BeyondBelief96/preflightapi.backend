@@ -18,12 +18,14 @@ namespace PreflightApi.API.Controllers;
 /// including effective dates, classification, text content, and plain-English translations.
 /// </summary>
 /// <remarks>
+/// <para>
 /// NOTAM data is synced from the FAA NMS system every 3 minutes via background delta sync,
 /// with a full refresh daily.
 /// Expired NOTAMs (effective end in the past) and cancelled NOTAMs (cancellation date in the past)
 /// are automatically excluded from query results
 /// (except <c>GET id/{nmsId}</c>, which returns any NOTAM regardless of status).
 /// Permanent NOTAMs (no expiration date) remain active indefinitely until manually cancelled.
+/// </para>
 /// </remarks>
 [ApiVersion("1.0")]
 [ApiController]
@@ -47,12 +49,35 @@ public class NotamController(INotamService notamService)
     private static readonly Regex NmsIdPattern = new(@"^\d{1,64}$", RegexOptions.Compiled);
 
     /// <summary>
-    /// Gets all active NOTAMs for a specific airport
+    /// Gets all active NOTAMs for a specific airport.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Returns NOTAMs matching the airport's FAA identifier or ICAO code. The identifier is
     /// case-insensitive — <c>kdfw</c>, <c>KDFW</c>, and <c>DFW</c> all match the same airport.
-    /// Optional filters can narrow results by classification, feature type, text content, or effective date range.
+    /// </para>
+    ///
+    /// <para><strong>Optional Filters</strong></para>
+    /// <para>
+    /// All filter parameters are optional and can be combined to narrow results:
+    /// </para>
+    ///
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><c>classification</c> — NOTAM classification: <c>INTERNATIONAL</c>, <c>MILITARY</c>, <c>LOCAL_MILITARY</c>, <c>DOMESTIC</c>, <c>FDC</c></description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>feature</c> — feature type: <c>RWY</c>, <c>TWY</c>, <c>APRON</c>, <c>AD</c>, <c>OBST</c>, <c>NAV</c>, <c>COM</c>, <c>SVC</c>, <c>AIRSPACE</c>, <c>ODP</c>, <c>SID</c>, <c>STAR</c>, <c>CHART</c>, <c>DATA</c>, <c>DVA</c>, <c>IAP</c>, <c>VFP</c>, <c>ROUTE</c>, <c>SPECIAL</c>, <c>SECURITY</c></description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>freeText</c> — text search within NOTAM text (max 80 characters, alphanumeric and <c>/.-( )</c> only)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><c>effectiveStartDate</c> / <c>effectiveEndDate</c> — ISO 8601 date range (must be paired)</description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para><strong>Examples</strong></para>
     /// <code>
     /// GET /api/v1/notams/KDFW                                  — all active NOTAMs for DFW
     /// GET /api/v1/notams/DFW?classification=FDC                — only FDC NOTAMs
@@ -97,11 +122,23 @@ public class NotamController(INotamService notamService)
     }
 
     /// <summary>
-    /// Gets NOTAMs within a radius of a geographic point
+    /// Gets NOTAMs within a radius of a geographic point.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Performs a spatial query using PostGIS to find NOTAMs whose geometry falls within the
-    /// specified radius of the given coordinates. Only NOTAMs with stored geometry are returned.
+    /// specified radius of the given coordinates. Only NOTAMs with stored geometry are returned —
+    /// NOTAMs that lack geographic data (no point or polygon in the source GeoJSON) are excluded
+    /// from spatial queries.
+    /// </para>
+    ///
+    /// <para>
+    /// The same optional filters available on the airport endpoint (<c>classification</c>,
+    /// <c>feature</c>, <c>freeText</c>, <c>effectiveStartDate</c>/<c>effectiveEndDate</c>)
+    /// can be combined with the spatial search.
+    /// </para>
+    ///
+    /// <para><strong>Examples</strong></para>
     /// <code>
     /// GET /api/v1/notams/radius?latitude=32.8998&amp;longitude=-97.0403&amp;radiusNm=25
     /// GET /api/v1/notams/radius?latitude=32.8998&amp;longitude=-97.0403&amp;radiusNm=10&amp;classification=DOMESTIC
@@ -157,18 +194,27 @@ public class NotamController(INotamService notamService)
     }
 
     /// <summary>
-    /// Gets NOTAMs for a flight route (airports and/or waypoints)
+    /// Gets NOTAMs for a flight route (airports and/or waypoints).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Fetches NOTAMs for each point along a route, deduplicates them, and returns a single combined result.
     /// The route can be specified in two ways:
+    /// </para>
     ///
-    /// **Option 1 — Airport identifiers only** (simple):
+    /// <para><strong>Option 1 — Airport identifiers only</strong></para>
+    /// <para>
+    /// The simplest form — provide an array of airport identifiers. Each airport is queried by identifier.
+    /// </para>
     /// <code>
     /// { "airportIdentifiers": ["KDFW", "KAUS"] }
     /// </code>
     ///
-    /// **Option 2 — Route points** (airports + waypoints with coordinates):
+    /// <para><strong>Option 2 — Route points (airports + waypoints)</strong></para>
+    /// <para>
+    /// Mix airport identifiers and geographic waypoints with coordinates. Waypoints use spatial
+    /// (radius) queries while airports query by identifier.
+    /// </para>
     /// <code>
     /// {
     ///   "routePoints": [
@@ -182,10 +228,13 @@ public class NotamController(INotamService notamService)
     /// }
     /// </code>
     ///
+    /// <para><strong>Radius Resolution</strong></para>
+    /// <para>
     /// If both <c>routePoints</c> and <c>airportIdentifiers</c> are provided, <c>routePoints</c> takes precedence.
     /// Each waypoint uses its own <c>radiusNm</c> if specified, otherwise falls back to <c>corridorRadiusNm</c>,
-    /// then to the server default (25 nm). Airport points query by identifier, not radius.
+    /// then to the server default (25 NM). Airport points query by identifier, not radius.
     /// Optional filters narrow results across all route points.
+    /// </para>
     /// </remarks>
     /// <param name="request">Route query with airport identifiers and/or route points, optional corridor radius, and optional filters</param>
     /// <param name="ct">Cancellation token</param>
@@ -227,13 +276,22 @@ public class NotamController(INotamService notamService)
     }
 
     /// <summary>
-    /// Searches NOTAMs across all locations using filter criteria
+    /// Searches NOTAMs across all locations using filter criteria.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Searches the entire active NOTAM database without requiring a specific airport or location.
     /// At least one filter parameter is required to prevent unbounded queries.
-    /// Results are returned with cursor-based pagination — pass the <c>pagination.nextCursor</c>
+    /// </para>
+    ///
+    /// <para><strong>Pagination</strong></para>
+    /// <para>
+    /// Results are returned with cursor-based pagination. Pass the <c>pagination.nextCursor</c>
     /// value from a previous response as the <c>cursor</c> query parameter to retrieve the next page.
+    /// The <c>limit</c> parameter controls page size (1–500, default 100).
+    /// </para>
+    ///
+    /// <para><strong>Examples</strong></para>
     /// <code>
     /// GET /api/v1/notams/search?classification=FDC                           — all active FDC NOTAMs
     /// GET /api/v1/notams/search?freeText=CLOSED&amp;limit=50                     — text search, 50 per page
@@ -281,12 +339,16 @@ public class NotamController(INotamService notamService)
     }
 
     /// <summary>
-    /// Gets a single NOTAM by its NMS ID
+    /// Gets a single NOTAM by its NMS ID.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Retrieves a specific NOTAM by its FAA NMS identifier. Unlike other NOTAM endpoints,
-    /// this does not filter out cancelled or expired NOTAMs — it returns the NOTAM regardless
+    /// this does <em>not</em> filter out cancelled or expired NOTAMs — it returns the NOTAM regardless
     /// of its current status, which is useful for looking up referenced or historical NOTAMs.
+    /// </para>
+    ///
+    /// <para><strong>Example</strong></para>
     /// <code>
     /// GET /api/v1/notams/id/1757609538792382
     /// </code>
