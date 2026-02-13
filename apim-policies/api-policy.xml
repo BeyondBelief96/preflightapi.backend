@@ -5,15 +5,6 @@
 		<set-header name="X-Api-Gateway-Secret" exists-action="override">
 			<value>{{apim-gateway-secret}}</value>
 		</set-header>
-		<!-- Cap total outbound NMS calls across all users (FAA rate limit protection) -->
-		<choose>
-			<when condition="@(context.Request.Url.Path.ToLower().Contains("/notams"))">
-				<rate-limit-by-key calls="15" renewal-period="180"
-					counter-key="@("nms-backend-global")"
-					remaining-calls-header-name="X-NMS-RateLimit-Remaining"
-					retry-after-header-name="X-NMS-Retry-After" />
-			</when>
-		</choose>
 		<!-- Determine cache duration based on endpoint -->
 		<set-variable name="cacheDuration" value="@{
 			if (context.Request.Method != "GET") { return 0; }
@@ -58,6 +49,58 @@
 		</choose>
 	</outbound>
 	<on-error>
+		<choose>
+			<when condition="@(context.LastError.Source == "rate-limit-by-key")">
+				<return-response>
+					<set-status code="429" reason="Too Many Requests" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-header name="Retry-After" exists-action="override">
+						<value>@{
+							var msg = context.LastError.Message ?? "";
+							var match = System.Text.RegularExpressions.Regex.Match(msg, @"(\d+)\s*second");
+							return match.Success ? match.Groups[1].Value : "60";
+						}</value>
+					</set-header>
+					<set-body>@{
+						var msg = context.LastError.Message ?? "";
+						var match = System.Text.RegularExpressions.Regex.Match(msg, @"(\d+)\s*second");
+						var retryAfterSeconds = match.Success ? int.Parse(match.Groups[1].Value) : 60;
+						return new JObject(
+							new JProperty("error", "RateLimitExceeded"),
+							new JProperty("message", "Too many requests. Please slow down and try again shortly."),
+							new JProperty("retryAfterSeconds", retryAfterSeconds)
+						).ToString();
+					}</set-body>
+				</return-response>
+			</when>
+			<when condition="@(context.LastError.Source == "quota-by-key")">
+				<return-response>
+					<set-status code="429" reason="Quota Exceeded" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-body>@{
+						var msg = context.LastError.Message ?? "";
+						var idx = msg.LastIndexOf("in ");
+						var resetAt = DateTime.UtcNow;
+						if (idx >= 0) {
+							var tsPart = msg.Substring(idx + 3).TrimEnd('.');
+							TimeSpan remaining;
+							if (TimeSpan.TryParse(tsPart, out remaining)) {
+								resetAt = DateTime.UtcNow.Add(remaining);
+							}
+						}
+						return new JObject(
+							new JProperty("error", "QuotaExceeded"),
+							new JProperty("message", "You have reached your monthly API call limit."),
+							new JProperty("quotaResetsAt", resetAt.ToString("o"))
+						).ToString();
+					}</set-body>
+				</return-response>
+			</when>
+		</choose>
 		<base />
 	</on-error>
 </policies>
