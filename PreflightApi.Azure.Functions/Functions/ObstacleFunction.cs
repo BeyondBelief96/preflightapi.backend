@@ -23,6 +23,7 @@ public class ObstacleFunction
     }
 
     [Function("ObstacleFunction")]
+    [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
     public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
     {
         _logger.LogInformation("Obstacle Function executed at: {Time}", DateTime.UtcNow);

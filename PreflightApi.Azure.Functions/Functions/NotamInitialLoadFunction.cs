@@ -24,6 +24,7 @@ public class NotamInitialLoadFunction
     }
 
     [Function("NotamInitialLoadFunction")]
+    [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
     public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
     {
         // On startup, only run if the database is empty
