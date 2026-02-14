@@ -4,6 +4,7 @@ using PreflightApi.API.Models;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
@@ -34,48 +35,65 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     /// by specific product or hazard type.
     /// </para>
     /// </remarks>
-    /// <returns>All active G-AIRMET advisories with hazard details and geographic boundaries</returns>
-    /// <response code="200">Returns the list of all current G-AIRMETs</response>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of all active G-AIRMET advisories with hazard details and geographic boundaries</returns>
+    /// <response code="200">Returns the paginated list of all current G-AIRMETs</response>
     [HttpGet]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetAllGAirmets()
+    [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> GetAllGAirmets(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
-        return Ok(await gairmetService.GetAllGAirmets());
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await gairmetService.GetAllGAirmets(pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
     /// Gets G-AIRMETs filtered by product type
     /// </summary>
     /// <param name="product">Product type: SIERRA, TANGO, or ZULU</param>
-    /// <returns>G-AIRMETs matching the specified product type</returns>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated G-AIRMETs matching the specified product type</returns>
     /// <response code="200">Returns the filtered G-AIRMETs</response>
     /// <response code="400">If the product type is invalid</response>
     [HttpGet("product/{product}")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetGAirmetsByProduct(string product)
+    public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> GetGAirmetsByProduct(
+        string product,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (!Enum.TryParse<GAirmetProduct>(product, ignoreCase: true, out var productEnum))
             throw new ValidationException("product", $"Invalid product type '{product}'. Valid values are: SIERRA, TANGO, ZULU");
 
-        return Ok(await gairmetService.GetGAirmetsByProduct(productEnum));
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await gairmetService.GetGAirmetsByProduct(productEnum, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
     /// Gets G-AIRMETs filtered by hazard type
     /// </summary>
     /// <param name="hazardType">Hazard type: MT_OBSC, IFR, TURB_LO, TURB_HI, LLWS, SFC_WIND, ICE, FZLVL, or M_FZLVL</param>
-    /// <returns>G-AIRMETs matching the specified hazard type</returns>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated G-AIRMETs matching the specified hazard type</returns>
     /// <response code="200">Returns the filtered G-AIRMETs</response>
     /// <response code="400">If the hazard type is invalid</response>
     [HttpGet("hazard/{hazardType}")]
-    [ProducesResponseType(typeof(List<GAirmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<List<GAirmetDto>>> GetGAirmetsByHazardType(string hazardType)
+    public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> GetGAirmetsByHazardType(
+        string hazardType,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (!Enum.TryParse<GAirmetHazardType>(hazardType, ignoreCase: true, out var hazardTypeEnum))
             throw new ValidationException("hazardType", $"Invalid hazard type '{hazardType}'. Valid values are: MT_OBSC, IFR, TURB_LO, TURB_HI, LLWS, SFC_WIND, ICE, FZLVL, M_FZLVL");
 
-        return Ok(await gairmetService.GetGAirmetsByHazardType(hazardTypeEnum));
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await gairmetService.GetGAirmetsByHazardType(hazardTypeEnum, pagination.Cursor, pagination.Limit, ct));
     }
 }

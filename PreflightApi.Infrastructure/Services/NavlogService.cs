@@ -482,7 +482,7 @@ public class NavlogService : INavlogService
         const double radiansPerDegree = Math.PI / 180.0;
         var relativeWind = Math.Abs(trueCourse - ((windTempData.Direction ?? 0) + 180) % 360);
         var headwindComponent = windTempData.Speed * Math.Cos(relativeWind * radiansPerDegree);
-        return legTrueAirSpeed + headwindComponent;
+        return Math.Max(0, legTrueAirSpeed + headwindComponent);
     }
 
     private double CalculateWindCorrectionAngle(
@@ -499,7 +499,12 @@ public class NavlogService : INavlogService
 
         leg.HeadwindComponent = headwindComponent;
 
-        var windCorrectionAngle = Math.Atan(crosswindComponent / (indicatedAirspeed - headwindComponent));
+        var denominator = indicatedAirspeed - headwindComponent;
+        double windCorrectionAngle;
+        if (Math.Abs(denominator) < 0.01)
+            windCorrectionAngle = crosswindComponent >= 0 ? Math.PI / 2 : -Math.PI / 2;
+        else
+            windCorrectionAngle = Math.Atan(crosswindComponent / denominator);
         return windCorrectionAngle / radiansPerDegree;
     }
 

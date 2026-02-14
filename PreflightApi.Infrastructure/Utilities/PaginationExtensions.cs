@@ -14,7 +14,8 @@ public static class PaginationExtensions
         Expression<Func<TEntity, string>> keySelector,
         Func<TEntity, TDto> mapper,
         string? cursor,
-        int limit) where TEntity : class
+        int limit,
+        CancellationToken ct = default) where TEntity : class
     {
         var decodedCursor = CursorHelper.DecodeString(cursor);
 
@@ -33,7 +34,7 @@ public static class PaginationExtensions
         var keyGetter = keySelector.Compile();
         query = query.OrderBy(keySelector);
 
-        var items = await query.Take(limit + 1).ToListAsync();
+        var items = await query.Take(limit + 1).ToListAsync(ct);
         var hasMore = items.Count > limit;
 
         if (hasMore)
@@ -66,7 +67,8 @@ public static class PaginationExtensions
         Expression<Func<TEntity, int>> keySelector,
         Func<TEntity, TDto> mapper,
         string? cursor,
-        int limit) where TEntity : class
+        int limit,
+        CancellationToken ct = default) where TEntity : class
     {
         var decodedCursor = CursorHelper.DecodeInt(cursor);
 
@@ -83,7 +85,7 @@ public static class PaginationExtensions
         var keyGetter = keySelector.Compile();
         query = query.OrderBy(keySelector);
 
-        var items = await query.Take(limit + 1).ToListAsync();
+        var items = await query.Take(limit + 1).ToListAsync(ct);
         var hasMore = items.Count > limit;
 
         if (hasMore)

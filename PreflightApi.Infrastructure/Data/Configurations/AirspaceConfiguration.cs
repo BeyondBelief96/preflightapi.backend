@@ -106,6 +106,7 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             builder.HasIndex(e => e.Name);
             builder.HasIndex(e => e.State);
             builder.HasIndex(e => e.Class);
+            builder.HasIndex(e => e.Geometry).HasMethod("gist");
         }
     }
 }

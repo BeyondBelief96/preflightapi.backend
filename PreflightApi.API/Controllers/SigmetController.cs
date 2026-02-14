@@ -4,6 +4,7 @@ using PreflightApi.API.Models;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
@@ -31,30 +32,41 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     /// Use the <c>GET /hazard/{hazardType}</c> endpoint to filter by a specific hazard type.
     /// </para>
     /// </remarks>
-    /// <returns>All active domestic SIGMET advisories with hazard details and geographic boundaries</returns>
-    /// <response code="200">Returns the list of all current domestic SIGMETs</response>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of all active domestic SIGMET advisories with hazard details and geographic boundaries</returns>
+    /// <response code="200">Returns the paginated list of all current domestic SIGMETs</response>
     [HttpGet]
-    [ProducesResponseType(typeof(List<SigmetDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<SigmetDto>>> GetAllSigmets()
+    [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResponse<SigmetDto>>> GetAllSigmets(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
-        return Ok(await sigmetService.GetAllSigmets());
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await sigmetService.GetAllSigmets(pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
     /// Gets SIGMETs filtered by hazard type
     /// </summary>
     /// <param name="hazardType">Hazard type: CONVECTIVE, ICE, TURB, IFR, or MTN_OBSCN</param>
-    /// <returns>SIGMETs matching the specified hazard type</returns>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated SIGMETs matching the specified hazard type</returns>
     /// <response code="200">Returns the filtered SIGMETs</response>
     /// <response code="400">If the hazard type is invalid</response>
     [HttpGet("hazard/{hazardType}")]
-    [ProducesResponseType(typeof(List<SigmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<List<SigmetDto>>> GetSigmetsByHazardType(string hazardType)
+    public async Task<ActionResult<PaginatedResponse<SigmetDto>>> GetSigmetsByHazardType(
+        string hazardType,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (!Enum.TryParse<SigmetHazardType>(hazardType, ignoreCase: true, out var hazardTypeEnum))
             throw new ValidationException("hazardType", $"Invalid hazard type '{hazardType}'. Valid values are: CONVECTIVE, ICE, TURB, IFR, MTN_OBSCN");
 
-        return Ok(await sigmetService.GetSigmetsByHazardType(hazardTypeEnum));
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await sigmetService.GetSigmetsByHazardType(hazardTypeEnum, pagination.Cursor, pagination.Limit, ct));
     }
 }
