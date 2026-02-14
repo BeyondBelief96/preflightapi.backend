@@ -4,7 +4,9 @@ using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.WeatherServices;
 
@@ -21,14 +23,14 @@ public class GAirmetService : IGAirmetService
         _logger = logger;
     }
 
-    public async Task<List<GAirmetDto>> GetAllGAirmets()
+    public async Task<PaginatedResponse<GAirmetDto>> GetAllGAirmets(string? cursor, int limit, CancellationToken ct)
     {
         try
         {
-            _logger.LogInformation("Retrieving all G-AIRMETs");
+            _logger.LogInformation("Retrieving G-AIRMETs, cursor: {Cursor}, limit: {Limit}", cursor, limit);
 
-            var gairmets = await _context.GAirmets.ToListAsync();
-            return gairmets.Select(GAirmetMapper.ToDto).ToList();
+            var query = _context.GAirmets.AsNoTracking();
+            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -37,18 +39,18 @@ public class GAirmetService : IGAirmetService
         }
     }
 
-    public async Task<List<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product)
+    public async Task<PaginatedResponse<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product, string? cursor, int limit, CancellationToken ct)
     {
         try
         {
-            _logger.LogInformation("Retrieving G-AIRMETs for product {Product}", product);
+            _logger.LogInformation("Retrieving G-AIRMETs for product {Product}, cursor: {Cursor}, limit: {Limit}",
+                product, cursor, limit);
 
             var productString = product.ToString().ToUpperInvariant();
-            var gairmets = await _context.GAirmets
-                .Where(g => g.Product == productString)
-                .ToListAsync();
+            var query = _context.GAirmets.AsNoTracking()
+                .Where(g => g.Product == productString);
 
-            return gairmets.Select(GAirmetMapper.ToDto).ToList();
+            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -57,18 +59,18 @@ public class GAirmetService : IGAirmetService
         }
     }
 
-    public async Task<List<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType)
+    public async Task<PaginatedResponse<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType, string? cursor, int limit, CancellationToken ct)
     {
         try
         {
-            _logger.LogInformation("Retrieving G-AIRMETs for hazard type {HazardType}", hazardType);
+            _logger.LogInformation("Retrieving G-AIRMETs for hazard type {HazardType}, cursor: {Cursor}, limit: {Limit}",
+                hazardType, cursor, limit);
 
             var hazardTypeStrings = GetHazardTypeStrings(hazardType);
-            var gairmets = await _context.GAirmets
-                .Where(g => g.HazardType != null && hazardTypeStrings.Contains(g.HazardType))
-                .ToListAsync();
+            var query = _context.GAirmets.AsNoTracking()
+                .Where(g => g.HazardType != null && hazardTypeStrings.Contains(g.HazardType));
 
-            return gairmets.Select(GAirmetMapper.ToDto).ToList();
+            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
         }
         catch (Exception ex)
         {

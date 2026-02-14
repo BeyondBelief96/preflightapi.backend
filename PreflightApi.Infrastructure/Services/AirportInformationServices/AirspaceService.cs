@@ -118,7 +118,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     string.Join(", ", icaoOrIdents));
 
                 var upperCodes = icaoOrIdents.Select(i => i.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.Airspaces
+                var airspaces = await _context.Airspaces.AsNoTracking()
                     .Where(a =>
                         a.IcaoId != null && upperCodes.Contains(a.IcaoId) ||
                         a.Ident != null && upperCodes.Contains(a.Ident))
@@ -142,7 +142,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting airspaces by global ids: {Ids}", string.Join(", ", globalIds));
 
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.Airspaces
+                var airspaces = await _context.Airspaces.AsNoTracking()
                     .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
                     .ToListAsync();
 
@@ -162,7 +162,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 _logger.LogInformation("Getting special use airspaces by global ids: {Ids}", string.Join(", ", globalIds));
 
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
-                var airspaces = await _context.SpecialUseAirspaces
+                var airspaces = await _context.SpecialUseAirspaces.AsNoTracking()
                     .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
                     .ToListAsync();
 

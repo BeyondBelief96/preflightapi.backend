@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Controllers;
@@ -23,12 +25,17 @@ public class PirepController(IPirepService pirepService) : ControllerBase
     /// and sky conditions. Each report includes the geographic coordinates and altitude where
     /// the observation was made.
     /// </summary>
-    /// <returns>All active pilot reports including turbulence, icing, and sky conditions</returns>
-    /// <response code="200">Returns the list of PIREPs</response>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of active pilot reports including turbulence, icing, and sky conditions</returns>
+    /// <response code="200">Returns the paginated list of PIREPs</response>
     [HttpGet]
-    [ProducesResponseType(typeof(List<PirepDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<PirepDto>>> GetAllPireps()
+    [ProducesResponseType(typeof(PaginatedResponse<PirepDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResponse<PirepDto>>> GetAllPireps(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
-        return Ok(await pirepService.GetAllPireps());
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await pirepService.GetAllPireps(pagination.Cursor, pagination.Limit, ct));
     }
 }

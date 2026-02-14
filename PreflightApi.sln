@@ -29,8 +29,22 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{6E50947F-9F17-4FE3-B017-BE38774A996A}"
+	ProjectSection(SolutionItems) = preProject
+		infra\modules\apim.bicep = infra\modules\apim.bicep
+		infra\modules\app-service.bicep = infra\modules\app-service.bicep
+		infra\modules\function-app.bicep = infra\modules\function-app.bicep
+		infra\modules\github-identity.bicep = infra\modules\github-identity.bicep
+		infra\modules\monitoring.bicep = infra\modules\monitoring.bicep
+		infra\modules\postgresql.bicep = infra\modules\postgresql.bicep
+		infra\modules\role-assignments.bicep = infra\modules\role-assignments.bicep
+		infra\modules\storage.bicep = infra\modules\storage.bicep
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "parameters", "parameters", "{CCE5402C-67B8-4B04-A5B0-A05A0DC2FDC4}"
+	ProjectSection(SolutionItems) = preProject
+		infra\parameters\prod.bicepparam = infra\parameters\prod.bicepparam
+		infra\parameters\test.bicepparam = infra\parameters\test.bicepparam
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apim-policies", "apim-policies", "{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9}"
 	ProjectSection(SolutionItems) = preProject

@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
+using PreflightApi.Infrastructure.Dtos.Pagination;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.WeatherServices;
 
@@ -20,14 +22,14 @@ public class PirepService : IPirepService
         _logger = logger;
     }
 
-    public async Task<List<PirepDto>> GetAllPireps()
+    public async Task<PaginatedResponse<PirepDto>> GetAllPireps(string? cursor, int limit, CancellationToken ct)
     {
         try
         {
-            _logger.LogInformation("Retrieving all PIREPs");
+            _logger.LogInformation("Retrieving PIREPs, cursor: {Cursor}, limit: {Limit}", cursor, limit);
 
-            var pireps = await _context.Pireps.ToListAsync();
-            return pireps.Select(PirepMapper.ToDto).ToList();
+            var query = _context.Pireps.AsNoTracking();
+            return await query.ToPaginatedAsync(p => p.Id, PirepMapper.ToDto, cursor, limit, ct);
         }
         catch (Exception ex)
         {
