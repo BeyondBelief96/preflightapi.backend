@@ -25,17 +25,32 @@
 			if (path.Contains("/airspaces") || path.Contains("/obstacles")) { return 900; }
 			return 0;
 		}" />
+		<!-- Build a deterministic cache key from the full URL path + sorted query string -->
+		<set-variable name="cacheQueryKey" value="@{
+			var query = context.Request.Url.Query;
+			if (query == null || query.Count == 0) { return ""; }
+			var sorted = query
+				.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+				.SelectMany(kvp => kvp.Value.Select(v => kvp.Key + "=" + v));
+			return string.Join("&", sorted);
+		}" />
 		<!-- Apply cache lookup for cacheable GET requests -->
 		<choose>
 			<when condition="@((int)context.Variables["cacheDuration"] > 0)">
-				<cache-lookup vary-by-developer="false" vary-by-developer-groups="false">
-					<vary-by-query-parameter>*</vary-by-query-parameter>
+				<!-- Set synthetic header with sorted query string so cache-lookup can key on it -->
+				<set-header name="X-Cache-Query-Key" exists-action="override">
+					<value>@((string)context.Variables["cacheQueryKey"])</value>
+				</set-header>
+				<cache-lookup vary-by-developer="true" vary-by-developer-groups="false">
+					<vary-by-header>X-Cache-Query-Key</vary-by-header>
 				</cache-lookup>
 			</when>
 		</choose>
 	</inbound>
 	<backend>
 		<base />
+		<!-- Strip synthetic cache key header so it's never sent to the backend -->
+		<set-header name="X-Cache-Query-Key" exists-action="delete" />
 	</backend>
 	<outbound>
 		<base />
