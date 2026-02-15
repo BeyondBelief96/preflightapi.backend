@@ -163,13 +163,6 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
                 .Distinct()
                 .ToList();
 
-            var existingOasNumbers = await _dbContext.Obstacles
-                .Where(o => allUpsertOasNumbers.Contains(o.OasNumber))
-                .Select(o => o.OasNumber)
-                .ToListAsync(cancellationToken);
-
-            var existingSet = new HashSet<string>(existingOasNumbers);
-
             var strategy = _dbContext.Database.CreateExecutionStrategy();
             var addedCount = 0;
             var updatedCount = 0;
@@ -177,6 +170,17 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
 
             await strategy.ExecuteAsync(async () =>
             {
+                // Re-query on each retry to avoid stale data after transient failures
+                var existingOasNumbers = await _dbContext.Obstacles
+                    .Where(o => allUpsertOasNumbers.Contains(o.OasNumber))
+                    .Select(o => o.OasNumber)
+                    .ToListAsync(cancellationToken);
+                var existingSet = new HashSet<string>(existingOasNumbers);
+
+                addedCount = 0;
+                updatedCount = 0;
+                dismantledCount = 0;
+
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 // Process ADDs — insert if missing, update if exists (idempotent)
@@ -236,7 +240,15 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
 
     private void UpdateExistingObstacle(Obstacle source)
     {
-        var entry = _dbContext.Obstacles.Attach(new Obstacle { OasNumber = source.OasNumber });
-        entry.CurrentValues.SetValues(source);
+        var local = _dbContext.Obstacles.Local.FirstOrDefault(o => o.OasNumber == source.OasNumber);
+        if (local != null)
+        {
+            _dbContext.Entry(local).CurrentValues.SetValues(source);
+        }
+        else
+        {
+            var entry = _dbContext.Obstacles.Attach(new Obstacle { OasNumber = source.OasNumber });
+            entry.CurrentValues.SetValues(source);
+        }
     }
 }
