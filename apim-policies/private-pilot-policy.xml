@@ -1,7 +1,8 @@
 <policies>
 	<inbound>
 		<base />
-		<rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" />
+		<rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" remaining-calls-variable-name="rlRemaining" />
+		<set-variable name="rlLimit" value="60" />
 		<quota-by-key calls="150000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
 		<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->
 		<set-variable name="is-blocked" value="@{
