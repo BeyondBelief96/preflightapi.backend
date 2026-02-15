@@ -1,8 +1,8 @@
 <policies>
 	<inbound>
 		<base />
-		<rate-limit-by-key calls="300" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" remaining-calls-variable-name="rlRemaining" />
 		<set-variable name="rlLimit" value="300" />
+		<rate-limit-by-key calls="@(int.Parse((string)context.Variables["rlLimit"]))" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" remaining-calls-variable-name="rlRemaining" />
 		<quota-by-key calls="750000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
 		<!-- No endpoint gating: Professional tier has access to all endpoints -->
 	</inbound>
