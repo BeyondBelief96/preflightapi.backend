@@ -65,6 +65,7 @@ builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFreq
 builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
 builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();
+builder.Services.AddScoped<IObstacleDailyChangeCronService, ObstacleDailyChangeCronService>();
 builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
 builder.Services.AddScoped<INotamDeltaSyncCronService, NotamDeltaSyncCronService>();
 builder.Services.AddScoped<INotamInitialLoadCronService, NotamInitialLoadCronService>();

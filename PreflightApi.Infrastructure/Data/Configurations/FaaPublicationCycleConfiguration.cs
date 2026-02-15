@@ -66,7 +66,8 @@ namespace PreflightApi.Infrastructure.Data.Configurations
                 Id = 7,
                 PublicationType = PublicationType.Obstacles,
                 CycleLengthDays = 56,
-                KnownValidDate = new DateTime(2025, 10, 26, 0, 0, 0, DateTimeKind.Utc),
+                // KnownValidDate uses the release date (2 days after "Reflects Changes To")
+                KnownValidDate = new DateTime(2025, 10, 28, 0, 0, 0, DateTimeKind.Utc),
                 LastSuccessfulUpdate = null
             });
         }
