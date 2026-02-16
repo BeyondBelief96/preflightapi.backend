@@ -25,18 +25,18 @@ public class NotamInitialLoadFunction
 
     [Function("NotamInitialLoadFunction")]
     [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-    public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+    public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
     {
         // On startup, only run if the database is empty
-        if (myTimer.IsPastDue)
-        {
-            var hasNotams = await _dbContext.Notams.AnyAsync(context.CancellationToken);
-            if (hasNotams)
-            {
-                _logger.LogInformation("NOTAM Initial Load skipped — database already populated (past due trigger)");
-                return;
-            }
-        }
+        //if (myTimer.IsPastDue)
+        //{
+        //    var hasNotams = await _dbContext.Notams.AnyAsync(context.CancellationToken);
+        //    if (hasNotams)
+        //    {
+        //        _logger.LogInformation("NOTAM Initial Load skipped — database already populated (past due trigger)");
+        //        return;
+        //    }
+        //}
 
         _logger.LogInformation("NOTAM Initial Load Function executed at: {Time}", DateTime.UtcNow);
         var sw = Stopwatch.StartNew();

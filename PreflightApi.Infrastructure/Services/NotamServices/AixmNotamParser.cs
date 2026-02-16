@@ -199,6 +199,7 @@ public static partial class AixmNotamParser
             AccountId = GetText(extensionNode, "fnse:accountId", nsMgr),
             LastUpdated = GetText(extensionNode, "fnse:lastUpdated", nsMgr),
             IcaoLocation = GetText(extensionNode, "fnse:icaoLocation", nsMgr),
+            AirportName = GetText(extensionNode, "fnse:airportname", nsMgr),
             // Q-code fields from event:NOTAM
             AffectedFir = GetText(notamNode, "event:affectedFIR", nsMgr),
             SelectionCode = GetText(notamNode, "event:selectionCode", nsMgr),

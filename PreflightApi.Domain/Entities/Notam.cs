@@ -4,6 +4,11 @@ using NetTopologySuite.Geometries;
 
 namespace PreflightApi.Domain.Entities;
 
+/// <summary>
+/// A NOTAM (Notice to Air Missions) synced from the FAA NMS system.
+/// Semi-normalized: indexed columns for common queries, plus the full GeoJSON Feature in <c>feature_json</c>.
+/// Expired and cancelled NOTAMs are periodically purged by the background sync jobs.
+/// </summary>
 [Table("notams")]
 public class Notam
 {
@@ -37,6 +42,30 @@ public class Notam
     /// </summary>
     [Column("notam_type", TypeName = "varchar(5)")]
     public string? NotamType { get; set; }
+
+    /// <summary>
+    /// Bare NOTAM sequence number (e.g., "420", "3997")
+    /// </summary>
+    [Column("notam_number", TypeName = "varchar(10)")]
+    public string? NotamNumber { get; set; }
+
+    /// <summary>
+    /// 4-digit NOTAM year (e.g., "2025")
+    /// </summary>
+    [Column("notam_year", TypeName = "varchar(4)")]
+    public string? NotamYear { get; set; }
+
+    /// <summary>
+    /// Accountability code (e.g., "BNA", "FDC")
+    /// </summary>
+    [Column("account_id", TypeName = "varchar(10)")]
+    public string? AccountId { get; set; }
+
+    /// <summary>
+    /// Airport/facility name from AIXM (null for GeoJSON-sourced NOTAMs)
+    /// </summary>
+    [Column("airport_name", TypeName = "varchar(100)")]
+    public string? AirportName { get; set; }
 
     /// <summary>
     /// Effective start date

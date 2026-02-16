@@ -139,6 +139,10 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
             IcaoLocation = detail?.IcaoLocation,
             Classification = detail?.Classification,
             NotamType = detail?.Type,
+            NotamNumber = NotamDeltaSyncCronService.NormalizeNotamNumber(detail?.Number),
+            NotamYear = detail?.Year,
+            AccountId = detail?.AccountId,
+            AirportName = detail?.AirportName,
             EffectiveStart = ParseDateTime(detail?.EffectiveStart),
             EffectiveEnd = ParseDateTime(detail?.EffectiveEnd),
             CancelationDate = ParseDateTime(detail?.CancelationDate),
@@ -156,6 +160,10 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
         existing.IcaoLocation = updated.IcaoLocation;
         existing.Classification = updated.Classification;
         existing.NotamType = updated.NotamType;
+        existing.NotamNumber = updated.NotamNumber;
+        existing.NotamYear = updated.NotamYear;
+        existing.AccountId = updated.AccountId;
+        existing.AirportName = updated.AirportName;
         existing.EffectiveStart = updated.EffectiveStart;
         existing.EffectiveEnd = updated.EffectiveEnd;
         existing.CancelationDate = updated.CancelationDate;

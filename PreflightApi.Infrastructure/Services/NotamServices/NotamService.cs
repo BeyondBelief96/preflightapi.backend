@@ -140,6 +140,45 @@ public class NotamService : INotamService
         return entity != null ? DeserializeFeature(entity) : null;
     }
 
+    public async Task<List<NotamDto>> GetNotamsByNumberAsync(string notamNumber, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(notamNumber))
+        {
+            throw new ArgumentException("NOTAM number cannot be null or empty", nameof(notamNumber));
+        }
+
+        var parsed = NotamNumberParser.Parse(notamNumber);
+        if (parsed == null)
+        {
+            throw new ArgumentException($"Could not parse NOTAM number: '{notamNumber}'", nameof(notamNumber));
+        }
+
+        _logger.LogInformation("Searching NOTAMs by number: {Number}, Year: {Year}, AccountId: {AccountId}, Location: {Location}",
+            parsed.Number, parsed.Year, parsed.AccountId, parsed.Location);
+
+        var query = _dbContext.Notams.AsNoTracking()
+            .Where(n => n.NotamNumber == parsed.Number);
+
+        if (parsed.Year != null)
+        {
+            query = query.Where(n => n.NotamYear == parsed.Year);
+        }
+
+        if (parsed.AccountId != null)
+        {
+            query = query.Where(n => n.AccountId == parsed.AccountId);
+        }
+
+        if (parsed.Location != null)
+        {
+            var loc = parsed.Location;
+            query = query.Where(n => n.Location == loc || n.IcaoLocation == loc);
+        }
+
+        var entities = await query.ToListAsync(ct);
+        return entities.Select(DeserializeFeature).Where(n => n != null).Cast<NotamDto>().ToList();
+    }
+
     public async Task<PaginatedResponse<NotamDto>> SearchNotamsAsync(NotamFilterDto filters, string? cursor = null, int limit = 100, CancellationToken ct = default)
     {
         if (filters == null || !filters.HasFilters)

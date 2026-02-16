@@ -254,6 +254,54 @@ public class AixmNotamParserTests
         ring[0][1].GetDouble().Should().BeApproximately(10.0, 0.001);
     }
 
+    #region AirportName extraction
+
+    [Fact]
+    public void Parse_FirstNotam_ShouldExtractAirportName()
+    {
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        var detail = results[0].Properties!.CoreNotamData!.Notam!;
+
+        detail.AirportName.Should().Be("WASHINGTON COUNTY");
+    }
+
+    [Fact]
+    public void Parse_SecondNotam_ShouldExtractAirportName()
+    {
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        var detail = results[1].Properties!.CoreNotamData!.Notam!;
+
+        detail.AirportName.Should().Be("ZBW ARTCC");
+    }
+
+    [Fact]
+    public void Parse_AirportName_ShouldBeNull_WhenAbsent()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_NO_AIRPORT_NAME",
+            notamBody: """
+                <event:number>1</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:location>TST</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202502010000</event:effectiveEnd>
+                <event:text>TEST</event:text>
+                """,
+            extensionBody: """
+                <fnse:classification>DOM</fnse:classification>
+                <fnse:accountId>TST</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+        results[0].Properties!.CoreNotamData!.Notam!.AirportName.Should().BeNull();
+    }
+
+    #endregion
+
     #region Q-code fields extraction
 
     [Fact]

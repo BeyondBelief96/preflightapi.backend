@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +11,7 @@ using PreflightApi.Infrastructure.Settings;
 
 namespace PreflightApi.Infrastructure.Services.NotamServices;
 
-public class NotamDeltaSyncCronService : INotamDeltaSyncCronService
+public partial class NotamDeltaSyncCronService : INotamDeltaSyncCronService
 {
     private readonly INmsApiClient _nmsApiClient;
     private readonly PreflightApiDbContext _dbContext;
@@ -140,6 +141,10 @@ public class NotamDeltaSyncCronService : INotamDeltaSyncCronService
             IcaoLocation = detail?.IcaoLocation,
             Classification = detail?.Classification,
             NotamType = detail?.Type,
+            NotamNumber = NormalizeNotamNumber(detail?.Number),
+            NotamYear = detail?.Year,
+            AccountId = detail?.AccountId,
+            AirportName = detail?.AirportName,
             EffectiveStart = ParseDateTime(detail?.EffectiveStart),
             EffectiveEnd = ParseDateTime(detail?.EffectiveEnd),
             CancelationDate = ParseDateTime(detail?.CancelationDate),
@@ -157,6 +162,10 @@ public class NotamDeltaSyncCronService : INotamDeltaSyncCronService
         existing.IcaoLocation = updated.IcaoLocation;
         existing.Classification = updated.Classification;
         existing.NotamType = updated.NotamType;
+        existing.NotamNumber = updated.NotamNumber;
+        existing.NotamYear = updated.NotamYear;
+        existing.AccountId = updated.AccountId;
+        existing.AirportName = updated.AirportName;
         existing.EffectiveStart = updated.EffectiveStart;
         existing.EffectiveEnd = updated.EffectiveEnd;
         existing.CancelationDate = updated.CancelationDate;
@@ -166,6 +175,23 @@ public class NotamDeltaSyncCronService : INotamDeltaSyncCronService
         existing.FeatureJson = updated.FeatureJson;
         existing.Geometry = updated.Geometry;
     }
+
+    /// <summary>
+    /// Strips any "mm/" month prefix from the NOTAM number, returning just the bare sequence number.
+    /// e.g., "01/123" → "123", "420" → "420"
+    /// </summary>
+    public static string? NormalizeNotamNumber(string? number)
+    {
+        if (string.IsNullOrWhiteSpace(number))
+            return null;
+
+        var trimmed = number.Trim();
+        var match = MonthPrefixRegex().Match(trimmed);
+        return match.Success ? match.Groups[1].Value : trimmed;
+    }
+
+    [GeneratedRegex(@"^\d{1,2}/(\d+)$")]
+    private static partial Regex MonthPrefixRegex();
 
     public async Task<int> PurgeExpiredAsync(CancellationToken ct = default)
     {
