@@ -3,7 +3,13 @@
 		<base />
 		<set-variable name="rlLimit" value="60" />
 		<rate-limit-by-key calls="@(int.Parse((string)context.Variables["rlLimit"]))" renewal-period="60" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" remaining-calls-header-name="X-RateLimit-Remaining" total-calls-header-name="X-RateLimit-Limit" retry-after-header-name="Retry-After" remaining-calls-variable-name="rlRemaining" />
-		<quota-by-key calls="150000" renewal-period="2628000" counter-key="@(context.Subscription?.Key ?? &quot;anonymous&quot;)" />
+		<quota-by-key calls="150000" renewal-period="2628000" counter-key="@{
+			var key = context.Subscription?.Key ?? &quot;anonymous&quot;;
+			var name = context.Subscription?.Name ?? &quot;&quot;;
+			var sep = name.LastIndexOf('|');
+			var epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;
+			return key + &quot;|&quot; + epoch;
+		}" />
 		<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->
 		<set-variable name="is-blocked" value="@{
 			var path = context.Request.Url.Path.ToLower();
