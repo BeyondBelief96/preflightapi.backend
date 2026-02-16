@@ -77,36 +77,46 @@ public class AixmNotamParserTests
     }
 
     [Fact]
-    public void Parse_FirstNotam_ShouldHavePointGeometryFromAirport()
+    public void Parse_FirstNotam_ShouldHaveGeometryCollectionWithPolygon()
     {
+        // First NOTAM has both RunwayElement and AirportHeliport.
+        // RunwayElement polygon has priority over AirportHeliport point, wrapped in GeometryCollection.
         var results = AixmNotamParser.Parse(SampleAixmXml);
         var geometry = results[0].Geometry;
 
         geometry.Should().NotBeNull();
-        geometry!.Type.Should().Be("Point");
-        geometry.Coordinates.Should().NotBeNull();
+        geometry!.Type.Should().Be("GeometryCollection");
+        geometry.Geometries.Should().NotBeNull();
+        geometry.Geometries.Should().HaveCount(1);
 
-        // GML pos is "37.92919525 -90.7314840277778" (lat lon)
-        // GeoJSON should be [-90.7314840277778, 37.92919525] (lon, lat)
-        var coords = (JsonElement)geometry.Coordinates!;
-        coords[0].GetDouble().Should().BeApproximately(-90.7314840277778, 0.0001);
-        coords[1].GetDouble().Should().BeApproximately(37.92919525, 0.0001);
+        var inner = geometry.Geometries![0];
+        inner.Type.Should().Be("Polygon");
+        inner.Coordinates.Should().NotBeNull();
+
+        // Verify polygon coordinates from RunwayElement (not AirportHeliport point)
+        var coords = (JsonElement)inner.Coordinates!;
+        var ring = coords[0]; // first (only) ring
+        ring.GetArrayLength().Should().Be(5); // 5 points (closed ring)
+
+        // First point: GML "37.924... -90.733..." → GeoJSON [-90.733..., 37.924...]
+        ring[0][0].GetDouble().Should().BeApproximately(-90.7338, 0.001);
+        ring[0][1].GetDouble().Should().BeApproximately(37.9240, 0.001);
     }
 
     [Fact]
     public void Parse_FirstNotam_GeometryShouldWorkWithNotamGeometryParser()
     {
-        // Verify the parsed geometry is compatible with the downstream NotamGeometryParser
+        // Verify the parsed geometry (GeometryCollection) is compatible with NotamGeometryParser
         var results = AixmNotamParser.Parse(SampleAixmXml);
         var geometry = results[0].Geometry;
 
         var ntsGeometry = NotamGeometryParser.Parse(geometry);
 
         ntsGeometry.Should().NotBeNull();
-        ntsGeometry.Should().BeOfType<NetTopologySuite.Geometries.Point>();
-        var point = (NetTopologySuite.Geometries.Point)ntsGeometry!;
-        point.X.Should().BeApproximately(-90.7315, 0.001);
-        point.Y.Should().BeApproximately(37.9292, 0.001);
+        ntsGeometry.Should().BeOfType<NetTopologySuite.Geometries.GeometryCollection>();
+        var collection = (NetTopologySuite.Geometries.GeometryCollection)ntsGeometry!;
+        collection.NumGeometries.Should().Be(1);
+        collection.GetGeometryN(0).Should().BeOfType<NetTopologySuite.Geometries.Polygon>();
     }
 
     [Fact]
@@ -199,9 +209,9 @@ public class AixmNotamParserTests
     }
 
     [Fact]
-    public void Parse_PolygonGeometry_ShouldBeExtractedWhenNoAirport()
+    public void Parse_PolygonGeometry_ShouldBeWrappedInGeometryCollection()
     {
-        // Member with runway element but no airport — should fall back to polygon
+        // Member with runway element but no airport — should produce GeometryCollection > Polygon
         var xml = """
             <?xml version="1.0"?>
             <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -228,10 +238,14 @@ public class AixmNotamParserTests
         results.Should().HaveCount(1);
         var geometry = results[0].Geometry;
         geometry.Should().NotBeNull();
-        geometry!.Type.Should().Be("Polygon");
+        geometry!.Type.Should().Be("GeometryCollection");
+        geometry.Geometries.Should().HaveCount(1);
+
+        var inner = geometry.Geometries![0];
+        inner.Type.Should().Be("Polygon");
 
         // Verify polygon coordinates are swapped from GML lat/lon to GeoJSON lon/lat
-        var coords = (JsonElement)geometry.Coordinates!;
+        var coords = (JsonElement)inner.Coordinates!;
         var ring = coords[0]; // first (only) ring
         ring.GetArrayLength().Should().Be(5); // 5 points (closed ring)
 
@@ -239,4 +253,376 @@ public class AixmNotamParserTests
         ring[0][0].GetDouble().Should().BeApproximately(20.0, 0.001);
         ring[0][1].GetDouble().Should().BeApproximately(10.0, 0.001);
     }
+
+    #region Q-code fields extraction
+
+    [Fact]
+    public void Parse_ShouldExtractQCodeFields_WhenPresent()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_QCODE_TEST",
+            notamBody: """
+                <event:number>100</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:affectedFIR>ZTL</event:affectedFIR>
+                <event:selectionCode>QMRLC</event:selectionCode>
+                <event:traffic>IV</event:traffic>
+                <event:purpose>BO</event:purpose>
+                <event:scope>A</event:scope>
+                <event:minimumFL>000</event:minimumFL>
+                <event:maximumFL>999</event:maximumFL>
+                <event:coordinates>3356N08424W</event:coordinates>
+                <event:radius>005</event:radius>
+                <event:location>CLT</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202502010000</event:effectiveEnd>
+                <event:text>RWY 18L/36R CLSD</event:text>
+                """,
+            extensionBody: """
+                <fnse:classification>DOM</fnse:classification>
+                <fnse:accountId>CLT</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                <fnse:icaoLocation>KCLT</fnse:icaoLocation>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+
+        var detail = results[0].Properties!.CoreNotamData!.Notam!;
+        detail.AffectedFir.Should().Be("ZTL");
+        detail.SelectionCode.Should().Be("QMRLC");
+        detail.Traffic.Should().Be("IV");
+        detail.Purpose.Should().Be("BO");
+        detail.Scope.Should().Be("A");
+        detail.MinimumFl.Should().Be("000");
+        detail.MaximumFl.Should().Be("999");
+        detail.Coordinates.Should().Be("3356N08424W");
+        detail.Radius.Should().Be("005");
+    }
+
+    [Fact]
+    public void Parse_QCodeFields_ShouldBeNull_WhenAbsent()
+    {
+        // The sample XML does not contain Q-code fields
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        var detail = results[0].Properties!.CoreNotamData!.Notam!;
+
+        detail.AffectedFir.Should().BeNull();
+        detail.SelectionCode.Should().BeNull();
+        detail.Traffic.Should().BeNull();
+        detail.Purpose.Should().BeNull();
+        detail.Scope.Should().BeNull();
+        detail.MinimumFl.Should().BeNull();
+        detail.MaximumFl.Should().BeNull();
+        detail.Coordinates.Should().BeNull();
+        detail.Radius.Should().BeNull();
+    }
+
+    #endregion
+
+    #region Estimated flag
+
+    [Fact]
+    public void Parse_Estimated_ShouldBeTrue_WhenIndeterminatePositionUnknown()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_EST_TEST",
+            endPositionAttrs: """indeterminatePosition="unknown" """,
+            notamBody: """
+                <event:number>1</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:location>TST</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202512312359</event:effectiveEnd>
+                <event:text>TEST EST</event:text>
+                """,
+            extensionBody: """
+                <fnse:classification>DOM</fnse:classification>
+                <fnse:accountId>TST</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+        results[0].Properties!.CoreNotamData!.Notam!.Estimated.Should().Be("true");
+    }
+
+    [Fact]
+    public void Parse_Estimated_ShouldBeNull_WhenNoIndeterminatePosition()
+    {
+        // Standard sample XML has no indeterminatePosition attribute
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        results[0].Properties!.CoreNotamData!.Notam!.Estimated.Should().BeNull();
+    }
+
+    #endregion
+
+    #region FormattedText extraction
+
+    [Fact]
+    public void Parse_ShouldExtractFormattedText_WithHtmlCleaned()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_FMT_TEST",
+            notamBody: """
+                <event:number>1</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:location>TST</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202502010000</event:effectiveEnd>
+                <event:text>OBST CRANE</event:text>
+                <event:translation>
+                    <event:NOTAMTranslation gml:id="NT01_FMT">
+                        <event:type>ICAO</event:type>
+                        <event:simpleText>Obstacle crane erected</event:simpleText>
+                        <event:formattedText>Q) ZTL/QOBCE/IV/M/A/000/999/3356N08424W005&lt;br/&gt;&lt;b&gt;A)&lt;/b&gt; KCLT&lt;br/&gt;&lt;b&gt;B)&lt;/b&gt; 2501010000&lt;br/&gt;&lt;b&gt;C)&lt;/b&gt; 2502010000&lt;br/&gt;&lt;b&gt;E)&lt;/b&gt; OBST CRANE ERECTED</event:formattedText>
+                    </event:NOTAMTranslation>
+                </event:translation>
+                """,
+            extensionBody: """
+                <fnse:classification>DOM</fnse:classification>
+                <fnse:accountId>TST</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+
+        var translation = results[0].Properties!.CoreNotamData!.NotamTranslation![0];
+        translation.Type.Should().Be("ICAO");
+        translation.SimpleText.Should().Be("Obstacle crane erected");
+        translation.FormattedText.Should().NotBeNull();
+        // HTML entities decoded, <br/> → \n, <b>/<b> stripped
+        translation.FormattedText.Should().Contain("Q) ZTL/QOBCE/IV/M/A/000/999/3356N08424W005");
+        translation.FormattedText.Should().Contain("\n");
+        translation.FormattedText.Should().NotContain("<br/>");
+        translation.FormattedText.Should().NotContain("<b>");
+    }
+
+    [Fact]
+    public void Parse_FormattedText_ShouldBeNull_WhenAbsent()
+    {
+        // Standard sample XML has no formattedText
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        var translation = results[0].Properties!.CoreNotamData!.NotamTranslation![0];
+        translation.FormattedText.Should().BeNull();
+    }
+
+    #endregion
+
+    #region Geometry priority tests
+
+    [Fact]
+    public void Parse_VerticalStructure_ShouldBePreferredOverAirport()
+    {
+        // NOTAM with both VerticalStructure and AirportHeliport — VerticalStructure should win
+        var xml = """
+            <?xml version="1.0"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+            <ns3:FeatureCollection
+            xmlns="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:ns3="http://www.opengis.net/wfs/2.0">
+            <aixm:member><AIXMBasicMessage gml:id="NMS_ID_VS_TEST"><gml:boundedBy xsi:nil="true"/>
+            <hasMember><aixm:VerticalStructure gml:id="VS_1"><gml:identifier codeSpace="urn:uuid:">vs-test</gml:identifier><gml:boundedBy xsi:nil="true"/><aixm:timeSlice><aixm:VerticalStructureTimeSlice gml:id="VS_TS_1"><gml:validTime><gml:TimeInstant gml:id="VS_TI_1"><gml:timePosition>2025-01-01T00:00:00Z</gml:timePosition></gml:TimeInstant></gml:validTime><aixm:interpretation>SNAPSHOT</aixm:interpretation><aixm:part><aixm:VerticalStructurePart gml:id="VSP_1"><aixm:horizontalProjection><aixm:ElevatedPoint gml:id="VSP_EP_1" srsName="urn:ogc:def:crs:EPSG::4326"><gml:pos>40.1234 -74.5678</gml:pos></aixm:ElevatedPoint></aixm:horizontalProjection></aixm:VerticalStructurePart></aixm:part></aixm:VerticalStructureTimeSlice></aixm:timeSlice></aixm:VerticalStructure></hasMember>
+            <hasMember><aixm:AirportHeliport gml:id="Airport_VS_TEST"><gml:identifier codeSpace="urn:uuid:">apt-test</gml:identifier><gml:boundedBy xsi:nil="true"/><aixm:timeSlice><aixm:AirportHeliportTimeSlice gml:id="Airport_VS_TS"><gml:validTime><gml:TimeInstant gml:id="Airport_VS_TI"><gml:timePosition>2025-01-01T00:00:00Z</gml:timePosition></gml:TimeInstant></gml:validTime><aixm:interpretation>SNAPSHOT</aixm:interpretation><aixm:ARP><aixm:ElevatedPoint gml:id="EP_VS_TEST" srsName="urn:ogc:def:crs:EPSG::4326"><gml:pos>39.0000 -75.0000</gml:pos></aixm:ElevatedPoint></aixm:ARP></aixm:AirportHeliportTimeSlice></aixm:timeSlice></aixm:AirportHeliport></hasMember>
+            <hasMember><event:Event gml:id="Event_VS_TEST"><gml:identifier codeSpace="urn:uuid:">evt-vs-test</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_VS_TS"><gml:validTime><gml:TimePeriod gml:id="Event_VS_TP"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition>2025-12-31T23:59:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>33</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_VS_TEST"><event:number>1</event:number><event:year>2025</event:year><event:type>N</event:type><event:issued>2025-01-01T00:00:00Z</event:issued><event:location>TST</event:location><event:effectiveStart>202501010000</event:effectiveStart><event:effectiveEnd>202512312359</event:effectiveEnd><event:text>OBST TOWER</event:text></event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_VS_TEST"><fnse:classification>DOM</fnse:classification><fnse:accountId>TST</fnse:accountId><fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated></fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </AIXMBasicMessage></aixm:member>
+            </ns3:FeatureCollection>
+            </soap:Body>
+            </soap:Envelope>
+            """;
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+
+        var geometry = results[0].Geometry;
+        geometry.Should().NotBeNull();
+        geometry!.Type.Should().Be("GeometryCollection");
+        var inner = geometry.Geometries![0];
+        inner.Type.Should().Be("Point");
+
+        // Should be VerticalStructure coords (40.1234, -74.5678), NOT airport (39.0, -75.0)
+        var coords = (JsonElement)inner.Coordinates!;
+        coords[0].GetDouble().Should().BeApproximately(-74.5678, 0.001);
+        coords[1].GetDouble().Should().BeApproximately(40.1234, 0.001);
+    }
+
+    [Fact]
+    public void Parse_AirportFallback_WhenNoHigherPriorityGeometry()
+    {
+        // NOTAM with only AirportHeliport — should use airport point as fallback
+        var xml = """
+            <?xml version="1.0"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+            <ns3:FeatureCollection
+            xmlns="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:ns3="http://www.opengis.net/wfs/2.0">
+            <aixm:member><AIXMBasicMessage gml:id="NMS_ID_APTONLY"><gml:boundedBy xsi:nil="true"/>
+            <hasMember><aixm:AirportHeliport gml:id="Airport_APTONLY"><gml:identifier codeSpace="urn:uuid:">apt-only</gml:identifier><gml:boundedBy xsi:nil="true"/><aixm:timeSlice><aixm:AirportHeliportTimeSlice gml:id="Airport_APTONLY_TS"><gml:validTime><gml:TimeInstant gml:id="Airport_APTONLY_TI"><gml:timePosition>2025-01-01T00:00:00Z</gml:timePosition></gml:TimeInstant></gml:validTime><aixm:interpretation>SNAPSHOT</aixm:interpretation><aixm:ARP><aixm:ElevatedPoint gml:id="EP_APTONLY" srsName="urn:ogc:def:crs:EPSG::4326"><gml:pos>33.9425 -118.4081</gml:pos></aixm:ElevatedPoint></aixm:ARP></aixm:AirportHeliportTimeSlice></aixm:timeSlice></aixm:AirportHeliport></hasMember>
+            <hasMember><event:Event gml:id="Event_APTONLY"><gml:identifier codeSpace="urn:uuid:">evt-aptonly</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_APTONLY_TS"><gml:validTime><gml:TimePeriod gml:id="Event_APTONLY_TP"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition>2025-12-31T23:59:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>87</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_APTONLY"><event:number>1</event:number><event:year>2025</event:year><event:type>N</event:type><event:issued>2025-01-01T00:00:00Z</event:issued><event:location>LAX</event:location><event:effectiveStart>202501010000</event:effectiveStart><event:effectiveEnd>202512312359</event:effectiveEnd><event:text>AD AP CLSD</event:text></event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_APTONLY"><fnse:classification>DOM</fnse:classification><fnse:accountId>LAX</fnse:accountId><fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated></fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </AIXMBasicMessage></aixm:member>
+            </ns3:FeatureCollection>
+            </soap:Body>
+            </soap:Envelope>
+            """;
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+
+        var geometry = results[0].Geometry;
+        geometry.Should().NotBeNull();
+        geometry!.Type.Should().Be("GeometryCollection");
+        var inner = geometry.Geometries![0];
+        inner.Type.Should().Be("Point");
+
+        var coords = (JsonElement)inner.Coordinates!;
+        coords[0].GetDouble().Should().BeApproximately(-118.4081, 0.001);
+        coords[1].GetDouble().Should().BeApproximately(33.9425, 0.001);
+    }
+
+    [Fact]
+    public void Parse_ApronElement_ShouldExtractPolygonGeometry()
+    {
+        var xml = """
+            <?xml version="1.0"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+            <ns3:FeatureCollection
+            xmlns="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:ns3="http://www.opengis.net/wfs/2.0">
+            <aixm:member><AIXMBasicMessage gml:id="NMS_ID_APRON_TEST"><gml:boundedBy xsi:nil="true"/>
+            <hasMember><aixm:ApronElement gml:id="AE1_TEST"><gml:identifier codeSpace="urn:uuid:">apron-test</gml:identifier><gml:boundedBy xsi:nil="true"/><aixm:timeSlice><aixm:ApronElementTimeSlice gml:id="AE01_TS1"><gml:validTime><gml:TimeInstant gml:id="AE_TI1"><gml:timePosition>2025-01-01T00:00:00Z</gml:timePosition></gml:TimeInstant></gml:validTime><aixm:interpretation>SNAPSHOT</aixm:interpretation><aixm:extent><aixm:ElevatedSurface gml:id="ES_APRON" srsDimension="2" srsName="urn:ogc:def:crs:EPSG::4326"><gml:patches><gml:PolygonPatch><gml:exterior><gml:LinearRing><gml:posList>30.0 -90.0 30.0 -89.0 31.0 -89.0 31.0 -90.0 30.0 -90.0</gml:posList></gml:LinearRing></gml:exterior></gml:PolygonPatch></gml:patches></aixm:ElevatedSurface></aixm:extent></aixm:ApronElementTimeSlice></aixm:timeSlice></aixm:ApronElement></hasMember>
+            <hasMember><event:Event gml:id="Event_APRON_TEST"><gml:identifier codeSpace="urn:uuid:">evt-apron</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_APRON_TS"><gml:validTime><gml:TimePeriod gml:id="Event_APRON_TP"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition>2025-12-31T23:59:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>87</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_APRON"><event:number>1</event:number><event:year>2025</event:year><event:type>N</event:type><event:issued>2025-01-01T00:00:00Z</event:issued><event:location>TST</event:location><event:effectiveStart>202501010000</event:effectiveStart><event:effectiveEnd>202512312359</event:effectiveEnd><event:text>APRON CLSD</event:text></event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_APRON"><fnse:classification>DOM</fnse:classification><fnse:accountId>TST</fnse:accountId><fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated></fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </AIXMBasicMessage></aixm:member>
+            </ns3:FeatureCollection>
+            </soap:Body>
+            </soap:Envelope>
+            """;
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+
+        var geometry = results[0].Geometry;
+        geometry.Should().NotBeNull();
+        geometry!.Type.Should().Be("GeometryCollection");
+        var inner = geometry.Geometries![0];
+        inner.Type.Should().Be("Polygon");
+
+        var coords = (JsonElement)inner.Coordinates!;
+        var ring = coords[0];
+        ring.GetArrayLength().Should().Be(5);
+        // First point: GML "30.0 -90.0" → GeoJSON [-90.0, 30.0]
+        ring[0][0].GetDouble().Should().BeApproximately(-90.0, 0.001);
+        ring[0][1].GetDouble().Should().BeApproximately(30.0, 0.001);
+    }
+
+    #endregion
+
+    #region ParseSingle tests
+
+    [Fact]
+    public void ParseSingle_ShouldParseStandaloneAixmMessage()
+    {
+        var xml = """
+            <msg:AIXMBasicMessage
+            xmlns:msg="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            gml:id="NMS_ID_SINGLE_TEST">
+            <gml:boundedBy xsi:nil="true"/>
+            <hasMember><event:Event gml:id="Event_SINGLE"><gml:identifier codeSpace="urn:uuid:">single-test</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_SINGLE_TS"><gml:validTime><gml:TimePeriod gml:id="Event_SINGLE_TP"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition>2025-06-01T00:00:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>87</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_SINGLE"><event:number>42</event:number><event:year>2025</event:year><event:type>N</event:type><event:issued>2025-01-01T00:00:00Z</event:issued><event:location>DFW</event:location><event:effectiveStart>202501010000</event:effectiveStart><event:effectiveEnd>202506010000</event:effectiveEnd><event:text>TWY A CLSD</event:text></event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_SINGLE"><fnse:classification>DOM</fnse:classification><fnse:accountId>DFW</fnse:accountId><fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated></fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </msg:AIXMBasicMessage>
+            """;
+
+        var result = AixmNotamParser.ParseSingle(xml);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be("NMS_ID_SINGLE_TEST");
+        result.Type.Should().Be("Feature");
+        result.Properties!.CoreNotamData!.Notam!.Number.Should().Be("42");
+        result.Properties.CoreNotamData.Notam.Location.Should().Be("DFW");
+        result.Properties.CoreNotamData.Notam.Text.Should().Be("TWY A CLSD");
+    }
+
+    [Fact]
+    public void ParseSingle_ShouldReturnNull_ForEmptyString()
+    {
+        AixmNotamParser.ParseSingle("").Should().BeNull();
+    }
+
+    [Fact]
+    public void ParseSingle_ShouldReturnNull_ForMalformedXml()
+    {
+        AixmNotamParser.ParseSingle("<not valid xml").Should().BeNull();
+    }
+
+    [Fact]
+    public void ParseSingle_ShouldReturnNull_ForXmlWithNoAixmMessage()
+    {
+        AixmNotamParser.ParseSingle("<root><child/></root>").Should().BeNull();
+    }
+
+    #endregion
+
+    #region Helper to build SOAP-wrapped NOTAM XML for targeted tests
+
+    /// <summary>
+    /// Builds a minimal SOAP-wrapped AIXM XML with one NOTAM member for targeted test cases.
+    /// </summary>
+    private static string BuildSoapWrappedNotam(
+        string nmsId,
+        string notamBody,
+        string extensionBody,
+        string endPositionAttrs = "",
+        string? extraMembers = null)
+    {
+        return $"""
+            <?xml version="1.0"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+            <ns3:FeatureCollection
+            xmlns="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:ns3="http://www.opengis.net/wfs/2.0">
+            <aixm:member><AIXMBasicMessage gml:id="{nmsId}"><gml:boundedBy xsi:nil="true"/>
+            {extraMembers ?? ""}
+            <hasMember><event:Event gml:id="Event_{nmsId}"><gml:identifier codeSpace="urn:uuid:">evt-{nmsId}</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_TS_{nmsId}"><gml:validTime><gml:TimePeriod gml:id="Event_TP_{nmsId}"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition {endPositionAttrs}>2025-12-31T23:59:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>87</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_{nmsId}">{notamBody}</event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_{nmsId}">{extensionBody}</fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </AIXMBasicMessage></aixm:member>
+            </ns3:FeatureCollection>
+            </soap:Body>
+            </soap:Envelope>
+            """;
+    }
+
+    #endregion
 }

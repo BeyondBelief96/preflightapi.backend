@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Infrastructure.Dtos.Notam;
@@ -6,10 +7,10 @@ using PreflightApi.Infrastructure.Dtos.Notam;
 namespace PreflightApi.Infrastructure.Services.NotamServices;
 
 /// <summary>
-/// Parses AIXM XML (SOAP-wrapped) from the NMS initial load endpoint into NotamDto objects
+/// Parses AIXM XML (SOAP-wrapped or standalone) from the NMS initial load endpoint into NotamDto objects
 /// that match the same GeoJSON Feature structure produced by the delta sync (GeoJSON) endpoint.
 /// </summary>
-public static class AixmNotamParser
+public static partial class AixmNotamParser
 {
     private const string NsSoap = "http://schemas.xmlsoap.org/soap/envelope/";
     private const string NsWfs = "http://www.opengis.net/wfs/2.0";
@@ -18,6 +19,7 @@ public static class AixmNotamParser
     private const string NsEvent = "http://www.aixm.aero/schema/5.1/event";
     private const string NsGml = "http://www.opengis.net/gml/3.2";
     private const string NsFnse = "http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE";
+    private const string NsHtml = "http://www.w3.org/1999/xhtml";
 
     public static List<NotamDto> Parse(string xml, ILogger? logger = null)
     {
@@ -38,14 +40,7 @@ public static class AixmNotamParser
             return results;
         }
 
-        var nsMgr = new XmlNamespaceManager(doc.NameTable);
-        nsMgr.AddNamespace("soap", NsSoap);
-        nsMgr.AddNamespace("ns3", NsWfs);
-        nsMgr.AddNamespace("msg", NsAixmMsg);
-        nsMgr.AddNamespace("aixm", NsAixm);
-        nsMgr.AddNamespace("event", NsEvent);
-        nsMgr.AddNamespace("gml", NsGml);
-        nsMgr.AddNamespace("fnse", NsFnse);
+        var nsMgr = CreateNamespaceManager(doc);
 
         // Each <aixm:member> contains one AIXMBasicMessage (one NOTAM)
         var members = doc.SelectNodes("//aixm:member/msg:AIXMBasicMessage", nsMgr);
@@ -79,6 +74,66 @@ public static class AixmNotamParser
         return results;
     }
 
+    /// <summary>
+    /// Parses a standalone AIXMBasicMessage XML string (not SOAP-wrapped).
+    /// Used for the data.aixm response format where each array element is a single NOTAM XML string.
+    /// Returns null if the XML is empty, malformed, or contains no parseable NOTAM.
+    /// </summary>
+    public static NotamDto? ParseSingle(string xml, ILogger? logger = null)
+    {
+        if (string.IsNullOrWhiteSpace(xml))
+            return null;
+
+        XmlDocument doc;
+        try
+        {
+            doc = new XmlDocument();
+            doc.LoadXml(xml);
+        }
+        catch (XmlException ex)
+        {
+            logger?.LogWarning(ex, "Failed to parse standalone AIXM XML");
+            return null;
+        }
+
+        var nsMgr = CreateNamespaceManager(doc);
+
+        // Find the AIXMBasicMessage root — may have msg: prefix or be in the default namespace
+        var member = doc.SelectSingleNode("//msg:AIXMBasicMessage", nsMgr)
+                    ?? doc.SelectSingleNode("//AIXMBasicMessage", nsMgr);
+
+        if (member == null)
+        {
+            logger?.LogDebug("No AIXMBasicMessage found in standalone XML");
+            return null;
+        }
+
+        try
+        {
+            return ParseMember(member, nsMgr, logger);
+        }
+        catch (Exception ex)
+        {
+            var nmsId = (member as XmlElement)?.GetAttribute("id", NsGml) ?? "unknown";
+            logger?.LogWarning(ex, "Failed to parse standalone AIXM member {NmsId}", nmsId);
+            return null;
+        }
+    }
+
+    private static XmlNamespaceManager CreateNamespaceManager(XmlDocument doc)
+    {
+        var nsMgr = new XmlNamespaceManager(doc.NameTable);
+        nsMgr.AddNamespace("soap", NsSoap);
+        nsMgr.AddNamespace("ns3", NsWfs);
+        nsMgr.AddNamespace("msg", NsAixmMsg);
+        nsMgr.AddNamespace("aixm", NsAixm);
+        nsMgr.AddNamespace("event", NsEvent);
+        nsMgr.AddNamespace("gml", NsGml);
+        nsMgr.AddNamespace("fnse", NsFnse);
+        nsMgr.AddNamespace("html", NsHtml);
+        return nsMgr;
+    }
+
     private static NotamDto? ParseMember(XmlNode member, XmlNamespaceManager nsMgr, ILogger? logger)
     {
         var element = member as XmlElement;
@@ -96,7 +151,7 @@ public static class AixmNotamParser
         var notamNode = eventTimeSlice.SelectSingleNode("event:textNOTAM/event:NOTAM", nsMgr);
         var extensionNode = eventTimeSlice.SelectSingleNode("event:extension/fnse:EventExtension", nsMgr);
 
-        var notamDetail = ParseNotamDetail(nmsId, notamNode, extensionNode, nsMgr);
+        var notamDetail = ParseNotamDetail(nmsId, notamNode, extensionNode, eventTimeSlice, nsMgr);
 
         // Parse scenario
         var scenario = GetText(eventTimeSlice, "event:scenario", nsMgr);
@@ -104,7 +159,7 @@ public static class AixmNotamParser
         // Parse translations
         var translations = ParseTranslations(notamNode, nsMgr);
 
-        // Parse geometry (airport point preferred, then runway polygon)
+        // Parse geometry (obstacle/structure preferred, then apron, runway, airport fallback)
         var geometry = ParseGeometry(member, nsMgr, logger);
 
         return new NotamDto
@@ -125,7 +180,8 @@ public static class AixmNotamParser
     }
 
     private static NotamDetailDto ParseNotamDetail(
-        string nmsId, XmlNode? notamNode, XmlNode? extensionNode, XmlNamespaceManager nsMgr)
+        string nmsId, XmlNode? notamNode, XmlNode? extensionNode,
+        XmlNode eventTimeSlice, XmlNamespaceManager nsMgr)
     {
         return new NotamDetailDto
         {
@@ -142,8 +198,36 @@ public static class AixmNotamParser
             Classification = GetText(extensionNode, "fnse:classification", nsMgr),
             AccountId = GetText(extensionNode, "fnse:accountId", nsMgr),
             LastUpdated = GetText(extensionNode, "fnse:lastUpdated", nsMgr),
-            IcaoLocation = GetText(extensionNode, "fnse:icaoLocation", nsMgr)
+            IcaoLocation = GetText(extensionNode, "fnse:icaoLocation", nsMgr),
+            // Q-code fields from event:NOTAM
+            AffectedFir = GetText(notamNode, "event:affectedFIR", nsMgr),
+            SelectionCode = GetText(notamNode, "event:selectionCode", nsMgr),
+            Traffic = GetText(notamNode, "event:traffic", nsMgr),
+            Purpose = GetText(notamNode, "event:purpose", nsMgr),
+            Scope = GetText(notamNode, "event:scope", nsMgr),
+            MinimumFl = GetText(notamNode, "event:minimumFL", nsMgr),
+            MaximumFl = GetText(notamNode, "event:maximumFL", nsMgr),
+            Coordinates = GetText(notamNode, "event:coordinates", nsMgr),
+            Radius = GetText(notamNode, "event:radius", nsMgr),
+            // Estimated flag from EventTimeSlice's TimePeriod endPosition
+            Estimated = ParseEstimatedFlag(eventTimeSlice, nsMgr)
         };
+    }
+
+    /// <summary>
+    /// Checks for indeterminatePosition="unknown" on gml:endPosition within the EventTimeSlice's TimePeriod.
+    /// Returns "true" when the end time is estimated, null otherwise.
+    /// </summary>
+    private static string? ParseEstimatedFlag(XmlNode eventTimeSlice, XmlNamespaceManager nsMgr)
+    {
+        var endPosition = eventTimeSlice.SelectSingleNode(
+            "gml:validTime/gml:TimePeriod/gml:endPosition", nsMgr) as XmlElement;
+
+        if (endPosition == null)
+            return null;
+
+        var indeterminate = endPosition.GetAttribute("indeterminatePosition");
+        return indeterminate == "unknown" ? "true" : null;
     }
 
     private static List<NotamTranslationDto> ParseTranslations(XmlNode? notamNode, XmlNamespaceManager nsMgr)
@@ -161,36 +245,88 @@ public static class AixmNotamParser
             translations.Add(new NotamTranslationDto
             {
                 Type = GetText(t, "event:type", nsMgr),
-                SimpleText = GetText(t, "event:simpleText", nsMgr)
+                SimpleText = GetText(t, "event:simpleText", nsMgr),
+                FormattedText = GetFormattedText(t, nsMgr)
             });
         }
 
         return translations;
     }
 
+    /// <summary>
+    /// Extracts formattedText from a NOTAMTranslation node.
+    /// The AIXM XML contains HTML-encoded text (with br, b tags).
+    /// XmlDocument auto-decodes XML entities; we strip remaining HTML tags to produce plain text.
+    /// </summary>
+    private static string? GetFormattedText(XmlNode translationNode, XmlNamespaceManager nsMgr)
+    {
+        var formattedNode = translationNode.SelectSingleNode("event:formattedText", nsMgr);
+        if (formattedNode == null)
+            return null;
+
+        var text = formattedNode.InnerText?.Trim();
+        if (string.IsNullOrEmpty(text))
+            return null;
+
+        // Clean HTML artifacts: <br/> → \n, strip <b>/<em>/etc tags
+        text = BrTagRegex().Replace(text, "\n");
+        text = HtmlTagRegex().Replace(text, "");
+
+        return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+    }
+
+    [GeneratedRegex(@"<br\s*/?>", RegexOptions.IgnoreCase)]
+    private static partial Regex BrTagRegex();
+
+    [GeneratedRegex(@"</?[a-zA-Z][^>]*>")]
+    private static partial Regex HtmlTagRegex();
+
     private static NotamGeometryDto? ParseGeometry(XmlNode member, XmlNamespaceManager nsMgr, ILogger? logger)
     {
-        // Priority 1: Airport point (most useful for spatial queries)
-        var posNode = member.SelectSingleNode(
-            ".//aixm:AirportHeliport//gml:pos", nsMgr);
-        if (posNode != null)
+        NotamGeometryDto? innerGeometry = null;
+
+        // Priority 1: VerticalStructure point — actual obstacle/tower location
+        var vsPos = member.SelectSingleNode(".//aixm:VerticalStructure//gml:pos", nsMgr);
+        if (vsPos != null)
         {
-            var point = ParseGmlPos(posNode.InnerText.Trim());
-            if (point != null)
-                return point;
+            innerGeometry = ParseGmlPos(vsPos.InnerText.Trim());
         }
 
-        // Priority 2: Runway polygon
-        var posListNode = member.SelectSingleNode(
-            ".//aixm:RunwayElement//gml:posList", nsMgr);
-        if (posListNode != null)
+        // Priority 2: ApronElement polygon
+        if (innerGeometry == null)
         {
-            var polygon = ParseGmlPosList(posListNode.InnerText.Trim(), logger);
-            if (polygon != null)
-                return polygon;
+            var apronPosList = member.SelectSingleNode(
+                ".//aixm:ApronElement//aixm:ElevatedSurface//gml:posList", nsMgr);
+            if (apronPosList != null)
+                innerGeometry = ParseGmlPosList(apronPosList.InnerText.Trim(), logger);
         }
 
-        return null;
+        // Priority 3: RunwayElement polygon
+        if (innerGeometry == null)
+        {
+            var rwyPosList = member.SelectSingleNode(
+                ".//aixm:RunwayElement//aixm:ElevatedSurface//gml:posList", nsMgr);
+            if (rwyPosList != null)
+                innerGeometry = ParseGmlPosList(rwyPosList.InnerText.Trim(), logger);
+        }
+
+        // Priority 4: AirportHeliport point — airport reference point (fallback only)
+        if (innerGeometry == null)
+        {
+            var airportPos = member.SelectSingleNode(".//aixm:AirportHeliport//gml:pos", nsMgr);
+            if (airportPos != null)
+                innerGeometry = ParseGmlPos(airportPos.InnerText.Trim());
+        }
+
+        if (innerGeometry == null)
+            return null;
+
+        // Wrap in GeometryCollection to match GeoJSON format from delta sync
+        return new NotamGeometryDto
+        {
+            Type = "GeometryCollection",
+            Geometries = [innerGeometry]
+        };
     }
 
     /// <summary>

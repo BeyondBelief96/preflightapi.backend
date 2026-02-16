@@ -56,7 +56,8 @@
       "Bash(taskkill:*)",
       "Bash(powershell:*)",
       "Bash(xxd:*)",
-      "WebFetch(domain:aviationweather.gov)"
+      "WebFetch(domain:aviationweather.gov)",
+      "Bash(/c/Python313/python:*)"
     ],
     "deny": [],
     "ask": []
