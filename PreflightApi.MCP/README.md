@@ -6,18 +6,38 @@ An MCP (Model Context Protocol) server that exposes PreflightApi's aviation serv
 
 ### Prerequisites
 
-1. **PreflightApi running locally** (the MCP server calls the API over HTTP)
-   ```bash
-   # From repo root
-   docker-compose -f docker-compose.local.yml up
-   ```
-   This starts PostgreSQL and the API on `https://localhost:7014`.
+**PreflightApi running locally** (the MCP server calls the API over HTTP):
+```bash
+# From repo root
+docker-compose -f docker-compose.local.yml up
+```
+This starts PostgreSQL and the API on `https://localhost:7014`.
 
-2. **Claude Desktop** installed ([download](https://claude.ai/download))
+### Build
 
-### Configure Claude Desktop
+```bash
+cd PreflightApi.MCP
+dotnet build
+```
 
-Add the MCP server to `~/.claude/claude_desktop_config.json`:
+## Command-Line Testing
+
+### Option 1: MCP Inspector (Recommended)
+
+The MCP Inspector provides an interactive UI to test tools:
+
+```bash
+npx @modelcontextprotocol/inspector dotnet run --project /path/to/PreflightApi.MCP
+```
+
+This opens a browser UI where you can:
+- See all available tools
+- Call tools with parameters
+- View JSON responses
+
+### Option 2: Claude Code
+
+Add to your Claude Code MCP settings (`~/.claude/settings.json`):
 
 ```json
 {
@@ -30,28 +50,21 @@ Add the MCP server to `~/.claude/claude_desktop_config.json`:
 }
 ```
 
-Replace `/path/to/PreflightApi.MCP` with the actual path, e.g.:
+Then use Claude Code normally - it will have access to the flight planning tools.
+
+### Option 3: Direct stdio Testing
+
+Send JSON-RPC messages directly via stdin:
+
+```bash
+cd PreflightApi.MCP
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | dotnet run
 ```
-/Users/jefferysummers/source/preflightapi.backend/PreflightApi.MCP
+
+Example tool call:
+```bash
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"SearchAirports","arguments":{"query":"Dallas","limit":5}}}' | dotnet run
 ```
-
-### Restart Claude Desktop
-
-Quit and reopen Claude Desktop. You should see "preflight" in the MCP servers list (click the hammer icon).
-
-## Example Usage
-
-**Prompt:** "Build me a flight plan from Dallas to Denver"
-
-Claude will use the MCP tools to:
-
-1. **Search airports** - finds KDFW, KDAL, KADS (Dallas area) and KDEN, KAPA, KBJC (Denver area)
-2. **Ask for clarification** - "Which Dallas airport? KDFW (DFW International) or KDAL (Love Field)?"
-3. **Get weather** - retrieves METARs for departure/destination
-4. **Validate inputs** - identifies missing aircraft performance data
-5. **Ask for performance data** - "What is your cruise airspeed? Fuel burn rate?"
-6. **Calculate navlog** - returns course, headings, fuel, time for each leg
-7. **Assess weather** - GO/CAUTION/NO-GO recommendation
 
 ## Available Tools
 
@@ -66,9 +79,36 @@ Claude will use the MCP tools to:
 | `CalculateNavlog` | Full navigation log calculation |
 | `GetRouteBriefing` | Combined weather + safety briefing |
 
+## Example: "Build me a flight plan from Dallas to Denver"
+
+The tools would be called in this sequence:
+
+```bash
+# 1. Search for Dallas airports
+SearchAirports(query: "Dallas", limit: 5)
+# Returns: KDFW, KDAL, KADS, etc. with AmbiguousInput uncertainty
+
+# 2. Search for Denver airports
+SearchAirports(query: "Denver", limit: 5)
+# Returns: KDEN, KAPA, KBJC, etc.
+
+# 3. Validate inputs (will identify missing performance data)
+ValidateFlightPlanInputs(departureAirport: "KDFW", destinationAirport: "KDEN", ...)
+# Returns: MissingRequiredField uncertainties for cruise speed, fuel burn, etc.
+
+# 4. After user provides data, calculate navlog
+CalculateNavlog(departureAirport: "KDFW", destinationAirport: "KDEN",
+                cruiseTas: 120, cruiseFuelBurn: 8.5, ...)
+# Returns: Full navigation log with legs, headings, fuel, time
+
+# 5. Get weather assessment
+AssessVfrWeather(airportCodes: "KDFW,KDEN")
+# Returns: GO/CAUTION/NO-GO for each airport
+```
+
 ## Configuration
 
-Edit `appsettings.json` to change the API URL:
+Edit `appsettings.json`:
 
 ```json
 {
@@ -79,29 +119,11 @@ Edit `appsettings.json` to change the API URL:
 }
 ```
 
-## Testing Without Claude Desktop
-
-Build and run directly to verify the server starts:
-
-```bash
-cd PreflightApi.MCP
-dotnet build
-dotnet run
-```
-
-The server runs via stdio (no HTTP port). It will wait for MCP protocol messages on stdin.
-
 ## Troubleshooting
 
 **"Connection refused" errors**
-- Ensure PreflightApi is running: `curl https://localhost:7014/health`
-- Check `docker-compose` logs if using Docker
-
-**Tools not appearing in Claude Desktop**
-- Verify the path in `claude_desktop_config.json` is correct
-- Check Claude Desktop logs: `~/Library/Logs/Claude/`
-- Restart Claude Desktop completely (Quit, not just close window)
+- Ensure PreflightApi is running: `curl -k https://localhost:7014/health`
 
 **"No METAR/TAF found"**
 - Small airports may not have weather reporting
-- Try a larger airport (KDFW, KDEN, KATL, etc.)
+- Try larger airports (KDFW, KDEN, KATL)
