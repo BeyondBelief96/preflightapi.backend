@@ -17,7 +17,7 @@ public class NotamDeltaSyncFunction
     }
 
     [Function("NotamDeltaSyncFunction")]
-    public async Task Run([TimerTrigger("0 */3 * * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
+    public async Task Run([TimerTrigger("0 */3 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
     {
         _logger.LogInformation("NOTAM Delta Sync Function executed at: {Time}", DateTime.UtcNow);
         var sw = Stopwatch.StartNew();
