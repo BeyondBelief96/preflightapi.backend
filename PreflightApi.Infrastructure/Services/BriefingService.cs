@@ -73,7 +73,7 @@ public class BriefingService : IBriefingService
         var gairmets = await FindGAirmetsIntersectingRouteAsync(routeLine, ct);
         var notams = await FindNotamsForBriefingAsync(routeLine, corridorMeters, waypointAirportIdents, ct);
 
-        // 4. Phase 2: Fetch METARs and TAFs for airports found in corridor
+        // 5. Phase 2: Fetch METARs and TAFs for airports found in corridor
         var airportIdents = airports
             .Select(a => a.IcaoId ?? a.ArptId)
             .Where(id => !string.IsNullOrEmpty(id))
