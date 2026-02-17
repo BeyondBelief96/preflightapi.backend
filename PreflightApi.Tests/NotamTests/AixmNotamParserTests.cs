@@ -589,6 +589,82 @@ public class AixmNotamParserTests
 
     #endregion
 
+    #region Series extraction
+
+    [Fact]
+    public void Parse_ShouldExtractSeries_WhenPresent()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_SERIES_TEST",
+            notamBody: """
+                <event:series>A</event:series>
+                <event:number>1234</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:location>KZBW</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202512312359</event:effectiveEnd>
+                <event:text>AIRSPACE TEST</event:text>
+                """,
+            extensionBody: """
+                <fnse:classification>INTL</fnse:classification>
+                <fnse:accountId>ZBW</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+        results[0].Properties!.CoreNotamData!.Notam!.Series.Should().Be("A");
+    }
+
+    [Fact]
+    public void Parse_Series_ShouldBeNull_WhenAbsent()
+    {
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        results[0].Properties!.CoreNotamData!.Notam!.Series.Should().BeNull();
+    }
+
+    #endregion
+
+    #region OriginId extraction
+
+    [Fact]
+    public void Parse_ShouldExtractOriginId_WhenPresent()
+    {
+        var xml = BuildSoapWrappedNotam(
+            nmsId: "NMS_ID_ORIGIN_TEST",
+            notamBody: """
+                <event:number>100</event:number>
+                <event:year>2025</event:year>
+                <event:type>N</event:type>
+                <event:issued>2025-01-01T00:00:00Z</event:issued>
+                <event:location>TST</event:location>
+                <event:effectiveStart>202501010000</event:effectiveStart>
+                <event:effectiveEnd>202512312359</event:effectiveEnd>
+                <event:text>TEST</event:text>
+                """,
+            extensionBody: """
+                <fnse:classification>DOM</fnse:classification>
+                <fnse:accountId>TST</fnse:accountId>
+                <fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated>
+                <fnse:originID>ABCD1234</fnse:originID>
+                """);
+
+        var results = AixmNotamParser.Parse(xml);
+        results.Should().HaveCount(1);
+        results[0].Properties!.CoreNotamData!.Notam!.OriginId.Should().Be("ABCD1234");
+    }
+
+    [Fact]
+    public void Parse_OriginId_ShouldBeNull_WhenAbsent()
+    {
+        var results = AixmNotamParser.Parse(SampleAixmXml);
+        results[0].Properties!.CoreNotamData!.Notam!.OriginId.Should().BeNull();
+    }
+
+    #endregion
+
     #region ParseSingle tests
 
     [Fact]

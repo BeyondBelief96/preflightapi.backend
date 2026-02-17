@@ -1,0 +1,208 @@
+{
+  "$schema": "aixm-notam-schema-manifest-v1",
+  "description": "Expected AIXM XML structure for FAA NMS NOTAM initial load responses (SOAP-wrapped or standalone)",
+  "lastVerified": "2026-02-17",
+  "contexts": {
+    "AIXMBasicMessage": {
+      "description": "Root message element for a single NOTAM, identified by gml:id attribute",
+      "xpath": ".",
+      "elements": {},
+      "attributes": {
+        "gml:id": {
+          "required": true,
+          "description": "NMS unique identifier (e.g., NMS_ID_1757609538792382)"
+        }
+      }
+    },
+    "EventTimeSlice": {
+      "description": "Event time slice containing NOTAM metadata, text, and extensions",
+      "xpath": ".//event:Event/event:timeSlice/event:EventTimeSlice",
+      "elements": {
+        "gml:validTime": {
+          "required": true,
+          "description": "Time period with beginPosition and endPosition"
+        },
+        "aixm:interpretation": {
+          "required": true,
+          "description": "Interpretation type (BASELINE, SNAPSHOT)"
+        },
+        "aixm:sequenceNumber": {
+          "required": true,
+          "description": "Sequence number for the event"
+        },
+        "aixm:correctionNumber": {
+          "required": true,
+          "description": "Correction number for the event"
+        },
+        "event:scenario": {
+          "required": false,
+          "description": "Event scenario code"
+        },
+        "event:textNOTAM": {
+          "required": true,
+          "description": "Container for the NOTAM element"
+        },
+        "event:extension": {
+          "required": false,
+          "description": "Container for FAA FNSE extensions"
+        }
+      },
+      "attributes": {}
+    },
+    "NOTAM": {
+      "description": "NOTAM detail fields within event:textNOTAM",
+      "xpath": "event:textNOTAM/event:NOTAM",
+      "parentContext": "EventTimeSlice",
+      "elements": {
+        "event:number": {
+          "required": true,
+          "description": "NOTAM number"
+        },
+        "event:year": {
+          "required": false,
+          "description": "NOTAM year"
+        },
+        "event:type": {
+          "required": false,
+          "description": "NOTAM type (N, R, C)"
+        },
+        "event:issued": {
+          "required": true,
+          "description": "Issuance timestamp (ISO 8601)"
+        },
+        "event:location": {
+          "required": true,
+          "description": "Domestic location identifier"
+        },
+        "event:effectiveStart": {
+          "required": true,
+          "description": "Effective start timestamp"
+        },
+        "event:effectiveEnd": {
+          "required": false,
+          "description": "Effective end timestamp"
+        },
+        "event:text": {
+          "required": true,
+          "description": "NOTAM text content"
+        },
+        "event:schedule": {
+          "required": false,
+          "description": "Schedule string"
+        },
+        "event:affectedFIR": {
+          "required": false,
+          "description": "Affected FIR/ARTCC (Q-code)"
+        },
+        "event:selectionCode": {
+          "required": false,
+          "description": "Q-code selection code"
+        },
+        "event:traffic": {
+          "required": false,
+          "description": "Traffic type (I, V, IV)"
+        },
+        "event:purpose": {
+          "required": false,
+          "description": "Purpose code"
+        },
+        "event:scope": {
+          "required": false,
+          "description": "Scope (A, E, W)"
+        },
+        "event:minimumFL": {
+          "required": false,
+          "description": "Minimum flight level"
+        },
+        "event:maximumFL": {
+          "required": false,
+          "description": "Maximum flight level"
+        },
+        "event:coordinates": {
+          "required": false,
+          "description": "ICAO coordinates string"
+        },
+        "event:radius": {
+          "required": false,
+          "description": "Radius in nautical miles"
+        },
+        "event:series": {
+          "required": false,
+          "description": "ICAO series code"
+        },
+        "event:translation": {
+          "required": false,
+          "description": "Container for NOTAMTranslation elements"
+        }
+      },
+      "attributes": {
+        "gml:id": {
+          "required": false,
+          "description": "GML identifier for the NOTAM element"
+        }
+      }
+    },
+    "EventExtension": {
+      "description": "FAA FNSE extension fields on EventTimeSlice",
+      "xpath": "event:extension/fnse:EventExtension",
+      "parentContext": "EventTimeSlice",
+      "elements": {
+        "fnse:classification": {
+          "required": true,
+          "description": "Classification (DOM, INTL, MIL, FDC, SPECIAL_NOTICE)"
+        },
+        "fnse:accountId": {
+          "required": false,
+          "description": "Accountability ID"
+        },
+        "fnse:airportname": {
+          "required": false,
+          "description": "Airport name"
+        },
+        "fnse:lastUpdated": {
+          "required": false,
+          "description": "Last updated timestamp"
+        },
+        "fnse:icaoLocation": {
+          "required": false,
+          "description": "ICAO location identifier"
+        },
+        "fnse:originID": {
+          "required": false,
+          "description": "Origin identifier"
+        }
+      },
+      "attributes": {
+        "gml:id": {
+          "required": false,
+          "description": "GML identifier for the extension element"
+        }
+      }
+    },
+    "NOTAMTranslation": {
+      "description": "NOTAM translation entry (validated against first translation only)",
+      "xpath": "event:translation/event:NOTAMTranslation",
+      "parentContext": "NOTAM",
+      "elements": {
+        "event:type": {
+          "required": true,
+          "description": "Translation type (LOCAL_FORMAT, ICAO)"
+        },
+        "event:simpleText": {
+          "required": false,
+          "description": "Plain English translation"
+        },
+        "event:formattedText": {
+          "required": false,
+          "description": "Formatted text (HTML or rich text)"
+        }
+      },
+      "attributes": {
+        "gml:id": {
+          "required": false,
+          "description": "GML identifier for the translation element"
+        }
+      }
+    }
+  }
+}

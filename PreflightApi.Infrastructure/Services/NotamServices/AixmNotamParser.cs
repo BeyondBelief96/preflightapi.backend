@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Infrastructure.Dtos.Notam;
+using PreflightApi.Infrastructure.Services.NotamServices.SchemaManifests;
 
 namespace PreflightApi.Infrastructure.Services.NotamServices;
 
@@ -20,6 +21,13 @@ public static partial class AixmNotamParser
     private const string NsGml = "http://www.opengis.net/gml/3.2";
     private const string NsFnse = "http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE";
     private const string NsHtml = "http://www.w3.org/1999/xhtml";
+
+    private static bool _schemaValidated;
+
+    /// <summary>
+    /// Resets the schema validation flag. Used for testing to ensure validation runs on the next parse call.
+    /// </summary>
+    public static void ResetSchemaValidation() => _schemaValidated = false;
 
     public static List<NotamDto> Parse(string xml, ILogger? logger = null)
     {
@@ -55,6 +63,8 @@ public static partial class AixmNotamParser
             return results;
 
         logger?.LogDebug("Found {Count} AIXM members to parse", members.Count);
+
+        ValidateSchemaIfNeeded(members[0]!, nsMgr, logger);
 
         foreach (XmlNode member in members)
         {
@@ -108,6 +118,8 @@ public static partial class AixmNotamParser
             return null;
         }
 
+        ValidateSchemaIfNeeded(member, nsMgr, logger);
+
         try
         {
             return ParseMember(member, nsMgr, logger);
@@ -117,6 +129,46 @@ public static partial class AixmNotamParser
             var nmsId = (member as XmlElement)?.GetAttribute("id", NsGml) ?? "unknown";
             logger?.LogWarning(ex, "Failed to parse standalone AIXM member {NmsId}", nmsId);
             return null;
+        }
+    }
+
+    private static void ValidateSchemaIfNeeded(XmlNode member, XmlNamespaceManager nsMgr, ILogger? logger)
+    {
+        if (_schemaValidated)
+            return;
+
+        _schemaValidated = true;
+
+        var validationResult = AixmSchemaValidator.ValidateMember(member, nsMgr);
+        if (!validationResult.HasDrift)
+            return;
+
+        if (validationResult.MissingElements.Count > 0)
+        {
+            logger?.LogError(
+                "AIXM schema drift detected — missing required elements: {MissingElements}",
+                string.Join(", ", validationResult.MissingElements));
+        }
+
+        if (validationResult.MissingAttributes.Count > 0)
+        {
+            logger?.LogError(
+                "AIXM schema drift detected — missing required attributes: {MissingAttributes}",
+                string.Join(", ", validationResult.MissingAttributes));
+        }
+
+        if (validationResult.UnexpectedElements.Count > 0)
+        {
+            logger?.LogWarning(
+                "AIXM schema drift detected — unexpected elements: {UnexpectedElements}",
+                string.Join(", ", validationResult.UnexpectedElements));
+        }
+
+        if (validationResult.UnexpectedAttributes.Count > 0)
+        {
+            logger?.LogWarning(
+                "AIXM schema drift detected — unexpected attributes: {UnexpectedAttributes}",
+                string.Join(", ", validationResult.UnexpectedAttributes));
         }
     }
 
@@ -187,6 +239,7 @@ public static partial class AixmNotamParser
         {
             Id = nmsId,
             Number = GetText(notamNode, "event:number", nsMgr),
+            Series = GetText(notamNode, "event:series", nsMgr),
             Year = GetText(notamNode, "event:year", nsMgr),
             Type = GetText(notamNode, "event:type", nsMgr),
             Issued = GetText(notamNode, "event:issued", nsMgr),
@@ -200,6 +253,7 @@ public static partial class AixmNotamParser
             LastUpdated = GetText(extensionNode, "fnse:lastUpdated", nsMgr),
             IcaoLocation = GetText(extensionNode, "fnse:icaoLocation", nsMgr),
             AirportName = GetText(extensionNode, "fnse:airportname", nsMgr),
+            OriginId = GetText(extensionNode, "fnse:originID", nsMgr),
             // Q-code fields from event:NOTAM
             AffectedFir = GetText(notamNode, "event:affectedFIR", nsMgr),
             SelectionCode = GetText(notamNode, "event:selectionCode", nsMgr),

@@ -57,7 +57,8 @@
       "Bash(powershell:*)",
       "Bash(xxd:*)",
       "WebFetch(domain:aviationweather.gov)",
-      "Bash(/c/Python313/python:*)"
+      "Bash(/c/Python313/python:*)",
+      "Bash(gh auth:*)"
     ],
     "deny": [],
     "ask": []

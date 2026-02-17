@@ -240,6 +240,12 @@ public record NotamDetailDto
     public string? AccountId { get; init; }
 
     /// <summary>
+    /// Origin identifier from FAA FNSE extension
+    /// </summary>
+    [JsonPropertyName("originId")]
+    public string? OriginId { get; init; }
+
+    /// <summary>
     /// Last updated timestamp (ISO 8601)
     /// </summary>
     [JsonPropertyName("lastUpdated")]
