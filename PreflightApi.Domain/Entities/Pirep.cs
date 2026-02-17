@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.ValueObjects.Pireps;
 
 namespace PreflightApi.Domain.Entities
@@ -100,5 +101,11 @@ namespace PreflightApi.Domain.Entities
         /// </summary>
         [Column("raw_text")]
         public string? RawText { get; set; }
+
+        /// <summary>
+        /// PostGIS geography point computed from Latitude/Longitude via database trigger.
+        /// </summary>
+        [Column("location", TypeName = "geography(Point, 4326)")]
+        public Point? Location { get; set; }
     }
 }
