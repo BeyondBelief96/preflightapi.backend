@@ -33,6 +33,7 @@ namespace PreflightApi.Tests.IntegrationTests
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(ConnectionString);
             dataSourceBuilder.EnableDynamicJson();
+            dataSourceBuilder.UseNetTopologySuite();
 
             // Create and configure DbContext
             var optionsBuilder = new DbContextOptionsBuilder<PreflightApiDbContext>()

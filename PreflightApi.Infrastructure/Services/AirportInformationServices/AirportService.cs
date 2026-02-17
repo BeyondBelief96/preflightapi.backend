@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
@@ -14,6 +16,8 @@ namespace PreflightApi.Infrastructure.Services
     {
         private readonly PreflightApiDbContext _context;
         private readonly ILogger<AirportService> _logger;
+        private readonly GeometryFactory _geometryFactory;
+        private readonly int NAUTICAL_MILE_TO_METERS = 1852;
 
         public AirportService(
             PreflightApiDbContext context,
@@ -21,6 +25,7 @@ namespace PreflightApi.Infrastructure.Services
         {
             _context = context;
             _logger = logger;
+            _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
         }
 
         public async Task<PaginatedResponse<AirportDto>> GetAirports(string? search = null, string[]? stateCodes = null, string? cursor = null, int limit = 100)
@@ -104,6 +109,35 @@ namespace PreflightApi.Infrastructure.Services
             {
                 _logger.LogError(ex, "Error getting airports by ICAO codes or idents: {CodesOrIdents}",
                     string.Join(", ", codesOrIdents));
+                throw;
+            }
+        }
+
+        public async Task<PaginatedResponse<AirportDto>> SearchNearby(
+            decimal latitude,
+            decimal longitude,
+            double radiusNm,
+            string? cursor = null,
+            int limit = 100)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Searching airports near ({Lat}, {Lon}) within {Radius} NM, cursor: {Cursor}, limit: {Limit}",
+                    latitude, longitude, radiusNm, cursor, limit);
+
+                var radiusMeters = radiusNm * NAUTICAL_MILE_TO_METERS;
+                var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+
+                var query = _context.Airports
+                    .AsNoTracking()
+                    .Where(a => a.Location != null && a.Location.IsWithinDistance(point, radiusMeters));
+
+                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching airports near ({Lat}, {Lon})", latitude, longitude);
                 throw;
             }
         }
