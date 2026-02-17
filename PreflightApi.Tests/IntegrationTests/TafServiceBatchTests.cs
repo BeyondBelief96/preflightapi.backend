@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PreflightApi.Tests.IntegrationTests;
 
+[Collection("Integration")]
 public class TafServiceBatchTests : PostgreSqlTestBase
 {
     protected override async Task SeedDatabaseAsync()

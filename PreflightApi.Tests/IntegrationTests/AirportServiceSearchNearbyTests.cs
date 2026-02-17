@@ -9,6 +9,7 @@ using Xunit;
 
 namespace PreflightApi.Tests.IntegrationTests;
 
+[Collection("Integration")]
 public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
 {
     private readonly GeometryFactory _geometryFactory =

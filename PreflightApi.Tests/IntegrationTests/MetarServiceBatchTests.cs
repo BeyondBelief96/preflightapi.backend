@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PreflightApi.Tests.IntegrationTests;
 
+[Collection("Integration")]
 public class MetarServiceBatchTests : PostgreSqlTestBase
 {
     protected override async Task SeedDatabaseAsync()
