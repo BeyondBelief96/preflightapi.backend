@@ -51,4 +51,55 @@ public class TafService : ITafService
 
         return TafMapper.ToDto(taf);
     }
+
+    public async Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents)
+    {
+        var upperCodes = icaoCodesOrIdents
+            .Select(c => c.ToUpperInvariant())
+            .Distinct()
+            .ToList();
+
+        // Query 1: Direct StationId matches
+        var directMatches = await _dbContext.Tafs
+            .Where(t => t.StationId != null && upperCodes.Contains(t.StationId))
+            .ToListAsync();
+
+        var matchedStationIds = directMatches
+            .Where(t => t.StationId != null)
+            .Select(t => t.StationId!)
+            .ToHashSet();
+
+        // Identify input codes that didn't match any StationId directly
+        var unmatchedCodes = upperCodes
+            .Where(c => !matchedStationIds.Contains(c))
+            .ToList();
+
+        if (unmatchedCodes.Count == 0)
+            return directMatches.Select(TafMapper.ToDto);
+
+        // Query 2: Resolve unmatched codes via Airports table
+        var airports = await _dbContext.Airports
+            .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
+            .ToListAsync();
+
+        var resolvedStationIds = airports
+            .Select(a => a.StateCode switch
+            {
+                "AK" or "HI" => $"P{a.ArptId}",
+                _ => $"K{a.ArptId}"
+            })
+            .Where(id => !matchedStationIds.Contains(id))
+            .Distinct()
+            .ToList();
+
+        if (resolvedStationIds.Count == 0)
+            return directMatches.Select(TafMapper.ToDto);
+
+        // Query 3: Fetch TAFs for resolved station IDs
+        var resolvedMatches = await _dbContext.Tafs
+            .Where(t => t.StationId != null && resolvedStationIds.Contains(t.StationId))
+            .ToListAsync();
+
+        return directMatches.Concat(resolvedMatches).Select(TafMapper.ToDto);
+    }
 }

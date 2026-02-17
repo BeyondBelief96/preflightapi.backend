@@ -37,6 +37,32 @@ public class MetarController(IMetarService metarService) : ControllerBase
     }
 
     /// <summary>
+    /// Gets the most recent METAR observations for multiple airports in a single request.
+    /// Accepts ICAO codes or FAA identifiers. Identifiers that don't resolve to a METAR are silently skipped.
+    /// </summary>
+    /// <param name="ids">Comma-separated ICAO codes or FAA identifiers (e.g., KDFW,KAUS,KHOU)</param>
+    /// <returns>METAR observations for the requested airports</returns>
+    /// <response code="200">Returns the METAR observations</response>
+    /// <response code="400">If the ids parameter is empty</response>
+    [HttpGet("batch")]
+    [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsBatch(
+        [FromQuery] string ids)
+    {
+        if (string.IsNullOrWhiteSpace(ids))
+            throw new ValidationException("ids", "At least one ICAO code or identifier is required");
+
+        var codesArray = ids.Split(',')
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .ToArray();
+
+        var metars = await metarService.GetMetarsForAirports(codesArray);
+        return Ok(metars);
+    }
+
+    /// <summary>
     /// Gets METARs for airports in one or more states
     /// </summary>
     /// <remarks>

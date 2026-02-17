@@ -78,6 +78,57 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             }
         }
 
+        public async Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents)
+        {
+            var upperCodes = icaoCodesOrIdents
+                .Select(c => c.ToUpperInvariant())
+                .Distinct()
+                .ToList();
+
+            // Query 1: Direct StationId matches
+            var directMatches = await _context.Metars
+                .Where(m => m.StationId != null && upperCodes.Contains(m.StationId))
+                .ToListAsync();
+
+            var matchedStationIds = directMatches
+                .Where(m => m.StationId != null)
+                .Select(m => m.StationId!)
+                .ToHashSet();
+
+            // Identify input codes that didn't match any StationId directly
+            var unmatchedCodes = upperCodes
+                .Where(c => !matchedStationIds.Contains(c))
+                .ToList();
+
+            if (unmatchedCodes.Count == 0)
+                return directMatches.Select(MetarMapper.ToDto);
+
+            // Query 2: Resolve unmatched codes via Airports table
+            var airports = await _context.Airports
+                .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
+                .ToListAsync();
+
+            var resolvedStationIds = airports
+                .Select(a => a.StateCode switch
+                {
+                    "AK" or "HI" => $"P{a.ArptId}",
+                    _ => $"K{a.ArptId}"
+                })
+                .Where(id => !matchedStationIds.Contains(id))
+                .Distinct()
+                .ToList();
+
+            if (resolvedStationIds.Count == 0)
+                return directMatches.Select(MetarMapper.ToDto);
+
+            // Query 3: Fetch METARs for resolved station IDs
+            var resolvedMatches = await _context.Metars
+                .Where(m => m.StationId != null && resolvedStationIds.Contains(m.StationId))
+                .ToListAsync();
+
+            return directMatches.Concat(resolvedMatches).Select(MetarMapper.ToDto);
+        }
+
         public async Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor = null, int limit = 100)
         {
             try
