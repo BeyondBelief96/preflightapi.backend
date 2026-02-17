@@ -19,7 +19,12 @@ namespace PreflightApi.Infrastructure.Data.Configurations
 
             builder.HasIndex(e => e.ObservationTime);
             builder.HasIndex(e => e.ReceiptTime);
-            builder.HasIndex(e => new { e.Latitude, e.Longitude });
+            // Spatial column and index
+            builder.Property(e => e.Location)
+                .HasColumnType("geography(Point, 4326)");
+
+            builder.HasIndex(e => e.Location)
+                .HasMethod("gist");
 
             builder.Property(x => x.QualityControlFlags)
                 .HasConversion(

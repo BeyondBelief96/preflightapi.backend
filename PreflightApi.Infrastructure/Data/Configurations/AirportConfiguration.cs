@@ -32,13 +32,19 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             builder.Property(e => e.LongMin).HasColumnType("int");
             builder.Property(e => e.LongSec).HasColumnType("decimal(6,2)");
 
+            // Spatial column and index
+            builder.Property(e => e.Location)
+                .HasColumnType("geography(Point, 4326)");
+
             // Indexes
             builder.HasIndex(e => e.IcaoId);
             builder.HasIndex(e => e.ArptId);
             builder.HasIndex(e => e.StateCode);
             builder.HasIndex(a => new { a.StateCode, a.IcaoId });
             builder.HasIndex(a => new { a.StateCode, a.ArptId });
-            builder.HasIndex(e => new { e.LatDecimal, e.LongDecimal });
+
+            builder.HasIndex(e => e.Location)
+                .HasMethod("gist");
         }
     }
 }

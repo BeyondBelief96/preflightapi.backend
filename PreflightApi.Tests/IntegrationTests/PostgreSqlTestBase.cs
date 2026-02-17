@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using PreflightApi.Infrastructure.Data;
@@ -33,11 +34,14 @@ namespace PreflightApi.Tests.IntegrationTests
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(ConnectionString);
             dataSourceBuilder.EnableDynamicJson();
+            dataSourceBuilder.UseNetTopologySuite();
 
             // Create and configure DbContext
             var optionsBuilder = new DbContextOptionsBuilder<PreflightApiDbContext>()
                     .UseNpgsql(dataSourceBuilder.Build(), options =>
-                        options.UseNetTopologySuite());
+                        options.UseNetTopologySuite())
+                    .ConfigureWarnings(w =>
+                        w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
             DbContext = new PreflightApiDbContext(optionsBuilder.Options);
 

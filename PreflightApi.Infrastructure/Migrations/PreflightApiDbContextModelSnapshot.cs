@@ -302,6 +302,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("lndg_rights_flag");
 
+                    b.Property<Point>("Location")
+                        .HasColumnType("geography(Point, 4326)")
+                        .HasColumnName("location");
+
                     b.Property<decimal?>("LongDecimal")
                         .HasColumnType("decimal(11,8)")
                         .HasColumnName("long_decimal");
@@ -444,9 +448,11 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.HasIndex("IcaoId");
 
-                    b.HasIndex("StateCode");
+                    b.HasIndex("Location");
 
-                    b.HasIndex("LatDecimal", "LongDecimal");
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
+
+                    b.HasIndex("StateCode");
 
                     b.HasIndex("StateCode", "ArptId");
 
@@ -984,6 +990,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("area");
 
+                    b.Property<Geometry>("Boundary")
+                        .HasColumnType("geometry(Geometry, 4326)")
+                        .HasColumnName("boundary");
+
                     b.Property<string>("DueTo")
                         .HasColumnType("text")
                         .HasColumnName("due_to");
@@ -1030,6 +1040,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("valid_time");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Boundary");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Boundary"), "gist");
 
                     b.HasIndex("ExpireTime");
 
@@ -1194,6 +1208,16 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("varchar(64)")
                         .HasColumnName("nms_id");
 
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("AirportName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("airport_name");
+
                     b.Property<DateTime?>("CancelationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("cancelation_date");
@@ -1234,10 +1258,25 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("varchar(10)")
                         .HasColumnName("location");
 
+                    b.Property<string>("NotamNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("notam_number");
+
                     b.Property<string>("NotamType")
                         .HasMaxLength(5)
                         .HasColumnType("varchar(5)")
                         .HasColumnName("notam_type");
+
+                    b.Property<string>("NotamYear")
+                        .HasMaxLength(4)
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("notam_year");
+
+                    b.Property<string>("Series")
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("series");
 
                     b.Property<DateTime>("SyncedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1248,6 +1287,8 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("text");
 
                     b.HasKey("NmsId");
+
+                    b.HasIndex("AccountId");
 
                     b.HasIndex("CancelationDate");
 
@@ -1266,6 +1307,8 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.HasIndex("LastUpdated");
 
                     b.HasIndex("Location");
+
+                    b.HasIndex("NotamNumber", "NotamYear", "Series");
 
                     b.ToTable("notams", (string)null);
                 });
@@ -1434,6 +1477,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("real")
                         .HasColumnName("latitude");
 
+                    b.Property<Point>("Location")
+                        .HasColumnType("geography(Point, 4326)")
+                        .HasColumnName("location");
+
                     b.Property<float?>("Longitude")
                         .HasColumnType("real")
                         .HasColumnName("longitude");
@@ -1492,11 +1539,13 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Location");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
+
                     b.HasIndex("ObservationTime");
 
                     b.HasIndex("ReceiptTime");
-
-                    b.HasIndex("Latitude", "Longitude");
 
                     b.ToTable("pirep");
                 });
@@ -1938,6 +1987,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("area");
 
+                    b.Property<Geometry>("Boundary")
+                        .HasColumnType("geometry(Geometry, 4326)")
+                        .HasColumnName("boundary");
+
                     b.Property<string>("Hazard")
                         .HasColumnType("jsonb")
                         .HasColumnName("hazard");
@@ -1967,6 +2020,10 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("valid_time_to");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Boundary");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Boundary"), "gist");
 
                     b.HasIndex("SigmetType");
 

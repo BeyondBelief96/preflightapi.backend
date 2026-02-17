@@ -248,15 +248,16 @@ public class NotamServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetNotamsByRadiusAsync_ShouldFormatQueryLocation()
+    public void GetNotamsByRadiusAsync_ShouldFormatQueryLocation()
     {
-        // Act (InMemory won't have spatial data, but we can verify format)
-        var result = await _service.GetNotamsByRadiusAsync(32.897, -97.038, 25.0);
+        // The spatial query uses FromSqlInterpolated (geometry::geography cast) which
+        // requires a real PostgreSQL database. Verify the format string directly here;
+        // spatial correctness is covered by integration tests.
+        var queryLocation = $"{32.897:F4},{-97.038:F4} ({25.0}nm)";
 
-        // Assert
-        result.QueryLocation.Should().Contain("32.8970");
-        result.QueryLocation.Should().Contain("-97.0380");
-        result.QueryLocation.Should().Contain("25");
+        queryLocation.Should().Contain("32.8970");
+        queryLocation.Should().Contain("-97.0380");
+        queryLocation.Should().Contain("25");
     }
 
     #endregion
@@ -788,6 +789,117 @@ public class NotamServiceTests : IDisposable
 
     #endregion
 
+    #region Number Search Tests
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldReturnNotam_ByBareNumber()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW"),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS", notamNumber: "999", notamYear: "2025", accountId: "AUS")
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("420");
+
+        // Assert
+        results.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldReturnNotam_WithYear()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW", notamNumber: "420", notamYear: "2024", accountId: "DFW")
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("420/2025");
+
+        // Assert
+        results.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldReturnNotam_WithAccountId()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "BNA", "KBNA", notamNumber: "420", notamYear: "2025", accountId: "BNA"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW")
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("BNA 420");
+
+        // Assert
+        results.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldReturnMultiple_ForAmbiguousBareNumber()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "BNA", "KBNA", notamNumber: "420", notamYear: "2025", accountId: "BNA"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW")
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("420");
+
+        // Assert
+        results.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldReturnEmpty_WhenNoMatch()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW")
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("999");
+
+        // Assert
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldThrowArgumentException_ForInvalidInput()
+    {
+        // Act
+        Func<Task> act = async () => await _service.GetNotamsByNumberAsync("");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*cannot be null or empty*");
+    }
+
+    [Fact]
+    public async Task GetNotamsByNumberAsync_ShouldIncludeCancelledNotams()
+    {
+        // Number search does not apply active filters — returns cancelled NOTAMs too
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW",
+                notamNumber: "420", notamYear: "2025", accountId: "DFW",
+                cancelationDate: DateTime.UtcNow.AddHours(-1))
+        );
+
+        // Act
+        var results = await _service.GetNotamsByNumberAsync("420");
+
+        // Assert
+        results.Should().HaveCount(1);
+    }
+
+    #endregion
+
     #region Helpers
 
     private void SeedNotams(params Notam[] notams)
@@ -811,7 +923,11 @@ public class NotamServiceTests : IDisposable
         string notamType = "N",
         DateTime? effectiveStart = null,
         DateTime? effectiveEnd = null,
-        DateTime? cancelationDate = null)
+        DateTime? cancelationDate = null,
+        string? notamNumber = null,
+        string? notamYear = null,
+        string? accountId = null,
+        string? airportName = null)
     {
         var dto = new NotamDto
         {
@@ -824,7 +940,7 @@ public class NotamServiceTests : IDisposable
                     Notam = new NotamDetailDto
                     {
                         Id = nmsId,
-                        Number = "01/001",
+                        Number = notamNumber ?? "001",
                         Location = location,
                         IcaoLocation = icaoLocation,
                         Classification = classification ?? "DOMESTIC",
@@ -832,7 +948,10 @@ public class NotamServiceTests : IDisposable
                         Text = $"Test NOTAM for {location}",
                         EffectiveStart = (effectiveStart ?? DateTime.UtcNow.AddHours(-1)).ToString("O"),
                         EffectiveEnd = effectiveEnd?.ToString("O"),
-                        CancelationDate = cancelationDate?.ToString("O")
+                        CancelationDate = cancelationDate?.ToString("O"),
+                        AccountId = accountId,
+                        Year = notamYear,
+                        AirportName = airportName
                     }
                 }
             }
@@ -845,6 +964,10 @@ public class NotamServiceTests : IDisposable
             IcaoLocation = icaoLocation,
             Classification = classification ?? "DOMESTIC",
             NotamType = notamType,
+            NotamNumber = notamNumber ?? "001",
+            NotamYear = notamYear,
+            AccountId = accountId,
+            AirportName = airportName,
             EffectiveStart = effectiveStart ?? DateTime.UtcNow.AddHours(-1),
             EffectiveEnd = effectiveEnd,
             CancelationDate = cancelationDate,

@@ -232,6 +232,45 @@ public class NmsApiClientTests
         result.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task GetNotamsByLocationAsync_ShouldParseDataAixmFormat()
+    {
+        // Arrange
+        SetupTokenEndpoint();
+
+        // Build a data.aixm response: JSON with an array of AIXM XML strings
+        var aixmXml = """
+            <msg:AIXMBasicMessage
+            xmlns:msg="http://www.aixm.aero/schema/5.1/message"
+            xmlns:aixm="http://www.aixm.aero/schema/5.1"
+            xmlns:event="http://www.aixm.aero/schema/5.1/event"
+            xmlns:gml="http://www.opengis.net/gml/3.2"
+            xmlns:fnse="http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            gml:id="NMS_ID_AIXM_TEST">
+            <gml:boundedBy xsi:nil="true"/>
+            <hasMember><event:Event gml:id="Event_AIXM"><gml:identifier codeSpace="urn:uuid:">aixm-test</gml:identifier><gml:boundedBy xsi:nil="true"/><event:timeSlice><event:EventTimeSlice gml:id="Event_AIXM_TS"><gml:validTime><gml:TimePeriod gml:id="Event_AIXM_TP"><gml:beginPosition>2025-01-01T00:00:00Z</gml:beginPosition><gml:endPosition>2025-06-01T00:00:00Z</gml:endPosition></gml:TimePeriod></gml:validTime><aixm:interpretation>BASELINE</aixm:interpretation><aixm:sequenceNumber>1</aixm:sequenceNumber><aixm:correctionNumber>0</aixm:correctionNumber><event:scenario>87</event:scenario><event:textNOTAM><event:NOTAM gml:id="NOTAM_AIXM"><event:number>99</event:number><event:year>2025</event:year><event:type>N</event:type><event:issued>2025-01-01T00:00:00Z</event:issued><event:location>DFW</event:location><event:effectiveStart>202501010000</event:effectiveStart><event:effectiveEnd>202506010000</event:effectiveEnd><event:text>TWY B CLSD</event:text></event:NOTAM></event:textNOTAM><event:extension><fnse:EventExtension gml:id="ext_AIXM"><fnse:classification>DOM</fnse:classification><fnse:accountId>DFW</fnse:accountId><fnse:lastUpdated>2025-01-01T00:00:00Z</fnse:lastUpdated></fnse:EventExtension></event:extension></event:EventTimeSlice></event:timeSlice></event:Event></hasMember>
+            </msg:AIXMBasicMessage>
+            """;
+
+        var escapedXml = JsonSerializer.Serialize(aixmXml); // JSON-escaped string
+        var response = """{"status": "Success", "data": {"aixm": [""" + escapedXml + "]}}";
+
+
+        SetupLocationEndpoint("KDFW", response);
+
+        // Act
+        var result = await _client.GetNotamsByLocationAsync("KDFW");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result[0].Id.Should().Be("NMS_ID_AIXM_TEST");
+        result[0].Properties?.CoreNotamData?.Notam?.Number.Should().Be("99");
+        result[0].Properties?.CoreNotamData?.Notam?.Location.Should().Be("DFW");
+        result[0].Properties?.CoreNotamData?.Notam?.Text.Should().Be("TWY B CLSD");
+    }
+
     private void SetupTokenEndpoint()
     {
         _mockHttp.When(HttpMethod.Post, $"{AuthBaseUrl}/v1/auth/token")

@@ -103,7 +103,10 @@ public record NotamDetailDto
     public string? Id { get; init; }
 
     /// <summary>
-    /// NOTAM number (e.g., "01/123", "A1234/25")
+    /// NOTAM number as returned by the NMS API. Typically a bare sequence number (e.g., "420", "3997")
+    /// but may include a month prefix (e.g., "01/123") for domestic NOTAMs or a series prefix
+    /// (e.g., "A1234/25") for ICAO NOTAMs. Stored as-is from the source; the denormalized
+    /// <c>notam_number</c> column on the entity strips any month prefix for indexed search.
     /// </summary>
     [JsonPropertyName("number")]
     public string? Number { get; init; }
@@ -115,7 +118,7 @@ public record NotamDetailDto
     public string? Series { get; init; }
 
     /// <summary>
-    /// NOTAM year
+    /// 4-digit NOTAM year (e.g., "2025"). Denormalized to the <c>notam_year</c> entity column for indexed search.
     /// </summary>
     [JsonPropertyName("year")]
     public string? Year { get; init; }
@@ -187,6 +190,12 @@ public record NotamDetailDto
     public string? IcaoLocation { get; init; }
 
     /// <summary>
+    /// Airport/facility name (AIXM-only, e.g., "JOHN C TUNE"). Null for GeoJSON-sourced NOTAMs.
+    /// </summary>
+    [JsonPropertyName("airportName")]
+    public string? AirportName { get; init; }
+
+    /// <summary>
     /// Effective start timestamp (ISO 8601)
     /// </summary>
     [JsonPropertyName("effectiveStart")]
@@ -223,10 +232,18 @@ public record NotamDetailDto
     public string? CancelationDate { get; init; }
 
     /// <summary>
-    /// Accountability ID (3-4 char domestic or 8 char AFTN)
+    /// Accountability ID — the issuing office code (e.g., "BNA", "FDC", "CLT").
+    /// 3-4 characters for domestic NOTAMs, up to 8 characters for AFTN.
+    /// Denormalized to the <c>account_id</c> entity column for indexed search.
     /// </summary>
     [JsonPropertyName("accountId")]
     public string? AccountId { get; init; }
+
+    /// <summary>
+    /// Origin identifier from FAA FNSE extension
+    /// </summary>
+    [JsonPropertyName("originId")]
+    public string? OriginId { get; init; }
 
     /// <summary>
     /// Last updated timestamp (ISO 8601)

@@ -28,6 +28,21 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
         builder.Property(e => e.NotamType)
             .HasMaxLength(5);
 
+        builder.Property(e => e.NotamNumber)
+            .HasMaxLength(10);
+
+        builder.Property(e => e.NotamYear)
+            .HasMaxLength(4);
+
+        builder.Property(e => e.Series)
+            .HasMaxLength(2);
+
+        builder.Property(e => e.AccountId)
+            .HasMaxLength(10);
+
+        builder.Property(e => e.AirportName)
+            .HasMaxLength(100);
+
         builder.Property(e => e.FeatureJson)
             .HasColumnType("jsonb")
             .IsRequired();
@@ -43,6 +58,8 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
         builder.HasIndex(e => e.EffectiveEnd);
         builder.HasIndex(e => e.CancelationDate);
         builder.HasIndex(e => e.LastUpdated);
+        builder.HasIndex(e => e.AccountId);
+        builder.HasIndex(e => new { e.NotamNumber, e.NotamYear, e.Series });
 
         // Spatial index for geometry queries
         builder.HasIndex(e => e.Geometry)

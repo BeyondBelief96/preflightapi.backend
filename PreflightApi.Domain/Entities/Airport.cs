@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
 
 namespace PreflightApi.Domain.Entities;
 
@@ -470,6 +471,10 @@ public class Airport : INasrEntity<Airport>
     /// <summary>FAA NASR field: ASP_ANLYS_DTRM_CODE. Airport safety analysis determination code.</summary>
     [Column("asp_analysis_dtrm_code")]
     public string? AspAnalysisDtrmCode { get; set; }
+
+    /// <summary>PostGIS geography point computed from LatDecimal/LongDecimal via database trigger.</summary>
+    [Column("location", TypeName = "geography(Point, 4326)")]
+    public Point? Location { get; set; }
 
     // Supplementary data from APT_ATT.csv
 

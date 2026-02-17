@@ -63,6 +63,45 @@ namespace PreflightApi.API.Controllers
         }
 
         /// <summary>
+        /// Searches for airports near a geographic point
+        /// </summary>
+        /// <remarks>
+        /// Useful for finding diversion airports, fuel stops, or nearby facilities.
+        /// <code>
+        /// GET /api/v1/airports/nearby?lat=32.897&amp;lon=-97.038&amp;radiusNm=30
+        /// </code>
+        /// </remarks>
+        /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
+        /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
+        /// <param name="radiusNm">Search radius in nautical miles (default 30, max 500)</param>
+        /// <param name="pagination">Cursor-based pagination parameters</param>
+        /// <returns>Paginated list of airports within the search radius</returns>
+        /// <response code="200">Returns the nearby airports</response>
+        /// <response code="400">If coordinates or radius are invalid</response>
+        [HttpGet("nearby")]
+        [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<PaginatedResponse<AirportDto>>> SearchNearby(
+            [FromQuery] decimal lat,
+            [FromQuery] decimal lon,
+            [FromQuery] double radiusNm = 30,
+            [FromQuery] PaginationParams? pagination = null)
+        {
+            if (lat < -90 || lat > 90)
+                throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
+            if (lon < -180 || lon > 180)
+                throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+            if (radiusNm <= 0)
+                throw new ValidationException("radiusNm", "Radius must be greater than 0");
+            if (radiusNm > 500)
+                throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
+
+            pagination ??= new PaginationParams();
+            pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+            return Ok(await airportService.SearchNearby(lat, lon, radiusNm, pagination.Cursor, pagination.Limit));
+        }
+
+        /// <summary>
         /// Gets a specific airport by ICAO code or FAA identifier
         /// </summary>
         /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>

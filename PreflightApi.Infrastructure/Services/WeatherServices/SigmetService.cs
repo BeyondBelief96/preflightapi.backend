@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
@@ -14,6 +16,7 @@ public class SigmetService : ISigmetService
 {
     private readonly PreflightApiDbContext _context;
     private readonly ILogger<SigmetService> _logger;
+    private readonly GeometryFactory _geometryFactory;
 
     public SigmetService(
         PreflightApiDbContext context,
@@ -21,6 +24,7 @@ public class SigmetService : ISigmetService
     {
         _context = context;
         _logger = logger;
+        _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
     }
 
     public async Task<PaginatedResponse<SigmetDto>> GetAllSigmets(string? cursor, int limit, CancellationToken ct)
@@ -81,6 +85,72 @@ public class SigmetService : ISigmetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving SIGMETs for hazard type {HazardType}", hazardType);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<SigmetDto>> SearchAffecting(
+        decimal latitude,
+        decimal longitude,
+        string? cursor,
+        int limit,
+        CancellationToken ct)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Searching SIGMETs affecting ({Lat}, {Lon}), cursor: {Cursor}, limit: {Limit}",
+                latitude, longitude, cursor, limit);
+
+            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+
+            var query = _context.Sigmets
+                .AsNoTracking()
+                .Where(s => s.Boundary != null && s.Boundary.Intersects(point));
+
+            return await query.ToPaginatedAsync(s => s.Id, SigmetMapper.ToDto, cursor, limit, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching SIGMETs affecting ({Lat}, {Lon})", latitude, longitude);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<SigmetDto>> SearchByArea(
+        decimal minLat,
+        decimal maxLat,
+        decimal minLon,
+        decimal maxLon,
+        string? cursor,
+        int limit,
+        CancellationToken ct)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Searching SIGMETs in area ({MinLat}, {MinLon}) to ({MaxLat}, {MaxLon}), cursor: {Cursor}, limit: {Limit}",
+                minLat, minLon, maxLat, maxLon, cursor, limit);
+
+            var coordinates = new[]
+            {
+                new Coordinate((double)minLon, (double)minLat),
+                new Coordinate((double)maxLon, (double)minLat),
+                new Coordinate((double)maxLon, (double)maxLat),
+                new Coordinate((double)minLon, (double)maxLat),
+                new Coordinate((double)minLon, (double)minLat)
+            };
+            var boundingBox = _geometryFactory.CreatePolygon(coordinates);
+
+            var query = _context.Sigmets
+                .AsNoTracking()
+                .Where(s => s.Boundary != null && s.Boundary.Intersects(boundingBox));
+
+            return await query.ToPaginatedAsync(s => s.Id, SigmetMapper.ToDto, cursor, limit, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching SIGMETs in bounding box");
             throw;
         }
     }

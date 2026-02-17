@@ -50,9 +50,21 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     }
 
     /// <summary>
-    /// Gets G-AIRMETs filtered by product type
+    /// Gets G-AIRMETs filtered by product type.
     /// </summary>
-    /// <param name="product">Product type: SIERRA, TANGO, or ZULU</param>
+    /// <remarks>
+    /// <para><strong>Product Types</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><c>SIERRA</c> — IFR conditions and mountain obscuration</description></item>
+    ///   <item><description><c>TANGO</c> — turbulence, low-level wind shear, and strong surface winds</description></item>
+    ///   <item><description><c>ZULU</c> — icing and freezing level</description></item>
+    /// </list>
+    /// <code>
+    /// GET /api/v1/g-airmets/product/SIERRA
+    /// GET /api/v1/g-airmets/product/ZULU
+    /// </code>
+    /// </remarks>
+    /// <param name="product">Product type: <c>SIERRA</c>, <c>TANGO</c>, or <c>ZULU</c></param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated G-AIRMETs matching the specified product type</returns>
@@ -74,9 +86,27 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     }
 
     /// <summary>
-    /// Gets G-AIRMETs filtered by hazard type
+    /// Gets G-AIRMETs filtered by hazard type.
     /// </summary>
-    /// <param name="hazardType">Hazard type: MT_OBSC, IFR, TURB_LO, TURB_HI, LLWS, SFC_WIND, ICE, FZLVL, or M_FZLVL</param>
+    /// <remarks>
+    /// <para><strong>Hazard Types</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><c>IFR</c> — IFR conditions (ceiling below 1000 ft and/or visibility below 3 SM)</description></item>
+    ///   <item><description><c>MT_OBSC</c> — mountain obscuration</description></item>
+    ///   <item><description><c>TURB_LO</c> — low-level turbulence (below FL180)</description></item>
+    ///   <item><description><c>TURB_HI</c> — high-level turbulence (FL180 and above)</description></item>
+    ///   <item><description><c>LLWS</c> — low-level wind shear</description></item>
+    ///   <item><description><c>SFC_WIND</c> — strong surface winds (30 kt or greater)</description></item>
+    ///   <item><description><c>ICE</c> — icing</description></item>
+    ///   <item><description><c>FZLVL</c> — freezing level</description></item>
+    ///   <item><description><c>M_FZLVL</c> — multiple freezing levels</description></item>
+    /// </list>
+    /// <code>
+    /// GET /api/v1/g-airmets/hazard/ICE
+    /// GET /api/v1/g-airmets/hazard/TURB_LO
+    /// </code>
+    /// </remarks>
+    /// <param name="hazardType">Hazard type: <c>MT_OBSC</c>, <c>IFR</c>, <c>TURB_LO</c>, <c>TURB_HI</c>, <c>LLWS</c>, <c>SFC_WIND</c>, <c>ICE</c>, <c>FZLVL</c>, or <c>M_FZLVL</c></param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated G-AIRMETs matching the specified hazard type</returns>
@@ -95,5 +125,40 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await gairmetService.GetGAirmetsByHazardType(hazardTypeEnum, pagination.Cursor, pagination.Limit, ct));
+    }
+
+    /// <summary>
+    /// Finds G-AIRMETs whose geographic boundary contains the given point. Returns advisories
+    /// that affect a specific location, answering "what G-AIRMETs are active at this position?"
+    /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/g-airmets/affecting?lat=32.897&amp;lon=-97.038
+    /// </code>
+    /// </remarks>
+    /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
+    /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of G-AIRMETs affecting the given point</returns>
+    /// <response code="200">Returns the G-AIRMETs found</response>
+    /// <response code="400">If coordinates are invalid</response>
+    [HttpGet("affecting")]
+    [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> SearchAffecting(
+        [FromQuery] decimal lat,
+        [FromQuery] decimal lon,
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
+    {
+        if (lat < -90 || lat > 90)
+            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
+        if (lon < -180 || lon > 180)
+            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+
+        pagination ??= new PaginationParams();
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await gairmetService.SearchAffecting(lat, lon, pagination.Cursor, pagination.Limit, ct));
     }
 }

@@ -236,21 +236,41 @@ public class NmsApiClient : INmsApiClient
             var root = doc.RootElement;
 
             // NMS API returns response wrapped in { status, data: { geojson: [] } }
-            if (root.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("geojson", out var geojson))
+            if (root.TryGetProperty("data", out var data))
             {
-                ValidateSchemaIfNeeded(geojson);
-
-                var notams = new List<NotamDto>();
-                foreach (var feature in geojson.EnumerateArray())
+                if (data.TryGetProperty("geojson", out var geojson))
                 {
-                    var notam = JsonSerializer.Deserialize<NotamDto>(feature.GetRawText(), JsonOptions);
-                    if (notam != null)
+                    ValidateSchemaIfNeeded(geojson);
+
+                    var notams = new List<NotamDto>();
+                    foreach (var feature in geojson.EnumerateArray())
                     {
-                        notams.Add(notam);
+                        var notam = JsonSerializer.Deserialize<NotamDto>(feature.GetRawText(), JsonOptions);
+                        if (notam != null)
+                        {
+                            notams.Add(notam);
+                        }
                     }
+                    return notams;
                 }
-                return notams;
+
+                // data.aixm format: array of AIXM XML strings, each containing one AIXMBasicMessage
+                if (data.TryGetProperty("aixm", out var aixm) && aixm.ValueKind == JsonValueKind.Array)
+                {
+                    _logger.LogInformation("Parsing data.aixm response ({Count} items)", aixm.GetArrayLength());
+                    var notams = new List<NotamDto>();
+                    foreach (var xmlElement in aixm.EnumerateArray())
+                    {
+                        var xmlString = xmlElement.GetString();
+                        if (string.IsNullOrWhiteSpace(xmlString))
+                            continue;
+
+                        var notam = AixmNotamParser.ParseSingle(xmlString, _logger);
+                        if (notam != null)
+                            notams.Add(notam);
+                    }
+                    return notams;
+                }
             }
 
             // Fallback: GeoJSON FeatureCollection format

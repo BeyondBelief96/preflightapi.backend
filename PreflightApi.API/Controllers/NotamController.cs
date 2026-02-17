@@ -13,17 +13,18 @@ namespace PreflightApi.API.Controllers;
 /// Provides access to NOTAMs (Notices to Air Missions) from the FAA NOTAM Management System (NMS).
 /// NOTAMs contain time-critical aeronautical information about airport closures, airspace restrictions,
 /// runway conditions, navigation aid outages, and other flight safety hazards.
-/// Query by airport identifier, geographic radius, along a flight route, or search across all active NOTAMs.
+/// Query by airport identifier, geographic radius, along a flight route, by NOTAM number,
+/// or search across all active NOTAMs.
 /// Each NOTAM is returned as a GeoJSON Feature with geographic geometry and detailed properties
 /// including effective dates, classification, text content, and plain-English translations.
 /// </summary>
 /// <remarks>
 /// <para>
 /// NOTAM data is synced from the FAA NMS system every 3 minutes via background delta sync,
-/// with a full refresh daily.
-/// Expired NOTAMs (effective end in the past) and cancelled NOTAMs (cancellation date in the past)
-/// are automatically excluded from query results
-/// (except <c>GET id/{nmsId}</c>, which returns any NOTAM regardless of status).
+/// with a full refresh daily. Expired and cancelled NOTAMs are periodically purged from the database.
+/// Most endpoints automatically exclude expired and cancelled NOTAMs that have not yet been purged.
+/// The <c>GET id/{nmsId}</c> and <c>GET number/{notamNumber}</c> endpoints skip this filter,
+/// so they may return recently expired or cancelled NOTAMs that are still awaiting purge.
 /// Permanent NOTAMs (no expiration date) remain active indefinitely until manually cancelled.
 /// </para>
 /// </remarks>
@@ -47,6 +48,80 @@ public class NotamController(INotamService notamService)
 
     private static readonly Regex FreeTextPattern = new(@"^[ /\.\-\(\)\w]{1,80}$", RegexOptions.Compiled);
     private static readonly Regex NmsIdPattern = new(@"^\d{1,64}$", RegexOptions.Compiled);
+    private static readonly Regex NotamNumberPattern = new(@"^[A-Za-z0-9 /!\-]{1,30}$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Gets NOTAMs by NOTAM number in various formats.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Searches the database for NOTAMs matching the given number. Unlike most NOTAM endpoints,
+    /// this does <em>not</em> filter out cancelled or expired NOTAMs — so results may include
+    /// recently expired or cancelled NOTAMs that have not yet been purged.
+    /// This is <em>not</em> a historical archive; the database periodically purges stale NOTAMs.
+    /// </para>
+    ///
+    /// <para><strong>Supported Input Formats</strong></para>
+    /// <list type="table">
+    ///   <listheader><term>Format</term><description>Example</description></listheader>
+    ///   <item><term>Bare number</term><description><c>3997</c></description></item>
+    ///   <item><term>Number/year</term><description><c>3997/2025</c> or <c>3997/25</c></description></item>
+    ///   <item><term>Month-prefix</term><description><c>03/420</c></description></item>
+    ///   <item><term>Domestic</term><description><c>BNA 420</c>, <c>BNA 03/420</c>, <c>!BNA 03/420</c></description></item>
+    ///   <item><term>FDC</term><description><c>FDC 4/3997</c>, <c>!FDC 4/3997</c></description></item>
+    ///   <item><term>ICAO</term><description><c>A1234/25</c></description></item>
+    /// </list>
+    ///
+    /// <para><strong>Disambiguation</strong></para>
+    /// <para>
+    /// Bare numbers (e.g., <c>3997</c>) may match multiple NOTAMs across different accounts or years.
+    /// Include the year, account ID, or full domestic format to narrow results.
+    /// </para>
+    ///
+    /// <para><strong>Examples</strong></para>
+    /// <code>
+    /// GET /api/v1/notams/number/3997                — bare number (may return multiple matches)
+    /// GET /api/v1/notams/number/3997%2F2025          — number with year (%2F = /)
+    /// GET /api/v1/notams/number/BNA%20420             — domestic format (%20 = space)
+    /// GET /api/v1/notams/number/A1234%2F25            — ICAO format
+    /// </code>
+    /// </remarks>
+    /// <param name="notamNumber">NOTAM number in any supported format (URL-encoded)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of matching NOTAMs as GeoJSON Features</returns>
+    /// <response code="200">Returns the matching NOTAMs</response>
+    /// <response code="400">If the input cannot be parsed or is invalid</response>
+    /// <response code="404">If no NOTAMs match the given number</response>
+    [HttpGet("number/{notamNumber}")]
+    [ProducesResponseType(typeof(List<NotamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<NotamDto>>> GetNotamsByNumber(
+        string notamNumber,
+        CancellationToken ct)
+    {
+        var decoded = Uri.UnescapeDataString(notamNumber);
+
+        if (string.IsNullOrWhiteSpace(decoded))
+        {
+            throw new ValidationException("notamNumber", "NOTAM number is required");
+        }
+
+        if (!NotamNumberPattern.IsMatch(decoded))
+        {
+            throw new ValidationException("notamNumber",
+                "NOTAM number must be 1-30 characters containing only letters, digits, spaces, /, !, and hyphens");
+        }
+
+        var results = await notamService.GetNotamsByNumberAsync(decoded, ct);
+
+        if (results.Count == 0)
+        {
+            throw new NotamNotFoundException(decoded);
+        }
+
+        return Ok(results);
+    }
 
     /// <summary>
     /// Gets all active NOTAMs for a specific airport.
@@ -343,9 +418,10 @@ public class NotamController(INotamService notamService)
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Retrieves a specific NOTAM by its FAA NMS identifier. Unlike other NOTAM endpoints,
-    /// this does <em>not</em> filter out cancelled or expired NOTAMs — it returns the NOTAM regardless
-    /// of its current status, which is useful for looking up referenced or historical NOTAMs.
+    /// Retrieves a specific NOTAM by its FAA NMS identifier. Unlike most NOTAM endpoints,
+    /// this does <em>not</em> filter out cancelled or expired NOTAMs — so the result may be
+    /// a recently expired or cancelled NOTAM that has not yet been purged.
+    /// This is <em>not</em> a historical archive; the database periodically purges stale NOTAMs.
     /// </para>
     ///
     /// <para><strong>Example</strong></para>
