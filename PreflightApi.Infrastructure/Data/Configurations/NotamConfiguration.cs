@@ -34,6 +34,9 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
         builder.Property(e => e.NotamYear)
             .HasMaxLength(4);
 
+        builder.Property(e => e.Series)
+            .HasMaxLength(2);
+
         builder.Property(e => e.AccountId)
             .HasMaxLength(10);
 
@@ -56,7 +59,7 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
         builder.HasIndex(e => e.CancelationDate);
         builder.HasIndex(e => e.LastUpdated);
         builder.HasIndex(e => e.AccountId);
-        builder.HasIndex(e => new { e.NotamNumber, e.NotamYear });
+        builder.HasIndex(e => new { e.NotamNumber, e.NotamYear, e.Series });
 
         // Spatial index for geometry queries
         builder.HasIndex(e => e.Geometry)

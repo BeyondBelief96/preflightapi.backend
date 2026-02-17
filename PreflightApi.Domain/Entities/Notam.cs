@@ -56,6 +56,12 @@ public class Notam
     public string? NotamYear { get; set; }
 
     /// <summary>
+    /// ICAO series letter (e.g., "A", "B", "C")
+    /// </summary>
+    [Column("series", TypeName = "varchar(2)")]
+    public string? Series { get; set; }
+
+    /// <summary>
     /// Accountability code (e.g., "BNA", "FDC")
     /// </summary>
     [Column("account_id", TypeName = "varchar(10)")]

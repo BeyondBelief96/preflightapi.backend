@@ -141,6 +141,7 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
             NotamType = detail?.Type,
             NotamNumber = NotamDeltaSyncCronService.NormalizeNotamNumber(detail?.Number),
             NotamYear = detail?.Year,
+            Series = detail?.Series,
             AccountId = detail?.AccountId,
             AirportName = detail?.AirportName,
             EffectiveStart = ParseDateTime(detail?.EffectiveStart),
@@ -162,6 +163,7 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
         existing.NotamType = updated.NotamType;
         existing.NotamNumber = updated.NotamNumber;
         existing.NotamYear = updated.NotamYear;
+        existing.Series = updated.Series;
         existing.AccountId = updated.AccountId;
         existing.AirportName = updated.AirportName;
         existing.EffectiveStart = updated.EffectiveStart;

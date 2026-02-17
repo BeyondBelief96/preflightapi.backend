@@ -156,8 +156,8 @@ public class NotamService : INotamService
             throw new ArgumentException($"Could not parse NOTAM number: '{notamNumber}'", nameof(notamNumber));
         }
 
-        _logger.LogInformation("Searching NOTAMs by number: {Number}, Year: {Year}, AccountId: {AccountId}, Location: {Location}",
-            parsed.Number, parsed.Year, parsed.AccountId, parsed.Location);
+        _logger.LogInformation("Searching NOTAMs by number: {Number}, Year: {Year}, Series: {Series}, AccountId: {AccountId}, Location: {Location}",
+            parsed.Number, parsed.Year, parsed.Series, parsed.AccountId, parsed.Location);
 
         var query = _dbContext.Notams.AsNoTracking()
             .Where(n => n.NotamNumber == parsed.Number);
@@ -165,6 +165,11 @@ public class NotamService : INotamService
         if (parsed.Year != null)
         {
             query = query.Where(n => n.NotamYear == parsed.Year);
+        }
+
+        if (parsed.Series != null)
+        {
+            query = query.Where(n => n.Series == parsed.Series);
         }
 
         if (parsed.AccountId != null)

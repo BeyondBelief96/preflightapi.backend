@@ -175,6 +175,7 @@ public class NotamNumberParserTests
         result.Should().NotBeNull();
         result!.Number.Should().Be("1234");
         result.Year.Should().Be("2025");
+        result.Series.Should().Be("A");
         result.AccountId.Should().BeNull();
     }
 
@@ -186,6 +187,7 @@ public class NotamNumberParserTests
         result.Should().NotBeNull();
         result!.Number.Should().Be("5678");
         result.Year.Should().Be("2024");
+        result.Series.Should().Be("B");
     }
 
     #endregion

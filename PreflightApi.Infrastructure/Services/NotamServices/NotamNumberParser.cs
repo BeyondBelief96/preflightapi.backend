@@ -37,12 +37,14 @@ public static partial class NotamNumberParser
         var icaoMatch = IcaoRegex().Match(trimmed);
         if (icaoMatch.Success)
         {
-            var number = icaoMatch.Groups[1].Value;
-            var yearStr = icaoMatch.Groups[2].Value;
+            var series = icaoMatch.Groups[1].Value.ToUpperInvariant();
+            var number = icaoMatch.Groups[2].Value;
+            var yearStr = icaoMatch.Groups[3].Value;
             return new ParsedNotamNumber
             {
                 Number = number,
-                Year = NormalizeYear(yearStr)
+                Year = NormalizeYear(yearStr),
+                Series = series
             };
         }
 
@@ -121,7 +123,7 @@ public static partial class NotamNumberParser
     }
 
     // ICAO: single letter + digits / 2-or-4-digit year
-    [GeneratedRegex(@"^[A-Za-z](\d+)/(\d{2,4})$")]
+    [GeneratedRegex(@"^([A-Za-z])(\d+)/(\d{2,4})$")]
     private static partial Regex IcaoRegex();
 
     // Account prefix: 2-4 letters, space, then number part, optional trailing location
@@ -157,4 +159,7 @@ public record ParsedNotamNumber
 
     /// <summary>Location code if provided (e.g., "JWN")</summary>
     public string? Location { get; init; }
+
+    /// <summary>ICAO series letter if provided (e.g., "A")</summary>
+    public string? Series { get; init; }
 }
