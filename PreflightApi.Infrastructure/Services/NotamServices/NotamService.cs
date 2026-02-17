@@ -85,8 +85,11 @@ public class NotamService : INotamService
         var point = GeometryFactory.CreatePoint(new Coordinate(lon, lat));
         var radiusMeters = radiusNm * 1852.0;
 
-        var query = _dbContext.Notams.AsNoTracking()
-            .Where(n => n.Geometry != null && n.Geometry.IsWithinDistance(point, radiusMeters));
+        // Notam.Geometry is geometry(Geometry, 4326), so ST_DWithin uses degrees by default.
+        // Cast to geography so the distance parameter is interpreted in meters.
+        var query = _dbContext.Notams
+            .FromSqlInterpolated($"SELECT * FROM notams WHERE geometry IS NOT NULL AND ST_DWithin(geometry::geography, {point}::geography, {radiusMeters})")
+            .AsNoTracking();
 
         query = ApplyActiveFilter(query);
         query = ApplyFilters(query, filters);

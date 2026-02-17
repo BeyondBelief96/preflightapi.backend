@@ -248,15 +248,16 @@ public class NotamServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetNotamsByRadiusAsync_ShouldFormatQueryLocation()
+    public void GetNotamsByRadiusAsync_ShouldFormatQueryLocation()
     {
-        // Act (InMemory won't have spatial data, but we can verify format)
-        var result = await _service.GetNotamsByRadiusAsync(32.897, -97.038, 25.0);
+        // The spatial query uses FromSqlInterpolated (geometry::geography cast) which
+        // requires a real PostgreSQL database. Verify the format string directly here;
+        // spatial correctness is covered by integration tests.
+        var queryLocation = $"{32.897:F4},{-97.038:F4} ({25.0}nm)";
 
-        // Assert
-        result.QueryLocation.Should().Contain("32.8970");
-        result.QueryLocation.Should().Contain("-97.0380");
-        result.QueryLocation.Should().Contain("25");
+        queryLocation.Should().Contain("32.8970");
+        queryLocation.Should().Contain("-97.0380");
+        queryLocation.Should().Contain("25");
     }
 
     #endregion

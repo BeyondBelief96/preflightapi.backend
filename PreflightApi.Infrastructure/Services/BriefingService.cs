@@ -228,8 +228,8 @@ public class BriefingService : IBriefingService
     /// <summary>
     /// Fetches NOTAMs in two parts mirroring a real preflight briefing:
     /// 1. Airport NOTAMs — by location identifier for the waypoint airports only
-    /// 2. En-route NOTAMs — FDC classification (TFRs, airspace changes) within the spatial corridor
-    /// This avoids pulling in thousands of aerodrome NOTAMs for every small airport along the route.
+    /// 2. En-route NOTAMs — all NOTAMs with geometry within the spatial corridor (TFRs, airspace, etc.)
+    /// Deduplication via NmsId ensures NOTAMs returned by both queries appear only once.
     /// </summary>
     private async Task<List<NotamDto>> FindNotamsForBriefingAsync(
         LineString routeLine, double corridorMeters,
@@ -260,11 +260,13 @@ public class BriefingService : IBriefingService
             }
         }
 
-        // 2. En-route NOTAMs: FDC (TFRs, airspace restrictions) within corridor
+        // 2. En-route NOTAMs: all NOTAMs with geometry within the corridor
+        //    Notam.Geometry is geometry(Geometry, 4326), so ST_DWithin uses degrees by default.
+        //    Cast to geography so the distance parameter is interpreted in meters.
+        //    Dedup with seenIds ensures airport NOTAMs from step 1 aren't repeated.
         var enrouteNotams = await _context.Notams
+            .FromSqlInterpolated($"SELECT * FROM notams WHERE geometry IS NOT NULL AND ST_DWithin(geometry::geography, {routeLine}::geography, {corridorMeters})")
             .AsNoTracking()
-            .Where(n => n.Geometry != null && n.Geometry.IsWithinDistance(routeLine, corridorMeters))
-            .Where(n => n.Classification == "FDC")
             .Where(n => n.CancelationDate == null || n.CancelationDate > now)
             .Where(n => n.EffectiveEnd == null || n.EffectiveEnd > now)
             .ToListAsync(ct);

@@ -9,7 +9,7 @@ namespace PreflightApi.API.Controllers;
 /// <summary>
 /// Provides composite weather briefings for flight routes — a single endpoint that returns
 /// METARs, TAFs, PIREPs, SIGMETs, G-AIRMETs, and NOTAMs for all airports and airspace
-/// along a planned route of flight. Similar to a standard weather briefing from 1800wxbrief.
+/// along a planned route of flight.
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]
