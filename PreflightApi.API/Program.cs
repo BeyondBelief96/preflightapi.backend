@@ -139,6 +139,9 @@ builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();
 // NOTAM Services (DB-backed, synced by Azure Functions)
 builder.Services.AddScoped<INotamService, NotamService>();
 
+// Briefing Services
+builder.Services.AddScoped<IBriefingService, BriefingService>();
+
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
