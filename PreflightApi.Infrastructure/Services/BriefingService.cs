@@ -202,7 +202,7 @@ public class BriefingService : IBriefingService
         // use explicit ::geography casts to avoid ambiguous ST_DWithin overload resolution.
         var pireps = await _context.Pireps
             .FromSqlInterpolated(
-                $"SELECT * FROM pireps WHERE location IS NOT NULL AND ST_DWithin(location::geography, {routeLine}::geography, {corridorMeters})")
+                $"SELECT * FROM pirep WHERE location IS NOT NULL AND ST_DWithin(location::geography, {routeLine}::geography, {corridorMeters})")
             .AsNoTracking()
             .ToListAsync(ct);
 
