@@ -130,8 +130,9 @@ namespace PreflightApi.Infrastructure.Services
                 var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
 
                 var query = _context.Airports
-                    .AsNoTracking()
-                    .Where(a => a.Location != null && a.Location.IsWithinDistance(point, radiusMeters));
+                    .FromSqlInterpolated(
+                        $"SELECT * FROM airports WHERE location IS NOT NULL AND ST_DWithin(location::geography, {point}::geography, {radiusMeters})")
+                    .AsNoTracking();
 
                 return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
             }

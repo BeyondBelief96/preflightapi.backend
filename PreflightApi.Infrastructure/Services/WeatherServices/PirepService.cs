@@ -60,8 +60,9 @@ public class PirepService : IPirepService
             var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
 
             var query = _context.Pireps
-                .AsNoTracking()
-                .Where(p => p.Location != null && p.Location.IsWithinDistance(point, radiusMeters));
+                .FromSqlInterpolated(
+                    $"SELECT * FROM pirep WHERE location IS NOT NULL AND ST_DWithin(location::geography, {point}::geography, {radiusMeters})")
+                .AsNoTracking();
 
             return await query.ToPaginatedAsync(p => p.Id, PirepMapper.ToDto, cursor, limit, ct);
         }

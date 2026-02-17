@@ -54,6 +54,9 @@ public class TafService : ITafService
 
     public async Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents)
     {
+        if (icaoCodesOrIdents.Length > 100)
+            throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
+
         var upperCodes = icaoCodesOrIdents
             .Select(c => c.ToUpperInvariant())
             .Distinct()
@@ -61,6 +64,7 @@ public class TafService : ITafService
 
         // Query 1: Direct StationId matches
         var directMatches = await _dbContext.Tafs
+            .AsNoTracking()
             .Where(t => t.StationId != null && upperCodes.Contains(t.StationId))
             .ToListAsync();
 
@@ -79,6 +83,7 @@ public class TafService : ITafService
 
         // Query 2: Resolve unmatched codes via Airports table
         var airports = await _dbContext.Airports
+            .AsNoTracking()
             .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
             .ToListAsync();
 
@@ -97,6 +102,7 @@ public class TafService : ITafService
 
         // Query 3: Fetch TAFs for resolved station IDs
         var resolvedMatches = await _dbContext.Tafs
+            .AsNoTracking()
             .Where(t => t.StationId != null && resolvedStationIds.Contains(t.StationId))
             .ToListAsync();
 

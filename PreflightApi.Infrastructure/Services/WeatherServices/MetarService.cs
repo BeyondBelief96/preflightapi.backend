@@ -80,6 +80,9 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
         public async Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents)
         {
+            if (icaoCodesOrIdents.Length > 100)
+                throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
+
             var upperCodes = icaoCodesOrIdents
                 .Select(c => c.ToUpperInvariant())
                 .Distinct()
@@ -87,6 +90,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
             // Query 1: Direct StationId matches
             var directMatches = await _context.Metars
+                .AsNoTracking()
                 .Where(m => m.StationId != null && upperCodes.Contains(m.StationId))
                 .ToListAsync();
 
@@ -105,6 +109,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
             // Query 2: Resolve unmatched codes via Airports table
             var airports = await _context.Airports
+                .AsNoTracking()
                 .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
                 .ToListAsync();
 
@@ -123,6 +128,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
             // Query 3: Fetch METARs for resolved station IDs
             var resolvedMatches = await _context.Metars
+                .AsNoTracking()
                 .Where(m => m.StationId != null && resolvedStationIds.Contains(m.StationId))
                 .ToListAsync();
 

@@ -104,6 +104,13 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     /// Finds SIGMETs that intersect a geographic bounding box. Returns advisories whose
     /// boundary overlaps the specified area, useful for checking conditions across a flight route.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Note:</strong> The bounding box must not cross the antimeridian (i.e., <c>minLon</c>
+    /// must be less than <c>maxLon</c>). Antimeridian-crossing queries are not supported.
+    /// This endpoint covers domestic US SIGMETs within the contiguous United States.
+    /// </para>
+    /// </remarks>
     /// <param name="minLat">Minimum latitude (-90 to 90)</param>
     /// <param name="maxLat">Maximum latitude (-90 to 90)</param>
     /// <param name="minLon">Minimum longitude (-180 to 180)</param>
@@ -112,7 +119,7 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of SIGMETs intersecting the bounding box</returns>
     /// <response code="200">Returns the SIGMETs found</response>
-    /// <response code="400">If coordinates are invalid</response>
+    /// <response code="400">If coordinates are invalid or the bounding box crosses the antimeridian</response>
     [HttpGet("by-area")]
     [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
