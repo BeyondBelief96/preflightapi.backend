@@ -46,7 +46,7 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     /// </summary>
     /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
     /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
-    /// <param name="radiusNm">Search radius in nautical miles (default 50)</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 50, max 500)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of PIREPs within the search radius</returns>
@@ -68,6 +68,8 @@ public class PirepController(IPirepService pirepService, IAirportService airport
             throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
         if (radiusNm <= 0)
             throw new ValidationException("radiusNm", "Radius must be greater than 0");
+        if (radiusNm > 500)
+            throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
@@ -79,7 +81,7 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     /// FAA identifier, then returns pilot reports within the specified radius.
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
-    /// <param name="radiusNm">Search radius in nautical miles (default 50)</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 50, max 500)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of PIREPs within the search radius of the airport</returns>
@@ -98,6 +100,8 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     {
         if (radiusNm <= 0)
             throw new ValidationException("radiusNm", "Radius must be greater than 0");
+        if (radiusNm > 500)
+            throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
 
         var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
 

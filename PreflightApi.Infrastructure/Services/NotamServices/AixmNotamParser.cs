@@ -22,12 +22,12 @@ public static partial class AixmNotamParser
     private const string NsFnse = "http://www.aixm.aero/schema/5.1/extensions/FAA/FNSE";
     private const string NsHtml = "http://www.w3.org/1999/xhtml";
 
-    private static bool _schemaValidated;
+    private static int _schemaValidated; // 0 = not validated, 1 = validated
 
     /// <summary>
     /// Resets the schema validation flag. Used for testing to ensure validation runs on the next parse call.
     /// </summary>
-    public static void ResetSchemaValidation() => _schemaValidated = false;
+    public static void ResetSchemaValidation() => Interlocked.Exchange(ref _schemaValidated, 0);
 
     public static List<NotamDto> Parse(string xml, ILogger? logger = null)
     {
@@ -134,10 +134,8 @@ public static partial class AixmNotamParser
 
     private static void ValidateSchemaIfNeeded(XmlNode member, XmlNamespaceManager nsMgr, ILogger? logger)
     {
-        if (_schemaValidated)
+        if (Interlocked.CompareExchange(ref _schemaValidated, 1, 0) != 0)
             return;
-
-        _schemaValidated = true;
 
         var validationResult = AixmSchemaValidator.ValidateMember(member, nsMgr);
         if (!validationResult.HasDrift)

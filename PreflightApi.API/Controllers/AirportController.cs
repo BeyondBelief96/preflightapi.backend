@@ -73,7 +73,7 @@ namespace PreflightApi.API.Controllers
         /// </remarks>
         /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
         /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
-        /// <param name="radiusNm">Search radius in nautical miles (default 30)</param>
+        /// <param name="radiusNm">Search radius in nautical miles (default 30, max 500)</param>
         /// <param name="pagination">Cursor-based pagination parameters</param>
         /// <returns>Paginated list of airports within the search radius</returns>
         /// <response code="200">Returns the nearby airports</response>
@@ -93,6 +93,8 @@ namespace PreflightApi.API.Controllers
                 throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
             if (radiusNm <= 0)
                 throw new ValidationException("radiusNm", "Radius must be greater than 0");
+            if (radiusNm > 500)
+                throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
 
             pagination ??= new PaginationParams();
             pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
