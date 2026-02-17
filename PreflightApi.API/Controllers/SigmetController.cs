@@ -69,4 +69,72 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await sigmetService.GetSigmetsByHazardType(hazardTypeEnum, pagination.Cursor, pagination.Limit, ct));
     }
+
+    /// <summary>
+    /// Finds SIGMETs whose geographic boundary contains the given point. Returns advisories
+    /// that affect a specific location, answering "what SIGMETs are active at this position?"
+    /// </summary>
+    /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
+    /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of SIGMETs affecting the given point</returns>
+    /// <response code="200">Returns the SIGMETs found</response>
+    /// <response code="400">If coordinates are invalid</response>
+    [HttpGet("affecting")]
+    [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResponse<SigmetDto>>> SearchAffecting(
+        [FromQuery] decimal lat,
+        [FromQuery] decimal lon,
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
+    {
+        if (lat < -90 || lat > 90)
+            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
+        if (lon < -180 || lon > 180)
+            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+
+        pagination ??= new PaginationParams();
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await sigmetService.SearchAffecting(lat, lon, pagination.Cursor, pagination.Limit, ct));
+    }
+
+    /// <summary>
+    /// Finds SIGMETs that intersect a geographic bounding box. Returns advisories whose
+    /// boundary overlaps the specified area, useful for checking conditions across a flight route.
+    /// </summary>
+    /// <param name="minLat">Minimum latitude (-90 to 90)</param>
+    /// <param name="maxLat">Maximum latitude (-90 to 90)</param>
+    /// <param name="minLon">Minimum longitude (-180 to 180)</param>
+    /// <param name="maxLon">Maximum longitude (-180 to 180)</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of SIGMETs intersecting the bounding box</returns>
+    /// <response code="200">Returns the SIGMETs found</response>
+    /// <response code="400">If coordinates are invalid</response>
+    [HttpGet("by-area")]
+    [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResponse<SigmetDto>>> SearchByArea(
+        [FromQuery] decimal minLat,
+        [FromQuery] decimal maxLat,
+        [FromQuery] decimal minLon,
+        [FromQuery] decimal maxLon,
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
+    {
+        if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90)
+            throw new ValidationException("lat", "Latitude values must be between -90 and 90 degrees");
+        if (minLon < -180 || minLon > 180 || maxLon < -180 || maxLon > 180)
+            throw new ValidationException("lon", "Longitude values must be between -180 and 180 degrees");
+        if (minLat >= maxLat)
+            throw new ValidationException("lat", "minLat must be less than maxLat");
+        if (minLon >= maxLon)
+            throw new ValidationException("lon", "minLon must be less than maxLon");
+
+        pagination ??= new PaginationParams();
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await sigmetService.SearchByArea(minLat, maxLat, minLon, maxLon, pagination.Cursor, pagination.Limit, ct));
+    }
 }

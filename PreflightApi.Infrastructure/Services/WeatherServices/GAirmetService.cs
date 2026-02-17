@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
@@ -14,6 +16,7 @@ public class GAirmetService : IGAirmetService
 {
     private readonly PreflightApiDbContext _context;
     private readonly ILogger<GAirmetService> _logger;
+    private readonly GeometryFactory _geometryFactory;
 
     public GAirmetService(
         PreflightApiDbContext context,
@@ -21,6 +24,7 @@ public class GAirmetService : IGAirmetService
     {
         _context = context;
         _logger = logger;
+        _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
     }
 
     public async Task<PaginatedResponse<GAirmetDto>> GetAllGAirmets(string? cursor, int limit, CancellationToken ct)
@@ -75,6 +79,34 @@ public class GAirmetService : IGAirmetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving G-AIRMETs for hazard type {HazardType}", hazardType);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<GAirmetDto>> SearchAffecting(
+        decimal latitude,
+        decimal longitude,
+        string? cursor,
+        int limit,
+        CancellationToken ct)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Searching G-AIRMETs affecting ({Lat}, {Lon}), cursor: {Cursor}, limit: {Limit}",
+                latitude, longitude, cursor, limit);
+
+            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+
+            var query = _context.GAirmets
+                .AsNoTracking()
+                .Where(g => g.Boundary != null && g.Boundary.Intersects(point));
+
+            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching G-AIRMETs affecting ({Lat}, {Lon})", latitude, longitude);
             throw;
         }
     }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.ValueObjects.GAirmets;
 
 namespace PreflightApi.Domain.Entities
@@ -88,5 +89,12 @@ namespace PreflightApi.Domain.Entities
         /// </summary>
         [Column("area", TypeName = "jsonb")]
         public GAirmetArea? Area { get; set; }
+
+        /// <summary>
+        /// PostGIS geometry computed from Area JSONB via database trigger.
+        /// Polygon representing the geographic boundary of the affected area.
+        /// </summary>
+        [Column("boundary", TypeName = "geometry(Geometry, 4326)")]
+        public Geometry? Boundary { get; set; }
     }
 }

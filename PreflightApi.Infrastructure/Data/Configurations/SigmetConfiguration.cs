@@ -21,6 +21,13 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             builder.HasIndex(e => e.ValidTimeTo);
             builder.HasIndex(e => e.SigmetType);
 
+            // Spatial column and index
+            builder.Property(e => e.Boundary)
+                .HasColumnType("geometry(Geometry, 4326)");
+
+            builder.HasIndex(e => e.Boundary)
+                .HasMethod("gist");
+
             builder.Property(x => x.Altitude)
                 .HasConversion(
                     v => v == null ? "{}" : JsonSerializer.Serialize(v, jsonOptions),

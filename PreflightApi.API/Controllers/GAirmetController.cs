@@ -96,4 +96,34 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await gairmetService.GetGAirmetsByHazardType(hazardTypeEnum, pagination.Cursor, pagination.Limit, ct));
     }
+
+    /// <summary>
+    /// Finds G-AIRMETs whose geographic boundary contains the given point. Returns advisories
+    /// that affect a specific location, answering "what G-AIRMETs are active at this position?"
+    /// </summary>
+    /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
+    /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
+    /// <param name="pagination">Cursor-based pagination parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of G-AIRMETs affecting the given point</returns>
+    /// <response code="200">Returns the G-AIRMETs found</response>
+    /// <response code="400">If coordinates are invalid</response>
+    [HttpGet("affecting")]
+    [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> SearchAffecting(
+        [FromQuery] decimal lat,
+        [FromQuery] decimal lon,
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
+    {
+        if (lat < -90 || lat > 90)
+            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
+        if (lon < -180 || lon > 180)
+            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+
+        pagination ??= new PaginationParams();
+        pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
+        return Ok(await gairmetService.SearchAffecting(lat, lon, pagination.Cursor, pagination.Limit, ct));
+    }
 }

@@ -9,4 +9,5 @@ public interface IGAirmetService
     Task<PaginatedResponse<GAirmetDto>> GetAllGAirmets(string? cursor, int limit, CancellationToken ct);
     Task<PaginatedResponse<GAirmetDto>> GetGAirmetsByProduct(GAirmetProduct product, string? cursor, int limit, CancellationToken ct);
     Task<PaginatedResponse<GAirmetDto>> GetGAirmetsByHazardType(GAirmetHazardType hazardType, string? cursor, int limit, CancellationToken ct);
+    Task<PaginatedResponse<GAirmetDto>> SearchAffecting(decimal latitude, decimal longitude, string? cursor, int limit, CancellationToken ct);
 }

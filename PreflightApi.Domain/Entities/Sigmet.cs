@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.ValueObjects.Sigmets;
 
 namespace PreflightApi.Domain.Entities
@@ -64,5 +65,12 @@ namespace PreflightApi.Domain.Entities
         /// </summary>
         [Column("area", TypeName = "jsonb")]
         public List<SigmetArea>? Areas { get; set; }
+
+        /// <summary>
+        /// PostGIS geometry computed from Areas JSONB via database trigger.
+        /// Polygon or MultiPolygon representing the union of all affected areas.
+        /// </summary>
+        [Column("boundary", TypeName = "geometry(Geometry, 4326)")]
+        public Geometry? Boundary { get; set; }
     }
 }
