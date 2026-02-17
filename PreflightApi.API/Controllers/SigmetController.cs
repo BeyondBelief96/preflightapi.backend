@@ -47,9 +47,23 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     }
 
     /// <summary>
-    /// Gets SIGMETs filtered by hazard type
+    /// Gets SIGMETs filtered by hazard type.
     /// </summary>
-    /// <param name="hazardType">Hazard type: CONVECTIVE, ICE, TURB, IFR, or MTN_OBSCN</param>
+    /// <remarks>
+    /// <para><strong>Hazard Types</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><c>CONVECTIVE</c> — thunderstorms and convective activity</description></item>
+    ///   <item><description><c>ICE</c> — severe icing</description></item>
+    ///   <item><description><c>TURB</c> — severe turbulence</description></item>
+    ///   <item><description><c>IFR</c> — widespread IFR conditions</description></item>
+    ///   <item><description><c>MTN_OBSCN</c> — mountain obscuration</description></item>
+    /// </list>
+    /// <code>
+    /// GET /api/v1/sigmets/hazard/CONVECTIVE
+    /// GET /api/v1/sigmets/hazard/TURB
+    /// </code>
+    /// </remarks>
+    /// <param name="hazardType">Hazard type: <c>CONVECTIVE</c>, <c>ICE</c>, <c>TURB</c>, <c>IFR</c>, or <c>MTN_OBSCN</c></param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated SIGMETs matching the specified hazard type</returns>
@@ -74,6 +88,11 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     /// Finds SIGMETs whose geographic boundary contains the given point. Returns advisories
     /// that affect a specific location, answering "what SIGMETs are active at this position?"
     /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/sigmets/affecting?lat=32.897&amp;lon=-97.038
+    /// </code>
+    /// </remarks>
     /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
     /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
@@ -110,6 +129,9 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     /// must be less than <c>maxLon</c>). Antimeridian-crossing queries are not supported.
     /// This endpoint covers domestic US SIGMETs within the contiguous United States.
     /// </para>
+    /// <code>
+    /// GET /api/v1/sigmets/by-area?minLat=30&amp;maxLat=35&amp;minLon=-100&amp;maxLon=-95
+    /// </code>
     /// </remarks>
     /// <param name="minLat">Minimum latitude (-90 to 90)</param>
     /// <param name="maxLat">Maximum latitude (-90 to 90)</param>

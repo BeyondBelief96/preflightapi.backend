@@ -23,9 +23,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     : ControllerBase
 {
     /// <summary>
-    /// Gets airspaces filtered by airspace classes
+    /// Gets controlled airspaces filtered by airspace class (B, C, or D).
     /// </summary>
-    /// <param name="classes">Comma-separated airspace classes (e.g., B,C,D)</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/airspaces/by-classes?classes=B        — all Class B airspaces
+    /// GET /api/v1/airspaces/by-classes?classes=B,C,D    — Class B, C, and D airspaces
+    /// </code>
+    /// </remarks>
+    /// <param name="classes">Comma-separated airspace classes: <c>B</c>, <c>C</c>, or <c>D</c></param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of airspaces matching the specified classes</returns>
     /// <response code="200">Returns the paginated airspaces</response>
@@ -46,9 +52,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets airspaces filtered by city names
+    /// Gets controlled airspaces filtered by city name.
     /// </summary>
-    /// <param name="cities">Comma-separated city names</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/airspaces/by-cities?cities=Dallas          — airspaces for Dallas
+    /// GET /api/v1/airspaces/by-cities?cities=Dallas,Houston   — multiple cities
+    /// </code>
+    /// </remarks>
+    /// <param name="cities">Comma-separated city names (e.g., <c>Dallas</c> or <c>Dallas,Houston</c>)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of airspaces in the specified cities</returns>
     /// <response code="200">Returns the paginated airspaces</response>
@@ -69,9 +81,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets airspaces filtered by state codes
+    /// Gets controlled airspaces filtered by two-letter state code.
     /// </summary>
-    /// <param name="states">Comma-separated state codes (e.g., TX,OK)</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/airspaces/by-states?states=TX       — airspaces in Texas
+    /// GET /api/v1/airspaces/by-states?states=TX,OK    — airspaces in Texas and Oklahoma
+    /// </code>
+    /// </remarks>
+    /// <param name="states">Comma-separated two-letter state codes (e.g., <c>TX</c> or <c>TX,OK</c>)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of airspaces in the specified states</returns>
     /// <response code="200">Returns the paginated airspaces</response>
@@ -92,9 +110,23 @@ public class AirspaceController(IAirspaceService airspaceService)
     }
 
     /// <summary>
-    /// Gets special use airspaces filtered by type codes
+    /// Gets special use airspaces filtered by type code.
     /// </summary>
-    /// <param name="typeCodes">Comma-separated type codes (e.g., R,P,W for restricted, prohibited, warning)</param>
+    /// <remarks>
+    /// <para><strong>Type Codes</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><c>R</c> — Restricted</description></item>
+    ///   <item><description><c>P</c> — Prohibited</description></item>
+    ///   <item><description><c>W</c> — Warning</description></item>
+    ///   <item><description><c>A</c> — Alert</description></item>
+    ///   <item><description><c>M</c> — MOA (Military Operations Area)</description></item>
+    /// </list>
+    /// <code>
+    /// GET /api/v1/airspaces/special-use/by-type-codes?typeCodes=R,P    — restricted and prohibited
+    /// GET /api/v1/airspaces/special-use/by-type-codes?typeCodes=M      — MOAs only
+    /// </code>
+    /// </remarks>
+    /// <param name="typeCodes">Comma-separated type codes: <c>R</c> (restricted), <c>P</c> (prohibited), <c>W</c> (warning), <c>A</c> (alert), <c>M</c> (MOA)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of special use airspaces matching the type codes</returns>
     /// <response code="200">Returns the paginated special use airspaces</response>
@@ -147,7 +179,12 @@ public class AirspaceController(IAirspaceService airspaceService)
     /// AirspaceGlobalIds returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
     /// to retrieve full details for airspaces along a planned route.
     /// </summary>
-    /// <param name="globalIds">Comma-separated global IDs (e.g., from the navlog response's AirspaceGlobalIds)</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/airspaces/by-global-ids?globalIds={guid1},{guid2}
+    /// </code>
+    /// </remarks>
+    /// <param name="globalIds">Comma-separated global IDs (GUIDs from the navlog response's <c>AirspaceGlobalIds</c> field)</param>
     /// <returns>Airspaces matching the specified global IDs with full boundary geometry and altitude data</returns>
     /// <response code="200">Returns the matching airspaces</response>
     /// <response code="400">If the global IDs parameter is empty</response>
@@ -169,7 +206,12 @@ public class AirspaceController(IAirspaceService airspaceService)
     /// SpecialUseAirspaceGlobalIds returned by the navigation log endpoint (<c>POST /api/v1/navlog/calculate</c>)
     /// to retrieve full details for special use airspaces along a planned route.
     /// </summary>
-    /// <param name="globalIds">Comma-separated global IDs (e.g., from the navlog response's SpecialUseAirspaceGlobalIds)</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/airspaces/special-use/by-global-ids?globalIds={guid1},{guid2}
+    /// </code>
+    /// </remarks>
+    /// <param name="globalIds">Comma-separated global IDs (GUIDs from the navlog response's <c>SpecialUseAirspaceGlobalIds</c> field)</param>
     /// <returns>Special use airspaces matching the specified global IDs with full boundary geometry and altitude data</returns>
     /// <response code="200">Returns the matching special use airspaces</response>
     /// <response code="400">If the global IDs parameter is empty</response>

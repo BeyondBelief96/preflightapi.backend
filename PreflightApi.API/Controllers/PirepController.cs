@@ -44,6 +44,12 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     /// Searches for PIREPs near a geographic point. Returns pilot reports within the specified
     /// radius of the given coordinates, useful for checking conditions along a flight route.
     /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/pireps/nearby?lat=32.897&amp;lon=-97.038                    — default 50 NM radius
+    /// GET /api/v1/pireps/nearby?lat=32.897&amp;lon=-97.038&amp;radiusNm=100    — custom radius
+    /// </code>
+    /// </remarks>
     /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
     /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
     /// <param name="radiusNm">Search radius in nautical miles (default 50, max 500)</param>
@@ -80,6 +86,12 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     /// Searches for PIREPs near an airport. Looks up the airport coordinates by ICAO code or
     /// FAA identifier, then returns pilot reports within the specified radius.
     /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/pireps/airport/KDFW                  — default 50 NM radius
+    /// GET /api/v1/pireps/airport/DFW?radiusNm=100      — custom radius with FAA identifier
+    /// </code>
+    /// </remarks>
     /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
     /// <param name="radiusNm">Search radius in nautical miles (default 50, max 500)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>

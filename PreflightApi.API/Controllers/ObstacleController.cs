@@ -23,11 +23,18 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     : ControllerBase
 {
     /// <summary>
-    /// Searches for obstacles near an airport
+    /// Searches for obstacles near an airport. Looks up the airport coordinates, then finds
+    /// obstacles within the specified radius. Use <c>minHeightAgl</c> to filter out low obstacles.
     /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/obstacles/airport/KDFW                              — default 10 NM radius
+    /// GET /api/v1/obstacles/airport/DFW?radiusNm=5&amp;minHeightAgl=200  — towers 200+ ft AGL within 5 NM
+    /// </code>
+    /// </remarks>
     /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
-    /// <param name="radiusNm">Search radius in nautical miles (default 10)</param>
-    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 10, must be greater than 0)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet — only return obstacles at or above this height</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of obstacles within the search radius of the airport</returns>
     /// <response code="200">Returns the obstacles found</response>
@@ -57,12 +64,18 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     }
 
     /// <summary>
-    /// Searches for obstacles near a geographic point
+    /// Searches for obstacles near a geographic point.
     /// </summary>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/obstacles/search?lat=32.897&amp;lon=-97.038                              — default 5 NM radius
+    /// GET /api/v1/obstacles/search?lat=32.897&amp;lon=-97.038&amp;radiusNm=10&amp;minHeightAgl=500  — tall obstacles within 10 NM
+    /// </code>
+    /// </remarks>
     /// <param name="lat">Latitude in decimal degrees (-90 to 90)</param>
     /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
-    /// <param name="radiusNm">Search radius in nautical miles (default 5)</param>
-    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <param name="radiusNm">Search radius in nautical miles (default 5, must be greater than 0)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet — only return obstacles at or above this height</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of obstacles within the search radius</returns>
     /// <response code="200">Returns the obstacles found</response>
@@ -90,10 +103,16 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     }
 
     /// <summary>
-    /// Gets obstacles in a specific state
+    /// Gets obstacles in a specific state.
     /// </summary>
-    /// <param name="stateCode">Two-letter state code (e.g., TX, CA)</param>
-    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/obstacles/state/TX                      — all obstacles in Texas
+    /// GET /api/v1/obstacles/state/TX?minHeightAgl=1000    — obstacles 1000+ ft AGL in Texas
+    /// </code>
+    /// </remarks>
+    /// <param name="stateCode">Two-letter state code (e.g., <c>TX</c>, <c>CA</c>)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet — only return obstacles at or above this height</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of obstacles in the state</returns>
     /// <response code="200">Returns the obstacles</response>
@@ -115,10 +134,15 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     }
 
     /// <summary>
-    /// Gets an obstacle by its OAS number
+    /// Gets a single obstacle by its OAS (Obstacle Assessment Surface) number.
     /// </summary>
-    /// <param name="oasNumber">Obstacle Assessment Surface number</param>
-    /// <returns>The obstacle details</returns>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/obstacles/12-345678
+    /// </code>
+    /// </remarks>
+    /// <param name="oasNumber">Obstacle Assessment Surface number (e.g., <c>12-345678</c>)</param>
+    /// <returns>The obstacle details including type, height (AGL and MSL), lighting, coordinates, and marking</returns>
     /// <response code="200">Returns the obstacle</response>
     /// <response code="404">If the obstacle is not found</response>
     [HttpGet("{oasNumber}")]
@@ -169,17 +193,27 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     }
 
     /// <summary>
-    /// Gets obstacles within a geographic bounding box
+    /// Gets obstacles within a geographic bounding box.
     /// </summary>
-    /// <param name="minLat">Minimum latitude (-90 to 90)</param>
-    /// <param name="maxLat">Maximum latitude (-90 to 90)</param>
-    /// <param name="minLon">Minimum longitude (-180 to 180)</param>
-    /// <param name="maxLon">Maximum longitude (-180 to 180)</param>
-    /// <param name="minHeightAgl">Optional minimum height AGL in feet to filter results</param>
+    /// <remarks>
+    /// <para>
+    /// <strong>Note:</strong> The bounding box must not cross the antimeridian (i.e., <c>minLon</c>
+    /// must be less than <c>maxLon</c>). Antimeridian-crossing queries are not supported.
+    /// </para>
+    /// <code>
+    /// GET /api/v1/obstacles/bbox?minLat=32.5&amp;maxLat=33.5&amp;minLon=-97.5&amp;maxLon=-96.5
+    /// GET /api/v1/obstacles/bbox?minLat=32.5&amp;maxLat=33.5&amp;minLon=-97.5&amp;maxLon=-96.5&amp;minHeightAgl=500
+    /// </code>
+    /// </remarks>
+    /// <param name="minLat">Southwest corner latitude (-90 to 90)</param>
+    /// <param name="maxLat">Northeast corner latitude (-90 to 90, must be greater than minLat)</param>
+    /// <param name="minLon">Southwest corner longitude (-180 to 180)</param>
+    /// <param name="maxLon">Northeast corner longitude (-180 to 180, must be greater than minLon)</param>
+    /// <param name="minHeightAgl">Optional minimum height AGL in feet — only return obstacles at or above this height</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of obstacles within the bounding box</returns>
     /// <response code="200">Returns the obstacles found</response>
-    /// <response code="400">If coordinates are invalid or minLat >= maxLat</response>
+    /// <response code="400">If coordinates are invalid, minLat >= maxLat, or the box crosses the antimeridian</response>
     [HttpGet("bbox")]
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

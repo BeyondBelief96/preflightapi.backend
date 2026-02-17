@@ -25,7 +25,18 @@ public class CommunicationFrequencyController(ICommunicationFrequencyService fre
     /// Returns frequencies including their intended use (e.g., TWR, GND, ATIS, APP, DEP),
     /// call signs, operating hours, and sectorization details.
     /// </summary>
-    /// <param name="servicedFacility">FAA facility identifier — typically the FAA airport code without the "K" prefix (e.g., DFW, AUS). Use the airport's ArptId field from the Airports endpoint.</param>
+    /// <remarks>
+    /// <para>
+    /// The facility identifier is the FAA airport code — typically the ICAO code without the leading
+    /// "K" prefix (e.g., <c>DFW</c> not <c>KDFW</c>). This corresponds to the <c>ArptId</c> field
+    /// returned by the Airports endpoint.
+    /// </para>
+    /// <code>
+    /// GET /api/v1/communication-frequencies/DFW
+    /// GET /api/v1/communication-frequencies/AUS
+    /// </code>
+    /// </remarks>
+    /// <param name="servicedFacility">FAA facility identifier — the FAA airport code without the "K" prefix (e.g., <c>DFW</c>, <c>AUS</c>). Use the <c>ArptId</c> field from the Airports endpoint.</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of communication frequencies for the facility</returns>
     /// <response code="200">Returns the communication frequencies</response>

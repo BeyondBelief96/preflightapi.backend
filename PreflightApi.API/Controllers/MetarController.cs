@@ -23,7 +23,13 @@ public class MetarController(IMetarService metarService) : ControllerBase
     /// Gets the most recent METAR observation for a specific airport.
     /// Returns decoded weather data including wind, visibility, sky conditions, temperature, and flight category.
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <remarks>
+    /// <code>
+    /// GET /api/v1/metars/KDFW    — by ICAO code
+    /// GET /api/v1/metars/DFW     — by FAA identifier
+    /// </code>
+    /// </remarks>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
     /// <returns>The latest METAR observation for the airport</returns>
     /// <response code="200">Returns the METAR observation</response>
     /// <response code="404">If no METAR is found for the airport</response>
@@ -40,10 +46,18 @@ public class MetarController(IMetarService metarService) : ControllerBase
     /// Gets the most recent METAR observations for multiple airports in a single request.
     /// Accepts ICAO codes or FAA identifiers. Identifiers that don't resolve to a METAR are silently skipped.
     /// </summary>
-    /// <param name="ids">Comma-separated ICAO codes or FAA identifiers (e.g., KDFW,KAUS,KHOU)</param>
+    /// <remarks>
+    /// Both ICAO codes and FAA identifiers can be mixed in the same request.
+    /// Maximum 100 identifiers per request.
+    /// <code>
+    /// GET /api/v1/metars/batch?ids=KDFW,KAUS,KHOU
+    /// GET /api/v1/metars/batch?ids=DFW,AUS
+    /// </code>
+    /// </remarks>
+    /// <param name="ids">Comma-separated ICAO codes or FAA identifiers (e.g., <c>KDFW,KAUS,KHOU</c>). Maximum 100.</param>
     /// <returns>METAR observations for the requested airports</returns>
     /// <response code="200">Returns the METAR observations</response>
-    /// <response code="400">If the ids parameter is empty</response>
+    /// <response code="400">If the ids parameter is empty or exceeds 100 identifiers</response>
     [HttpGet("batch")]
     [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

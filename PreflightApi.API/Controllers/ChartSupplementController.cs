@@ -23,10 +23,19 @@ public class ChartSupplementController(IChartSupplementService chartSupplementSe
     /// Multi-page supplements will have one URL per page. The URLs expire after a limited period;
     /// request new URLs if they have expired.
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <remarks>
+    /// <para>
+    /// Returns the airport's ICAO code, name, and a list of page URLs.
+    /// </para>
+    /// <code>
+    /// GET /api/v1/chart-supplements/KDFW
+    /// GET /api/v1/chart-supplements/DFW
+    /// </code>
+    /// </remarks>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
     /// <returns>Airport metadata and pre-signed URLs for each chart supplement PDF page</returns>
     /// <response code="200">Returns the chart supplements for the airport</response>
-    /// <response code="404">If no chart supplements are found</response>
+    /// <response code="404">If no chart supplements are found for the given identifier</response>
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(ChartSupplementsResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
