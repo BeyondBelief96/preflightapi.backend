@@ -184,9 +184,12 @@ public class BriefingService : IBriefingService
     private async Task<List<AirportDto>> FindAirportsAlongRouteAsync(
         LineString routeLine, double corridorMeters, CancellationToken ct)
     {
+        // Airport.Location is geography(Point, 4326) but routeLine is sent as geometry —
+        // use explicit ::geography casts to avoid ambiguous ST_DWithin overload resolution.
         var airports = await _context.Airports
+            .FromSqlInterpolated(
+                $"SELECT * FROM airports WHERE location IS NOT NULL AND ST_DWithin(location::geography, {routeLine}::geography, {corridorMeters})")
             .AsNoTracking()
-            .Where(a => a.Location != null && a.Location.IsWithinDistance(routeLine, corridorMeters))
             .ToListAsync(ct);
 
         return airports.Select(AirportMapper.ToDto).ToList();
@@ -195,9 +198,12 @@ public class BriefingService : IBriefingService
     private async Task<List<PirepDto>> FindPirepsAlongRouteAsync(
         LineString routeLine, double corridorMeters, CancellationToken ct)
     {
+        // Pirep.Location is geography(Point, 4326) but routeLine is sent as geometry —
+        // use explicit ::geography casts to avoid ambiguous ST_DWithin overload resolution.
         var pireps = await _context.Pireps
+            .FromSqlInterpolated(
+                $"SELECT * FROM pireps WHERE location IS NOT NULL AND ST_DWithin(location::geography, {routeLine}::geography, {corridorMeters})")
             .AsNoTracking()
-            .Where(p => p.Location != null && p.Location.IsWithinDistance(routeLine, corridorMeters))
             .ToListAsync(ct);
 
         return pireps.Select(PirepMapper.ToDto).ToList();
@@ -283,14 +289,15 @@ public class BriefingService : IBriefingService
         return results;
     }
 
-    private static NotamDto? DeserializeNotam(Domain.Entities.Notam entity)
+    private NotamDto? DeserializeNotam(Domain.Entities.Notam entity)
     {
         try
         {
             return JsonSerializer.Deserialize<NotamDto>(entity.FeatureJson, JsonOptions);
         }
-        catch
+        catch (JsonException ex)
         {
+            _logger.LogWarning(ex, "Failed to deserialize NOTAM {NmsId}", entity.NmsId);
             return null;
         }
     }
