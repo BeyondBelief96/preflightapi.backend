@@ -5,7 +5,7 @@ namespace PreflightApi.Domain.ValueObjects.Taf
     /// </summary>
     public class TafSkyCondition
     {
-        /// <summary>Sky cover type: SKC (sky clear), CLR (clear), FEW (few), SCT (scattered), BKN (broken), or OVC (overcast).</summary>
+        /// <summary>Sky cover type: CLR (clear), CAVOK (ceiling and visibility OK), FEW (few), SCT (scattered), BKN (broken), OVC (overcast), or OVX (obscured).</summary>
         public string SkyCover { get; set; } = string.Empty;
         /// <summary>Cloud base height in feet AGL. Null for SKC or CLR.</summary>
         public int? CloudBaseFtAgl { get; set; }

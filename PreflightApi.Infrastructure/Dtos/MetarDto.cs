@@ -31,7 +31,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? VisibilityStatuteMi { get; init; }
         /// <summary>Altimeter setting in inches of mercury.</summary>
         public float? AltimInHg { get; init; }
-        /// <summary>Sea level pressure in millibars.</summary>
+        /// <summary>Sea level pressure in millibars. ex: 1016.2</summary>
         public float? SeaLevelPressureMb { get; init; }
         /// <summary>Quality control flags for the observation.</summary>
         public MetarQualityControlFlagsDto? QualityControlFlags { get; init; }
@@ -71,9 +71,9 @@ namespace PreflightApi.Infrastructure.Dtos
     /// </summary>
     public record MetarSkyConditionDto
     {
-        /// <summary>Sky cover type: SKC, CLR, FEW, SCT, BKN, or OVC.</summary>
+        /// <summary>Sky cover type: SKC (sky clear), CLR (clear below 12,000), FEW (few), SCT (scattered), BKN (broken), OVC (overcast), or OVX (obscured).</summary>
         public string SkyCover { get; init; } = string.Empty;
-        /// <summary>Cloud base height in feet AGL.</summary>
+        /// <summary>Cloud base height in feet AGL. Null for SKC or CLR.</summary>
         public int? CloudBaseFtAgl { get; init; }
     }
 }

@@ -1,43 +1,43 @@
 namespace PreflightApi.Domain.ValueObjects.GAirmets;
 
 /// <summary>
-/// Represents altitude information for a G-AIRMET
+/// Altitude information for a G-AIRMET advisory. Bottom/top levels valid in feet MSL; 0 indicates surface, -1 indicates freezing level.
 /// </summary>
 public class GAirmetAltitude
 {
     /// <summary>
-    /// Minimum altitude in feet MSL. Can be a number, "SFC" for surface, or "FZL" for freezing level
+    /// Minimum altitude in feet MSL. 0 indicates surface, -1 indicates freezing level.
     /// </summary>
     public string? MinFtMsl { get; set; }
 
     /// <summary>
-    /// Maximum altitude in feet MSL
+    /// Maximum altitude in feet MSL.
     /// </summary>
     public string? MaxFtMsl { get; set; }
 
     /// <summary>
-    /// Single level altitude in feet MSL (used for freezing level lines)
+    /// Single level altitude in feet MSL (used for freezing level lines).
     /// </summary>
     public string? LevelFtMsl { get; set; }
 
     /// <summary>
-    /// Freezing level altitude range (when min_ft_msl is "FZL")
+    /// Range of altitudes for freezing level within an icing AIRMET.
     /// </summary>
     public GAirmetFzlAltitude? FzlAltitude { get; set; }
 }
 
 /// <summary>
-/// Represents freezing level altitude range
+/// Range of altitudes for the freezing level within an icing G-AIRMET.
 /// </summary>
 public class GAirmetFzlAltitude
 {
     /// <summary>
-    /// Minimum freezing level in feet MSL
+    /// Minimum freezing level altitude in feet MSL.
     /// </summary>
     public string? MinFtMsl { get; set; }
 
     /// <summary>
-    /// Maximum freezing level in feet MSL
+    /// Maximum freezing level altitude in feet MSL.
     /// </summary>
     public string? MaxFtMsl { get; set; }
 }

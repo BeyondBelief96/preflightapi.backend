@@ -4,6 +4,10 @@ using PreflightApi.Domain.ValueObjects.Metar;
 
 namespace PreflightApi.Domain.Entities;
 
+/// <summary>
+/// METAR (Meteorological Aerodrome Report) observation data from the NOAA Aviation Weather Center.
+/// Sourced from the AvWx cache XML feed (metar1_3.xsd schema).
+/// </summary>
 [Table("metar")]
 public class Metar
 {
@@ -84,7 +88,7 @@ public class Metar
     public float? AltimInHg { get; set; }
 
     /// <summary>
-    /// Altimer setting in millibars ex: 1013.25
+    /// Sea level pressure in millibars. ex: 1013.25
     /// </summary>
     [Column("sea_level_pressure_mb")]
     public float? SeaLevelPressureMb { get; set; }
@@ -95,6 +99,9 @@ public class Metar
     [Column("quality_control_flags", TypeName = "jsonb")]
     public MetarQualityControlFlags? QualityControlFlags { get; set; }
 
+    /// <summary>
+    /// Present weather string. Encoded weather phenomena (e.g., -RA for light rain, +TSRA for heavy thunderstorms with rain, FG for fog).
+    /// </summary>
     [Column("wx_string")]
     public string? WxString { get; set; }
 
@@ -110,6 +117,9 @@ public class Metar
     [Column("flight_category")]
     public string? FlightCategory { get; set; }
 
+    /// <summary>
+    /// Three-hour pressure tendency in millibars.
+    /// </summary>
     [Column("three_hr_pressure_tendency_mb")]
     public float? ThreeHrPressureTendencyMb { get; set; }
 
@@ -126,36 +136,37 @@ public class Metar
     public float? MinTC { get; set; }
 
     /// <summary>
-    /// Maximum temperature in degrees Celsius predicted over the next 24 hours, if available. ex: 15.0
+    /// Maximum temperature in degrees Celsius over the past 24 hours, if available. ex: 15.0
     /// </summary>
     [Column("maxT24hr_c")]
     public float? MaxT24hrC { get; set; }
 
     /// <summary>
-    /// Minimum temperature in degrees Celsius predicted over the next 24 hours, if available. ex: 3.0
+    /// Minimum temperature in degrees Celsius over the past 24 hours, if available. ex: 3.0
+    /// </summary>
     [Column("minT24hr_c")]
     public float? MinT24hrC { get; set; }
 
     /// <summary>
-    /// Expected precipitation in inches over the last hour, if available. ex: 0.0
+    /// Precipitation accumulation in inches since the last routine observation. ex: 0.0
     /// </summary>
     [Column("precip_in")]
     public float? PrecipIn { get; set; }
 
     /// <summary>
-    /// Expected precipitation in inches over the next 3 hour, if available. ex: 0.0
+    /// Precipitation accumulation in inches over the past 3 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp3hr_in")]
     public float? Pcp3hrIn { get; set; }
 
     /// <summary>
-    /// Expected precipitation in inches over the next 6 hours, if available. ex: 0.0
+    /// Precipitation accumulation in inches over the past 6 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp6hr_in")]
     public float? Pcp6hrIn { get; set; }
 
     /// <summary>
-    /// Expected precipitation in inches over the next 24 hours, if available. ex: 0.0
+    /// Precipitation accumulation in inches over the past 24 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp24hr_in")]
     public float? Pcp24hrIn { get; set; }

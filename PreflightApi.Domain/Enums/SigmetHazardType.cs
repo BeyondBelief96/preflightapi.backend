@@ -29,6 +29,11 @@ public enum SigmetHazardType
     IFR,
 
     /// <summary>
+    /// Volcanic ash
+    /// </summary>
+    ASH,
+
+    /// <summary>
     /// Mountain obscuration
     /// </summary>
     MTN_OBSCN

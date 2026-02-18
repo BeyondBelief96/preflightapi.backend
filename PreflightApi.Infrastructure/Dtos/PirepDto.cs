@@ -17,7 +17,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? ObservationTime { get; init; }
         /// <summary>Quality control flags for the report.</summary>
         public PirepQualityControlFlags? QualityControlFlags { get; init; }
-        /// <summary>Aircraft type that filed the report.</summary>
+        /// <summary>Aircraft type designation. ex: B738, C172</summary>
         public string? AircraftRef { get; init; }
         /// <summary>Latitude of the report in decimal degrees.</summary>
         public float? Latitude { get; init; }
@@ -43,7 +43,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public int? WindSpeedKt { get; init; }
         /// <summary>Vertical gust speed in knots.</summary>
         public int? VertGustKt { get; init; }
-        /// <summary>Report type: UA (routine) or UUA (urgent).</summary>
+        /// <summary>Report type: UA (routine PIREP) or UUA (urgent PIREP).</summary>
         public string? ReportType { get; init; }
     }
 }

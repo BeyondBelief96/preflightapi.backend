@@ -5,6 +5,10 @@ using PreflightApi.Domain.ValueObjects.Sigmets;
 
 namespace PreflightApi.Domain.Entities
 {
+    /// <summary>
+    /// AIRMET/SIGMET advisory data from the NOAA Aviation Weather Center.
+    /// Sourced from the AvWx cache XML feed (airsigmet1_1.xsd schema).
+    /// </summary>
     [Table("sigmet")]
     public class Sigmet
     {
@@ -55,7 +59,7 @@ namespace PreflightApi.Domain.Entities
         public SigmetHazard? Hazard { get; set; }
 
         /// <summary>
-        /// The type of product: SIGMET or OUTLOOK
+        /// The type of product: Always SIGMET
         /// </summary>
         [Column("sigmet_type")]
         public string? SigmetType { get; set; }
