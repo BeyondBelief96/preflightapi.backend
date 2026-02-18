@@ -5,6 +5,10 @@ using PreflightApi.Domain.ValueObjects.GAirmets;
 
 namespace PreflightApi.Domain.Entities
 {
+    /// <summary>
+    /// G-AIRMET (Graphical AIRMET) advisory data from the NOAA Aviation Weather Center.
+    /// Sourced from the AvWx cache XML feed (gairmet1_0.xsd schema).
+    /// </summary>
     [Table("gairmet")]
     public class GAirmet
     {
@@ -25,13 +29,13 @@ namespace PreflightApi.Domain.Entities
         public DateTime IssueTime { get; set; }
 
         /// <summary>
-        /// Time the G-AIRMET expires
+        /// Time the G-AIRMET expires, typically 6 hours after issuance.
         /// </summary>
         [Column("expire_time")]
         public DateTime ExpireTime { get; set; }
 
         /// <summary>
-        /// Time the G-AIRMET is valid for
+        /// The valid time of the G-AIRMET snapshot.
         /// </summary>
         [Column("valid_time")]
         public DateTime ValidTime { get; set; }
@@ -43,43 +47,43 @@ namespace PreflightApi.Domain.Entities
         public string Product { get; set; } = string.Empty;
 
         /// <summary>
-        /// Forecast component tag
+        /// Forecast component identifier tag. ex: 1C
         /// </summary>
         [Column("tag")]
         public string? Tag { get; set; }
 
         /// <summary>
-        /// Number of hours between issue time and valid time
+        /// The forecast hour taken from initial product issuance. ex: 0, 3, 6, 9, 12
         /// </summary>
         [Column("forecast_hour")]
         public int ForecastHour { get; set; }
 
         /// <summary>
-        /// Type of hazard (e.g., MT_OBSC, TURB, ICE, IFR, etc.)
+        /// Type of hazard: IFR, MT_OBSC (mountain obscuration), TURB-HI (high-level turbulence), TURB-LO (low-level turbulence), ICE (icing), FZLVL (freezing level), M_FZLVL (multiple freezing levels), SFC_WND (strong surface winds), or LLWS (low-level wind shear).
         /// </summary>
         [Column("hazard_type")]
         public string? HazardType { get; set; }
 
         /// <summary>
-        /// Severity of the hazard
+        /// Severity of the hazard: MOD (moderate) or null.
         /// </summary>
         [Column("hazard_severity")]
         public string? HazardSeverity { get; set; }
 
         /// <summary>
-        /// Geometry type: AREA or LINE
+        /// The geometry type: AREA or LINE.
         /// </summary>
         [Column("geometry_type")]
         public string? GeometryType { get; set; }
 
         /// <summary>
-        /// Cause of the hazard (e.g., "MTNS OBSC BY PCPN/CLDS")
+        /// Additional information, reason for the AIRMET. ex: CIG BLW 010/VIS BLW 3SM PCPN/BR/FG
         /// </summary>
         [Column("due_to")]
         public string? DueTo { get; set; }
 
         /// <summary>
-        /// Altitude information (can have multiple altitude ranges)
+        /// Altitude ranges for the advisory in feet MSL. 0 indicates surface, -1 indicates freezing level.
         /// </summary>
         [Column("altitudes", TypeName = "jsonb")]
         public List<GAirmetAltitude>? Altitudes { get; set; }

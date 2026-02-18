@@ -4,6 +4,10 @@ using PreflightApi.Domain.ValueObjects.Taf;
 
 namespace PreflightApi.Domain.Entities
 {
+    /// <summary>
+    /// TAF (Terminal Aerodrome Forecast) data from the NOAA Aviation Weather Center.
+    /// Sourced from the AvWx cache XML feed (taf1_3.xsd schema).
+    /// </summary>
     [Table("taf")]
     public class Taf
     {
@@ -12,7 +16,7 @@ namespace PreflightApi.Domain.Entities
         public int Id { get; set; }
 
         /// <summary>
-        /// Raw text of forecast ex: KORD 032151Z 23006KT 10SM BKN110 OVC250 14/03 A3000 RMK AO2 SLP162 VIRGA OHD T01440028
+        /// Raw text of the TAF forecast. ex: KORD 061728Z 0618/0724 21012KT P6SM BKN250 FM062200 24008KT P6SM SCT250
         /// </summary>
         [Column("raw_text")]
         public string? RawText { get; set; }

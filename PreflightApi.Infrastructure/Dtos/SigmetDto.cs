@@ -23,7 +23,7 @@ public record SigmetDto
     public int? MovementSpeedKt { get; init; }
     /// <summary>Hazard type and severity information.</summary>
     public SigmetHazardDto? Hazard { get; init; }
-    /// <summary>Advisory type: SIGMET or OUTLOOK.</summary>
+    /// <summary>Advisory type: always SIGMET.</summary>
     public string? SigmetType { get; init; }
     /// <summary>Geographic areas affected by the advisory.</summary>
     public List<SigmetArea>? Areas { get; init; }

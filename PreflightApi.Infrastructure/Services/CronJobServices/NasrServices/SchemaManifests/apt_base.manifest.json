@@ -77,7 +77,7 @@
       "entityProperty": "OwnershipTypeCode",
       "dataType": "string",
       "description": "Airport ownership type.",
-      "enumeratedValues": ["PU", "PR", "MA", "MN", "MR"]
+      "enumeratedValues": ["PU", "PR", "MA", "MN", "MR", "CG"]
     },
     "FACILITY_USE_CODE": {
       "entityProperty": "FacilityUseCode",
@@ -312,7 +312,7 @@
       "entityProperty": "InspectorCode",
       "dataType": "string",
       "description": "Agency performing inspection.",
-      "enumeratedValues": ["F", "S", "C"]
+      "enumeratedValues": ["F", "S", "C", "N"]
     },
     "LAST_INSPECTION": {
       "entityProperty": "LastInspection",
@@ -378,7 +378,7 @@
       "entityProperty": "BcnLensColor",
       "dataType": "string",
       "description": "Airport beacon lens color.",
-      "enumeratedValues": ["CG", "CY", "CGY", "SCG", "C"]
+      "enumeratedValues": ["WG", "WY", "WGY", "SWG", "W", "Y", "G", "N"]
     },
     "LNDG_FEE_FLAG": {
       "entityProperty": "LndgFeeFlag",

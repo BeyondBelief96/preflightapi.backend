@@ -44,6 +44,7 @@ public static class SigmetMapper
             "ICE" => SigmetHazardType.ICE,
             "TURB" => SigmetHazardType.TURB,
             "IFR" => SigmetHazardType.IFR,
+            "ASH" => SigmetHazardType.ASH,
             "MTN OBSCN" => SigmetHazardType.MTN_OBSCN,
             _ => null
         };

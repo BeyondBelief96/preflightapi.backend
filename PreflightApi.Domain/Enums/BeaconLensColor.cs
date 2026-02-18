@@ -11,18 +11,27 @@ public enum BeaconLensColor
     /// <summary>Beacon lens color could not be determined from FAA data.</summary>
     Unknown,
 
-    /// <summary>CG - Clear-Green (lighted land airport).</summary>
-    ClearGreen,
+    /// <summary>WG - White-Green (lighted land airport).</summary>
+    WhiteGreen,
 
-    /// <summary>CY - Clear-Yellow (lighted water airport).</summary>
-    ClearYellow,
+    /// <summary>WY - White-Yellow (lighted seaplane base).</summary>
+    WhiteYellow,
 
-    /// <summary>CGY - Clear-Green-Yellow (lighted heliport).</summary>
-    ClearGreenYellow,
+    /// <summary>WGY - White-Green-Yellow (heliport).</summary>
+    WhiteGreenYellow,
 
-    /// <summary>SCG - Split Clear-Green (lighted military airport).</summary>
-    SplitClearGreen,
+    /// <summary>SWG - Split-White-Green (lighted military airport).</summary>
+    SplitWhiteGreen,
 
-    /// <summary>C - Clear (unlighted).</summary>
-    Clear
+    /// <summary>W - White (unlighted land airport).</summary>
+    White,
+
+    /// <summary>Y - Yellow (unlighted seaplane base).</summary>
+    Yellow,
+
+    /// <summary>G - Green (lighted land airport).</summary>
+    Green,
+
+    /// <summary>N - None (no beacon).</summary>
+    None
 }

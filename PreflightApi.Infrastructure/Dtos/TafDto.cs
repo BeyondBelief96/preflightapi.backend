@@ -7,7 +7,7 @@ namespace PreflightApi.Infrastructure.Dtos;
 /// </summary>
 public record TafDto
 {
-    /// <summary>Raw TAF text string as received from the source.</summary>
+    /// <summary>Raw TAF forecast text as received from the source. ex: KORD 061728Z 0618/0724 21012KT P6SM BKN250</summary>
     public string? RawText { get; init; }
     /// <summary>ICAO station identifier (e.g., KDFW).</summary>
     public string? StationId { get; init; }

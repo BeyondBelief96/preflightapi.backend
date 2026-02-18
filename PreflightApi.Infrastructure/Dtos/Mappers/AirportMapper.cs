@@ -182,6 +182,7 @@ public static class AirportMapper
             "MA" => AirportOwnershipType.AirForce,
             "MN" => AirportOwnershipType.Navy,
             "MR" => AirportOwnershipType.Army,
+            "CG" => AirportOwnershipType.CoastGuard,
             _ => AirportOwnershipType.Unknown
         };
     }
@@ -239,6 +240,7 @@ public static class AirportMapper
             "F" => AirportInspectorAgency.Faa,
             "S" => AirportInspectorAgency.State,
             "C" => AirportInspectorAgency.Contractor,
+            "N" => AirportInspectorAgency.Owner,
             _ => AirportInspectorAgency.Unknown
         };
     }
@@ -279,11 +281,14 @@ public static class AirportMapper
 
         return code.Trim().ToUpperInvariant() switch
         {
-            "CG" => BeaconLensColor.ClearGreen,
-            "CY" => BeaconLensColor.ClearYellow,
-            "CGY" => BeaconLensColor.ClearGreenYellow,
-            "SCG" => BeaconLensColor.SplitClearGreen,
-            "C" => BeaconLensColor.Clear,
+            "WG" => BeaconLensColor.WhiteGreen,
+            "WY" => BeaconLensColor.WhiteYellow,
+            "WGY" => BeaconLensColor.WhiteGreenYellow,
+            "SWG" => BeaconLensColor.SplitWhiteGreen,
+            "W" => BeaconLensColor.White,
+            "Y" => BeaconLensColor.Yellow,
+            "G" => BeaconLensColor.Green,
+            "N" => BeaconLensColor.None,
             _ => BeaconLensColor.Unknown
         };
     }

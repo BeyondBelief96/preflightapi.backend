@@ -83,23 +83,32 @@ public class Runway : INasrEntity<Runway>
     [Column("weight_bearing_double_dual_tandem")]
     public int? WeightBearingDoubleDualTandem { get; set; }
 
-    /// <summary>FAA NASR field: COND. Runway surface condition.</summary>
+    /// <summary>
+    /// FAA NASR field: COND. Runway Surface Condition.
+    /// <para>Possible values: EXCELLENT, GOOD, FAIR, POOR, FAILED.</para>
+    /// </summary>
     [Column("surface_condition")]
     public string? SurfaceCondition { get; set; }
 
-    /// <summary>FAA NASR field: PAVEMENT_TYPE_CODE. Pavement type code.</summary>
+    /// <summary>
+    /// FAA NASR field: PAVEMENT_TYPE_CODE. Pavement Type.
+    /// <para>Possible values: R (Rigid), F (Flexible).</para>
+    /// </summary>
     [Column("pavement_type_code")]
     public string? PavementTypeCode { get; set; }
 
-    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade strength code.</summary>
+    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade Strength (Letters A-F).</summary>
     [Column("subgrade_strength_code")]
     public string? SubgradeStrengthCode { get; set; }
 
-    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire pressure code.</summary>
+    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire Pressure Code (Letters W-Z).</summary>
     [Column("tire_pressure_code")]
     public string? TirePressureCode { get; set; }
 
-    /// <summary>FAA NASR field: DTRM_METHOD_CODE. Determination method code for pavement strength.</summary>
+    /// <summary>
+    /// FAA NASR field: DTRM_METHOD_CODE. Determination Method for pavement strength.
+    /// <para>Possible values: T (Technical), U (Using Aircraft).</para>
+    /// </summary>
     [Column("determination_method_code")]
     public string? DeterminationMethodCode { get; set; }
 
