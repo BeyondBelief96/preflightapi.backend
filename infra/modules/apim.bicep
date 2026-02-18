@@ -173,6 +173,36 @@ resource commercialPilotPolicy 'Microsoft.ApiManagement/service/products/policie
   }
 }
 
+// ATP (Enterprise tier)
+resource atpProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
+  parent: apim
+  name: 'atp'
+  properties: {
+    displayName: 'ATP'
+    description: 'Enterprise tier — full access to all endpoints with highest limits'
+    subscriptionRequired: true
+    approvalRequired: false
+    state: 'published'
+  }
+}
+
+resource atpApiLink 'Microsoft.ApiManagement/service/products/apis@2024-05-01' = {
+  parent: atpProduct
+  name: 'preflightapi'
+  dependsOn: [
+    api
+  ]
+}
+
+resource atpPolicy 'Microsoft.ApiManagement/service/products/policies@2024-05-01' = {
+  parent: atpProduct
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: loadTextContent('../../apim-policies/atp-policy.xml')
+  }
+}
+
 // ─── Outputs ──────────────────────────────────────────────────────────────────
 
 @description('APIM service name')
