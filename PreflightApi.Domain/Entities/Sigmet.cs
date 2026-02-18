@@ -6,7 +6,7 @@ using PreflightApi.Domain.ValueObjects.Sigmets;
 namespace PreflightApi.Domain.Entities
 {
     /// <summary>
-    /// AIRMET/SIGMET advisory data from the NOAA Aviation Weather Center.
+    /// SIGMET advisory data from the NOAA Aviation Weather Center.
     /// Sourced from the AvWx cache XML feed (airsigmet1_1.xsd schema).
     /// </summary>
     [Table("sigmet")]

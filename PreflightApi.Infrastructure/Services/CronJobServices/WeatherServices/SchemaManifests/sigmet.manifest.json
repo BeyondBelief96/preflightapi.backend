@@ -50,7 +50,7 @@
       "required": false,
       "openApiProperty": "airSigmetType",
       "captured": true,
-      "description": "Product type: SIGMET or OUTLOOK"
+      "description": "Product type: always SIGMET"
     }
   },
   "nestedElements": {
