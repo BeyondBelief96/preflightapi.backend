@@ -49,7 +49,10 @@ public class KeyVaultCertificateService : IKeyVaultCertificateService
 
     public async Task ImportCertificateAsync(string certificateName, byte[] pfxBytes, CancellationToken ct = default)
     {
-        var importOptions = new ImportCertificateOptions(certificateName, pfxBytes);
+        var importOptions = new ImportCertificateOptions(certificateName, pfxBytes)
+        {
+            Password = string.Empty
+        };
         await _certificateClient.Value.ImportCertificateAsync(importOptions, ct);
         _logger.LogInformation("Certificate '{CertificateName}' imported to Key Vault", certificateName);
     }
