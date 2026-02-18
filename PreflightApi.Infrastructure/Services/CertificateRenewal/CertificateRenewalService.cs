@@ -40,6 +40,7 @@ public class CertificateRenewalService : ICertificateRenewalService
                 "Certificate '{CertName}' expires on {Expiry:O} ({Days:F0} days remaining)",
                 _settings.CertificateName, expiry.Value, daysUntilExpiry);
 
+            // Renew at or within threshold (e.g. ≤30 days remaining)
             if (daysUntilExpiry > _settings.RenewalThresholdDays)
             {
                 _logger.LogInformation("Certificate does not need renewal (threshold: {Threshold} days)", _settings.RenewalThresholdDays);
