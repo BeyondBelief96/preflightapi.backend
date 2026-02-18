@@ -54,19 +54,28 @@ public record RunwayDto
     /// <summary>FAA NASR field: GROSS_WT_DDTW. Runway weight-bearing capacity for two dual wheels in tandem/two dual wheels in double tandem body gear type landing gear, in pounds.</summary>
     public int? WeightBearingDoubleDualTandem { get; init; }
 
-    /// <summary>FAA NASR field: COND. Runway surface condition.</summary>
+    /// <summary>
+    /// FAA NASR field: COND. Runway Surface Condition.
+    /// <para>Possible values: EXCELLENT, GOOD, FAIR, POOR, FAILED.</para>
+    /// </summary>
     public string? SurfaceCondition { get; init; }
 
-    /// <summary>FAA NASR field: PAVEMENT_TYPE_CODE. Pavement type code.</summary>
+    /// <summary>
+    /// FAA NASR field: PAVEMENT_TYPE_CODE. Pavement Type.
+    /// <para>Possible values: R (Rigid), F (Flexible).</para>
+    /// </summary>
     public string? PavementTypeCode { get; init; }
 
-    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade strength code.</summary>
+    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade Strength (Letters A-F).</summary>
     public string? SubgradeStrengthCode { get; init; }
 
-    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire pressure code.</summary>
+    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire Pressure Code (Letters W-Z).</summary>
     public string? TirePressureCode { get; init; }
 
-    /// <summary>FAA NASR field: DTRM_METHOD_CODE. Determination method code for pavement strength.</summary>
+    /// <summary>
+    /// FAA NASR field: DTRM_METHOD_CODE. Determination Method for pavement strength.
+    /// <para>Possible values: T (Technical), U (Using Aircraft).</para>
+    /// </summary>
     public string? DeterminationMethodCode { get; init; }
 
     /// <summary>FAA NASR field: RWY_LEN_SOURCE. Source of runway length information.</summary>
@@ -256,16 +265,21 @@ public record RunwayEndDto
 
     // ── Codes & Gradient ─────────────────────────────────────────────────
 
-    /// <summary>FAA NASR field: FAR_PART_77_CODE. FAR Part 77 approach category code.</summary>
+    /// <summary>
+    /// FAA NASR field: FAR_PART_77_CODE. FAA CFR Part 77 (Objects Affecting Navigable Airspace) Runway Category.
+    /// <para>Possible values: A(V) (Utility Runway with Visual Approach), B(V) (Other Than Utility with Visual Approach),
+    /// A(NP) (Utility with Nonprecision Approach), C (Other Than Utility with Nonprecision, visibility &gt; 3/4 mile),
+    /// D (Other Than Utility with Nonprecision, visibility as low as 3/4 mile), PIR (Precision Instrument Runway).</para>
+    /// </summary>
     public string? FarPart77Code { get; init; }
 
-    /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Centerline direction code.</summary>
+    /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Controlling Object Centerline Offset Direction. Indicates direction (left or right) to the object from the centerline as seen by an approaching pilot.</summary>
     public string? CenterlineDirectionCode { get; init; }
 
-    /// <summary>FAA NASR field: RWY_GRAD. Runway gradient as a percentage.</summary>
+    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient.</summary>
     public decimal? RunwayGradient { get; init; }
 
-    /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway gradient direction (UP or DOWN).</summary>
+    /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway End Gradient Direction (Up or Down).</summary>
     public string? RunwayGradientDirection { get; init; }
 
     // ── Source/Date Metadata ─────────────────────────────────────────────
@@ -316,13 +330,13 @@ public record RunwayEndDto
 
     // ── LAHSO (Land and Hold Short Operations) ───────────────────────────
 
-    /// <summary>FAA NASR field: LAHSO_ALD. LAHSO available landing distance in feet.</summary>
+    /// <summary>FAA NASR field: LAHSO_ALD. Available Landing Distance for Land and Hold Short Operations (LAHSO), in feet.</summary>
     public int? LahsoAvailableLandingDistance { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_INTERSECT_LAHSO. Intersecting runway for LAHSO operations.</summary>
+    /// <summary>FAA NASR field: RWY_END_INTERSECT_LAHSO. ID of Intersecting Runway Defining Hold Short Point.</summary>
     public string? LahsoIntersectingRunway { get; init; }
 
-    /// <summary>FAA NASR field: LAHSO_DESC. LAHSO hold short point description.</summary>
+    /// <summary>FAA NASR field: LAHSO_DESC. Description of Entity Defining Hold Short Point if not an Intersecting Runway.</summary>
     public string? LahsoDescription { get; init; }
 
     /// <summary>FAA NASR field: LAHSO_LAT. LAHSO hold short point latitude (DMS format).</summary>

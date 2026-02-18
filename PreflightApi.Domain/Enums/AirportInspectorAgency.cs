@@ -11,12 +11,15 @@ public enum AirportInspectorAgency
     /// <summary>Inspector agency could not be determined from FAA data.</summary>
     Unknown,
 
-    /// <summary>F - FAA.</summary>
+    /// <summary>F - FAA Airports Field Personnel.</summary>
     Faa,
 
-    /// <summary>S - State.</summary>
+    /// <summary>S - State Aeronautical Personnel.</summary>
     State,
 
-    /// <summary>C - Contractor.</summary>
-    Contractor
+    /// <summary>C - Private Contract Personnel.</summary>
+    Contractor,
+
+    /// <summary>N - Owner.</summary>
+    Owner
 }

@@ -60,24 +60,24 @@ public class Airport : INasrEntity<Airport>
     [Column("county_name")]
     public string? CountyName { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: COUNTY_ASSOC_STATE. Two-letter state code associated with the county.</summary>
+    /// <summary>FAA NASR field: COUNTY_ASSOC_STATE. Two-letter state, territory, or country code associated with the county (e.g., US state codes, CN for Canada, GU for Guam, VI for Virgin Islands).</summary>
     [Column("county_assoc_state")]
     public string? CountyAssocState { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: ARPT_NAME. Official airport facility name.</summary>
+    /// <summary>FAA NASR field: ARPT_NAME. Official Facility Name.</summary>
     [Column("arpt_name")]
     public string? ArptName { get; set; } = string.Empty;
 
     /// <summary>
     /// FAA NASR field: OWNERSHIP_TYPE_CODE. Airport ownership type.
-    /// <para>Possible values: PU (Publicly Owned), PR (Privately Owned), MA (Air Force), MN (Navy), MR (Army).</para>
+    /// <para>Possible values: PU (Publicly Owned), PR (Privately Owned), MA (Air Force Owned), MN (Navy Owned), MR (Army Owned), CG (Coast Guard Owned).</para>
     /// </summary>
     [Column("ownership_type_code")]
     public string? OwnershipTypeCode { get; set; } = string.Empty;
 
     /// <summary>
     /// FAA NASR field: FACILITY_USE_CODE. Facility use designation.
-    /// <para>Possible values: PU (Public Use), PR (Private Use).</para>
+    /// <para>Possible values: PU (Open to the Public), PR (Private).</para>
     /// </summary>
     [Column("facility_use_code")]
     public string? FacilityUseCode { get; set; } = string.Empty;
@@ -135,7 +135,7 @@ public class Airport : INasrEntity<Airport>
     [Column("survey_method_code")]
     public string? SurveyMethodCode { get; set; }
 
-    /// <summary>FAA NASR field: ELEV. Airport elevation in feet above Mean Sea Level (MSL), to the nearest tenth of a foot.</summary>
+    /// <summary>FAA NASR field: ELEV. Airport elevation in feet MSL, to the nearest tenth of a foot. Measured at the highest point on the centerline of the usable landing surface.</summary>
     [Column("elev", TypeName = "decimal(6,1)")]
     public decimal? Elev { get; set; }
 
@@ -146,22 +146,22 @@ public class Airport : INasrEntity<Airport>
     [Column("elev_method_code")]
     public string? ElevMethodCode { get; set; }
 
-    /// <summary>FAA NASR field: MAG_VARN. Magnetic variation in degrees. Combine with MagHemis to determine east/west deviation.</summary>
+    /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees.</summary>
     [Column("mag_varn", TypeName = "decimal(2,0)")]
     public decimal? MagVarn { get; set; }
 
     /// <summary>
-    /// FAA NASR field: MAG_HEMIS. Magnetic variation hemisphere.
-    /// <para>Possible values: E (East - add to true heading for magnetic), W (West - subtract from true heading for magnetic).</para>
+    /// FAA NASR field: MAG_HEMIS. Magnetic Variation Direction.
+    /// <para>Possible values: E (East), W (West).</para>
     /// </summary>
     [Column("mag_hemis")]
     public string? MagHemis { get; set; }
 
-    /// <summary>FAA NASR field: MAG_VARN_YEAR. Year the magnetic variation was determined.</summary>
+    /// <summary>FAA NASR field: MAG_VARN_YEAR. Magnetic Variation Epoch Year.</summary>
     [Column("mag_varn_year")]
     public int? MagVarnYear { get; set; }
 
-    /// <summary>FAA NASR field: TPA. Traffic Pattern Altitude in feet above Mean Sea Level (MSL).</summary>
+    /// <summary>FAA NASR field: TPA. Traffic Pattern Altitude (Whole Feet AGL).</summary>
     [Column("tpa")]
     public int? Tpa { get; set; }
 
@@ -169,23 +169,23 @@ public class Airport : INasrEntity<Airport>
     [Column("chart_name")]
     public string? ChartName { get; set; }
 
-    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from the associated city to the airport, in nautical miles.</summary>
+    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport.</summary>
     [Column("dist_city_to_airport", TypeName = "decimal(2,0)")]
     public decimal? DistCityToAirport { get; set; }
 
-    /// <summary>FAA NASR field: DIRECTION_CODE. Compass direction from the associated city to the airport (e.g., N, NE, SW).</summary>
+    /// <summary>FAA NASR field: DIRECTION_CODE. Direction of Airport from Central Business District of Associated City (Nearest 1/8 Compass Point).</summary>
     [Column("direction_code")]
     public string? DirectionCode { get; set; }
 
-    /// <summary>FAA NASR field: ACREAGE. Airport acreage.</summary>
+    /// <summary>FAA NASR field: ACREAGE. Land Area Covered by Airport (Acres).</summary>
     [Column("acreage")]
     public int? Acreage { get; set; }
 
-    /// <summary>FAA NASR field: COMPUTER_ID. Computer identifier assigned to the airport.</summary>
+    /// <summary>FAA NASR field: COMPUTER_ID. Responsible ARTCC (FAA) Computer Identifier.</summary>
     [Column("computer_id")]
     public string? ComputerId { get; set; }
 
-    /// <summary>FAA NASR field: RESP_ARTCC_ID. Identifier of the responsible Air Route Traffic Control Center (ARTCC).</summary>
+    /// <summary>FAA NASR field: RESP_ARTCC_ID. Responsible ARTCC Identifier. The Responsible ARTCC is the FAA Air Route Traffic Control Center that has control over the Airport.</summary>
     [Column("resp_artcc_id")]
     public string? RespArtccId { get; set; } = string.Empty;
 
@@ -194,29 +194,29 @@ public class Airport : INasrEntity<Airport>
     public string? ArtccName { get; set; }
 
     /// <summary>
-    /// FAA NASR field: FSS_ON_ARPT_FLAG. Whether a Flight Service Station (FSS) is located on the airport.
-    /// <para>Possible values: Y (Yes), N (No).</para>
+    /// FAA NASR field: FSS_ON_ARPT_FLAG. Tie-In FSS Physically Located On Facility.
+    /// <para>Possible values: Y (Tie-In FSS is on the airport), N (Tie-In FSS is not on airport).</para>
     /// </summary>
     [Column("fss_on_arpt_flag")]
     public string? FssOnArptFlag { get; set; }
 
-    /// <summary>FAA NASR field: FSS_ID. Identifier of the Flight Service Station (FSS) serving the airport.</summary>
+    /// <summary>FAA NASR field: FSS_ID. Tie-In Flight Service Station (FSS) Identifier.</summary>
     [Column("fss_id")]
     public string? FssId { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: FSS_NAME. Name of the Flight Service Station (FSS) serving the airport.</summary>
+    /// <summary>FAA NASR field: FSS_NAME. Tie-In FSS Name.</summary>
     [Column("fss_name")]
     public string? FssName { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: PHONE_NO. FSS local phone number.</summary>
+    /// <summary>FAA NASR field: PHONE_NO. Local Phone Number from Airport to FSS for Administrative Services.</summary>
     [Column("fss_phone_number")]
     public string? FssPhoneNumber { get; set; }
 
-    /// <summary>FAA NASR field: TOLL_FREE_NO. FSS toll-free phone number.</summary>
+    /// <summary>FAA NASR field: TOLL_FREE_NO. Toll Free Phone Number from Airport to FSS for Pilot Briefing Services.</summary>
     [Column("toll_free_number")]
     public string? TollFreeNumber { get; set; }
 
-    /// <summary>FAA NASR field: ALT_FSS_ID. Alternate Flight Service Station identifier.</summary>
+    /// <summary>FAA NASR field: ALT_FSS_ID. Alternate FSS Identifier. Identifies a full-time Flight Service Station that assumes responsibility for the Airport during the off hours of a part-time primary FSS.</summary>
     [Column("alt_fss_id")]
     public string? AltFssId { get; set; }
 
@@ -224,22 +224,22 @@ public class Airport : INasrEntity<Airport>
     [Column("alt_fss_name")]
     public string? AltFssName { get; set; }
 
-    /// <summary>FAA NASR field: ALT_TOLL_FREE_NO. Alternate FSS toll-free phone number.</summary>
+    /// <summary>FAA NASR field: ALT_TOLL_FREE_NO. Toll Free Phone Number from Airport to Alternate FSS for Pilot Briefing Services.</summary>
     [Column("alt_toll_free_number")]
     public string? AltTollFreeNumber { get; set; }
 
-    /// <summary>FAA NASR field: NOTAM_ID. NOTAM facility identifier. The identifier used in the NOTAM system to identify the airport.</summary>
+    /// <summary>FAA NASR field: NOTAM_ID. Identifier of the Facility responsible for issuing Notices to Airmen (NOTAMs) and Weather information for the Airport.</summary>
     [Column("notam_id")]
     public string? NotamId { get; set; }
 
     /// <summary>
-    /// FAA NASR field: NOTAM_FLAG. NOTAM service availability flag.
-    /// <para>Possible values: Y (Yes, NOTAM service available), N (No).</para>
+    /// FAA NASR field: NOTAM_FLAG. Availability of NOTAM 'D' Service at Airport.
+    /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("notam_flag")]
     public string? NotamFlag { get; set; }
 
-    /// <summary>FAA NASR field: ACTIVATION_DATE. Airport activation date (MM/YYYY format).</summary>
+    /// <summary>FAA NASR field: ACTIVATION_DATE. Airport Activation Date (YYYY/MM). Year and month the facility was added to the NFDC airport database. Only available for facilities opened since 1981.</summary>
     [Column("activation_date")]
     public string? ActivationDate { get; set; }
 
@@ -250,34 +250,42 @@ public class Airport : INasrEntity<Airport>
     [Column("arpt_status")]
     public string? ArptStatus { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: NASP_CODE. National Plan of Integrated Airport Systems (NPIAS) or Federal/Military Airport code.</summary>
+    /// <summary>
+    /// FAA NASR field: NASP_CODE. NPIAS/Federal Agreements Code. A combination of 1 to 7 codes indicating the type
+    /// of Federal agreements existing at the Airport.
+    /// <para>Possible values: N (NPIAS), B (Navigational Facilities on Private Airports), G (Grant Agreements under FAAP/ADAP/AIP),
+    /// H (Handicapped Accessibility Compliance), P (Surplus Property - Public Law 289), R (Surplus Property - Regulation 16-WAA),
+    /// S (Conveyance under Section 16/23), V (Advance Planning Agreement under FAAP), X (Obligations Assumed by Transfer),
+    /// Y (Title VI Civil Rights Act), Z (Conveyance under Section 303(C)), 1 (Expired Grant - Still Public Use),
+    /// 2 (Expired 303(C) - Still Public Use), 3 (Expired AP-4 Agreement), NONE/blank (No Grant Agreement).</para>
+    /// </summary>
     [Column("nasp_code")]
     public string? NaspCode { get; set; }
 
     /// <summary>
-    /// FAA NASR field: CUST_FLAG. Customs airport of entry flag.
-    /// <para>Possible values: Y (Yes, airport of entry), N (No).</para>
+    /// FAA NASR field: CUST_FLAG. Facility has been designated by the U.S. Department of Homeland Security as an International Airport of Entry for Customs.
+    /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("customs_flag")]
     public string? CustomsFlag { get; set; }
 
     /// <summary>
-    /// FAA NASR field: LNDG_RIGHTS_FLAG. Customs landing rights flag.
-    /// <para>Possible values: Y (Yes, airport has landing rights), N (No).</para>
+    /// FAA NASR field: LNDG_RIGHTS_FLAG. Facility has been designated by the U.S. Department of Homeland Security as a Customs Landing Rights Airport.
+    /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("lndg_rights_flag")]
     public string? LndgRightsFlag { get; set; }
 
     /// <summary>
-    /// FAA NASR field: JOINT_USE_FLAG. Joint use agreement between military and civil.
-    /// <para>Possible values: Y (Yes, joint civil/military use), N (No).</para>
+    /// FAA NASR field: JOINT_USE_FLAG. Facility has Military/Civil Joint Use Agreement that allows Civil Operations at a Military Airport.
+    /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("joint_use_flag")]
     public string? JointUseFlag { get; set; }
 
     /// <summary>
-    /// FAA NASR field: MIL_LNDG_FLAG. Military landing rights agreement.
-    /// <para>Possible values: Y (Yes, military landing rights), N (No).</para>
+    /// FAA NASR field: MIL_LNDG_FLAG. Airport has entered into an Agreement that Grants Landing Rights to the Military.
+    /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("mil_lndg_flag")]
     public string? MilLndgFlag { get; set; }
@@ -290,8 +298,8 @@ public class Airport : INasrEntity<Airport>
     public string? InspectMethodCode { get; set; }
 
     /// <summary>
-    /// FAA NASR field: INSPECTOR_CODE. Agency performing the airport inspection.
-    /// <para>Possible values: F (FAA), S (State), C (Contractor).</para>
+    /// FAA NASR field: INSPECTOR_CODE. Agency/Group Performing Physical Inspection.
+    /// <para>Possible values: F (FAA Airports Field Personnel), S (State Aeronautical Personnel), C (Private Contract Personnel), N (Owner).</para>
     /// </summary>
     [Column("inspector_code")]
     public string? InspectorCode { get; set; } = string.Empty;
@@ -304,7 +312,7 @@ public class Airport : INasrEntity<Airport>
     [Column("last_info_response")]
     public DateTime? LastInfoResponse { get; set; }
 
-    /// <summary>FAA NASR field: FUEL_TYPES. Available fuel types at the airport. Comma-separated list (e.g., 100LL, JET-A, MOGAS).</summary>
+    /// <summary>FAA NASR field: FUEL_TYPES. Fuel Types available for public use at the Airport (e.g., 100LL, A, A+, MOGAS, UL94).</summary>
     [Column("fuel_types")]
     public string? FuelTypes { get; set; }
 
@@ -336,44 +344,49 @@ public class Airport : INasrEntity<Airport>
     [Column("bulk_oxy_type")]
     public string? BulkOxyType { get; set; }
 
-    /// <summary>FAA NASR field: LGT_SKED. Airport lighting schedule (e.g., SS-SR for sunset to sunrise).</summary>
+    /// <summary>FAA NASR field: LGT_SKED. Airport Lighting Schedule. Beginning-ending times (local time) that Standard Airport Lights are operated. Value can be "SS-SR" (sunset-sunrise), blank, or "SEE RMK".</summary>
     [Column("lgt_sked")]
     public string? LgtSked { get; set; }
 
-    /// <summary>FAA NASR field: BCN_LGT_SKED. Beacon lighting schedule (e.g., SS-SR for sunset to sunrise).</summary>
+    /// <summary>FAA NASR field: BCN_LGT_SKED. Beacon Lighting Schedule. Beginning-ending times (local time) that the Rotating Airport Beacon Light is operated. Value can be "SS-SR" (sunset-sunrise), blank, or "SEE RMK".</summary>
     [Column("bcn_lgt_sked")]
     public string? BcnLgtSked { get; set; }
 
     /// <summary>
-    /// FAA NASR field: TWR_TYPE_CODE. Air Traffic Control Tower type.
-    /// <para>Possible values include: NON-ATCT, ATCT, ATCT-A/C (with approach control), etc.</para>
+    /// FAA NASR field: TWR_TYPE_CODE. Air Traffic Control Tower Facility Type. NON-ATCT is equivalent to no ATC tower; all others indicate ATC tower present.
+    /// <para>Possible values: ATCT (Air Traffic Control Tower), NON-ATCT (No Tower), ATCT-A/C (Tower plus Approach Control),
+    /// ATCT-RAPCON (Tower plus Radar Approach Control - AF operates ATCT/FAA operates AC),
+    /// ATCT-RATCF (Tower plus Radar Approach Control - Navy operates ATCT/FAA operates AC),
+    /// ATCT-TRACON (Tower plus Terminal Radar Approach Control), TRACON.</para>
     /// </summary>
     [Column("twr_type_code")]
     public string? TwrTypeCode { get; set; } = string.Empty;
 
     /// <summary>
-    /// FAA NASR field: SEG_CIRCLE_MKR_FLAG. Segmented circle airport marker system.
-    /// <para>Possible values: Y (Yes), Y-L (Yes, Lighted), N (No).</para>
+    /// FAA NASR field: SEG_CIRCLE_MKR_FLAG. Segmented Circle Airport Marker System on the Airport.
+    /// <para>Possible values: Y (Yes), Y-L (Yes, Lighted), N (No), NONE.</para>
     /// </summary>
     [Column("seg_circle_mkr_flag")]
     public string? SegCircleMkrFlag { get; set; }
 
     /// <summary>
-    /// FAA NASR field: BCN_LENS_COLOR. Airport beacon lens color.
-    /// <para>Possible values: CG (Clear-Green, land airport), CY (Clear-Yellow, water airport), CGY (Clear-Green-Yellow, heliport), SCG (Split Clear-Green, military), C (Clear, unlighted).</para>
+    /// FAA NASR field: BCN_LENS_COLOR. Lens Color of Operable Beacon located on the Airport.
+    /// <para>Possible values: WG (White-Green, lighted land airport), WY (White-Yellow, lighted seaplane base),
+    /// WGY (White-Green-Yellow, heliport), SWG (Split-White-Green, lighted military airport),
+    /// W (White, unlighted land airport), Y (Yellow, unlighted seaplane base), G (Green, lighted land airport), N (None).</para>
     /// </summary>
     [Column("bcn_lens_color")]
     public string? BcnLensColor { get; set; }
 
     /// <summary>
-    /// FAA NASR field: LNDG_FEE_FLAG. Whether landing fees are charged at the airport.
+    /// FAA NASR field: LNDG_FEE_FLAG. Landing Fee charged to Non-Commercial Users of Airport.
     /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("lndg_fee_flag")]
     public string? LndgFeeFlag { get; set; }
 
     /// <summary>
-    /// FAA NASR field: MEDICAL_USE_FLAG. Whether the airport is used for medical purposes (air ambulance).
+    /// FAA NASR field: MEDICAL_USE_FLAG. Indicates that the Landing Facility is used for Medical Purposes.
     /// <para>Possible values: Y (Yes), N (No).</para>
     /// </summary>
     [Column("medical_use_flag")]
@@ -434,7 +447,7 @@ public class Airport : INasrEntity<Airport>
     public string? OtherServices { get; set; }
 
     /// <summary>
-    /// FAA NASR field: WIND_INDCR_FLAG. Whether a wind indicator exists at the airport.
+    /// FAA NASR field: WIND_INDCR_FLAG. Wind Indicator at the Airport.
     /// <para>Possible values: N (No Wind Indicator), Y (Unlighted Wind Indicator Exists), Y-L (Lighted Wind Indicator Exists).</para>
     /// </summary>
     [Column("wind_indcr_flag")]
@@ -448,7 +461,7 @@ public class Airport : INasrEntity<Airport>
     [Column("min_op_network")]
     public string? MinOpNetwork { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: USER_FEE_FLAG. If set, the airport is designated as "US CUSTOMS USER FEE ARPT."</summary>
+    /// <summary>FAA NASR field: USER_FEE_FLAG. If set, User Fee Airports will be designated with text "US CUSTOMS USER FEE ARPT."</summary>
     [Column("user_fee_flag")]
     public string? UserFeeFlag { get; set; }
 
@@ -456,19 +469,25 @@ public class Airport : INasrEntity<Airport>
     [Column("cta")]
     public string? Cta { get; set; }
 
-    /// <summary>FAA NASR field: FAR_139_TYPE_CODE. FAR Part 139 airport certification type code.</summary>
+    /// <summary>FAA NASR field: FAR_139_TYPE_CODE. Airport ARFF Certification Type Code. Format is class code (I/II/III/IV) followed by A/B/C/D/E (full certificate under CFR Part 139, identifies ARFF index) or L (limited certification). Blank if not certificated.</summary>
     [Column("far_139_type_code")]
     public string? Far139TypeCode { get; set; }
 
-    /// <summary>FAA NASR field: FAR_139_CARRIER_SER_CODE. FAR Part 139 carrier service code.</summary>
+    /// <summary>
+    /// FAA NASR field: FAR_139_CARRIER_SER_CODE. Airport ARFF Certification Carrier Service Code.
+    /// <para>Possible values: S (Scheduled Air Carrier Service), U (Not receiving scheduled service).</para>
+    /// </summary>
     [Column("far_139_carrier_ser_code")]
     public string? Far139CarrierSerCode { get; set; }
 
-    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. ARFF certification type and date.</summary>
+    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. Airport ARFF Certification Date (YYYY/MM).</summary>
     [Column("arff_cert_type_date")]
     public DateTime? ArffCertTypeDate { get; set; }
 
-    /// <summary>FAA NASR field: ASP_ANLYS_DTRM_CODE. Airport safety analysis determination code.</summary>
+    /// <summary>
+    /// FAA NASR field: ASP_ANLYS_DTRM_CODE. Airport Airspace Analysis Determination.
+    /// <para>Possible values: CONDL (Conditional), NOT ANALYZED, NO OBJECTION, OBJECTIONABLE.</para>
+    /// </summary>
     [Column("asp_analysis_dtrm_code")]
     public string? AspAnalysisDtrmCode { get; set; }
 

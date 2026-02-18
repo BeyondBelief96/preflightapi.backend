@@ -15,89 +15,89 @@ namespace PreflightApi.Domain.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        /// <summary>FAA NASR field: FACILITY_CODE. FAA facility identifier code for the communication facility.</summary>
+        /// <summary>FAA NASR field: FACILITY. Contains FACILITY ID except for FACILITY TYPE AFIS, CTAF, GCO, UNICOM and RCAG. The FACILITY NAME is used for RCAG sites. AFIS, CTAF, GCO and UNICOM are NULL.</summary>
         [Column("facility_code", TypeName = "varchar(30)")]
         public string? FacilityCode { get; set; }
 
-        /// <summary>FAA NASR field: EFF_DATE. Effective date of the frequency record.</summary>
+        /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date (YYYY/MM/DD).</summary>
         [Column("effective_date")]
         public DateTime EffectiveDate { get; set; }
 
-        /// <summary>FAA NASR field: FACILITY_NAME. Name of the communication facility.</summary>
+        /// <summary>FAA NASR field: FAC_NAME. Official Facility Name. NULL for AFIS, CTAF, GCO, UNICOM (no FACILITY ID or NAME in NASR) and ASOS/AWOS (no FACILITY NAME in NASR).</summary>
         [Column("facility_name", TypeName = "varchar(50)")]
         public string? FacilityName { get; set; }
 
-        /// <summary>FAA NASR field: FACILITY_TYPE. Type of facility (e.g., ATCT, TRACON, ARTCC, FSS, CTAF).</summary>
+        /// <summary>FAA NASR field: FACILITY_TYPE. All records contain a FACILITY TYPE. Note: RCO and RCO1 serve the same function (remote communication outlet). An RCO1 may exist if two separate sites share the same identifier.</summary>
         [Column("facility_type", TypeName = "varchar(12)")]
         [Required]
         public string FacilityType { get; set; } = string.Empty;
 
-        /// <summary>FAA NASR field: ARTCC_OR_FSS_ID. Associated Air Route Traffic Control Center (ARTCC) or Flight Service Station (FSS) identifier.</summary>
+        /// <summary>FAA NASR field: ARTCC_OR_FSS_ID. RCAG facilities contain an ARTCC ID; RCO/RCO1 facilities contain an FSS ID. Included for convenience to identify the parent ARTCC or FSS resource in NASR.</summary>
         [Column("artcc_or_fss_id", TypeName = "varchar(4)")]
         public string? ArtccOrFssId { get; set; }
 
-        /// <summary>FAA NASR field: CPDLC. Controller-Pilot Data Link Communications (CPDLC) information.</summary>
+        /// <summary>FAA NASR field: CPDLC. A Controller Pilot Data Link Communications (CPDLC) remark associated with a FACILITY.</summary>
         [Column("cpdlc", TypeName = "varchar(100)")]
         public string? Cpdlc { get; set; }
 
-        /// <summary>FAA NASR field: TOWER_HOURS. Tower operating hours (e.g., "0600-2200", "24 HRS", "SS-SR").</summary>
+        /// <summary>FAA NASR field: TOWER_HRS. Tower operating hours. Only listed for ATCT FACILITY TYPEs where the FACILITY equals the SERVICED FACILITY.</summary>
         [Column("tower_hours", TypeName = "varchar(200)")]
         public string? TowerHours { get; set; }
 
-        /// <summary>FAA NASR field: SERVICED_FACILITY. FAA identifier of the facility being serviced by this frequency.</summary>
+        /// <summary>FAA NASR field: SERVICED_FACILITY. The FACILITY ID (or FACILITY NAME if FACILITY TYPE is RCAG) that is serviced by the frequencies listed. This is a NON-NULL field.</summary>
         [Column("serviced_facility", TypeName = "varchar(30)")]
         [Required]
         public string ServicedFacility { get; set; } = string.Empty;
 
-        /// <summary>FAA NASR field: SERVICED_FACILITY_NAME. Name of the facility being serviced.</summary>
+        /// <summary>FAA NASR field: SERVICED_FAC_NAME. The FACILITY NAME that is serviced by the frequencies listed.</summary>
         [Column("serviced_facility_name", TypeName = "varchar(50)")]
         public string? ServicedFacilityName { get; set; }
 
-        /// <summary>FAA NASR field: SERVICED_SITE_TYPE. Site type of the facility being serviced (e.g., AIRPORT, HELIPORT).</summary>
+        /// <summary>FAA NASR field: SERVICED_SITE_TYPE. Facility Type of SERVICED FACILITY.</summary>
         [Column("serviced_site_type", TypeName = "varchar(25)")]
         public string? ServicedSiteType { get; set; }
 
-        /// <summary>FAA NASR field: LATITUDE. Latitude of the serviced facility in decimal degrees.</summary>
+        /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in Decimal Format.</summary>
         [Column("latitude", TypeName = "decimal(10,8)")]
         public decimal? Latitude { get; set; }
 
-        /// <summary>FAA NASR field: LONGITUDE. Longitude of the serviced facility in decimal degrees.</summary>
+        /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in Decimal Format.</summary>
         [Column("longitude", TypeName = "decimal(11,8)")]
         public decimal? Longitude { get; set; }
 
-        /// <summary>FAA NASR field: SERVICED_CITY. City of the serviced facility.</summary>
+        /// <summary>FAA NASR field: SERVICED_CITY. Serviced Facility Associated City Name.</summary>
         [Column("serviced_city", TypeName = "varchar(40)")]
         public string? ServicedCity { get; set; }
 
-        /// <summary>FAA NASR field: SERVICED_STATE. Two-letter state code of the serviced facility.</summary>
+        /// <summary>FAA NASR field: SERVICED_STATE. Two-letter state ID of the SERVICED FACILITY.</summary>
         [Column("serviced_state", TypeName = "varchar(2)")]
         public string? ServicedState { get; set; }
 
-        /// <summary>FAA NASR field: SERVICED_COUNTRY. Two-letter country code of the serviced facility.</summary>
+        /// <summary>FAA NASR field: SERVICED_COUNTRY. Country Post Office Code of Serviced Facility.</summary>
         [Column("serviced_country", TypeName = "varchar(2)")]
         public string? ServicedCountry { get; set; }
 
-        /// <summary>FAA NASR field: TOWER_OR_COMM_CALL. Tower or communications call sign (e.g., "DALLAS TOWER", "SOCAL APPROACH").</summary>
+        /// <summary>FAA NASR field: TOWER_OR_COMM_CALL. Radio call used by pilot to contact ATC or FSS facility.</summary>
         [Column("tower_or_comm_call", TypeName = "varchar(30)")]
         public string? TowerOrCommCall { get; set; }
 
-        /// <summary>FAA NASR field: PRIMARY_APPROACH_RADIO_CALL. Primary approach control radio call sign.</summary>
+        /// <summary>FAA NASR field: PRIMARY_APPROACH_RADIO_CALL. Radio call of facility that furnishes primary approach control.</summary>
         [Column("primary_approach_radio_call", TypeName = "varchar(26)")]
         public string? PrimaryApproachRadioCall { get; set; }
 
-        /// <summary>FAA NASR field: FREQUENCY. Radio frequency in MHz (e.g., "118.700", "121.900").</summary>
+        /// <summary>FAA NASR field: FREQ. Frequency for SERVICED FACILITY use. In the case of a NAVAID with DME/TACAN Channel, the Frequency is displayed with the Channel (FREQ/CHAN).</summary>
         [Column("frequency", TypeName = "varchar(40)")]
         public string? Frequency { get; set; }
 
-        /// <summary>FAA NASR field: SECTORIZATION. Sectorization or coverage area description for the frequency.</summary>
+        /// <summary>FAA NASR field: SECTORIZATION. Sectorization based on SERVICED FACILITY or airway boundaries, or limitations based on runway usage. For ARTCC and RCAG, identifies the Frequency Altitude as Low, High, Low/High or Ultra-High.</summary>
         [Column("sectorization", TypeName = "varchar(50)")]
         public string? Sectorization { get; set; }
 
-        /// <summary>FAA NASR field: FREQUENCY_USE. Intended use of the frequency (e.g., ATIS, LCL/P (Local/Tower), GND/P (Ground), CD/P (Clearance Delivery), APCH/P (Approach), DEP/P (Departure)).</summary>
+        /// <summary>FAA NASR field: FREQ_USE. SERVICED FACILITY frequency use description.</summary>
         [Column("frequency_use", TypeName = "varchar(600)")]
         public string? FrequencyUse { get; set; }
 
-        /// <summary>FAA NASR field: REMARK. Free-form remark text providing additional information about the frequency.</summary>
+        /// <summary>FAA NASR field: REMARK. Remark Text (Free Form Text that further describes a specific Information Item).</summary>
         [Column("remark", TypeName = "varchar(1500)")]
         public string? Remark { get; set; }
 

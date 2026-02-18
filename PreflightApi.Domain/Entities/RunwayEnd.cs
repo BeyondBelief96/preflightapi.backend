@@ -255,19 +255,24 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public string? DisplacedThrLongHemis { get; set; }
 
     // Codes & Gradient
-    /// <summary>FAA NASR field: FAR_PART_77_CODE. FAR Part 77 approach category code.</summary>
+    /// <summary>
+    /// FAA NASR field: FAR_PART_77_CODE. FAA CFR Part 77 (Objects Affecting Navigable Airspace) Runway Category.
+    /// <para>Possible values: A(V) (Utility Runway with Visual Approach), B(V) (Other Than Utility with Visual Approach),
+    /// A(NP) (Utility with Nonprecision Approach), C (Other Than Utility with Nonprecision, visibility &gt; 3/4 mile),
+    /// D (Other Than Utility with Nonprecision, visibility as low as 3/4 mile), PIR (Precision Instrument Runway).</para>
+    /// </summary>
     [Column("far_part_77_code")]
     public string? FarPart77Code { get; set; }
 
-    /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Centerline direction code.</summary>
+    /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Controlling Object Centerline Offset Direction. Indicates direction (left or right) to the object from the centerline as seen by an approaching pilot.</summary>
     [Column("centerline_direction_code")]
     public string? CenterlineDirectionCode { get; set; }
 
-    /// <summary>FAA NASR field: RWY_GRAD. Runway gradient as a percentage.</summary>
+    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient.</summary>
     [Column("runway_gradient", TypeName = "decimal(5,2)")]
     public decimal? RunwayGradient { get; set; }
 
-    /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway gradient direction (UP or DOWN).</summary>
+    /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway End Gradient Direction (Up or Down).</summary>
     [Column("runway_gradient_direction")]
     public string? RunwayGradientDirection { get; set; }
 
@@ -330,15 +335,15 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     public int? LandingDistanceAvailable { get; set; }
 
     // LAHSO (Land and Hold Short Operations)
-    /// <summary>FAA NASR field: LAHSO_ALD. LAHSO available landing distance in feet.</summary>
+    /// <summary>FAA NASR field: LAHSO_ALD. Available Landing Distance for Land and Hold Short Operations (LAHSO), in feet.</summary>
     [Column("lahso_available_landing_distance")]
     public int? LahsoAvailableLandingDistance { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_INTERSECT_LAHSO. Intersecting runway for LAHSO operations.</summary>
+    /// <summary>FAA NASR field: RWY_END_INTERSECT_LAHSO. ID of Intersecting Runway Defining Hold Short Point.</summary>
     [Column("lahso_intersecting_runway")]
     public string? LahsoIntersectingRunway { get; set; }
 
-    /// <summary>FAA NASR field: LAHSO_DESC. LAHSO hold short point description.</summary>
+    /// <summary>FAA NASR field: LAHSO_DESC. Description of Entity Defining Hold Short Point if not an Intersecting Runway.</summary>
     [Column("lahso_description")]
     public string? LahsoDescription { get; set; }
 

@@ -24,5 +24,8 @@ public enum AirportOwnershipType
     Navy,
 
     /// <summary>MR - Army Owned.</summary>
-    Army
+    Army,
+
+    /// <summary>CG - Coast Guard Owned.</summary>
+    CoastGuard
 }
