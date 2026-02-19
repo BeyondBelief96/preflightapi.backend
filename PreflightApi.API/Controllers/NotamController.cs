@@ -49,6 +49,7 @@ public class NotamController(INotamService notamService)
     private static readonly Regex FreeTextPattern = new(@"^[ /\.\-\(\)\w]{1,80}$", RegexOptions.Compiled);
     private static readonly Regex NmsIdPattern = new(@"^\d{1,64}$", RegexOptions.Compiled);
     private static readonly Regex NotamNumberPattern = new(@"^[A-Za-z0-9 /!\-]{1,30}$", RegexOptions.Compiled);
+    private static readonly Regex AlphanumericPattern = new(@"^[A-Za-z0-9]{1,10}$", RegexOptions.Compiled);
 
     /// <summary>
     /// Gets NOTAMs by NOTAM number in various formats.
@@ -357,6 +358,7 @@ public class NotamController(INotamService notamService)
     /// <para>
     /// Searches the entire active NOTAM database without requiring a specific airport or location.
     /// At least one filter parameter is required to prevent unbounded queries.
+    /// Mirrors the FAA NMS API query parameters for flexible NOTAM filtering.
     /// </para>
     ///
     /// <para><strong>Pagination</strong></para>
@@ -366,12 +368,25 @@ public class NotamController(INotamService notamService)
     /// The <c>limit</c> parameter controls page size (1–500, default 100).
     /// </para>
     ///
+    /// <para><strong>Parameter Pairing Rules</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><c>notamNumber</c> must be paired with <c>location</c> or <c>accountability</c></description></item>
+    ///   <item><description><c>latitude</c>, <c>longitude</c>, and <c>radius</c> must all be provided together</description></item>
+    ///   <item><description><c>effectiveStartDate</c> and <c>effectiveEndDate</c> must both be provided or both omitted</description></item>
+    ///   <item><description><c>lastUpdatedDate</c>: when provided, returns both active and inactive NOTAMs modified since that time</description></item>
+    /// </list>
+    ///
     /// <para><strong>Examples</strong></para>
     /// <code>
-    /// GET /api/v1/notams/search?classification=FDC                           — all active FDC NOTAMs
-    /// GET /api/v1/notams/search?freeText=CLOSED&amp;limit=50                     — text search, 50 per page
-    /// GET /api/v1/notams/search?feature=RWY&amp;classification=DOMESTIC           — combined filters
-    /// GET /api/v1/notams/search?classification=FDC&amp;cursor=ABC123&amp;limit=100   — next page
+    /// GET /api/v1/notams/search?classification=FDC                                          — all active FDC NOTAMs
+    /// GET /api/v1/notams/search?freeText=CLOSED&amp;limit=50                                    — text search, 50 per page
+    /// GET /api/v1/notams/search?feature=RWY&amp;classification=DOMESTIC                          — combined filters
+    /// GET /api/v1/notams/search?accountability=BNA                                          — NOTAMs by issuing office
+    /// GET /api/v1/notams/search?location=DFW                                                — NOTAMs for a location
+    /// GET /api/v1/notams/search?notamNumber=420&amp;location=DFW                                 — NOTAM by number + location
+    /// GET /api/v1/notams/search?latitude=32.8998&amp;longitude=-97.0403&amp;radius=25                — spatial search
+    /// GET /api/v1/notams/search?lastUpdatedDate=2025-03-01T00:00:00Z                        — recently modified (active + inactive)
+    /// GET /api/v1/notams/search?classification=FDC&amp;cursor=ABC123&amp;limit=100                   — next page
     /// </code>
     /// </remarks>
     /// <param name="classification">Optional NOTAM classification filter: INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC</param>
@@ -379,6 +394,13 @@ public class NotamController(INotamService notamService)
     /// <param name="freeText">Optional text search within NOTAM text (max 80 characters, alphanumeric and /.-() only)</param>
     /// <param name="effectiveStartDate">Optional effective start date filter (ISO 8601). Must be paired with effectiveEndDate.</param>
     /// <param name="effectiveEndDate">Optional effective end date filter (ISO 8601). Must be paired with effectiveStartDate.</param>
+    /// <param name="accountability">Optional accountability code (issuing office) filter, e.g., "BNA", "FDC". Alphanumeric, max 10 characters.</param>
+    /// <param name="location">Optional location identifier filter (FAA domestic or ICAO code), e.g., "DFW" or "KDFW". Alphanumeric, max 10 characters.</param>
+    /// <param name="notamNumber">Optional NOTAM number filter. Must be paired with location or accountability.</param>
+    /// <param name="latitude">Optional latitude in decimal degrees (-90 to 90). Must be paired with longitude and radius.</param>
+    /// <param name="longitude">Optional longitude in decimal degrees (-180 to 180). Must be paired with latitude and radius.</param>
+    /// <param name="radius">Optional search radius in nautical miles (0 to 100). Must be paired with latitude and longitude.</param>
+    /// <param name="lastUpdatedDate">Optional ISO 8601 timestamp. Returns NOTAMs modified since this time, including inactive NOTAMs.</param>
     /// <param name="pagination">Cursor-based pagination parameters. <c>cursor</c>: opaque value from a previous response's <c>nextCursor</c>; <c>limit</c>: items per page (1–500, default 100).</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated NOTAMs matching the filter criteria</returns>
@@ -394,15 +416,24 @@ public class NotamController(INotamService notamService)
         [FromQuery] string? freeText,
         [FromQuery] string? effectiveStartDate,
         [FromQuery] string? effectiveEndDate,
+        [FromQuery] string? accountability,
+        [FromQuery] string? location,
+        [FromQuery] string? notamNumber,
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        [FromQuery] double? radius,
+        [FromQuery] string? lastUpdatedDate,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {
-        var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate);
+        var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate,
+            accountability, location, notamNumber, latitude, longitude, radius, lastUpdatedDate);
 
         if (filters == null || !filters.HasFilters)
         {
             throw new ValidationException("filters",
-                "At least one filter parameter is required (classification, feature, freeText, effectiveStartDate/effectiveEndDate)");
+                "At least one filter parameter is required (classification, feature, freeText, effectiveStartDate/effectiveEndDate, " +
+                "accountability, location, notamNumber, latitude/longitude/radius, lastUpdatedDate)");
         }
 
         ValidateFilters(filters);
@@ -468,8 +499,22 @@ public class NotamController(INotamService notamService)
         string? classification, string? feature, string? freeText,
         string? effectiveStartDate, string? effectiveEndDate)
     {
+        return BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate,
+            null, null, null, null, null, null, null);
+    }
+
+    private static NotamFilterDto? BuildFilters(
+        string? classification, string? feature, string? freeText,
+        string? effectiveStartDate, string? effectiveEndDate,
+        string? accountability, string? location, string? notamNumber,
+        double? latitude, double? longitude, double? radius,
+        string? lastUpdatedDate)
+    {
         if (classification == null && feature == null && freeText == null &&
-            effectiveStartDate == null && effectiveEndDate == null)
+            effectiveStartDate == null && effectiveEndDate == null &&
+            accountability == null && location == null && notamNumber == null &&
+            latitude == null && longitude == null && radius == null &&
+            lastUpdatedDate == null)
         {
             return null;
         }
@@ -480,7 +525,14 @@ public class NotamController(INotamService notamService)
             Feature = feature,
             FreeText = freeText,
             EffectiveStartDate = effectiveStartDate,
-            EffectiveEndDate = effectiveEndDate
+            EffectiveEndDate = effectiveEndDate,
+            Accountability = accountability,
+            Location = location,
+            NotamNumber = notamNumber,
+            Latitude = latitude,
+            Longitude = longitude,
+            Radius = radius,
+            LastUpdatedDate = lastUpdatedDate
         };
     }
 
@@ -513,6 +565,70 @@ public class NotamController(INotamService notamService)
         {
             throw new ValidationException("effectiveStartDate",
                 "effectiveStartDate and effectiveEndDate must both be provided or both omitted");
+        }
+
+        if (filters.Accountability != null && !AlphanumericPattern.IsMatch(filters.Accountability))
+        {
+            throw new ValidationException("accountability",
+                "Accountability must be alphanumeric and at most 10 characters");
+        }
+
+        if (filters.Location != null && !AlphanumericPattern.IsMatch(filters.Location))
+        {
+            throw new ValidationException("location",
+                "Location must be alphanumeric and at most 10 characters");
+        }
+
+        if (filters.NotamNumber != null)
+        {
+            if (!NotamNumberPattern.IsMatch(filters.NotamNumber))
+            {
+                throw new ValidationException("notamNumber",
+                    "NOTAM number must be 1-30 characters containing only letters, digits, spaces, /, !, and hyphens");
+            }
+
+            if (filters.Location == null && filters.Accountability == null)
+            {
+                throw new ValidationException("notamNumber",
+                    "notamNumber must be paired with location or accountability");
+            }
+        }
+
+        // Latitude, longitude, radius must all be provided together
+        var hasLat = filters.Latitude.HasValue;
+        var hasLon = filters.Longitude.HasValue;
+        var hasRadius = filters.Radius.HasValue;
+        if (hasLat || hasLon || hasRadius)
+        {
+            if (!hasLat || !hasLon || !hasRadius)
+            {
+                throw new ValidationException("latitude",
+                    "latitude, longitude, and radius must all be provided together");
+            }
+
+            if (filters.Latitude!.Value < -90 || filters.Latitude.Value > 90)
+            {
+                throw new ValidationException("latitude",
+                    "Latitude must be between -90 and 90 degrees");
+            }
+
+            if (filters.Longitude!.Value < -180 || filters.Longitude.Value > 180)
+            {
+                throw new ValidationException("longitude",
+                    "Longitude must be between -180 and 180 degrees");
+            }
+
+            if (filters.Radius!.Value <= 0 || filters.Radius.Value > 100)
+            {
+                throw new ValidationException("radius",
+                    "Radius must be between 0 and 100 nautical miles");
+            }
+        }
+
+        if (filters.LastUpdatedDate != null && !DateTime.TryParse(filters.LastUpdatedDate, out _))
+        {
+            throw new ValidationException("lastUpdatedDate",
+                "lastUpdatedDate must be a valid ISO 8601 timestamp");
         }
     }
 

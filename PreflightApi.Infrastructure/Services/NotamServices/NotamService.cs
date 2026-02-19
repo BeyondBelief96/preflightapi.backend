@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -197,8 +198,34 @@ public class NotamService : INotamService
         _logger.LogInformation("Searching NOTAMs with filters: Classification={Classification}, Feature={Feature}, FreeText={FreeText}",
             filters.Classification, filters.Feature, filters.FreeText);
 
-        var query = _dbContext.Notams.AsNoTracking();
-        query = ApplyActiveFilter(query);
+        IQueryable<Domain.Entities.Notam> query;
+
+        // When lat/lon/radius are provided, start with a spatial query (requires PostGIS)
+        if (filters.Latitude.HasValue && filters.Longitude.HasValue && filters.Radius.HasValue)
+        {
+            var point = GeometryFactory.CreatePoint(new Coordinate(filters.Longitude.Value, filters.Latitude.Value));
+            var radiusMeters = filters.Radius.Value * 1852.0;
+
+            query = _dbContext.Notams
+                .FromSqlInterpolated($"SELECT * FROM notams WHERE geometry IS NOT NULL AND ST_DWithin(geometry::geography, {point}::geography, {radiusMeters})")
+                .AsNoTracking();
+        }
+        else
+        {
+            query = _dbContext.Notams.AsNoTracking();
+        }
+
+        // LastUpdatedDate: skip active filter and return NOTAMs modified since that date (FAA behavior)
+        if (!string.IsNullOrEmpty(filters.LastUpdatedDate) &&
+            DateTime.TryParse(filters.LastUpdatedDate, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out var lastUpdated))
+        {
+            query = query.Where(n => n.LastUpdated >= lastUpdated);
+        }
+        else
+        {
+            query = ApplyActiveFilter(query);
+        }
+
         query = ApplyFilters(query, filters);
 
         return await query.ToPaginatedAsync(
@@ -346,6 +373,12 @@ public class NotamService : INotamService
             query = query.Where(n => n.Classification == filters.Classification);
         }
 
+        if (!string.IsNullOrEmpty(filters.Feature))
+        {
+            var feature = filters.Feature;
+            query = query.Where(n => EF.Functions.ILike(n.FeatureJson, $"%\"feature\":\"{feature}\"%"));
+        }
+
         if (!string.IsNullOrEmpty(filters.FreeText))
         {
             var searchText = filters.FreeText;
@@ -362,6 +395,42 @@ public class NotamService : INotamService
             DateTime.TryParse(filters.EffectiveEndDate, out var endDate))
         {
             query = query.Where(n => n.EffectiveEnd <= endDate);
+        }
+
+        if (!string.IsNullOrEmpty(filters.Accountability))
+        {
+            var accountability = filters.Accountability.ToUpperInvariant();
+            query = query.Where(n => n.AccountId == accountability);
+        }
+
+        if (!string.IsNullOrEmpty(filters.Location))
+        {
+            var location = filters.Location.ToUpperInvariant();
+            query = query.Where(n => n.Location == location || n.IcaoLocation == location);
+        }
+
+        if (!string.IsNullOrEmpty(filters.NotamNumber))
+        {
+            var parsed = NotamNumberParser.Parse(filters.NotamNumber);
+            if (parsed != null)
+            {
+                query = query.Where(n => n.NotamNumber == parsed.Number);
+
+                if (parsed.Year != null)
+                    query = query.Where(n => n.NotamYear == parsed.Year);
+
+                if (parsed.Series != null)
+                    query = query.Where(n => n.Series == parsed.Series);
+
+                if (parsed.AccountId != null)
+                    query = query.Where(n => n.AccountId == parsed.AccountId);
+
+                if (parsed.Location != null)
+                {
+                    var loc = parsed.Location;
+                    query = query.Where(n => n.Location == loc || n.IcaoLocation == loc);
+                }
+            }
         }
 
         return query;
