@@ -10,6 +10,7 @@ using PreflightApi.Domain.Entities;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
+using PreflightApi.Infrastructure.Services.CertificateRenewal;
 using PreflightApi.Infrastructure.Services.CronJobServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
@@ -48,6 +49,8 @@ builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
 // Register settings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
+builder.Services.Configure<PorkbunSettings>(builder.Configuration.GetSection("Porkbun"));
+builder.Services.Configure<CertificateRenewalSettings>(builder.Configuration.GetSection("CertificateRenewal"));
 
 // Register services
 builder.Services.AddScoped<IFaaPublicationCycleService, FaaPublicationCycleService>();
@@ -69,6 +72,9 @@ builder.Services.AddScoped<IObstacleDailyChangeCronService, ObstacleDailyChangeC
 builder.Services.AddSingleton<INmsApiClient, NmsApiClient>();
 builder.Services.AddScoped<INotamDeltaSyncCronService, NotamDeltaSyncCronService>();
 builder.Services.AddScoped<INotamInitialLoadCronService, NotamInitialLoadCronService>();
+builder.Services.AddScoped<IPorkbunDnsClient, PorkbunDnsClient>();
+builder.Services.AddScoped<IKeyVaultCertificateService, KeyVaultCertificateService>();
+builder.Services.AddScoped<ICertificateRenewalService, CertificateRenewalService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddResilientHttpClients();
 
@@ -84,6 +90,9 @@ builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
     var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
     client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
 });
+
+// Configure HttpClient for Porkbun DNS API
+builder.Services.AddHttpClient("Porkbun");
 
 // Register database context
 builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) =>
