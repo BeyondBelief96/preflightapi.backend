@@ -25,7 +25,7 @@ namespace PreflightApi.Azure.Functions.Functions
 
         [Function("AirspaceFunction")]
         [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-        public async Task Run([TimerTrigger("0 0 2 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 11 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Airspace Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
