@@ -58,7 +58,9 @@
       "Bash(xxd:*)",
       "WebFetch(domain:aviationweather.gov)",
       "Bash(/c/Python313/python:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "WebFetch(domain:modelcontextprotocol.github.io)",
+      "WebFetch(domain:www.nuget.org)"
     ],
     "deny": [],
     "ask": []
