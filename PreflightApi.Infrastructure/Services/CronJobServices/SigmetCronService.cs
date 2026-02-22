@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,20 +17,24 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         private readonly ILogger<SigmetCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
+        private readonly ISyncTelemetryService _telemetry;
         private const string SigmetUrl = "https://aviationweather.gov/data/cache/airsigmets.cache.xml.gz";
 
         public SigmetCronService(
             ILogger<SigmetCronService> logger,
             IHttpClientFactory httpClientFactory,
-            PreflightApiDbContext dbContext)
+            PreflightApiDbContext dbContext,
+            ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _dbContext = dbContext;
+            _telemetry = telemetry;
         }
 
         public async Task PollWeatherDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 _logger.LogInformation("Starting SIGMET data fetch and storage");
@@ -39,6 +44,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 {
                     _logger.LogInformation("No SIGMET data available from API (204 No Content)");
                     await PurgeExpiredSigmetsAsync(cancellationToken);
+                    _telemetry.TrackSyncCompleted("Sigmet", 0, 0, sw.ElapsedMilliseconds);
                     return;
                 }
 
@@ -46,10 +52,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 await UpdateOrCreateSigmetsAsync(sigmetData, cancellationToken);
                 await PurgeExpiredSigmetsAsync(cancellationToken);
                 _logger.LogInformation("Completed SIGMET data update");
+                _telemetry.TrackSyncCompleted("Sigmet", sigmetData.Count(), 0, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching SIGMET data");
+                _telemetry.TrackSyncFailed("Sigmet", ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

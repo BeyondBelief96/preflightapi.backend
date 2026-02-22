@@ -29,26 +29,19 @@ public class ObstacleFunction
         _logger.LogInformation("Obstacle Function executed at: {Time}", DateTime.UtcNow);
         var cancellationToken = context.CancellationToken;
 
-        try
-        {
-            var currentDate = DateTime.UtcNow;
+        var currentDate = DateTime.UtcNow;
 
-            if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Obstacles, currentDate))
-            {
-                var sw = Stopwatch.StartNew();
-                _logger.LogInformation("Starting obstacle data update process");
-                await _obstacleService.DownloadAndProcessObstaclesAsync(cancellationToken);
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Obstacles, currentDate);
-                _logger.LogInformation("Obstacle data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
-            }
-            else
-            {
-                _logger.LogInformation("No obstacle data update needed at this time");
-            }
-        }
-        catch (Exception)
+        if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Obstacles, currentDate))
         {
-            throw;
+            var sw = Stopwatch.StartNew();
+            _logger.LogInformation("Starting obstacle data update process");
+            await _obstacleService.DownloadAndProcessObstaclesAsync(cancellationToken);
+            await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Obstacles, currentDate);
+            _logger.LogInformation("Obstacle data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+        }
+        else
+        {
+            _logger.LogInformation("No obstacle data update needed at this time");
         }
     }
 }

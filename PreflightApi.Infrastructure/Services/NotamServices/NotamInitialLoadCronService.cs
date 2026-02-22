@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,6 +14,7 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
     private readonly INmsApiClient _nmsApiClient;
     private readonly PreflightApiDbContext _dbContext;
     private readonly ILogger<NotamInitialLoadCronService> _logger;
+    private readonly ISyncTelemetryService _telemetry;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,15 +24,18 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
     public NotamInitialLoadCronService(
         INmsApiClient nmsApiClient,
         PreflightApiDbContext dbContext,
-        ILogger<NotamInitialLoadCronService> logger)
+        ILogger<NotamInitialLoadCronService> logger,
+        ISyncTelemetryService telemetry)
     {
         _nmsApiClient = nmsApiClient;
         _dbContext = dbContext;
         _logger = logger;
+        _telemetry = telemetry;
     }
 
     public async Task LoadAllClassificationsAsync(CancellationToken ct = default)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             _logger.LogInformation("Starting NOTAM initial load via bulk /v1/notams/il endpoint");
@@ -48,10 +53,13 @@ public class NotamInitialLoadCronService : INotamInitialLoadCronService
             _logger.LogInformation(
                 "NOTAM initial load complete: {NewCount} new, {UpdatedCount} updated out of {TotalFetched} fetched",
                 newCount, updatedCount, notamDtos.Count);
+
+            _telemetry.TrackSyncCompleted("NotamInitialLoad", notamDtos.Count, 0, sw.ElapsedMilliseconds);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Error during NOTAM initial load");
+            _telemetry.TrackSyncFailed("NotamInitialLoad", ex, sw.ElapsedMilliseconds);
             throw;
         }
     }

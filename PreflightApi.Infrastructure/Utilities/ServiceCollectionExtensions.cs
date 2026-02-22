@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
 {
     public const string WeatherHttpClient = "Weather";
     public const string FaaDataHttpClient = "FaaData";
+    public const string MagVarHttpClient = "MagVar";
 
     /// <summary>
     /// Registers Azure Blob Storage services for cloud storage.
@@ -32,25 +33,32 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers named HttpClients with Polly retry policies for external service resilience.
+    /// Registers named HttpClients with Polly retry and circuit breaker policies for external service resilience.
     /// Weather client: NOAA Aviation Weather cache endpoints.
     /// FaaData client: FAA NASR data, obstacles, diagrams, chart supplements (large downloads, 5-min timeout).
+    /// MagVar client: NOAA Geomagnetic Web API for magnetic declination.
     /// </summary>
     public static IServiceCollection AddResilientHttpClients(this IServiceCollection services)
     {
         services.AddHttpClient(WeatherHttpClient)
-            .AddPolicyHandler(CreateRetryPolicy());
+            .AddPolicyHandler(CreateRetryPolicy())
+            .AddPolicyHandler(CreateCircuitBreakerPolicy());
 
         services.AddHttpClient(FaaDataHttpClient, client =>
         {
             client.Timeout = TimeSpan.FromMinutes(5);
         })
-        .AddPolicyHandler(CreateRetryPolicy());
+        .AddPolicyHandler(CreateRetryPolicy())
+        .AddPolicyHandler(CreateCircuitBreakerPolicy());
+
+        services.AddHttpClient(MagVarHttpClient)
+            .AddPolicyHandler(CreateRetryPolicy())
+            .AddPolicyHandler(CreateCircuitBreakerPolicy());
 
         return services;
     }
 
-    private static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy()
+    public static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy()
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
@@ -60,5 +68,16 @@ public static class ServiceCollectionExtensions
             .WaitAndRetryAsync(
                 retryCount: 3,
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+    }
+
+    public static IAsyncPolicy<HttpResponseMessage> CreateCircuitBreakerPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<HttpIOException>()
+            .Or<TaskCanceledException>()
+            .CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 5,
+                durationOfBreak: TimeSpan.FromSeconds(30));
     }
 }

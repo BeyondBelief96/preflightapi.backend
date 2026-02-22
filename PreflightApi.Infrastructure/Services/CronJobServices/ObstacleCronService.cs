@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ public class ObstacleCronService : IObstacleCronService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly PreflightApiDbContext _dbContext;
     private readonly GeometryFactory _geometryFactory;
+    private readonly ISyncTelemetryService _telemetry;
 
     private const int BatchSize = 5000;
     private const int HeaderLines = 4;
@@ -24,16 +26,19 @@ public class ObstacleCronService : IObstacleCronService
     public ObstacleCronService(
         ILogger<ObstacleCronService> logger,
         IHttpClientFactory httpClientFactory,
-        PreflightApiDbContext dbContext)
+        PreflightApiDbContext dbContext,
+        ISyncTelemetryService telemetry)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _dbContext = dbContext;
         _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+        _telemetry = telemetry;
     }
 
     public async Task DownloadAndProcessObstaclesAsync(CancellationToken cancellationToken = default)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             var publicationCycle = await _dbContext.FaaPublicationCycles
@@ -142,11 +147,13 @@ public class ObstacleCronService : IObstacleCronService
 
                 await transaction.CommitAsync(cancellationToken);
                 _logger.LogInformation("Completed obstacle processing. Total obstacles: {Count}", obstacles.Count);
+                _telemetry.TrackSyncCompleted("Obstacle", obstacles.Count, 0, sw.ElapsedMilliseconds);
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing obstacles");
+            _telemetry.TrackSyncFailed("Obstacle", ex, sw.ElapsedMilliseconds);
             throw;
         }
     }

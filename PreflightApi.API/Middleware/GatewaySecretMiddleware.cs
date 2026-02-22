@@ -29,8 +29,9 @@ public class GatewaySecretMiddleware
             return;
         }
 
-        // Allow the OpenAPI spec endpoint through without the secret
-        if (context.Request.Path.StartsWithSegments("/openapi") ||
+        // Allow health probes, OpenAPI, and Swagger through without the secret
+        if (context.Request.Path.StartsWithSegments("/health") ||
+            context.Request.Path.StartsWithSegments("/openapi") ||
             context.Request.Path.StartsWithSegments("/swagger"))
         {
             await _next(context);

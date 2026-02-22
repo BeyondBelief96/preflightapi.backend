@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,20 +17,24 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         private readonly ILogger<PirepCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
+        private readonly ISyncTelemetryService _telemetry;
         private const string PirepUrl = "https://aviationweather.gov/data/cache/aircraftreports.cache.xml.gz";
 
         public PirepCronService(
             ILogger<PirepCronService> logger,
             IHttpClientFactory httpClientFactory,
-            PreflightApiDbContext dbContext)
+            PreflightApiDbContext dbContext,
+            ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _dbContext = dbContext;
+            _telemetry = telemetry;
         }
 
         public async Task PollWeatherDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 _logger.LogInformation("Starting PIREP data fetch and storage");
@@ -43,6 +48,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 if (xmlData == null)
                 {
                     _logger.LogInformation("No PIREP data available from API (204 No Content)");
+                    _telemetry.TrackSyncCompleted("Pirep", 0, 0, sw.ElapsedMilliseconds);
                     return;
                 }
 
@@ -50,10 +56,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 await UpdateOrCreatePirepsAsync(pirepData, cancellationToken);
 
                 _logger.LogInformation("Completed PIREP data update");
+                _telemetry.TrackSyncCompleted("Pirep", pirepData.Count(), 0, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching PIREP data");
+                _telemetry.TrackSyncFailed("Pirep", ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

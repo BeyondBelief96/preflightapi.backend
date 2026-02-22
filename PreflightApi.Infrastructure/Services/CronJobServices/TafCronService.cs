@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,20 +17,24 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         private readonly ILogger<TafCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
+        private readonly ISyncTelemetryService _telemetry;
         private const string TafUrl = "https://aviationweather.gov/data/cache/tafs.cache.xml.gz";
 
         public TafCronService(
         ILogger<TafCronService> logger,
         IHttpClientFactory httpClientFactory,
-        PreflightApiDbContext dbContext)
+        PreflightApiDbContext dbContext,
+        ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _dbContext = dbContext;
+            _telemetry = telemetry;
         }
 
         public async Task PollWeatherDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 _logger.LogInformation("Starting TAF data fetch and storage");
@@ -38,6 +43,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 if (xmlData == null)
                 {
                     _logger.LogInformation("No TAF data available from API (204 No Content)");
+                    _telemetry.TrackSyncCompleted("Taf", 0, 0, sw.ElapsedMilliseconds);
                     return;
                 }
 
@@ -78,10 +84,13 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     _logger.LogWarning("Completed TAF data update with {ErrorCount} record errors", errorCount);
                 else
                     _logger.LogInformation("Completed TAF data update");
+
+                _telemetry.TrackSyncCompleted("Taf", tafData.Count, errorCount, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching TAF data");
+                _telemetry.TrackSyncFailed("Taf", ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

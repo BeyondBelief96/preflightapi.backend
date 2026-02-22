@@ -2,6 +2,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
 using System.Linq.Expressions;
@@ -33,6 +34,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
         private readonly KeyExtractor<T> _keyExtractor;
         private readonly KeyMatcher<T> _keyMatcher;
         private readonly Lazy<HashSet<string>> _allPropertyNames;
+        private readonly ISyncTelemetryService _telemetry;
 
         protected abstract NasrDataType DataType { get; }
         protected abstract string[] UniqueIdentifiers { get; }
@@ -44,12 +46,14 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             ILogger logger,
             IHttpClientFactory httpClientFactory,
             IFaaPublicationCycleService publicationCycleService,
-            PreflightApiDbContext dbContext)
+            PreflightApiDbContext dbContext,
+            ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _faaPublicationCycleService = publicationCycleService;
             _dbContext = dbContext;
+            _telemetry = telemetry;
 
             _keyExtractor = CreateKeyExtractor();
             _keyMatcher = CreateKeyMatcher();
@@ -59,6 +63,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
 
         public async Task DownloadAndProcessDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             var publicationCycle = await _faaPublicationCycleService.GetPublicationCycleAsync(PublicationType);
             if (publicationCycle == null)
             {
@@ -90,10 +95,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 }
 
                 _logger.LogInformation("{DataType} data update completed successfully", DataType);
+                _telemetry.TrackSyncCompleted(DataType.ToString(), 0, 0, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing {DataType} data", DataType);
+                _telemetry.TrackSyncFailed(DataType.ToString(), ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

@@ -29,26 +29,19 @@ namespace PreflightApi.Azure.Functions.Functions
             _logger.LogInformation("Airport Diagram Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
-            try
-            {
-                var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.UtcNow;
 
-                if (await _publicationService.ShouldRunUpdateAsync(PublicationType.AirportDiagram, currentDate))
-                {
-                    var sw = Stopwatch.StartNew();
-                    _logger.LogInformation("Starting airport diagram update process");
-                    await _airportDiagramService.DownloadAndProcessAirportDiagramsAsync(cancellationToken);
-                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.AirportDiagram, currentDate);
-                    _logger.LogInformation("Airport diagram update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
-                }
-                else
-                {
-                    _logger.LogInformation("No airport diagram update needed at this time");
-                }
-            }
-            catch (Exception)
+            if (await _publicationService.ShouldRunUpdateAsync(PublicationType.AirportDiagram, currentDate))
             {
-                throw;
+                var sw = Stopwatch.StartNew();
+                _logger.LogInformation("Starting airport diagram update process");
+                await _airportDiagramService.DownloadAndProcessAirportDiagramsAsync(cancellationToken);
+                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.AirportDiagram, currentDate);
+                _logger.LogInformation("Airport diagram update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.LogInformation("No airport diagram update needed at this time");
             }
         }
     }
