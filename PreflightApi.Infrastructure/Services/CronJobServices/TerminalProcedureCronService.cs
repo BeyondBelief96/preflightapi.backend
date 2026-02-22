@@ -62,30 +62,59 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         faaUrl,
                         region);
 
-                    using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
-                    using var response = await client.GetStreamAsync(faaUrl, cancellationToken);
-                    using var zipArchive = new ZipArchive(response);
-
-                    if (region == "E")
+                    // Download ZIP to a temp file to avoid buffering ~1 GB per region in memory.
+                    // ZipArchive requires a seekable stream; wrapping a non-seekable HTTP stream
+                    // forces it to buffer the entire contents in memory.
+                    var tempFilePath = Path.GetTempFileName();
+                    try
                     {
-                        var xmlEntry = zipArchive.Entries.FirstOrDefault(e => e.Name.EndsWith(".xml"));
-                        if (xmlEntry == null)
+                        using var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.FaaDataHttpClient);
+                        using (var httpStream = await client.GetStreamAsync(faaUrl, cancellationToken))
+                        await using (var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920))
                         {
-                            throw new Exception("Terminal procedure metadata XML file not found in zip archive.");
+                            await httpStream.CopyToAsync(fileStream, cancellationToken);
                         }
 
-                        using var xmlStream = xmlEntry.Open();
-                        using var reader = new StreamReader(xmlStream);
-                        var xmlContent = await reader.ReadToEndAsync(cancellationToken);
+                        _logger.LogInformation("Downloaded region {Region} ZIP to temp file ({SizeMB:F0} MB)",
+                            region, new FileInfo(tempFilePath).Length / (1024.0 * 1024.0));
 
-                        await ParseAndStoreXmlDataAsync(xmlContent, cancellationToken);
+                        using var zipFileStream = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920);
+                        using var zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read);
+
+                        if (region == "E")
+                        {
+                            var xmlEntry = zipArchive.Entries.FirstOrDefault(e => e.Name.EndsWith(".xml"));
+                            if (xmlEntry == null)
+                            {
+                                throw new Exception("Terminal procedure metadata XML file not found in zip archive.");
+                            }
+
+                            using var xmlStream = xmlEntry.Open();
+                            using var reader = new StreamReader(xmlStream);
+                            var xmlContent = await reader.ReadToEndAsync(cancellationToken);
+
+                            await ParseAndStoreXmlDataAsync(xmlContent, cancellationToken);
+                        }
+
+                        // Extract ALL PDF files from the ZIP (not just airport diagrams)
+                        var pdfEntries = zipArchive.Entries.Where(e =>
+                            e.Name.EndsWith(".PDF", StringComparison.OrdinalIgnoreCase));
+                        var uploaded = await UploadPdfsToStorageAsync(pdfEntries, uploadedBlobNames, cancellationToken);
+                        foreach (var name in uploaded) uploadedBlobNames.Add(name);
+                    }
+                    finally
+                    {
+                        // Clean up temp file immediately after processing each region
+                        if (File.Exists(tempFilePath))
+                        {
+                            File.Delete(tempFilePath);
+                        }
                     }
 
-                    // Extract ALL PDF files from the ZIP (not just airport diagrams)
-                    var pdfEntries = zipArchive.Entries.Where(e =>
-                        e.Name.EndsWith(".PDF", StringComparison.OrdinalIgnoreCase));
-                    var uploaded = await UploadPdfsToStorageAsync(pdfEntries, uploadedBlobNames, cancellationToken);
-                    foreach (var name in uploaded) uploadedBlobNames.Add(name);
+                    // Hint GC to reclaim memory between regions
+                    GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+                    _logger.LogInformation("Completed region {Region}, forcing GC. Memory: {MemoryMB:F0} MB",
+                        region, GC.GetTotalMemory(forceFullCollection: false) / (1024.0 * 1024.0));
                 }
 
                 // Clean up stale blobs that aren't in the new publication cycle
@@ -134,7 +163,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             HashSet<string> alreadyUploaded,
             CancellationToken cancellationToken)
         {
-            const int batchSize = 50;
+            const int batchSize = 10;
             var containerName = _cloudStorageSettings.TerminalProceduresContainerName;
             var uploadedNames = new List<string>();
 
