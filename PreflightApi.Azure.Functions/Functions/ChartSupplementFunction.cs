@@ -24,31 +24,24 @@ namespace PreflightApi.Azure.Functions.Functions
 
         [Function("ChartSupplementFunction")]
         [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-        public async Task Run([TimerTrigger("0 0 4 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 12 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Chart Supplement Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
-            try
-            {
-                var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.UtcNow;
 
-                if (await _publicationService.ShouldRunUpdateAsync(PublicationType.ChartSupplement, currentDate))
-                {
-                    var sw = Stopwatch.StartNew();
-                    _logger.LogInformation("Starting chart supplement update process");
-                    await _chartSupplementService.DownloadAndProcessChartSupplementsAsync(cancellationToken);
-                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.ChartSupplement, currentDate);
-                    _logger.LogInformation("Chart supplement update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
-                }
-                else
-                {
-                    _logger.LogInformation("No chart supplement update needed at this time");
-                }
-            }
-            catch (Exception)
+            if (await _publicationService.ShouldRunUpdateAsync(PublicationType.ChartSupplement, currentDate))
             {
-                throw;
+                var sw = Stopwatch.StartNew();
+                _logger.LogInformation("Starting chart supplement update process");
+                await _chartSupplementService.DownloadAndProcessChartSupplementsAsync(cancellationToken);
+                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.ChartSupplement, currentDate);
+                _logger.LogInformation("Chart supplement update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.LogInformation("No chart supplement update needed at this time");
             }
         }
     }

@@ -60,12 +60,12 @@ public class TafNotFoundException : NotFoundException
 }
 
 /// <summary>
-/// Exception thrown when an airport diagram cannot be found.
+/// Exception thrown when terminal procedures cannot be found.
 /// </summary>
-public class AirportDiagramNotFoundException : NotFoundException
+public class TerminalProcedureNotFoundException : NotFoundException
 {
-    public AirportDiagramNotFoundException(string airportId)
-        : base(ErrorCodes.AirportDiagramNotFound, $"Airport diagram was not found for airport '{airportId}'.")
+    public TerminalProcedureNotFoundException(string airportId)
+        : base(ErrorCodes.TerminalProcedureNotFound, $"Terminal procedures were not found for airport '{airportId}'.")
     {
     }
 }

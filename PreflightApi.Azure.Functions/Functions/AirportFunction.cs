@@ -30,47 +30,40 @@ namespace PreflightApi.Azure.Functions.Functions
 
         [Function("AirportFunction")]
         [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-        public async Task Run([TimerTrigger("0 0 0 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 10 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Airport Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
-            try
+            var currentDate = DateTime.UtcNow;
+
+            if (await _publicationService.ShouldRunUpdateAsync(PublicationType.NasrSubscription_Airport, currentDate))
             {
-                var currentDate = DateTime.UtcNow;
+                var sw = Stopwatch.StartNew();
+                _logger.LogInformation("Starting airport data update process");
 
-                if (await _publicationService.ShouldRunUpdateAsync(PublicationType.NasrSubscription_Airport, currentDate))
-                {
-                    var sw = Stopwatch.StartNew();
-                    _logger.LogInformation("Starting airport data update process");
+                // Process airports first (APT_BASE.csv, APT_ATT.csv, APT_CON.csv)
+                await _airportService.DownloadAndProcessDataAsync(cancellationToken);
+                _logger.LogInformation("Airport base data processing completed");
 
-                    // Process airports first (APT_BASE.csv, APT_ATT.csv, APT_CON.csv)
-                    await _airportService.DownloadAndProcessDataAsync(cancellationToken);
-                    _logger.LogInformation("Airport base data processing completed");
+                // Process runways (APT_RWY.csv)
+                await _runwayService.DownloadAndProcessDataAsync(cancellationToken);
+                _logger.LogInformation("Runway data processing completed");
 
-                    // Process runways (APT_RWY.csv)
-                    await _runwayService.DownloadAndProcessDataAsync(cancellationToken);
-                    _logger.LogInformation("Runway data processing completed");
+                // Process runway ends (APT_RWY_END.csv)
+                await _runwayEndService.DownloadAndProcessDataAsync(cancellationToken);
+                _logger.LogInformation("Runway end data processing completed");
 
-                    // Process runway ends (APT_RWY_END.csv)
-                    await _runwayEndService.DownloadAndProcessDataAsync(cancellationToken);
-                    _logger.LogInformation("Runway end data processing completed");
+                // Link runway ends to their parent runways
+                await _runwayEndService.LinkRunwayEndsToRunwaysAsync(cancellationToken);
+                _logger.LogInformation("Runway end linking completed");
 
-                    // Link runway ends to their parent runways
-                    await _runwayEndService.LinkRunwayEndsToRunwaysAsync(cancellationToken);
-                    _logger.LogInformation("Runway end linking completed");
-
-                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);
-                    _logger.LogInformation("Airport data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
-                }
-                else
-                {
-                    _logger.LogInformation("No airport data update needed at this time");
-                }
+                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);
+                _logger.LogInformation("Airport data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
             }
-            catch (Exception)
+            else
             {
-                throw;
+                _logger.LogInformation("No airport data update needed at this time");
             }
         }
     }

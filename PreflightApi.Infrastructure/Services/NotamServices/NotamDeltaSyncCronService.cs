@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public partial class NotamDeltaSyncCronService : INotamDeltaSyncCronService
     private readonly PreflightApiDbContext _dbContext;
     private readonly NmsSettings _settings;
     private readonly ILogger<NotamDeltaSyncCronService> _logger;
+    private readonly ISyncTelemetryService _telemetry;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -27,16 +29,19 @@ public partial class NotamDeltaSyncCronService : INotamDeltaSyncCronService
         INmsApiClient nmsApiClient,
         PreflightApiDbContext dbContext,
         IOptions<NmsSettings> settings,
-        ILogger<NotamDeltaSyncCronService> logger)
+        ILogger<NotamDeltaSyncCronService> logger,
+        ISyncTelemetryService telemetry)
     {
         _nmsApiClient = nmsApiClient;
         _dbContext = dbContext;
         _settings = settings.Value;
         _logger = logger;
+        _telemetry = telemetry;
     }
 
     public async Task SyncDeltaAsync(CancellationToken ct = default)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             // Add 1-minute overlap to avoid gaps
@@ -48,6 +53,7 @@ public partial class NotamDeltaSyncCronService : INotamDeltaSyncCronService
             if (notamDtos.Count == 0)
             {
                 _logger.LogInformation("No NOTAM updates found since {LastUpdatedDate}", lastUpdatedDate);
+                _telemetry.TrackSyncCompleted("NotamDelta", 0, 0, sw.ElapsedMilliseconds);
                 return;
             }
 
@@ -60,10 +66,12 @@ public partial class NotamDeltaSyncCronService : INotamDeltaSyncCronService
             _logger.LogInformation(
                 "NOTAM delta sync complete: {NewCount} new, {UpdatedCount} updated, {ErrorCount} errors, {PurgedCount} purged, {TotalFetched} fetched",
                 newCount, updatedCount, errorCount, purgedCount, notamDtos.Count);
+            _telemetry.TrackSyncCompleted("NotamDelta", notamDtos.Count, errorCount, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during NOTAM delta sync");
+            _telemetry.TrackSyncFailed("NotamDelta", ex, sw.ElapsedMilliseconds);
             throw;
         }
     }

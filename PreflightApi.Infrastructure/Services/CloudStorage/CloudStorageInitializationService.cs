@@ -44,17 +44,17 @@ public class CloudStorageInitializationService : ICloudStorageInitializationServ
                     _settings.ChartSupplementsContainerName);
             }
 
-            // Ensure airport diagrams container exists
-            if (!await _storageService.ContainerExistsAsync(_settings.AirportDiagramsContainerName))
+            // Ensure terminal procedures container exists
+            if (!await _storageService.ContainerExistsAsync(_settings.TerminalProceduresContainerName))
             {
-                _logger.LogInformation("Creating airport diagrams container: {ContainerName}",
-                    _settings.AirportDiagramsContainerName);
-                await _storageService.CreateContainerAsync(_settings.AirportDiagramsContainerName);
+                _logger.LogInformation("Creating terminal procedures container: {ContainerName}",
+                    _settings.TerminalProceduresContainerName);
+                await _storageService.CreateContainerAsync(_settings.TerminalProceduresContainerName);
             }
             else
             {
-                _logger.LogInformation("Airport diagrams container already exists: {ContainerName}",
-                    _settings.AirportDiagramsContainerName);
+                _logger.LogInformation("Terminal procedures container already exists: {ContainerName}",
+                    _settings.TerminalProceduresContainerName);
             }
 
             _logger.LogInformation("Azure Blob Storage initialization completed successfully");

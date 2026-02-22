@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.40.2.10011",
-      "templateHash": "5938602708772211031"
+      "templateHash": "2549703735505780594"
     }
   },
   "parameters": {
@@ -62,10 +62,10 @@
         "description": "Storage account name for blob data (globally unique, 3-24 lowercase alphanumeric)"
       }
     },
-    "airportDiagramsContainerName": {
+    "terminalProceduresContainerName": {
       "type": "string",
       "metadata": {
-        "description": "Airport diagrams blob container name"
+        "description": "Terminal procedures blob container name"
       }
     },
     "chartSupplementsContainerName": {
@@ -595,8 +595,8 @@
           "skuName": {
             "value": "[parameters('storageSkuName')]"
           },
-          "airportDiagramsContainerName": {
-            "value": "[parameters('airportDiagramsContainerName')]"
+          "terminalProceduresContainerName": {
+            "value": "[parameters('terminalProceduresContainerName')]"
           },
           "chartSupplementsContainerName": {
             "value": "[parameters('chartSupplementsContainerName')]"
@@ -609,7 +609,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "7482837630224598740"
+              "templateHash": "2937387460836753486"
             }
           },
           "parameters": {
@@ -632,10 +632,10 @@
                 "description": "Storage account SKU"
               }
             },
-            "airportDiagramsContainerName": {
+            "terminalProceduresContainerName": {
               "type": "string",
               "metadata": {
-                "description": "Airport diagrams blob container name"
+                "description": "Terminal procedures blob container name"
               }
             },
             "chartSupplementsContainerName": {
@@ -673,7 +673,7 @@
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('airportDiagramsContainerName'))]",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('terminalProceduresContainerName'))]",
               "properties": {
                 "publicAccess": "None"
               },
@@ -708,12 +708,12 @@
               },
               "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
             },
-            "airportDiagramsContainerName": {
+            "terminalProceduresContainerName": {
               "type": "string",
               "metadata": {
-                "description": "Airport diagrams container name"
+                "description": "Terminal procedures container name"
               },
-              "value": "[parameters('airportDiagramsContainerName')]"
+              "value": "[parameters('terminalProceduresContainerName')]"
             },
             "chartSupplementsContainerName": {
               "type": "string",
@@ -776,8 +776,8 @@
           "storageAccountName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
           },
-          "airportDiagramsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
+          "terminalProceduresContainerName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.terminalProceduresContainerName.value]"
           },
           "chartSupplementsContainerName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
@@ -793,7 +793,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "1873978144254666020"
+              "templateHash": "16530486527755960320"
             }
           },
           "parameters": {
@@ -871,10 +871,10 @@
                 "description": "Storage account name for managed identity access"
               }
             },
-            "airportDiagramsContainerName": {
+            "terminalProceduresContainerName": {
               "type": "string",
               "metadata": {
-                "description": "Airport diagrams blob container name"
+                "description": "Terminal procedures blob container name"
               }
             },
             "chartSupplementsContainerName": {
@@ -959,8 +959,8 @@
                       "value": "[parameters('storageAccountName')]"
                     },
                     {
-                      "name": "CloudStorage__AirportDiagramsContainerName",
-                      "value": "[parameters('airportDiagramsContainerName')]"
+                      "name": "CloudStorage__TerminalProceduresContainerName",
+                      "value": "[parameters('terminalProceduresContainerName')]"
                     },
                     {
                       "name": "CloudStorage__ChartSupplementsContainerName",
@@ -1081,8 +1081,8 @@
           "storageAccountName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
           },
-          "airportDiagramsContainerName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.airportDiagramsContainerName.value]"
+          "terminalProceduresContainerName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.terminalProceduresContainerName.value]"
           },
           "chartSupplementsContainerName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
@@ -1116,7 +1116,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "1428046727572454119"
+              "templateHash": "17146812085942124383"
             }
           },
           "parameters": {
@@ -1180,10 +1180,10 @@
                 "description": "Storage account name for managed identity access"
               }
             },
-            "airportDiagramsContainerName": {
+            "terminalProceduresContainerName": {
               "type": "string",
               "metadata": {
-                "description": "Airport diagrams blob container name"
+                "description": "Terminal procedures blob container name"
               }
             },
             "chartSupplementsContainerName": {
@@ -1283,7 +1283,7 @@
                 "httpsOnly": true,
                 "siteConfig": {
                   "minTlsVersion": "1.2",
-                  "appSettings": "[concat(createArray(createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'DEPLOYMENT_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', parameters('appInsightsConnectionString')), createObject('name', 'Database__Host', 'value', parameters('databaseHost')), createObject('name', 'Database__Database', 'value', parameters('databaseName')), createObject('name', 'Database__Username', 'value', parameters('databaseUsername')), createObject('name', 'Database__Password', 'value', parameters('databasePassword')), createObject('name', 'Database__Port', 'value', '5432'), createObject('name', 'CloudStorage__UseManagedIdentity', 'value', 'true'), createObject('name', 'CloudStorage__AccountName', 'value', parameters('storageAccountName')), createObject('name', 'CloudStorage__AirportDiagramsContainerName', 'value', parameters('airportDiagramsContainerName')), createObject('name', 'CloudStorage__ChartSupplementsContainerName', 'value', parameters('chartSupplementsContainerName')), createObject('name', 'NmsSettings__BaseUrl', 'value', parameters('nmsBaseUrl')), createObject('name', 'NmsSettings__AuthBaseUrl', 'value', parameters('nmsAuthBaseUrl')), createObject('name', 'NmsSettings__ClientId', 'value', parameters('nmsClientId')), createObject('name', 'NmsSettings__ClientSecret', 'value', parameters('nmsClientSecret')), createObject('name', 'NOAASettings__NOAAApiKey', 'value', parameters('noaaApiKey')), createObject('name', 'GatewaySecret', 'value', parameters('gatewaySecret'))), variables('clerkSettings'))]"
+                  "appSettings": "[concat(createArray(createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'DEPLOYMENT_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', parameters('appInsightsConnectionString')), createObject('name', 'Database__Host', 'value', parameters('databaseHost')), createObject('name', 'Database__Database', 'value', parameters('databaseName')), createObject('name', 'Database__Username', 'value', parameters('databaseUsername')), createObject('name', 'Database__Password', 'value', parameters('databasePassword')), createObject('name', 'Database__Port', 'value', '5432'), createObject('name', 'CloudStorage__UseManagedIdentity', 'value', 'true'), createObject('name', 'CloudStorage__AccountName', 'value', parameters('storageAccountName')), createObject('name', 'CloudStorage__TerminalProceduresContainerName', 'value', parameters('terminalProceduresContainerName')), createObject('name', 'CloudStorage__ChartSupplementsContainerName', 'value', parameters('chartSupplementsContainerName')), createObject('name', 'NmsSettings__BaseUrl', 'value', parameters('nmsBaseUrl')), createObject('name', 'NmsSettings__AuthBaseUrl', 'value', parameters('nmsAuthBaseUrl')), createObject('name', 'NmsSettings__ClientId', 'value', parameters('nmsClientId')), createObject('name', 'NmsSettings__ClientSecret', 'value', parameters('nmsClientSecret')), createObject('name', 'NOAASettings__NOAAApiKey', 'value', parameters('noaaApiKey')), createObject('name', 'GatewaySecret', 'value', parameters('gatewaySecret'))), variables('clerkSettings'))]"
                 }
               },
               "dependsOn": [
@@ -1378,7 +1378,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "13446647792596344465"
+              "templateHash": "6547509364083201698"
             }
           },
           "parameters": {
@@ -1435,10 +1435,11 @@
             }
           },
           "variables": {
-            "$fxv#0": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"override\">\r\n\t\t\t<value>{{apim-gateway-secret}}</value>\r\n\t\t</set-header>\r\n\t\t<!-- Cap total outbound NMS calls across all users (FAA rate limit protection) -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Request.Url.Path.ToLower().Contains(\"/notams\"))\">\r\n\t\t\t\t<rate-limit-by-key calls=\"15\" renewal-period=\"180\"\r\n\t\t\t\t\tcounter-key=\"@(\"nms-backend-global\")\"\r\n\t\t\t\t\tremaining-calls-header-name=\"X-NMS-RateLimit-Remaining\"\r\n\t\t\t\t\tretry-after-header-name=\"X-NMS-Retry-After\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t\t<!-- Determine cache duration based on endpoint -->\r\n\t\t<set-variable name=\"cacheDuration\" value=\"@{\r\n\t\t\tif (context.Request.Method != \"GET\") { return 0; }\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\t// Real-time weather: 2 min\r\n\t\t\tif (path.Contains(\"/metars\") || path.Contains(\"/pireps\")) { return 120; }\r\n\t\t\t// E6B GET endpoints use live METAR: 2 min\r\n\t\t\tif (path.Contains(\"/e6b/\")) { return 120; }\r\n\t\t\t// Forecast weather, NOTAMs: 5 min\r\n\t\t\tif (path.Contains(\"/tafs\") || path.Contains(\"/sigmets\") || path.Contains(\"/g-airmets\")) { return 300; }\r\n\t\t\tif (path.Contains(\"/notams\")) { return 300; }\r\n\t\t\t// Winds aloft: 5 min\r\n\t\t\tif (path.Contains(\"/navlog/winds-aloft\")) { return 300; }\r\n\t\t\t// Presigned URLs: 10 min\r\n\t\t\tif (path.Contains(\"/airport-diagrams\") || path.Contains(\"/chart-supplements\")) { return 600; }\r\n\t\t\t// NASR/static data: 15 min\r\n\t\t\tif (path.Contains(\"/airports\") || path.Contains(\"/communication-frequencies\")) { return 900; }\r\n\t\t\tif (path.Contains(\"/airspaces\") || path.Contains(\"/obstacles\")) { return 900; }\r\n\t\t\treturn 0;\r\n\t\t}\" />\r\n\t\t<!-- Apply cache lookup for cacheable GET requests -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@((int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\">\r\n\t\t\t\t\t<vary-by-query-parameter>*</vary-by-query-parameter>\r\n\t\t\t\t</cache-lookup>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t\t<!-- Strip the secret header from the response so it's never exposed to callers -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"delete\" />\r\n\t\t<!-- Store response in cache if cacheable -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cacheDuration\") && (int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-store duration=\"@((int)context.Variables[\"cacheDuration\"])\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
-            "$fxv#1": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"10\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"500\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- Endpoint gating: Free tier only allows basic weather and airports -->\r\n\t\t<set-variable name=\"is-allowed\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar allowedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/metars\",\r\n\t\t\t\t\"/api/v1/tafs\",\r\n\t\t\t\t\"/api/v1/airports\",\r\n\t\t\t\t\"/api/v1/communication-frequencies\"\r\n\t\t\t};\r\n\t\t\treturn allowedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Free tier. Please upgrade to Starter or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
-            "$fxv#2": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"150000\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->\r\n\t\t<set-variable name=\"is-blocked\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar blockedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/navlog\",\r\n\t\t\t\t\"/api/v1/notams\",\r\n\t\t\t\t\"/api/v1/airport-diagrams\",\r\n\t\t\t\t\"/api/v1/chart-supplements\",\r\n\t\t\t\t\"/api/v1/e6b\"\r\n\t\t\t};\r\n\t\t\treturn blockedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Starter tier. Please upgrade to Commercial or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
-            "$fxv#3": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<rate-limit-by-key calls=\"300\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" />\r\n\t\t<quota-by-key calls=\"750000\" renewal-period=\"2628000\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" />\r\n\t\t<!-- No endpoint gating: Professional tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n"
+            "$fxv#0": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"override\">\r\n\t\t\t<value>{{apim-gateway-secret}}</value>\r\n\t\t</set-header>\r\n\t\t<!-- Determine cache duration based on endpoint -->\r\n\t\t<set-variable name=\"cacheDuration\" value=\"@{\r\n\t\t\tif (context.Request.Method != \"GET\") { return 0; }\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\t// Real-time weather: 2 min\r\n\t\t\tif (path.Contains(\"/metars\") || path.Contains(\"/pireps\")) { return 120; }\r\n\t\t\t// E6B GET endpoints use live METAR: 2 min\r\n\t\t\tif (path.Contains(\"/e6b/\")) { return 120; }\r\n\t\t\t// Forecast weather, NOTAMs: 5 min\r\n\t\t\tif (path.Contains(\"/tafs\") || path.Contains(\"/sigmets\") || path.Contains(\"/g-airmets\")) { return 300; }\r\n\t\t\tif (path.Contains(\"/notams\")) { return 300; }\r\n\t\t\t// Winds aloft: 5 min\r\n\t\t\tif (path.Contains(\"/navlog/winds-aloft\")) { return 300; }\r\n\t\t\t// Presigned URLs: 10 min\r\n\t\t\tif (path.Contains(\"/airport-diagrams\") || path.Contains(\"/chart-supplements\")) { return 600; }\r\n\t\t\t// NASR/static data: 15 min\r\n\t\t\tif (path.Contains(\"/airports\") || path.Contains(\"/communication-frequencies\")) { return 900; }\r\n\t\t\tif (path.Contains(\"/airspaces\") || path.Contains(\"/obstacles\")) { return 900; }\r\n\t\t\treturn 0;\r\n\t\t}\" />\r\n\t\t<!-- Build a deterministic cache key from the URL path + sorted query string -->\r\n\t\t<set-variable name=\"cacheKey\" value=\"@{\r\n\t\t\tvar key = context.Request.Url.Path;\r\n\t\t\tvar query = context.Request.Url.Query;\r\n\t\t\tif (query != null && query.Count > 0) {\r\n\t\t\t\tvar sorted = query\r\n\t\t\t\t\t.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)\r\n\t\t\t\t\t.SelectMany(kvp => kvp.Value.Select(v => kvp.Key + \"=\" + v));\r\n\t\t\t\tkey += \"|\" + string.Join(\"&\", sorted);\r\n\t\t\t}\r\n\t\t\treturn key;\r\n\t\t}\" />\r\n\t\t<!-- Check cache for cacheable GET requests -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@((int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-lookup-value key=\"@((string)context.Variables[\"cacheKey\"])\" variable-name=\"cachedBody\" caching-type=\"internal\" />\r\n\t\t\t\t<choose>\r\n\t\t\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cachedBody\"))\">\r\n\t\t\t\t\t\t<!-- Cache hit: return cached body with fresh per-user rate-limit headers -->\r\n\t\t\t\t\t\t<return-response>\r\n\t\t\t\t\t\t\t<set-status code=\"200\" reason=\"OK\" />\r\n\t\t\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Remaining\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlRemaining\") ? ((int)context.Variables[\"rlRemaining\"]).ToString() : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Limit\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlLimit\") ? (string)context.Variables[\"rlLimit\"] : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-body>@((string)context.Variables[\"cachedBody\"])</set-body>\r\n\t\t\t\t\t\t</return-response>\r\n\t\t\t\t\t</when>\r\n\t\t\t\t</choose>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t\t<!-- Strip the secret header from the response so it's never exposed to callers -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"delete\" />\r\n\t\t<!-- Cache the response body for cacheable 200 responses -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cacheDuration\") && (int)context.Variables[\"cacheDuration\"] > 0 && context.Response.StatusCode == 200)\">\r\n\t\t\t\t<cache-store-value key=\"@((string)context.Variables[\"cacheKey\"])\" value=\"@(context.Response.Body.As<string>(preserveContent: true))\" duration=\"@((int)context.Variables[\"cacheDuration\"])\" caching-type=\"internal\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"rate-limit-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Too Many Requests\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-header name=\"Retry-After\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>@{\r\n\t\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\t\treturn match.Success ? match.Groups[1].Value : \"60\";\r\n\t\t\t\t\t\t}</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\tvar retryAfterSeconds = match.Success ? int.Parse(match.Groups[1].Value) : 60;\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"error\", \"RateLimitExceeded\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"Too many requests. Please slow down and try again shortly.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"retryAfterSeconds\", retryAfterSeconds)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"quota-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Quota Exceeded\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar idx = msg.LastIndexOf(\"in \");\r\n\t\t\t\t\t\tvar resetAt = DateTime.UtcNow;\r\n\t\t\t\t\t\tif (idx >= 0) {\r\n\t\t\t\t\t\t\tvar tsPart = msg.Substring(idx + 3).TrimEnd('.');\r\n\t\t\t\t\t\t\tTimeSpan remaining;\r\n\t\t\t\t\t\t\tif (TimeSpan.TryParse(tsPart, out remaining)) {\r\n\t\t\t\t\t\t\t\tresetAt = DateTime.UtcNow.Add(remaining);\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"error\", \"QuotaExceeded\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"You have reached your monthly API call limit.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"quotaResetsAt\", resetAt.ToString(\"o\"))\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#1": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"10\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"5000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Free tier only allows basic weather and airports -->\r\n\t\t<set-variable name=\"is-allowed\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar allowedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/metars\",\r\n\t\t\t\t\"/api/v1/tafs\",\r\n\t\t\t\t\"/api/v1/airports\",\r\n\t\t\t\t\"/api/v1/communication-frequencies\"\r\n\t\t\t};\r\n\t\t\treturn allowedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Free tier. Please upgrade to Starter or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#2": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"60\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"150000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->\r\n\t\t<set-variable name=\"is-blocked\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar blockedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/navlog\",\r\n\t\t\t\t\"/api/v1/notams\",\r\n\t\t\t\t\"/api/v1/airport-diagrams\",\r\n\t\t\t\t\"/api/v1/chart-supplements\",\r\n\t\t\t\t\"/api/v1/e6b\"\r\n\t\t\t};\r\n\t\t\treturn blockedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Starter tier. Please upgrade to Commercial or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#3": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"300\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"750000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- No endpoint gating: Professional tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#4": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"500\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"2000000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- No endpoint gating: ATP tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n"
           },
           "resources": [
             {
@@ -1611,6 +1612,42 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'commercial-pilot')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'atp')]",
+              "properties": {
+                "displayName": "ATP",
+                "description": "Enterprise tier — full access to all endpoints with highest limits",
+                "subscriptionRequired": true,
+                "approvalRequired": false,
+                "state": "published"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/apis",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'atp', 'preflightapi')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'atp')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/policies",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'atp', 'policy')]",
+              "properties": {
+                "format": "rawxml",
+                "value": "[variables('$fxv#4')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), 'atp')]"
               ]
             }
           ],

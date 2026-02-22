@@ -7,8 +7,8 @@ param storageAccountName string
 @description('Storage account SKU')
 param skuName string = 'Standard_LRS'
 
-@description('Airport diagrams blob container name')
-param airportDiagramsContainerName string
+@description('Terminal procedures blob container name')
+param terminalProceduresContainerName string
 
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
@@ -35,10 +35,10 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01
   name: 'default'
 }
 
-// Airport Diagrams container
-resource airportDiagramsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+// Terminal Procedures container
+resource terminalProceduresContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobServices
-  name: airportDiagramsContainerName
+  name: terminalProceduresContainerName
   properties: {
     publicAccess: 'None'
   }
@@ -59,8 +59,8 @@ output storageAccountName string = storageAccount.name
 @description('Storage account resource ID')
 output storageAccountId string = storageAccount.id
 
-@description('Airport diagrams container name')
-output airportDiagramsContainerName string = airportDiagramsContainer.name
+@description('Terminal procedures container name')
+output terminalProceduresContainerName string = terminalProceduresContainer.name
 
 @description('Chart supplements container name')
 output chartSupplementsContainerName string = chartSupplementsContainer.name

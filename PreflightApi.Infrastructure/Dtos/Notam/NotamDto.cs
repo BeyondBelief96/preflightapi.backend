@@ -130,6 +130,12 @@ public record NotamDetailDto
     public string? Type { get; init; }
 
     /// <summary>
+    /// Feature category: RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY
+    /// </summary>
+    [JsonPropertyName("feature")]
+    public string? Feature { get; init; }
+
+    /// <summary>
     /// Issuance timestamp (ISO 8601)
     /// </summary>
     [JsonPropertyName("issued")]

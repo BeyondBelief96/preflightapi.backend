@@ -34,8 +34,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             ILogger<CommunicationFrequencyCronService> logger,
             IHttpClientFactory httpClientFactory,
             IFaaPublicationCycleService faaPublicationCycleService,
-            PreflightApiDbContext dbContext)
-            : base(logger, httpClientFactory, faaPublicationCycleService, dbContext)
+            PreflightApiDbContext dbContext,
+            ISyncTelemetryService telemetry)
+            : base(logger, httpClientFactory, faaPublicationCycleService, dbContext, telemetry)
         {
         }
     }

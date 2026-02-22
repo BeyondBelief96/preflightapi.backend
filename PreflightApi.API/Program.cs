@@ -50,8 +50,8 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.Configure<AzureFileLoggerOptions>(options =>
 {
     options.FileName = "PreflightApi-api-log";
-    options.FileSizeLimit = 50 * 1024;
-    options.RetainedFileCountLimit = 5;
+    options.FileSizeLimit = 10 * 1024 * 1024; // 10 MB
+    options.RetainedFileCountLimit = 10;
 });
 
 // Setup Controller Json Serialization Handling
@@ -116,6 +116,10 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
     }
 }, ServiceLifetime.Scoped);
 
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<PreflightApiDbContext>("database", tags: new[] { "ready" });
+
 // Configure Services
 builder.Services.AddMemoryCache();
 builder.Services.AddCloudStorageServices(builder.Configuration);
@@ -124,7 +128,7 @@ builder.Services.AddScoped<IPirepService, PirepService>();
 builder.Services.AddScoped<ITafService, TafService>();
 builder.Services.AddScoped<ISigmetService, SigmetService>();
 builder.Services.AddScoped<IGAirmetService, GAirmetService>();
-builder.Services.AddScoped<IAirportDiagramService, AirportDiagramService>();
+builder.Services.AddScoped<ITerminalProcedureService, TerminalProcedureService>();
 builder.Services.AddScoped<IChartSupplementService, ChartSupplementService>();  
 builder.Services.AddScoped<IAirportService, AirportService>();
 builder.Services.AddScoped<IRunwayService, RunwayService>();
@@ -142,7 +146,7 @@ builder.Services.AddScoped<INotamService, NotamService>();
 // Briefing Services
 builder.Services.AddScoped<IBriefingService, BriefingService>();
 
-builder.Services.AddHttpClient();
+builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
 
@@ -176,4 +180,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.MapHealthChecks("/health");
 await app.RunAsync();

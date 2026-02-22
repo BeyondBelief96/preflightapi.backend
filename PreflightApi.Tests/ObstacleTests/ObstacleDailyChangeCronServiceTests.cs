@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Infrastructure.Data;
+using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services.CronJobServices;
 using RichardSzalay.MockHttp;
 using Xunit;
@@ -35,7 +36,8 @@ public class ObstacleDailyChangeCronServiceTests : IDisposable
 
         var logger = Substitute.For<ILogger<ObstacleDailyChangeCronService>>();
 
-        _service = new ObstacleDailyChangeCronService(logger, httpClientFactory, _dbContext);
+        var telemetry = Substitute.For<ISyncTelemetryService>();
+        _service = new ObstacleDailyChangeCronService(logger, httpClientFactory, _dbContext, telemetry);
     }
 
     public void Dispose()

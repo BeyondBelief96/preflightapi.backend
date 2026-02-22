@@ -174,7 +174,7 @@ public class GlobalExceptionMiddleware
         var logLevel = statusCode switch
         {
             HttpStatusCode.InternalServerError => LogLevel.Error,
-            HttpStatusCode.ServiceUnavailable => LogLevel.Warning,
+            HttpStatusCode.ServiceUnavailable => LogLevel.Error,
             _ => LogLevel.Information
         };
 

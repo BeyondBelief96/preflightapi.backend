@@ -37,9 +37,49 @@ public record NotamFilterDto
     public string? EffectiveEndDate { get; init; }
 
     /// <summary>
+    /// Filter by accountability code (issuing office), e.g., "BNA", "FDC", "CLT".
+    /// Maps to the account_id column. Alphanumeric, max 10 characters.
+    /// </summary>
+    public string? Accountability { get; init; }
+
+    /// <summary>
+    /// Filter by location identifier (FAA domestic or ICAO code), e.g., "DFW" or "KDFW".
+    /// Matches against both the domestic location and ICAO location columns. Alphanumeric, max 10 characters.
+    /// </summary>
+    public string? Location { get; init; }
+
+    /// <summary>
+    /// ISO 8601 timestamp. When provided, returns NOTAMs modified between this time and now,
+    /// including both active and inactive NOTAMs (skips the active filter per FAA behavior).
+    /// </summary>
+    public string? LastUpdatedDate { get; init; }
+
+    /// <summary>
+    /// NOTAM number in any supported format. Per FAA spec, must be paired with Location or Accountability.
+    /// </summary>
+    public string? NotamNumber { get; init; }
+
+    /// <summary>
+    /// Latitude in decimal degrees [-90, 90]. Must be paired with Longitude and Radius.
+    /// </summary>
+    public double? Latitude { get; init; }
+
+    /// <summary>
+    /// Longitude in decimal degrees [-180, 180]. Must be paired with Latitude and Radius.
+    /// </summary>
+    public double? Longitude { get; init; }
+
+    /// <summary>
+    /// Search radius in nautical miles [0, 100]. Must be paired with Latitude and Longitude.
+    /// </summary>
+    public double? Radius { get; init; }
+
+    /// <summary>
     /// Whether any filter values are set.
     /// </summary>
     public bool HasFilters =>
         Classification != null || Feature != null || FreeText != null ||
-        EffectiveStartDate != null || EffectiveEndDate != null;
+        EffectiveStartDate != null || EffectiveEndDate != null ||
+        Accountability != null || Location != null || LastUpdatedDate != null ||
+        NotamNumber != null || Latitude != null || Longitude != null || Radius != null;
 }

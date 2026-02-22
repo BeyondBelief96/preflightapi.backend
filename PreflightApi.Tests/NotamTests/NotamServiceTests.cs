@@ -787,6 +787,144 @@ public class NotamServiceTests : IDisposable
             .WithMessage("*At least one filter*");
     }
 
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByAccountability()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", accountId: "BNA"),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS", accountId: "FDC"),
+            CreateNotamEntity("0000000000000003", "ORD", "KORD", accountId: "BNA")
+        );
+
+        var filters = new NotamFilterDto { Accountability = "BNA" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert
+        result.Data.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByLocation()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW"),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS"),
+            CreateNotamEntity("0000000000000003", "DFW", "KDFW")
+        );
+
+        var filters = new NotamFilterDto { Location = "DFW" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert
+        result.Data.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByLocation_MatchingIcaoLocation()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW"),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS")
+        );
+
+        var filters = new NotamFilterDto { Location = "KDFW" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert
+        result.Data.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByLastUpdatedDate_IncludingInactive()
+    {
+        // Arrange — one active, one cancelled (inactive), both recently updated
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW",
+                lastUpdated: DateTime.UtcNow.AddMinutes(-30)),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS",
+                cancelationDate: DateTime.UtcNow.AddHours(-1),
+                lastUpdated: DateTime.UtcNow.AddMinutes(-30)),
+            CreateNotamEntity("0000000000000003", "ORD", "KORD",
+                lastUpdated: DateTime.UtcNow.AddHours(-3)) // older than filter
+        );
+
+        var filters = new NotamFilterDto
+        {
+            LastUpdatedDate = DateTime.UtcNow.AddHours(-1).ToString("O")
+        };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert — includes cancelled NOTAM (inactive) because LastUpdatedDate skips active filter
+        result.Data.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByNotamNumber_WithLocation()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "DFW"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW", notamNumber: "999", notamYear: "2025", accountId: "DFW"),
+            CreateNotamEntity("0000000000000003", "AUS", "KAUS", notamNumber: "420", notamYear: "2025", accountId: "AUS")
+        );
+
+        var filters = new NotamFilterDto { NotamNumber = "420", Location = "DFW" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert — matches number 420 AND location DFW
+        result.Data.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldFilterByNotamNumber_WithAccountability()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", notamNumber: "420", notamYear: "2025", accountId: "BNA"),
+            CreateNotamEntity("0000000000000002", "AUS", "KAUS", notamNumber: "420", notamYear: "2025", accountId: "FDC")
+        );
+
+        var filters = new NotamFilterDto { NotamNumber = "420", Accountability = "BNA" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert — matches number 420 AND accountability BNA
+        result.Data.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task SearchNotamsAsync_ShouldCombineMultipleFilters()
+    {
+        // Arrange
+        SeedNotams(
+            CreateNotamEntity("0000000000000001", "DFW", "KDFW", classification: "DOMESTIC", accountId: "DFW"),
+            CreateNotamEntity("0000000000000002", "DFW", "KDFW", classification: "FDC", accountId: "FDC"),
+            CreateNotamEntity("0000000000000003", "AUS", "KAUS", classification: "DOMESTIC", accountId: "AUS")
+        );
+
+        var filters = new NotamFilterDto { Classification = "DOMESTIC", Location = "DFW" };
+
+        // Act
+        var result = await _service.SearchNotamsAsync(filters);
+
+        // Assert — DOMESTIC + DFW location = only one match
+        result.Data.Should().HaveCount(1);
+    }
+
     #endregion
 
     #region Number Search Tests
@@ -927,7 +1065,8 @@ public class NotamServiceTests : IDisposable
         string? notamNumber = null,
         string? notamYear = null,
         string? accountId = null,
-        string? airportName = null)
+        string? airportName = null,
+        DateTime? lastUpdated = null)
     {
         var dto = new NotamDto
         {
@@ -972,7 +1111,7 @@ public class NotamServiceTests : IDisposable
             EffectiveEnd = effectiveEnd,
             CancelationDate = cancelationDate,
             Text = $"Test NOTAM for {location}",
-            LastUpdated = DateTime.UtcNow,
+            LastUpdated = lastUpdated ?? DateTime.UtcNow,
             SyncedAt = DateTime.UtcNow,
             FeatureJson = JsonSerializer.Serialize(dto, JsonOptions)
         };

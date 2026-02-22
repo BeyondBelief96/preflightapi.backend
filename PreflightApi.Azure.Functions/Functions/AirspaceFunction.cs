@@ -25,31 +25,24 @@ namespace PreflightApi.Azure.Functions.Functions
 
         [Function("AirspaceFunction")]
         [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-        public async Task Run([TimerTrigger("0 0 2 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 11 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Airspace Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
 
-            try
-            {
-                var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.UtcNow;
 
-                if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Airspaces, currentDate))
-                {
-                    var sw = Stopwatch.StartNew();
-                    _logger.LogInformation("Starting airspace update process");
-                    await _airspaceService.UpdateAirspacesAsync(cancellationToken);
-                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Airspaces, currentDate);
-                    _logger.LogInformation("Airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
-                }
-                else
-                {
-                    _logger.LogInformation("No airspace update needed at this time");
-                }
-            }
-            catch (Exception)
+            if (await _publicationService.ShouldRunUpdateAsync(PublicationType.Airspaces, currentDate))
             {
-                throw;
+                var sw = Stopwatch.StartNew();
+                _logger.LogInformation("Starting airspace update process");
+                await _airspaceService.UpdateAirspacesAsync(cancellationToken);
+                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Airspaces, currentDate);
+                _logger.LogInformation("Airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.LogInformation("No airspace update needed at this time");
             }
         }
     }
