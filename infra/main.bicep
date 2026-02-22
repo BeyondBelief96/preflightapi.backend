@@ -32,8 +32,8 @@ param postgresLocation string = location
 @description('Storage account name for blob data (globally unique, 3-24 lowercase alphanumeric)')
 param storageAccountName string
 
-@description('Airport diagrams blob container name')
-param airportDiagramsContainerName string
+@description('Terminal procedures blob container name')
+param terminalProceduresContainerName string
 
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
@@ -185,7 +185,7 @@ module storage 'modules/storage.bicep' = {
     location: location
     storageAccountName: storageAccountName
     skuName: storageSkuName
-    airportDiagramsContainerName: airportDiagramsContainerName
+    terminalProceduresContainerName: terminalProceduresContainerName
     chartSupplementsContainerName: chartSupplementsContainerName
   }
 }
@@ -206,7 +206,7 @@ module appService 'modules/app-service.bicep' = {
     databaseUsername: dbAdminLogin
     databasePassword: dbAdminPassword
     storageAccountName: storage.outputs.storageAccountName
-    airportDiagramsContainerName: storage.outputs.airportDiagramsContainerName
+    terminalProceduresContainerName: storage.outputs.terminalProceduresContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
     gatewaySecret: gatewaySecret
   }
@@ -226,7 +226,7 @@ module functionApp 'modules/function-app.bicep' = {
     databaseUsername: dbAdminLogin
     databasePassword: dbAdminPassword
     storageAccountName: storage.outputs.storageAccountName
-    airportDiagramsContainerName: storage.outputs.airportDiagramsContainerName
+    terminalProceduresContainerName: storage.outputs.terminalProceduresContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
     nmsBaseUrl: nmsBaseUrl
     nmsAuthBaseUrl: nmsAuthBaseUrl

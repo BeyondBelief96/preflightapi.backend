@@ -56,7 +56,7 @@ builder.Services.Configure<CertificateRenewalSettings>(builder.Configuration.Get
 // Register services
 builder.Services.AddScoped<IFaaPublicationCycleService, FaaPublicationCycleService>();
 builder.Services.AddScoped<IChartSupplementCronService, ChartSupplementCronService>();
-builder.Services.AddScoped<IAirportDiagramCronService, AirportDiagramCronService>();
+builder.Services.AddScoped<ITerminalProcedureCronService, TerminalProcedureCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Metar>, MetarCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Taf>, TafCronService>();
 builder.Services.AddScoped<IAviationWeatherService<Sigmet>, SigmetCronService>();

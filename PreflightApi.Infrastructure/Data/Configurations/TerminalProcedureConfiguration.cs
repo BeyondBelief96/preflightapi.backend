@@ -4,11 +4,11 @@ using PreflightApi.Domain.Entities;
 
 namespace PreflightApi.Infrastructure.Data.Configurations
 {
-    public class AirportDiagramConfiguration : IEntityTypeConfiguration<AirportDiagram>
+    public class TerminalProcedureConfiguration : IEntityTypeConfiguration<TerminalProcedure>
     {
-        public void Configure(EntityTypeBuilder<AirportDiagram> builder)
+        public void Configure(EntityTypeBuilder<TerminalProcedure> builder)
         {
-            builder.ToTable("airport_diagrams");
+            builder.ToTable("terminal_procedures");
 
             builder.Property(e => e.Id)
                 .HasColumnName("id");
@@ -26,19 +26,34 @@ namespace PreflightApi.Infrastructure.Data.Configurations
                 .HasColumnName("airport_ident")
                 .HasMaxLength(4);
 
+            builder.Property(e => e.ChartCode)
+                .HasColumnName("chart_code")
+                .IsRequired()
+                .HasMaxLength(10);
+
             builder.Property(e => e.ChartName)
                 .HasColumnName("chart_name")
-                .HasMaxLength(100);
+                .IsRequired()
+                .HasMaxLength(200);
 
-            builder.Property(e => e.FileName)
-                .HasColumnName("file_name")
+            builder.Property(e => e.PdfFileName)
+                .HasColumnName("pdf_file_name")
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // Add indexes
+            builder.Property(e => e.AmendmentNumber)
+                .HasColumnName("amendment_number")
+                .HasMaxLength(10);
+
+            builder.Property(e => e.AmendmentDate)
+                .HasColumnName("amendment_date")
+                .HasMaxLength(20);
+
+            // Indexes
             builder.HasIndex(e => e.IcaoIdent);
             builder.HasIndex(e => e.AirportIdent);
-            builder.HasIndex(e => e.FileName)
+            builder.HasIndex(e => e.ChartCode);
+            builder.HasIndex(e => new { e.PdfFileName, e.AirportIdent, e.ChartName })
                 .IsUnique();
         }
     }

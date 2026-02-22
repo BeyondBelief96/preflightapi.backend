@@ -36,7 +36,7 @@ services:
       # Azure Blob Storage Settings
       - CloudStorage__ConnectionString=${CLOUD_STORAGE_CONNECTION_STRING}
       - CloudStorage__ChartSupplementsContainerName=preflightapi-chart-supplements-centralus-test
-      - CloudStorage__AirportDiagramsContainerName=preflightapi-airport-diagrams-centralus-test
+      - CloudStorage__TerminalProceduresContainerName=preflightapi-terminal-procedures-centralus-test
       - CloudStorage__UseManagedIdentity=false
       # NOAA API Settings
       - NOAASettings__NOAAApiKey=zNEw7

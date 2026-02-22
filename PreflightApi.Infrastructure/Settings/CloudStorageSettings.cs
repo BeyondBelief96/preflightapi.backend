@@ -27,9 +27,9 @@ public class CloudStorageSettings
     public string ChartSupplementsContainerName { get; set; } = "chart-supplements";
 
     /// <summary>
-    /// Container name for airport diagram PDFs.
+    /// Container name for terminal procedure PDFs.
     /// </summary>
-    public string AirportDiagramsContainerName { get; set; } = "airport-diagrams";
+    public string TerminalProceduresContainerName { get; set; } = "terminal-procedures";
 
     /// <summary>
     /// Use Azure Managed Identity for authentication instead of explicit credentials.

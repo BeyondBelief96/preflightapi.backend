@@ -128,7 +128,7 @@ builder.Services.AddScoped<IPirepService, PirepService>();
 builder.Services.AddScoped<ITafService, TafService>();
 builder.Services.AddScoped<ISigmetService, SigmetService>();
 builder.Services.AddScoped<IGAirmetService, GAirmetService>();
-builder.Services.AddScoped<IAirportDiagramService, AirportDiagramService>();
+builder.Services.AddScoped<ITerminalProcedureService, TerminalProcedureService>();
 builder.Services.AddScoped<IChartSupplementService, ChartSupplementService>();  
 builder.Services.AddScoped<IAirportService, AirportService>();
 builder.Services.AddScoped<IRunwayService, RunwayService>();

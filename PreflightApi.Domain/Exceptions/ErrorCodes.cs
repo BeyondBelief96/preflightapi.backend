@@ -13,7 +13,7 @@ public static class ErrorCodes
 
     // Airports
     public const string AirportNotFound = "AIRPORT_NOT_FOUND";
-    public const string AirportDiagramNotFound = "AIRPORT_DIAGRAM_NOT_FOUND";
+    public const string TerminalProcedureNotFound = "TERMINAL_PROCEDURE_NOT_FOUND";
     public const string RunwayNotFound = "RUNWAY_NOT_FOUND";
     public const string CommunicationFrequencyNotFound = "COMMUNICATION_FREQUENCY_NOT_FOUND";
 
