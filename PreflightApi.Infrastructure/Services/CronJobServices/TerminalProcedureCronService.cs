@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.IO.Compression;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Infrastructure.Data;
@@ -13,16 +12,16 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
 {
-    public class AirportDiagramCronService : IAirportDiagramCronService
+    public class TerminalProcedureCronService : ITerminalProcedureCronService
     {
-        private readonly ILogger<AirportDiagramCronService> _logger;
+        private readonly ILogger<TerminalProcedureCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
         private readonly ICloudStorageService _cloudStorageService;
         private readonly CloudStorageSettings _cloudStorageSettings;
 
-        public AirportDiagramCronService(
-            ILogger<AirportDiagramCronService> logger,
+        public TerminalProcedureCronService(
+            ILogger<TerminalProcedureCronService> logger,
             IHttpClientFactory httpClientFactory,
             PreflightApiDbContext dbContext,
             ICloudStorageService cloudStorageService,
@@ -35,21 +34,20 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             _cloudStorageSettings = cloudStorageSettings.Value;
         }
 
-        public async Task DownloadAndProcessAirportDiagramsAsync(CancellationToken cancellationToken = default)
+        public async Task DownloadAndProcessTerminalProceduresAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var currentDate = DateTime.UtcNow;
                 var publicationCycle = await _dbContext.FaaPublicationCycles.FirstOrDefaultAsync(
-                    p => p.PublicationType == PublicationType.AirportDiagram);
+                    p => p.PublicationType == PublicationType.TerminalProcedure, cancellationToken);
 
                 if (publicationCycle == null)
                 {
-                    throw new Exception("No publication cycle found for Airport Diagrams.");
+                    throw new Exception("No publication cycle found for Terminal Procedures.");
                 }
 
                 var currentPublicationDate = FaaPublicationDateUtils.CalculateCurrentPublicationDate(publicationCycle.KnownValidDate, publicationCycle.CycleLengthDays);
-                var dateString = FaaPublicationDateUtils.FormatDateForAirportDiagrams(currentPublicationDate);
+                var dateString = FaaPublicationDateUtils.FormatDateForTerminalProcedures(currentPublicationDate);
                 var regions = new[] { "A", "B", "C", "D", "E" };
 
                 // Track all uploaded blob names so we can clean up stale ones after
@@ -73,39 +71,38 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         var xmlEntry = zipArchive.Entries.FirstOrDefault(e => e.Name.EndsWith(".xml"));
                         if (xmlEntry == null)
                         {
-                            throw new Exception("Airport Diagram metadata XML file not found in zip archive.");
+                            throw new Exception("Terminal procedure metadata XML file not found in zip archive.");
                         }
 
                         using var xmlStream = xmlEntry.Open();
                         using var reader = new StreamReader(xmlStream);
-                        var xmlContent = await reader.ReadToEndAsync();
+                        var xmlContent = await reader.ReadToEndAsync(cancellationToken);
 
                         await ParseAndStoreXmlDataAsync(xmlContent, cancellationToken);
                     }
 
-                    // Match airport diagram PDFs: 5-digit code + "AD" + optional variant + ".PDF"
-                    // Examples: 00500AD.PDF, 00500ADROGERSLAKEBED.PDF, 00500ADROSAMONDLAKEBED.PDF
-                    var airportDiagramPattern = new Regex(@"^\d{5}AD.*\.PDF$", RegexOptions.IgnoreCase);
-                    var pdfEntries = zipArchive.Entries.Where(e => airportDiagramPattern.IsMatch(e.Name));
-                    var uploaded = await UploadPdfsToStorageAsync(pdfEntries, cancellationToken);
+                    // Extract ALL PDF files from the ZIP (not just airport diagrams)
+                    var pdfEntries = zipArchive.Entries.Where(e =>
+                        e.Name.EndsWith(".PDF", StringComparison.OrdinalIgnoreCase));
+                    var uploaded = await UploadPdfsToStorageAsync(pdfEntries, uploadedBlobNames, cancellationToken);
                     foreach (var name in uploaded) uploadedBlobNames.Add(name);
                 }
 
                 // Clean up stale blobs that aren't in the new publication cycle
                 await DeleteStaleBlobsAsync(uploadedBlobNames, cancellationToken);
 
-                _logger.LogInformation("Completed airport diagram processing.");
+                _logger.LogInformation("Completed terminal procedure processing.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing airport diagrams");
+                _logger.LogError(ex, "Error processing terminal procedures");
                 throw;
             }
         }
 
         private async Task DeleteStaleBlobsAsync(HashSet<string> uploadedBlobNames, CancellationToken cancellationToken)
         {
-            var containerName = _cloudStorageSettings.AirportDiagramsContainerName;
+            var containerName = _cloudStorageSettings.TerminalProceduresContainerName;
 
             try
             {
@@ -117,12 +114,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 if (staleBlobs.Count > 0)
                 {
                     await _cloudStorageService.DeleteBlobsAsync(containerName, staleBlobs);
-                    _logger.LogInformation("Deleted {StaleCount} stale airport diagrams from storage (kept {KeptCount})",
+                    _logger.LogInformation("Deleted {StaleCount} stale terminal procedures from storage (kept {KeptCount})",
                         staleBlobs.Count, uploadedBlobNames.Count);
                 }
                 else
                 {
-                    _logger.LogInformation("No stale airport diagrams to clean up");
+                    _logger.LogInformation("No stale terminal procedures to clean up");
                 }
             }
             catch (Exception ex)
@@ -132,15 +129,21 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             }
         }
 
-        private async Task<List<string>> UploadPdfsToStorageAsync(IEnumerable<ZipArchiveEntry> pdfEntries, CancellationToken cancellationToken)
+        private async Task<List<string>> UploadPdfsToStorageAsync(
+            IEnumerable<ZipArchiveEntry> pdfEntries,
+            HashSet<string> alreadyUploaded,
+            CancellationToken cancellationToken)
         {
-            const int batchSize = 50; // Process 50 PDFs at a time to avoid memory issues
-            var containerName = _cloudStorageSettings.AirportDiagramsContainerName;
+            const int batchSize = 50;
+            var containerName = _cloudStorageSettings.TerminalProceduresContainerName;
             var uploadedNames = new List<string>();
 
             try
             {
-                var entriesList = pdfEntries.ToList();
+                // Skip PDFs already uploaded from previous regions
+                var entriesList = pdfEntries
+                    .Where(e => !alreadyUploaded.Contains(e.Name))
+                    .ToList();
                 var totalCount = entriesList.Count;
                 var uploadedCount = 0;
 
@@ -162,12 +165,12 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                         await _cloudStorageService.UploadBlobsAsync(containerName, blobs);
                         uploadedCount += blobs.Count;
                         uploadedNames.AddRange(blobs.Select(b => b.BlobName));
-                        _logger.LogInformation("Uploaded batch of {BatchCount} airport diagrams ({UploadedCount}/{TotalCount})",
+                        _logger.LogInformation("Uploaded batch of {BatchCount} terminal procedures ({UploadedCount}/{TotalCount})",
                             blobs.Count, uploadedCount, totalCount);
                     }
                 }
 
-                _logger.LogInformation("Completed uploading {Count} airport diagrams to storage", uploadedCount);
+                _logger.LogInformation("Completed uploading {Count} terminal procedures to storage", uploadedCount);
                 return uploadedNames;
             }
             catch (Exception ex)
@@ -182,66 +185,39 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             const int batchSize = 1000;
 
             var doc = XDocument.Parse(xmlContent);
-            var diagrams = doc.Descendants("airport_name")
-            .SelectMany(airport => airport.Elements("record")
-            .Where(record => record.Element("chart_code")?.Value == "APD")
-            .Select(record => new AirportDiagram
-            {
-                AirportName = airport.Attribute("ID")?.Value ?? "",
-                IcaoIdent = airport.Attribute("icao_ident")?.Value,
-                AirportIdent = airport.Attribute("apt_ident")?.Value,
-                ChartName = record.Element("chart_name")?.Value,
-                FileName = record.Element("pdf_name")?.Value ?? ""
-            }))
-            .Where(diagram => !string.IsNullOrEmpty(diagram.AirportName) &&
-                   !string.IsNullOrEmpty(diagram.FileName))
-            .ToList();
-
-            _logger.LogInformation("Processing {Count} airport diagrams from XML", diagrams.Count);
-
-            for (int i = 0; i < diagrams.Count; i += batchSize)
-            {
-                var batch = diagrams.Skip(i).Take(batchSize).ToList();
-
-                // Get all filenames for this batch
-                var fileNames = batch.Select(d => d.FileName).ToList();
-
-                // Get existing records for this batch by filename (unique identifier)
-                var existingDiagrams = await _dbContext.AirportDiagrams
-                    .Where(d => fileNames.Contains(d.FileName))
-                    .ToListAsync(cancellationToken);
-
-                // Create lookup by filename
-                var existingByFileName = existingDiagrams.ToDictionary(d => d.FileName, d => d);
-
-                var newDiagrams = new List<AirportDiagram>();
-
-                foreach (var diagram in batch)
+            var procedures = doc.Descendants("airport_name")
+                .SelectMany(airport => airport.Elements("record")
+                .Select(record => new TerminalProcedure
                 {
-                    if (existingByFileName.TryGetValue(diagram.FileName, out var existingDiagram))
-                    {
-                        // Update existing record
-                        existingDiagram.AirportName = diagram.AirportName;
-                        existingDiagram.IcaoIdent = diagram.IcaoIdent;
-                        existingDiagram.AirportIdent = diagram.AirportIdent;
-                        existingDiagram.ChartName = diagram.ChartName;
-                    }
-                    else
-                    {
-                        newDiagrams.Add(diagram);
-                    }
-                }
+                    AirportName = airport.Attribute("ID")?.Value ?? "",
+                    IcaoIdent = airport.Attribute("icao_ident")?.Value,
+                    AirportIdent = airport.Attribute("apt_ident")?.Value,
+                    ChartCode = record.Element("chart_code")?.Value ?? "",
+                    ChartName = record.Element("chart_name")?.Value ?? "",
+                    PdfFileName = record.Element("pdf_name")?.Value ?? "",
+                    AmendmentNumber = record.Element("amdnt_num")?.Value,
+                    AmendmentDate = record.Element("amdnt_date")?.Value
+                }))
+                .Where(tp => !string.IsNullOrEmpty(tp.AirportName) &&
+                       !string.IsNullOrEmpty(tp.ChartCode) &&
+                       !string.IsNullOrEmpty(tp.ChartName) &&
+                       !string.IsNullOrEmpty(tp.PdfFileName))
+                .ToList();
 
-                // Batch add new diagrams
-                if (newDiagrams.Count > 0)
-                {
-                    await _dbContext.AirportDiagrams.AddRangeAsync(newDiagrams, cancellationToken);
-                }
+            _logger.LogInformation("Processing {Count} terminal procedures from XML", procedures.Count);
 
+            // Clear-and-reload strategy: delete all existing records, then bulk insert
+            await _dbContext.TerminalProcedures.ExecuteDeleteAsync(cancellationToken);
+            _logger.LogInformation("Cleared existing terminal procedure records");
+
+            for (int i = 0; i < procedures.Count; i += batchSize)
+            {
+                var batch = procedures.Skip(i).Take(batchSize).ToList();
+                await _dbContext.TerminalProcedures.AddRangeAsync(batch, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation("Processed airport diagram batch: {Count} diagrams ({NewCount} new, {UpdatedCount} updated)",
-                    batch.Count, newDiagrams.Count, batch.Count - newDiagrams.Count);
+                _logger.LogInformation("Inserted terminal procedure batch: {Count} records ({Processed}/{Total})",
+                    batch.Count, Math.Min(i + batchSize, procedures.Count), procedures.Count);
             }
         }
     }

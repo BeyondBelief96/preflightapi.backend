@@ -26,7 +26,7 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             new FaaPublicationCycle
             {
                 Id = 2,
-                PublicationType = PublicationType.AirportDiagram,
+                PublicationType = PublicationType.TerminalProcedure,
                 CycleLengthDays = 28,
                 KnownValidDate = new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc),
                 LastSuccessfulUpdate = null

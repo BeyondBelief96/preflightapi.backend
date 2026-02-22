@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PreflightApi.Domain.Entities
 {
-    public class AirportDiagram
+    public class TerminalProcedure
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -19,11 +19,22 @@ namespace PreflightApi.Domain.Entities
         [MaxLength(4)]
         public string? AirportIdent { get; set; }
 
-        [MaxLength(100)]
-        public string? ChartName { get; set; }
+        [Required]
+        [MaxLength(10)]
+        public string ChartCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(200)]
+        public string ChartName { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(100)]
-        public string FileName { get; set; } = string.Empty;
+        public string PdfFileName { get; set; } = string.Empty;
+
+        [MaxLength(10)]
+        public string? AmendmentNumber { get; set; }
+
+        [MaxLength(20)]
+        public string? AmendmentDate { get; set; }
     }
 }

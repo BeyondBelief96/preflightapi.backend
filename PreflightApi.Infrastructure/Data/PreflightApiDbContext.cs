@@ -22,7 +22,7 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<ChartSupplement> ChartSupplements => Set<ChartSupplement>();
 
-        public virtual DbSet<AirportDiagram> AirportDiagrams => Set<AirportDiagram>();
+        public virtual DbSet<TerminalProcedure> TerminalProcedures => Set<TerminalProcedure>();
 
         public virtual DbSet<Airport> Airports => Set<Airport>();
 

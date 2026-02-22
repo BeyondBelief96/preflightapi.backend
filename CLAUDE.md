@@ -31,7 +31,7 @@ This is a Clean Architecture solution with the following layers:
 - NOAA Aviation Weather API for METAR, TAF, PIREP, AIRMET/SIGMET data
 - FAA NASR data for airports and communication frequencies
 - ArcGIS services for airspace boundaries (via ArcGisBaseService)
-- Azure Blob Storage for storing airport diagrams and chart supplements (via ICloudStorageService)
+- Azure Blob Storage for storing terminal procedures and chart supplements (via ICloudStorageService)
 
 **Cloud Storage**: Uses `ICloudStorageService` abstraction with `AzureBlobStorageService` implementation. Supports:
 - SAS token URL generation for secure blob access
@@ -133,7 +133,7 @@ Configuration is via `CloudStorageSettings`:
 - `AccountName`: Storage account name (for Managed Identity)
 - `UseManagedIdentity`: Enable for production
 - `ChartSupplementsContainerName`: Container for FAA chart supplements
-- `AirportDiagramsContainerName`: Container for airport diagrams
+- `TerminalProceduresContainerName`: Container for terminal procedure charts (d-TPP)
 
 ### NASR Data Synchronization
 
@@ -180,7 +180,7 @@ For local development, `local.settings.json` must include:
 - `AzureWebJobsStorage`: Azure Storage connection string (for timer trigger state)
 - `CloudStorage__ConnectionString`: Azure Blob Storage connection string
 - `CloudStorage__ChartSupplementsContainerName`: Container name for chart supplements
-- `CloudStorage__AirportDiagramsContainerName`: Container name for airport diagrams
+- `CloudStorage__TerminalProceduresContainerName`: Container name for terminal procedures
 
 ## Git Workflow
 

@@ -17,7 +17,7 @@ namespace PreflightApi.Infrastructure.Utilities
             return $"{date.Day:D2}_{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(date.ToString("MMM", CultureInfo.InvariantCulture).ToLower())}_{date.Year}";
         }
 
-        public static string FormatDateForAirportDiagrams(DateTime date)
+        public static string FormatDateForTerminalProcedures(DateTime date)
         {
             return date.ToString("yyMMdd");
         }

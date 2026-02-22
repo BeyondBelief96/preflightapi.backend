@@ -29,8 +29,8 @@ param databasePassword string
 @description('Storage account name for managed identity access')
 param storageAccountName string
 
-@description('Airport diagrams blob container name')
-param airportDiagramsContainerName string
+@description('Terminal procedures blob container name')
+param terminalProceduresContainerName string
 
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
@@ -132,8 +132,8 @@ var baseAppSettings = [
     value: storageAccountName
   }
   {
-    name: 'CloudStorage__AirportDiagramsContainerName'
-    value: airportDiagramsContainerName
+    name: 'CloudStorage__TerminalProceduresContainerName'
+    value: terminalProceduresContainerName
   }
   {
     name: 'CloudStorage__ChartSupplementsContainerName'
