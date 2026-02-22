@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly PreflightApiDbContext _dbContext;
     private readonly GeometryFactory _geometryFactory;
+    private readonly ISyncTelemetryService _telemetry;
 
     private const string ChangeFileUrl = "https://aeronav.faa.gov/Obst_Data/DOF_DAILY_CHANGE_UPDATE.ZIP";
     private const string ChangeFileName = "DOF_DAILY_CHANGE_UPDATE.DAT";
@@ -24,16 +26,19 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
     public ObstacleDailyChangeCronService(
         ILogger<ObstacleDailyChangeCronService> logger,
         IHttpClientFactory httpClientFactory,
-        PreflightApiDbContext dbContext)
+        PreflightApiDbContext dbContext,
+        ISyncTelemetryService telemetry)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _dbContext = dbContext;
         _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+        _telemetry = telemetry;
     }
 
     public async Task ProcessDailyChangesAsync(CancellationToken cancellationToken = default)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             _logger.LogInformation("Starting daily obstacle change download from {Url}", ChangeFileUrl);
@@ -230,10 +235,13 @@ public class ObstacleDailyChangeCronService : IObstacleDailyChangeCronService
             _logger.LogInformation(
                 "Daily obstacle change processing complete: {Added} added, {Updated} updated, {Dismantled} dismantled",
                 addedCount, updatedCount, dismantledCount);
+
+            _telemetry.TrackSyncCompleted("ObstacleDailyChange", addedCount + updatedCount + dismantledCount, 0, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing daily obstacle changes");
+            _telemetry.TrackSyncFailed("ObstacleDailyChange", ex, sw.ElapsedMilliseconds);
             throw;
         }
     }

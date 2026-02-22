@@ -34,7 +34,8 @@ public class NotamDeltaSyncCronServiceTests : IDisposable
 
         var logger = Substitute.For<ILogger<NotamDeltaSyncCronService>>();
 
-        _service = new NotamDeltaSyncCronService(_nmsApiClient, _dbContext, settings, logger);
+        var telemetry = Substitute.For<ISyncTelemetryService>();
+        _service = new NotamDeltaSyncCronService(_nmsApiClient, _dbContext, settings, logger, telemetry);
     }
 
     public void Dispose()

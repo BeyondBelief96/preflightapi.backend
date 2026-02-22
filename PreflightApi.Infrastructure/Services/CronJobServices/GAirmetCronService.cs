@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,20 +17,24 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         private readonly ILogger<GAirmetCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
+        private readonly ISyncTelemetryService _telemetry;
         private const string GAirmetUrl = "https://aviationweather.gov/data/cache/gairmets.cache.xml.gz";
 
         public GAirmetCronService(
             ILogger<GAirmetCronService> logger,
             IHttpClientFactory httpClientFactory,
-            PreflightApiDbContext dbContext)
+            PreflightApiDbContext dbContext,
+            ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _dbContext = dbContext;
+            _telemetry = telemetry;
         }
 
         public async Task PollWeatherDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 _logger.LogInformation("Starting G-AIRMET data fetch and storage");
@@ -42,16 +47,19 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 if (xmlData == null)
                 {
                     _logger.LogInformation("No G-AIRMET data available from API (204 No Content)");
+                    _telemetry.TrackSyncCompleted("GAirmet", 0, 0, sw.ElapsedMilliseconds);
                     return;
                 }
 
                 var gairmetData = ParseGAirmetXmlData(xmlData);
                 await UpdateOrCreateGAirmetsAsync(gairmetData, cancellationToken);
                 _logger.LogInformation("Completed G-AIRMET data update");
+                _telemetry.TrackSyncCompleted("GAirmet", gairmetData.Count(), 0, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching G-AIRMET data");
+                _telemetry.TrackSyncFailed("GAirmet", ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

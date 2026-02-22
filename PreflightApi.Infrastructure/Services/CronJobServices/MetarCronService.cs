@@ -8,6 +8,7 @@ using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services.CronJobServices.WeatherServices.SchemaManifests;
 using PreflightApi.Infrastructure.Utilities;
+using System.Diagnostics;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
 {
@@ -16,20 +17,24 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
         private readonly ILogger<MetarCronService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PreflightApiDbContext _dbContext;
+        private readonly ISyncTelemetryService _telemetry;
         private const string MetarUrl = "https://aviationweather.gov/data/cache/metars.cache.xml.gz";
 
         public MetarCronService(
         ILogger<MetarCronService> logger,
         IHttpClientFactory httpClientFactory,
-        PreflightApiDbContext dbContext)
+        PreflightApiDbContext dbContext,
+        ISyncTelemetryService telemetry)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _dbContext = dbContext;
+            _telemetry = telemetry;
         }
 
         public async Task PollWeatherDataAsync(CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 _logger.LogInformation("Starting METAR data fetch and storage");
@@ -38,6 +43,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 if (xmlData == null)
                 {
                     _logger.LogInformation("No METAR data available from API (204 No Content)");
+                    _telemetry.TrackSyncCompleted("Metar", 0, 0, sw.ElapsedMilliseconds);
                     return;
                 }
 
@@ -78,10 +84,13 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     _logger.LogWarning("Completed METAR data update with {ErrorCount} record errors", errorCount);
                 else
                     _logger.LogInformation("Completed METAR data update");
+
+                _telemetry.TrackSyncCompleted("Metar", metarData.Count, errorCount, sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching METAR data");
+                _telemetry.TrackSyncFailed("Metar", ex, sw.ElapsedMilliseconds);
                 throw;
             }
         }

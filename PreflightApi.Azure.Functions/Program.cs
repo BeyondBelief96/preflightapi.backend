@@ -15,6 +15,7 @@ using PreflightApi.Infrastructure.Services.CronJobServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices;
 using PreflightApi.Infrastructure.Services.CronJobServices.NasrServices;
 using PreflightApi.Infrastructure.Services.NotamServices;
+using PreflightApi.Infrastructure.Services.Telemetry;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 
@@ -75,6 +76,7 @@ builder.Services.AddScoped<INotamInitialLoadCronService, NotamInitialLoadCronSer
 builder.Services.AddScoped<IPorkbunDnsClient, PorkbunDnsClient>();
 builder.Services.AddScoped<IKeyVaultCertificateService, KeyVaultCertificateService>();
 builder.Services.AddScoped<ICertificateRenewalService, CertificateRenewalService>();
+builder.Services.AddSingleton<ISyncTelemetryService, SyncTelemetryService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddResilientHttpClients();
 
@@ -84,12 +86,14 @@ builder.Services.AddHttpClient("ArcGis", client =>
     client.Timeout = TimeSpan.FromMinutes(10);
 });
 
-// Configure HttpClient for NMS API with configurable timeout
+// Configure HttpClient for NMS API with configurable timeout + retry and circuit breaker
 builder.Services.AddHttpClient("NmsApi", (serviceProvider, client) =>
 {
     var nmsSettings = serviceProvider.GetRequiredService<IOptions<NmsSettings>>().Value;
     client.Timeout = TimeSpan.FromSeconds(nmsSettings.RequestTimeoutSeconds);
-});
+})
+.AddPolicyHandler(PreflightApi.Infrastructure.Utilities.ServiceCollectionExtensions.CreateRetryPolicy())
+.AddPolicyHandler(PreflightApi.Infrastructure.Utilities.ServiceCollectionExtensions.CreateCircuitBreakerPolicy());
 
 // Configure HttpClient for Porkbun DNS API
 builder.Services.AddHttpClient("Porkbun");

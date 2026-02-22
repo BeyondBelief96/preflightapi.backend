@@ -27,7 +27,8 @@ public class NotamInitialLoadCronServiceTests : IDisposable
 
         var logger = Substitute.For<ILogger<NotamInitialLoadCronService>>();
 
-        _service = new NotamInitialLoadCronService(_nmsApiClient, _dbContext, logger);
+        var telemetry = Substitute.For<ISyncTelemetryService>();
+        _service = new NotamInitialLoadCronService(_nmsApiClient, _dbContext, logger, telemetry);
     }
 
     public void Dispose()

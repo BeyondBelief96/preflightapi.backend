@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PreflightApi.Infrastructure.Dtos.Navlog;
 using PreflightApi.Infrastructure.Settings;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services;
 
@@ -37,7 +38,7 @@ public class MagneticVariationService : IMagneticVariationService
                 return cachedVariation;
             }
             
-            var client = _httpClientFactory.CreateClient();
+            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.MagVarHttpClient);
             var response = await client.GetAsync(
                 $"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?" +
                 $"lat1={latitude}&lon1={longitude}&key={_apiKey}&resultFormat=json");
