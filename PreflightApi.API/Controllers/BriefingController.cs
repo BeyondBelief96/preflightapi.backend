@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos.Briefing;
@@ -11,7 +10,6 @@ namespace PreflightApi.API.Controllers;
 /// METARs, TAFs, PIREPs, SIGMETs, G-AIRMETs, and NOTAMs for all airports and airspace
 /// along a planned route of flight.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/briefing")]
 [Tags("Briefing")]

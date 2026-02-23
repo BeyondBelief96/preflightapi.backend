@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Enums;
@@ -15,7 +14,6 @@ namespace PreflightApi.API.Controllers;
 /// hazards significant to all aircraft (severe turbulence/icing, convective activity). Each advisory includes
 /// the hazard type, severity, altitude range, and geographic polygon defining the affected area.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/sigmets")]
 [Tags("Weather - Domestic SIGMETs")]

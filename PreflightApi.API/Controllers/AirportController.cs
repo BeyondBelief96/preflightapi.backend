@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -14,7 +13,6 @@ namespace PreflightApi.API.Controllers
     /// ICAO code or identifier to query related data from other endpoints such as METARs, TAFs, runways,
     /// communication frequencies, airport diagrams, and chart supplements.
     /// </summary>
-    [ApiVersion("1.0")]
     [ApiController]
     [Route("api/v{version:apiVersion}/airports")]
     [Tags("Airports")]

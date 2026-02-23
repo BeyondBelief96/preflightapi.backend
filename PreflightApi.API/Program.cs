@@ -63,13 +63,20 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
+// Derive API URL version from assembly major version
+var apiMajorVersion = Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 1;
+
 // Setup API Versioning
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.DefaultApiVersion = new ApiVersion(apiMajorVersion, 0);
     options.AssumeDefaultVersionWhenUnspecified = false;
     options.ReportApiVersions = true;
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddMvc(options =>
+{
+    options.Conventions.Add(new AssemblyMajorVersionConvention());
 })
 .AddApiExplorer(options =>
 {
@@ -86,7 +93,7 @@ var assemblyVersion = Assembly.GetExecutingAssembly()
 builder.Services.AddOpenApiDocument(options =>
 {
     options.Title = "PreflightApi";
-    options.Version = $"v1 ({assemblyVersion})";
+    options.Version = $"v{apiMajorVersion} ({assemblyVersion})";
     options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
     options.DocumentProcessors.Add(new ControllerXmlDocProcessor());
     options.OperationProcessors.Add(new OperationXmlDocProcessor());

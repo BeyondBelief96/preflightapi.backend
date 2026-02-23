@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Enums;
@@ -17,7 +16,6 @@ namespace PreflightApi.API.Controllers;
 /// hazard, severity, altitude range, and geographic polygon of the affected area. G-AIRMETs are issued every
 /// 3 hours with forecasts at 0, 3, 6, 9, and 12 hour intervals.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/g-airmets")]
 [Tags("Weather - G-AIRMETs")]

@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos.Performance;
@@ -68,7 +67,6 @@ namespace PreflightApi.API.Controllers;
 /// certified instruments and official flight planning tools.
 /// </para>
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/e6b")]
 [Tags("E6B Flight Computer")]

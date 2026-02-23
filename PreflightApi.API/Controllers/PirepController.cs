@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -14,7 +13,6 @@ namespace PreflightApi.API.Controllers;
 /// visibility, and other flight conditions at specific altitudes and locations. Unlike METARs (ground-based),
 /// PIREPs describe conditions aloft. Report types are UA (routine) or UUA (urgent, indicating severe conditions).
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/pireps")]
 [Tags("Weather - PIREPs")]

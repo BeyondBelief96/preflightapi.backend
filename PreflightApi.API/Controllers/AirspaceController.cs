@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -15,7 +14,6 @@ namespace PreflightApi.API.Controllers;
 /// Airspace GlobalIds are returned by the navigation log endpoint for airspaces along a planned route —
 /// use the by-global-ids endpoints to retrieve full details for those airspaces.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/airspaces")]
 [Tags("Airspace")]

@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
@@ -12,7 +11,6 @@ namespace PreflightApi.API.Controllers;
 /// lighting, available services, airspace, and other operational details.
 /// PDFs are returned as time-limited pre-signed URLs.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/chart-supplements")]
 [Tags("Chart Supplements")]

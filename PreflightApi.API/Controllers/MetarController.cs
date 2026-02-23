@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -13,7 +12,6 @@ namespace PreflightApi.API.Controllers;
 /// METARs are routine weather observations from airport weather stations, updated approximately every hour.
 /// METAR data is also used by the E6B endpoints to automatically calculate crosswind and density altitude for airports.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/metars")]
 [Tags("Weather - METARs")]
