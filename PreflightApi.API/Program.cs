@@ -212,7 +212,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
                 status = e.Value.Status.ToString(),
                 duration = e.Value.Duration.TotalMilliseconds,
                 description = e.Value.Description,
-                exception = e.Value.Exception?.Message
+                exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
             })
         };
         await context.Response.WriteAsJsonAsync(result);
