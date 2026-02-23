@@ -698,7 +698,7 @@ public class NavlogService : INavlogService
             return airports.MinBy(a => a.Distance)?.Airport;
         }
 
-    private WindTempDto? InterpolateWindTempData(int altitude, WindsAloftSiteDto airport)
+    internal static WindTempDto? InterpolateWindTempData(int altitude, WindsAloftSiteDto airport)
     {
         var altitudeLevels = new[] { 3000, 6000, 9000, 12000, 18000, 24000, 30000, 34000, 39000 };
 

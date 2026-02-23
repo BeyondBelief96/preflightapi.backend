@@ -274,13 +274,13 @@ public class NotamController(INotamService notamService)
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Fetches NOTAMs for each point along a route, deduplicates them, and returns a single combined result.
-    /// The route can be specified in two ways:
+    /// Queries NOTAMs for each point along a route, deduplicates them, and returns a single combined result.
     /// </para>
     ///
-    /// <para><strong>Option 1 — Airport identifiers only</strong></para>
+    /// <para><strong>Option 1 — Airport identifiers only (simple)</strong></para>
     /// <para>
-    /// The simplest form — provide an array of airport identifiers. Each airport is queried by identifier.
+    /// Provide a list of airport identifiers. Each airport is queried by identifier match (FAA or ICAO).
+    /// Best for straightforward airport-to-airport routes with no en-route waypoints.
     /// </para>
     /// <code>
     /// { "airportIdentifiers": ["KDFW", "KAUS"] }
@@ -288,8 +288,9 @@ public class NotamController(INotamService notamService)
     ///
     /// <para><strong>Option 2 — Route points (airports + waypoints)</strong></para>
     /// <para>
-    /// Mix airport identifiers and geographic waypoints with coordinates. Waypoints use spatial
-    /// (radius) queries while airports query by identifier.
+    /// Provide an ordered list of route points. Each point is either an airport (queried by identifier)
+    /// or a geographic waypoint (queried by spatial radius around its coordinates).
+    /// Use this when your route includes en-route waypoints or you need per-point radius control.
     /// </para>
     /// <code>
     /// {
@@ -304,15 +305,20 @@ public class NotamController(INotamService notamService)
     /// }
     /// </code>
     ///
-    /// <para><strong>Radius Resolution</strong></para>
-    /// <para>
-    /// If both <c>routePoints</c> and <c>airportIdentifiers</c> are provided, <c>routePoints</c> takes precedence.
-    /// Each waypoint uses its own <c>radiusNm</c> if specified, otherwise falls back to <c>corridorRadiusNm</c>,
-    /// then to the server default (25 NM). Airport points query by identifier, not radius.
-    /// Optional filters narrow results across all route points.
-    /// </para>
+    /// <para><strong>How each point type is queried</strong></para>
+    /// <list type="bullet">
+    ///   <item><description><strong>Airport points</strong> — queried by identifier (same as the single-airport endpoint). Radius settings do not apply.</description></item>
+    ///   <item><description><strong>Waypoints</strong> — queried by spatial radius. The radius used is: the point's own <c>radiusNm</c> if set, otherwise the request-level <c>corridorRadiusNm</c>, otherwise the server default (25 NM).</description></item>
+    /// </list>
+    ///
+    /// <para><strong>Notes</strong></para>
+    /// <list type="bullet">
+    ///   <item><description>If both <c>routePoints</c> and <c>airportIdentifiers</c> are provided, <c>routePoints</c> is used and <c>airportIdentifiers</c> is ignored.</description></item>
+    ///   <item><description>Duplicate NOTAMs appearing at multiple route points are returned only once.</description></item>
+    ///   <item><description>Optional <c>filters</c> (classification, feature, freeText, date range) are applied to every route point query.</description></item>
+    /// </list>
     /// </remarks>
-    /// <param name="request">Route query with airport identifiers and/or route points, optional corridor radius, and optional filters</param>
+    /// <param name="request">Route query — provide either <c>airportIdentifiers</c> or <c>routePoints</c>, with optional <c>corridorRadiusNm</c> and <c>filters</c></param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Aggregated and deduplicated NOTAMs for all points along the route</returns>
     /// <response code="200">Returns the combined NOTAMs for the route</response>
