@@ -1,6 +1,21 @@
 <policies>
 	<inbound>
 		<base />
+		<!-- Maintenance mode: return 503 during deployments (toggled via CI/CD) -->
+		<choose>
+			<when condition="@("{{maintenance-mode}}" == "true")">
+				<return-response>
+					<set-status code="503" reason="Service Unavailable" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-header name="Retry-After" exists-action="override">
+						<value>300</value>
+					</set-header>
+					<set-body>{"status":"maintenance","message":"PreflightApi is undergoing a deployment. Please try again shortly."}</set-body>
+				</return-response>
+			</when>
+		</choose>
 		<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->
 		<set-header name="X-Api-Gateway-Secret" exists-action="override">
 			<value>{{apim-gateway-secret}}</value>

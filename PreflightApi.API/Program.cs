@@ -15,6 +15,8 @@ using PreflightApi.Infrastructure.Services.DocumentServices;
 using PreflightApi.Infrastructure.Services.NotamServices;
 using PreflightApi.Infrastructure.Services.WeatherServices;
 using PreflightApi.Infrastructure.Settings;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -194,5 +196,26 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            version = assemblyVersion,
+            totalDuration = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds,
+                description = e.Value.Description,
+                exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
+            })
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
 await app.RunAsync();

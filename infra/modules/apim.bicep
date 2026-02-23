@@ -51,6 +51,16 @@ resource gatewaySecretNamedValue 'Microsoft.ApiManagement/service/namedValues@20
   }
 }
 
+// Named value for maintenance mode (toggled by CI/CD during deployments)
+resource maintenanceModeNamedValue 'Microsoft.ApiManagement/service/namedValues@2024-05-01' = {
+  parent: apim
+  name: 'maintenance-mode'
+  properties: {
+    displayName: 'maintenance-mode'
+    value: 'false'
+  }
+}
+
 // API definition pointing to the backend Web App
 resource api 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apim
@@ -78,6 +88,7 @@ resource apiPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = 
   }
   dependsOn: [
     gatewaySecretNamedValue
+    maintenanceModeNamedValue
   ]
 }
 
