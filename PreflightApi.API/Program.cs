@@ -17,6 +17,7 @@ using PreflightApi.Infrastructure.Services.WeatherServices;
 using PreflightApi.Infrastructure.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -133,7 +134,10 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
 
 // Health checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<PreflightApiDbContext>("database", tags: new[] { "ready" });
+    .AddDbContextCheck<PreflightApiDbContext>("database",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: new[] { "ready" })
+    .AddInfrastructureHealthChecks();
 
 // Configure Services
 builder.Services.AddMemoryCache();
@@ -196,26 +200,56 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+// Liveness probe — is the process alive? Always returns 200.
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = WriteHealthResponse
+});
+
+// Readiness probe — can the API serve traffic? Checks database + blob storage.
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+    },
+    ResponseWriter = WriteHealthResponse
+});
+
+// Full status page — all checks including external dependencies.
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
-    ResponseWriter = async (context, report) =>
+    ResultStatusCodes =
     {
-        context.Response.ContentType = "application/json";
-        var result = new
-        {
-            status = report.Status.ToString(),
-            version = assemblyVersion,
-            totalDuration = report.TotalDuration.TotalMilliseconds,
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                duration = e.Value.Duration.TotalMilliseconds,
-                description = e.Value.Description,
-                exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
-            })
-        };
-        await context.Response.WriteAsJsonAsync(result);
-    }
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+    },
+    ResponseWriter = WriteHealthResponse
 });
+
+async Task WriteHealthResponse(HttpContext context, HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+    var result = new
+    {
+        status = report.Status.ToString(),
+        version = assemblyVersion,
+        totalDuration = report.TotalDuration.TotalMilliseconds,
+        checks = report.Entries.Select(e => new
+        {
+            name = e.Key,
+            status = e.Value.Status.ToString(),
+            duration = e.Value.Duration.TotalMilliseconds,
+            description = e.Value.Description,
+            tags = e.Value.Tags,
+            exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
+        })
+    };
+    await context.Response.WriteAsJsonAsync(result);
+}
 await app.RunAsync();
