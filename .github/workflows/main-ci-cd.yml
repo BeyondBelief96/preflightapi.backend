@@ -181,12 +181,14 @@ jobs:
           echo "Waiting for API to become healthy..."
           for i in $(seq 1 30); do
             if curl -sf "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json" -o /dev/null; then
-              echo "API is ready"
-              break
+              echo "API is ready after attempt $i"
+              exit 0
             fi
             echo "Attempt $i/30 — waiting 10s..."
             sleep 10
           done
+          echo "::error::API did not become healthy after 30 attempts (5 minutes)"
+          exit 1
 
       - name: Import OpenAPI spec into APIM
         run: >
