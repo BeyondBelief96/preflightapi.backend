@@ -106,7 +106,7 @@ cd PreflightApi
 
 ### 2. Environment Setup
 
-#### Create Environment File
+#### Docker Compose Environment File
 
 Copy the example environment file and configure your values:
 
@@ -114,32 +114,40 @@ Copy the example environment file and configure your values:
 cp .env.example .env
 ```
 
-Edit `.env` with your actual values:
-
-```env
-# Database password for the PostgreSQL container
-DB_PASSWORD=your_secure_password_here
-
-# Azure Blob Storage connection string
-# Get this from Azure Portal > Storage Account > Access Keys
-CLOUD_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=YOUR_ACCOUNT;AccountKey=YOUR_KEY;EndpointSuffix=core.windows.net
-
-# FAA NMS API credentials (for NOTAM data sync)
-# Apply at: https://api.faa.gov/
-NMS_CLIENT_ID=your-client-id
-NMS_CLIENT_SECRET=your-client-secret
-```
-
-#### Required Environment Variables
+Edit `.env` with your actual values. These variables are referenced by `docker-compose.local.yml`:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DB_PASSWORD` | PostgreSQL database password | Yes |
+| `DB_PASSWORD` | PostgreSQL container password | Yes |
 | `CLOUD_STORAGE_CONNECTION_STRING` | Azure Blob Storage connection string | Yes |
-| `NMS_CLIENT_ID` | FAA NMS API client ID | No* |
-| `NMS_CLIENT_SECRET` | FAA NMS API client secret | No* |
+| `NMS_CLIENT_ID` | FAA NMS API client ID (for NOTAM sync) | No |
+| `NMS_CLIENT_SECRET` | FAA NMS API client secret (for NOTAM sync) | No |
 
-*These are only required if you need NOTAM synchronization via Azure Functions.
+#### User Secrets (non-Docker development)
+
+Both projects use [.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) for sensitive configuration. Example files are provided as reference templates:
+
+- **API**: `PreflightApi.API/user-secrets.example.json`
+- **Azure Functions**: `PreflightApi.Azure.Functions/user-secrets.example.json`
+
+To set up user secrets for each project:
+
+```bash
+# API project
+cd PreflightApi.API
+dotnet user-secrets init
+# Then set each key from user-secrets.example.json:
+dotnet user-secrets set "Database:Password" "your_password"
+dotnet user-secrets set "CloudStorage:ConnectionString" "your_connection_string"
+# ... etc.
+
+# Azure Functions project
+cd ../PreflightApi.Azure.Functions
+dotnet user-secrets init
+dotnet user-secrets set "Database:Password" "your_password"
+dotnet user-secrets set "NmsSettings:ClientId" "your_client_id"
+# ... etc.
+```
 
 ### 3. Docker Setup (Recommended)
 
@@ -232,23 +240,14 @@ CREATE EXTENSION postgis;
 
 #### Configure User Secrets (Alternative to appsettings)
 
-For sensitive configuration, use .NET User Secrets:
+For sensitive configuration, use .NET User Secrets. See `PreflightApi.API/user-secrets.example.json` for all available keys:
 
 ```bash
 cd PreflightApi.API
-
-# Initialize user secrets
 dotnet user-secrets init
-
-# Set database password
 dotnet user-secrets set "Database:Password" "your_password"
-
-# Set cloud storage connection string
 dotnet user-secrets set "CloudStorage:ConnectionString" "your_connection_string"
-
-# Set NMS API credentials (only needed for Azure Functions NOTAM sync)
-dotnet user-secrets set "NmsSettings:ClientId" "your_client_id"
-dotnet user-secrets set "NmsSettings:ClientSecret" "your_client_secret"
+dotnet user-secrets set "NOAASettings:NOAAApiKey" "your_noaa_key"
 ```
 
 #### Run Database Migrations
@@ -268,80 +267,67 @@ The API will be available at `https://localhost:7014` or `http://localhost:5014`
 
 ## Configuration
 
-### appsettings Files
+### Configuration Hierarchy
 
-Configuration is loaded hierarchically:
+Both projects load configuration in this order (later sources override earlier):
 
-1. `appsettings.json` - Base configuration
-2. `appsettings.{Environment}.json` - Environment-specific overrides
-3. Environment variables - Highest priority
-4. User Secrets - Development only (not committed to source control)
+1. `appsettings.json` — Base configuration (committed)
+2. `appsettings.{Environment}.json` — Environment-specific overrides (committed)
+3. Environment variables — Highest priority (CI/CD, Docker Compose)
+4. User Secrets — Development only (not committed)
 
-### Configuration Sections
+### API Configuration (`PreflightApi.API`)
 
-#### Database
+See `PreflightApi.API/user-secrets.example.json` for a copyable template.
 
-```json
-{
-  "Database": {
-    "Host": "localhost",
-    "Database": "preflightapi_development_database",
-    "Username": "preflightapi_development_user",
-    "Password": "your_password",
-    "Port": 5432
-  }
-}
-```
+| Setting | Description | Required |
+|---------|-------------|----------|
+| `Database:Password` | PostgreSQL password | Yes |
+| `NOAASettings:NOAAApiKey` | NOAA Aviation Weather Center API key | Yes |
+| `CloudStorage:ConnectionString` | Azure Blob Storage connection string (for local dev) | Yes |
+| `CloudStorage:ChartSupplementsContainerName` | Blob container for FAA chart supplements | Yes |
+| `CloudStorage:TerminalProceduresContainerName` | Blob container for terminal procedure charts (d-TPP) | Yes |
+| `CloudStorage:AccountName` | Storage account name (for Managed Identity in production) | Prod only |
+| `ClerkSettings:Authority` | Clerk JWT authority URL | No |
+| `ClerkSettings:RequireAuthenticationInDevelopment` | Enable Clerk auth in dev (`true`/`false`) | No |
 
-#### Cloud Storage
+Non-secret database settings (`Host`, `Database`, `Username`, `Port`) are in `appsettings.Development.json`.
 
-```json
-{
-  "CloudStorage": {
-    "ConnectionString": "your_connection_string",
-    "UseManagedIdentity": false,
-    "ChartSupplementsContainerName": "preflightapi-chart-supplements-centralus-test",
-    "TerminalProceduresContainerName": "preflightapi-terminal-procedures-centralus-test"
-  }
-}
-```
+### Azure Functions Configuration (`PreflightApi.Azure.Functions`)
 
-For production, set `UseManagedIdentity` to `true` and provide `AccountName` instead of `ConnectionString`.
+See `PreflightApi.Azure.Functions/user-secrets.example.json` for a copyable template.
 
-#### NMS API (NOTAMs — used by Azure Functions only)
+| Setting | Description | Required |
+|---------|-------------|----------|
+| **Database** | | |
+| `Database:Password` | PostgreSQL password | Yes |
+| **Cloud Storage** | | |
+| `CloudStorage:ConnectionString` | Azure Blob Storage connection string (for local dev) | Yes |
+| `CloudStorage:ChartSupplementsContainerName` | Blob container for FAA chart supplements | Yes |
+| `CloudStorage:TerminalProceduresContainerName` | Blob container for terminal procedure charts (d-TPP) | Yes |
+| `CloudStorage:AccountName` | Storage account name (for Managed Identity in production) | Prod only |
+| **NMS API** (NOTAM sync) | | |
+| `NmsSettings:ClientId` | FAA NMS OAuth2 client ID | Yes |
+| `NmsSettings:ClientSecret` | FAA NMS OAuth2 client secret | Yes |
+| `NmsSettings:BaseUrl` | NMS API base URL | Yes |
+| `NmsSettings:AuthBaseUrl` | NMS OAuth2 token endpoint base URL | Yes |
+| **Porkbun DNS** (certificate renewal) | | |
+| `Porkbun:ApiKey` | Porkbun DNS API key | No* |
+| `Porkbun:SecretApiKey` | Porkbun DNS secret API key | No* |
+| **Certificate Renewal** (Let's Encrypt via ACME) | | |
+| `CertificateRenewal:RootDomain` | Root domain for DNS challenges | No* |
+| `CertificateRenewal:KeyVaultName` | Azure Key Vault name for certificate storage | No* |
+| `CertificateRenewal:Domain` | Domain for the certificate (e.g., `api.yourdomain.io`) | No* |
+| `CertificateRenewal:CertificateName` | Certificate name in Key Vault | No* |
+| `CertificateRenewal:AcmeEmail` | Email for Let's Encrypt ACME registration | No* |
 
-```json
-{
-  "NmsSettings": {
-    "BaseUrl": "https://api-staging.cgifederal-aim.com/nmsapi",
-    "AuthBaseUrl": "https://api-staging.cgifederal-aim.com",
-    "ClientId": "your_client_id",
-    "ClientSecret": "your_client_secret",
-    "CacheDurationMinutes": 5,
-    "DefaultRouteCorridorRadiusNm": 25,
-    "RequestTimeoutSeconds": 120,
-    "DeltaSyncIntervalMinutes": 3
-  }
-}
-```
+*Porkbun and CertificateRenewal settings are only required if you run the certificate renewal function.
 
-### Azure Functions Configuration
+Non-secret NMS settings (`CacheDurationMinutes`, `DefaultRouteCorridorRadiusNm`, `RequestTimeoutSeconds`, `DeltaSyncIntervalMinutes`) are in `appsettings.json`.
 
-For Azure Functions, configuration is in `local.settings.json`:
+### Azure Functions `local.settings.json`
 
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AZURE_FUNCTIONS_ENVIRONMENT": "Development",
-    "DOTNET_ENVIRONMENT": "Development"
-  }
-}
-```
-
-To disable specific functions during development, add `"AzureWebJobs.<FunctionName>.Disabled": "true"` entries to the `Values` section:
+The `local.settings.json` file controls Azure Functions runtime settings. It is already committed with function toggle defaults. To disable specific functions during development:
 
 ```json
 {
@@ -458,13 +444,15 @@ PreflightApi/
 │
 ├── PreflightApi.API/                    # ASP.NET Core Web API
 │   ├── Controllers/                     # API controllers
-│   ├── Configuration/                   # Service registration
+│   ├── Configuration/                   # Service registration, API version convention
 │   ├── Middleware/                       # Gateway secret, global exceptions, API version header
 │   ├── Models/                          # API request/response models
+│   ├── user-secrets.example.json        # Template for dotnet user-secrets (API)
 │   └── Program.cs                       # Application entry point
 │
 ├── PreflightApi.Azure.Functions/        # Azure Functions (timer-triggered data sync)
 │   ├── Functions/                       # Timer-triggered sync functions
+│   ├── user-secrets.example.json        # Template for dotnet user-secrets (Functions)
 │   └── Program.cs                       # Functions host configuration
 │
 ├── PreflightApi.Tests/                  # Test project
