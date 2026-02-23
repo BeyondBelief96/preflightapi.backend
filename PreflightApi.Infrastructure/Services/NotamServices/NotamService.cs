@@ -245,41 +245,34 @@ public class NotamService : INotamService
         var seenIds = new HashSet<string>();
         var routeDescriptions = new List<string>();
 
-        // Fetch NOTAMs for each route point in parallel
-        var tasks = request.RoutePoints
-            .Select(async (point, index) =>
-            {
-                try
-                {
-                    if (point.IsAirport)
-                    {
-                        var response = await GetNotamsForAirportAsync(point.AirportIdentifier!, request.Filters, ct);
-                        return (Index: index, Point: point, Notams: response.Notams, Error: (Exception?)null);
-                    }
-                    else
-                    {
-                        var radius = GetWaypointRadius(point, request.CorridorRadiusNm);
-                        var response = await GetNotamsByRadiusAsync(point.Latitude!.Value, point.Longitude!.Value, radius, request.Filters, ct);
-                        return (Index: index, Point: point, Notams: response.Notams, Error: (Exception?)null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var pointDesc = FormatRoutePointDescription(point);
-                    _logger.LogWarning(ex, "Failed to fetch NOTAMs for route point {PointDescription}", pointDesc);
-                    return (Index: index, Point: point, Notams: new List<NotamDto>(), Error: ex);
-                }
-            })
-            .ToList();
-
-        var results = await Task.WhenAll(tasks);
-
-        // Process results in original order
-        foreach (var result in results.OrderBy(r => r.Index))
+        // Fetch NOTAMs for each route point sequentially (DbContext is not thread-safe)
+        foreach (var point in request.RoutePoints)
         {
-            routeDescriptions.Add(FormatRoutePointDescription(result.Point));
+            routeDescriptions.Add(FormatRoutePointDescription(point));
 
-            foreach (var notam in result.Notams)
+            List<NotamDto> notams;
+            try
+            {
+                if (point.IsAirport)
+                {
+                    var response = await GetNotamsForAirportAsync(point.AirportIdentifier!, request.Filters, ct);
+                    notams = response.Notams;
+                }
+                else
+                {
+                    var radius = GetWaypointRadius(point, request.CorridorRadiusNm);
+                    var response = await GetNotamsByRadiusAsync(point.Latitude!.Value, point.Longitude!.Value, radius, request.Filters, ct);
+                    notams = response.Notams;
+                }
+            }
+            catch (Exception ex)
+            {
+                var pointDesc = FormatRoutePointDescription(point);
+                _logger.LogWarning(ex, "Failed to fetch NOTAMs for route point {PointDescription}", pointDesc);
+                continue;
+            }
+
+            foreach (var notam in notams)
             {
                 var notamId = GetNotamUniqueId(notam);
                 if (!string.IsNullOrEmpty(notamId) && seenIds.Add(notamId))
@@ -309,28 +302,22 @@ public class NotamService : INotamService
         var allNotams = new List<NotamDto>();
         var seenIds = new HashSet<string>();
 
-        // Fetch NOTAMs for each airport in parallel
-        var tasks = request.AirportIdentifiers
-            .Select(async ident =>
-            {
-                try
-                {
-                    var response = await GetNotamsForAirportAsync(ident, request.Filters, ct);
-                    return (Identifier: ident, Notams: response.Notams, Error: (Exception?)null);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to fetch NOTAMs for airport {Identifier}", ident);
-                    return (Identifier: ident, Notams: new List<NotamDto>(), Error: ex);
-                }
-            })
-            .ToList();
-
-        var results = await Task.WhenAll(tasks);
-
-        foreach (var result in results)
+        // Fetch NOTAMs for each airport sequentially (DbContext is not thread-safe)
+        foreach (var ident in request.AirportIdentifiers)
         {
-            foreach (var notam in result.Notams)
+            List<NotamDto> notams;
+            try
+            {
+                var response = await GetNotamsForAirportAsync(ident, request.Filters, ct);
+                notams = response.Notams;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch NOTAMs for airport {Identifier}", ident);
+                continue;
+            }
+
+            foreach (var notam in notams)
             {
                 var notamId = GetNotamUniqueId(notam);
                 if (!string.IsNullOrEmpty(notamId) && seenIds.Add(notamId))
