@@ -11,6 +11,7 @@ on:
       - 'PreflightApi.Tests/**'
       - '.github/workflows/main-ci-cd.yml'
       - 'apim-policies/**'
+      - 'Directory.Build.props'
 
 env:
   DOTNET_CORE_VERSION: 8.0.x
@@ -250,3 +251,37 @@ jobs:
               --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
               --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
           done
+
+  release:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from Directory.Build.props
+        id: version
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Check if tag already exists
+        id: tag-check
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.version.outputs.version }} already exists — skipping release"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: steps.tag-check.outputs.exists == 'false'
+        run: >
+          gh release create "v${{ steps.version.outputs.version }}"
+          --title "v${{ steps.version.outputs.version }}"
+          --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

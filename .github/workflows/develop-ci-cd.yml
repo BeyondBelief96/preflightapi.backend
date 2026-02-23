@@ -11,6 +11,7 @@ on:
       - 'PreflightApi.Tests/**'
       - '.github/workflows/develop-ci-cd.yml'
       - 'apim-policies/**'
+      - 'Directory.Build.props'
 
 env:
   DOTNET_CORE_VERSION: 8.0.x

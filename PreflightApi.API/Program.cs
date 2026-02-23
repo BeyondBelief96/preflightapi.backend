@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
@@ -76,11 +77,16 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+// Read assembly version for Swagger
+var assemblyVersion = Assembly.GetExecutingAssembly()
+    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+    ?.InformationalVersion?.Split('+')[0] ?? "unknown";
+
 // Setup Swagger
 builder.Services.AddOpenApiDocument(options =>
 {
     options.Title = "PreflightApi";
-    options.Version = "v1";
+    options.Version = $"v1 ({assemblyVersion})";
     options.Description = "Aviation data API for VFR flight planning — weather, airports, airspace, NOTAMs, navigation, and E6B flight computer calculations.";
     options.DocumentProcessors.Add(new ControllerXmlDocProcessor());
     options.OperationProcessors.Add(new OperationXmlDocProcessor());
@@ -170,6 +176,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseGlobalExceptionHandling();
 app.UseGatewaySecretValidation();
+app.UseApiVersionHeader();
 
 app.UseOpenApi();
 
