@@ -1,0 +1,153 @@
+{
+  "$schema": "faa-doc-schema-manifest-v1",
+  "documentType": "dtpp",
+  "entity": "TerminalProcedure",
+  "lastVerified": "2026-02-22",
+  "description": "Expected XML structure for the FAA Digital Terminal Procedures Publication (d-TPP) metadata XML found in the DDTPPE region ZIP archive.",
+  "containerElement": "airport_name",
+  "containerAttributes": {
+    "ID": {
+      "entityProperty": "AirportName",
+      "dataType": "string",
+      "required": true,
+      "captured": true,
+      "description": "Airport name used as the container identifier"
+    },
+    "icao_ident": {
+      "entityProperty": "IcaoIdent",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "ICAO airport identifier (e.g., KDFW)"
+    },
+    "apt_ident": {
+      "entityProperty": "AirportIdent",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "FAA airport identifier (e.g., DFW)"
+    }
+  },
+  "recordElement": "record",
+  "recordElements": {
+    "chartseq": {
+      "entityProperty": null,
+      "dataType": "int",
+      "required": false,
+      "captured": false,
+      "description": "Chart sequence number for ordering"
+    },
+    "chart_code": {
+      "entityProperty": "ChartCode",
+      "dataType": "string",
+      "required": true,
+      "captured": true,
+      "description": "Procedure type code (IAP, DP, STAR, APD, MIN, HOT, etc.)"
+    },
+    "chart_name": {
+      "entityProperty": "ChartName",
+      "dataType": "string",
+      "required": true,
+      "captured": true,
+      "description": "Full name of the chart (e.g., ILS Y OR LOC Y RWY 23)"
+    },
+    "useraction": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "User action flag (A=Added, C=Changed, D=Deleted)"
+    },
+    "pdf_name": {
+      "entityProperty": "PdfFileName",
+      "dataType": "string",
+      "required": true,
+      "captured": true,
+      "description": "PDF filename within the ZIP archive (e.g., 01244IYLY23.PDF)"
+    },
+    "cn_flg": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Change notice flag (Y/N)"
+    },
+    "cnsection": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Change notice section number"
+    },
+    "cnpage": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Change notice page number"
+    },
+    "bvsection": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Bound volume section number"
+    },
+    "bvpage": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Bound volume page number"
+    },
+    "procuid": {
+      "entityProperty": null,
+      "dataType": "int",
+      "required": false,
+      "captured": false,
+      "description": "Procedure unique identifier"
+    },
+    "two_colored": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Two-colored chart flag (Y/N)"
+    },
+    "civil": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Civil/military designation (C=Civil, M=Military, J=Joint)"
+    },
+    "faanfd18": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "FAA NFD 18 reference"
+    },
+    "copter": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": false,
+      "captured": false,
+      "description": "Copter procedure flag"
+    },
+    "amdtnum": {
+      "entityProperty": "AmendmentNumber",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "Amendment number for the procedure"
+    },
+    "amdtdate": {
+      "entityProperty": "AmendmentDate",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "Amendment date (e.g., 12/5/2019)"
+    }
+  }
+}

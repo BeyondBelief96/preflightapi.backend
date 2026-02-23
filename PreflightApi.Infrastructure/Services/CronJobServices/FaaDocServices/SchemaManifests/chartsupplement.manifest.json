@@ -1,0 +1,54 @@
+{
+  "$schema": "faa-doc-schema-manifest-v1",
+  "documentType": "chartsupplement",
+  "entity": "ChartSupplement",
+  "lastVerified": "2026-02-22",
+  "description": "Expected XML structure for the FAA Chart Supplement (formerly Airport/Facility Directory) metadata XML found in the DCS ZIP archive.",
+  "containerElement": "location",
+  "containerAttributes": null,
+  "recordElement": "airport",
+  "recordElements": {
+    "aptname": {
+      "entityProperty": "AirportName",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "Airport name (empty for navaid entries)"
+    },
+    "aptcity": {
+      "entityProperty": "AirportCity",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "Airport city (empty for navaid entries)"
+    },
+    "aptid": {
+      "entityProperty": "AirportCode",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "FAA airport identifier (empty for navaid entries)"
+    },
+    "navidname": {
+      "entityProperty": "NavigationalAidName",
+      "dataType": "string",
+      "required": false,
+      "captured": true,
+      "description": "Navigational aid name (empty for airport entries)"
+    }
+  },
+  "nestedElements": {
+    "pages": {
+      "description": "Container for PDF page references",
+      "elements": {
+        "pdf": {
+          "entityProperty": "FileName",
+          "dataType": "string",
+          "required": true,
+          "captured": true,
+          "description": "PDF filename within the ZIP archive"
+        }
+      }
+    }
+  }
+}

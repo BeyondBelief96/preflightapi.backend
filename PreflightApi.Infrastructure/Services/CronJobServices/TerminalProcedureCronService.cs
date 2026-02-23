@@ -9,6 +9,7 @@ using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Services.CronJobServices.FaaDocServices.SchemaManifests;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
 {
@@ -214,6 +215,25 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             const int batchSize = 1000;
 
             var doc = XDocument.Parse(xmlContent);
+
+            // Validate schema on first record to detect drift
+            var validationResult = FaaDocSchemaValidator.Validate("dtpp", doc);
+            if (validationResult.HasDrift)
+            {
+                if (validationResult.MissingElements.Count > 0)
+                    _logger.LogError("Schema drift detected in d-TPP XML: missing expected elements: {Elements}",
+                        string.Join(", ", validationResult.MissingElements));
+                if (validationResult.UnexpectedElements.Count > 0)
+                    _logger.LogWarning("Schema drift detected in d-TPP XML: unexpected new elements: {Elements}",
+                        string.Join(", ", validationResult.UnexpectedElements));
+                if (validationResult.MissingAttributes.Count > 0)
+                    _logger.LogError("Schema drift detected in d-TPP XML: missing expected attributes: {Attributes}",
+                        string.Join(", ", validationResult.MissingAttributes));
+                if (validationResult.UnexpectedAttributes.Count > 0)
+                    _logger.LogWarning("Schema drift detected in d-TPP XML: unexpected new attributes: {Attributes}",
+                        string.Join(", ", validationResult.UnexpectedAttributes));
+            }
+
             var procedures = doc.Descendants("airport_name")
                 .SelectMany(airport => airport.Elements("record")
                 .Select(record => new TerminalProcedure
@@ -224,8 +244,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     ChartCode = record.Element("chart_code")?.Value ?? "",
                     ChartName = record.Element("chart_name")?.Value ?? "",
                     PdfFileName = record.Element("pdf_name")?.Value ?? "",
-                    AmendmentNumber = record.Element("amdnt_num")?.Value,
-                    AmendmentDate = record.Element("amdnt_date")?.Value
+                    AmendmentNumber = record.Element("amdtnum")?.Value,
+                    AmendmentDate = record.Element("amdtdate")?.Value
                 }))
                 .Where(tp => !string.IsNullOrEmpty(tp.AirportName) &&
                        !string.IsNullOrEmpty(tp.ChartCode) &&

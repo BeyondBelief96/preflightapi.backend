@@ -9,6 +9,7 @@ using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
+using PreflightApi.Infrastructure.Services.CronJobServices.FaaDocServices.SchemaManifests;
 
 namespace PreflightApi.Infrastructure.Services.CronJobServices
 {
@@ -92,6 +93,25 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             {
                 // Parse XML and group data in memory first
                 var doc = XDocument.Parse(xmlContent);
+
+                // Validate schema on first record to detect drift
+                var validationResult = FaaDocSchemaValidator.Validate("chartsupplement", doc);
+                if (validationResult.HasDrift)
+                {
+                    if (validationResult.MissingElements.Count > 0)
+                        _logger.LogError("Schema drift detected in Chart Supplement XML: missing expected elements: {Elements}",
+                            string.Join(", ", validationResult.MissingElements));
+                    if (validationResult.UnexpectedElements.Count > 0)
+                        _logger.LogWarning("Schema drift detected in Chart Supplement XML: unexpected new elements: {Elements}",
+                            string.Join(", ", validationResult.UnexpectedElements));
+                    if (validationResult.MissingAttributes.Count > 0)
+                        _logger.LogError("Schema drift detected in Chart Supplement XML: missing expected attributes: {Attributes}",
+                            string.Join(", ", validationResult.MissingAttributes));
+                    if (validationResult.UnexpectedAttributes.Count > 0)
+                        _logger.LogWarning("Schema drift detected in Chart Supplement XML: unexpected new attributes: {Attributes}",
+                            string.Join(", ", validationResult.UnexpectedAttributes));
+                }
+
                 var supplements = doc.Descendants("location")
                     .SelectMany(location => location.Elements("airport"))
                     .Select(airport => new ChartSupplement
