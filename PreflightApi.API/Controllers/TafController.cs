@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -13,7 +12,6 @@ namespace PreflightApi.API.Controllers;
 /// describing expected wind, visibility, sky conditions, and weather phenomena. TAFs are issued
 /// approximately every 6 hours for airports with weather reporting capabilities.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/tafs")]
 [Tags("Weather - TAFs")]

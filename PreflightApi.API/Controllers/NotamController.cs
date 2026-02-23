@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -28,7 +27,6 @@ namespace PreflightApi.API.Controllers;
 /// Permanent NOTAMs (no expiration date) remain active indefinitely until manually cancelled.
 /// </para>
 /// </remarks>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/notams")]
 [Tags("NOTAMs")]

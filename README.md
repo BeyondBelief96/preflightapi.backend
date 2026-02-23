@@ -1,11 +1,10 @@
 # PreflightApi
 
-A .NET 8 aviation data platform providing weather information, airport data, airspace boundaries, and flight planning services for VFR (Visual Flight Rules) pilots.
+A .NET 8 aviation data platform providing weather, airport, airspace, NOTAM, and flight planning data for VFR (Visual Flight Rules) pilots.
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
@@ -19,48 +18,17 @@ A .NET 8 aviation data platform providing weather information, airport data, air
 - [Testing](#testing)
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
+- [Infrastructure](#infrastructure)
 - [Contributing](#contributing)
 
 ## Overview
 
 PreflightApi is the server-side component of the PreflightApi aviation platform. It consists of two main applications:
 
-1. **PreflightApi.API** - ASP.NET Core Web API serving client applications
-2. **PreflightApi.Azure.Functions** - Azure Functions app for scheduled data synchronization (cron jobs)
+1. **PreflightApi.API** - ASP.NET Core Web API serving client applications (behind Azure API Management)
+2. **PreflightApi.Azure.Functions** - Azure Functions app for scheduled data synchronization (timer-triggered cron jobs)
 
-## Features
-
-### Weather Data
-- **METAR** - Current weather observations for airports
-- **TAF** - Terminal Aerodrome Forecasts
-- **PIREP** - Pilot Reports (turbulence, icing, weather)
-- **AIRMET/SIGMET** - Aviation weather hazards
-- **G-AIRMET** - Graphical AIRMETs
-
-### Airport Information
-- Airport search and details (FAA NASR data)
-- Runway information with runway ends
-- Communication frequencies (ATIS, Tower, Ground, etc.)
-- Airport diagrams
-- Chart supplements (FAA A/FD)
-
-### Airspace & Navigation
-- Airspace boundaries (Class B, C, D, E)
-- Special Use Airspace (MOAs, Restricted, Prohibited)
-- Obstacle data
-- NOTAMs (Notices to Air Missions)
-
-### Flight Planning
-- Navigation log calculations (bearing, distance, headings)
-- Winds aloft integration
-- Magnetic variation calculations
-- Aircraft performance profiles
-- Weight & Balance calculations
-
-### Aircraft Management
-- User aircraft profiles
-- Performance profiles
-- Aircraft documents storage
+All aviation data is synced to a local PostgreSQL database by the Azure Functions cron jobs. The API serves data exclusively from the database — no external API calls are made at request time.
 
 ## Technology Stack
 
@@ -70,44 +38,52 @@ PreflightApi is the server-side component of the PreflightApi aviation platform.
 | Database | PostgreSQL 15 with PostGIS |
 | ORM | Entity Framework Core 9 |
 | Spatial Data | NetTopologySuite |
-| Authentication | Clerk JWT Bearer |
+| API Gateway | Azure API Management (authentication, rate limiting, subscriptions) |
+| API Versioning | Asp.Versioning.Mvc (URL segment: `/api/v1/...`) |
 | Cloud Storage | Azure Blob Storage |
 | Serverless | Azure Functions (isolated worker) |
 | API Docs | NSwag (OpenAPI/Swagger) |
-| Testing | xUnit, FluentAssertions, NSubstitute, Testcontainers |
+| Monitoring | Application Insights |
+| IaC | Azure Bicep |
+| Testing | xUnit, FluentAssertions, NSubstitute, Testcontainers, Bogus, MockHttp |
 | Containerization | Docker, Docker Compose |
-
-### External Data Sources
-- NOAA Aviation Weather API (METAR, TAF, PIREP, AIRMET/SIGMET)
-- FAA NASR data (airports, frequencies)
-- FAA NMS API (NOTAMs)
-- ArcGIS REST services (airspace boundaries)
 
 ## Architecture
 
 This solution follows **Clean Architecture** principles:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Presentation                          │
-│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
-│  │     PreflightApi.API       │    │   PreflightApi.Azure.Functions     │ │
-│  │   (Controllers)     │    │    (Timer Triggers)         │ │
-│  └─────────────────────┘    └─────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                      Infrastructure                          │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │                PreflightApi.Infrastructure                      ││
-│  │  • Repositories  • Services  • EF Core  • External APIs ││
-│  └─────────────────────────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────┤
-│                         Domain                               │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │                   PreflightApi.Domain                           ││
-│  │      • Entities  • Value Objects  • Enums  • Exceptions ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Azure API Management                        │
+│           (Authentication, Rate Limiting, Subscriptions)        │
+├─────────────────────────────────────────────────────────────────┤
+│                        Presentation                             │
+│  ┌─────────────────────┐    ┌─────────────────────────────────┐ │
+│  │  PreflightApi.API   │    │ PreflightApi.Azure.Functions    │ │
+│  │   (Controllers)     │    │  (Timer Triggers)               │ │
+│  └─────────────────────┘    └─────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────┤
+│                      Infrastructure                             │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              PreflightApi.Infrastructure                    ││
+│  │  • Services  • Cron Jobs  • EF Core  • External APIs       ││
+│  │  • Cloud Storage  • DTOs/Mappers  • Settings               ││
+│  └─────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│                         Domain                                  │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                PreflightApi.Domain                          ││
+│  │  • Entities  • Value Objects  • Enums  • Exceptions         ││
+│  │  • Utilities (unit conversions)                             ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Data Flow
+
+1. **Azure Functions** run on cron schedules, fetching data from external sources (NOAA, FAA, ArcGIS) and upserting it into PostgreSQL
+2. **API** serves all data from the local PostgreSQL database (no external API calls at request time)
+3. **APIM** sits in front of the API, handling authentication, rate limiting, and subscription tier enforcement
 
 ## Prerequisites
 
@@ -130,7 +106,7 @@ cd PreflightApi
 
 ### 2. Environment Setup
 
-#### Create Environment File
+#### Docker Compose Environment File
 
 Copy the example environment file and configure your values:
 
@@ -138,32 +114,40 @@ Copy the example environment file and configure your values:
 cp .env.example .env
 ```
 
-Edit `.env` with your actual values:
-
-```env
-# Database password for the PostgreSQL container
-DB_PASSWORD=your_secure_password_here
-
-# Azure Blob Storage connection string
-# Get this from Azure Portal > Storage Account > Access Keys
-CLOUD_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=YOUR_ACCOUNT;AccountKey=YOUR_KEY;EndpointSuffix=core.windows.net
-
-# FAA NMS API credentials (for NOTAM data)
-# Apply at: https://api.faa.gov/
-NMS_CLIENT_ID=your-client-id
-NMS_CLIENT_SECRET=your-client-secret
-```
-
-#### Required Environment Variables
+Edit `.env` with your actual values. These variables are referenced by `docker-compose.local.yml`:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DB_PASSWORD` | PostgreSQL database password | Yes |
+| `DB_PASSWORD` | PostgreSQL container password | Yes |
 | `CLOUD_STORAGE_CONNECTION_STRING` | Azure Blob Storage connection string | Yes |
-| `NMS_CLIENT_ID` | FAA NMS API client ID | No* |
-| `NMS_CLIENT_SECRET` | FAA NMS API client secret | No* |
+| `NMS_CLIENT_ID` | FAA NMS API client ID (for NOTAM sync) | No |
+| `NMS_CLIENT_SECRET` | FAA NMS API client secret (for NOTAM sync) | No |
 
-*These are only required if you need NOTAM functionality.
+#### User Secrets (non-Docker development)
+
+Both projects use [.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) for sensitive configuration. Example files are provided as reference templates:
+
+- **API**: `PreflightApi.API/user-secrets.example.json`
+- **Azure Functions**: `PreflightApi.Azure.Functions/user-secrets.example.json`
+
+To set up user secrets for each project:
+
+```bash
+# API project
+cd PreflightApi.API
+dotnet user-secrets init
+# Then set each key from user-secrets.example.json:
+dotnet user-secrets set "Database:Password" "your_password"
+dotnet user-secrets set "CloudStorage:ConnectionString" "your_connection_string"
+# ... etc.
+
+# Azure Functions project
+cd ../PreflightApi.Azure.Functions
+dotnet user-secrets init
+dotnet user-secrets set "Database:Password" "your_password"
+dotnet user-secrets set "NmsSettings:ClientId" "your_client_id"
+# ... etc.
+```
 
 ### 3. Docker Setup (Recommended)
 
@@ -256,23 +240,14 @@ CREATE EXTENSION postgis;
 
 #### Configure User Secrets (Alternative to appsettings)
 
-For sensitive configuration, use .NET User Secrets:
+For sensitive configuration, use .NET User Secrets. See `PreflightApi.API/user-secrets.example.json` for all available keys:
 
 ```bash
 cd PreflightApi.API
-
-# Initialize user secrets
 dotnet user-secrets init
-
-# Set database password
 dotnet user-secrets set "Database:Password" "your_password"
-
-# Set cloud storage connection string
 dotnet user-secrets set "CloudStorage:ConnectionString" "your_connection_string"
-
-# Set NMS API credentials
-dotnet user-secrets set "NmsSettings:ClientId" "your_client_id"
-dotnet user-secrets set "NmsSettings:ClientSecret" "your_client_secret"
+dotnet user-secrets set "NOAASettings:NOAAApiKey" "your_noaa_key"
 ```
 
 #### Run Database Migrations
@@ -292,90 +267,67 @@ The API will be available at `https://localhost:7014` or `http://localhost:5014`
 
 ## Configuration
 
-### appsettings Files
+### Configuration Hierarchy
 
-Configuration is loaded hierarchically:
+Both projects load configuration in this order (later sources override earlier):
 
-1. `appsettings.json` - Base configuration
-2. `appsettings.{Environment}.json` - Environment-specific overrides
-3. Environment variables - Highest priority
-4. User Secrets - Development only (not committed to source control)
+1. `appsettings.json` — Base configuration (committed)
+2. `appsettings.{Environment}.json` — Environment-specific overrides (committed)
+3. Environment variables — Highest priority (CI/CD, Docker Compose)
+4. User Secrets — Development only (not committed)
 
-### Configuration Sections
+### API Configuration (`PreflightApi.API`)
 
-#### Database
+See `PreflightApi.API/user-secrets.example.json` for a copyable template.
 
-```json
-{
-  "Database": {
-    "Host": "localhost",
-    "Database": "preflightapi_development_database",
-    "Username": "preflightapi_development_user",
-    "Password": "your_password",
-    "Port": 5432
-  }
-}
-```
+| Setting | Description | Required |
+|---------|-------------|----------|
+| `Database:Password` | PostgreSQL password | Yes |
+| `NOAASettings:NOAAApiKey` | NOAA Aviation Weather Center API key | Yes |
+| `CloudStorage:ConnectionString` | Azure Blob Storage connection string (for local dev) | Yes |
+| `CloudStorage:ChartSupplementsContainerName` | Blob container for FAA chart supplements | Yes |
+| `CloudStorage:TerminalProceduresContainerName` | Blob container for terminal procedure charts (d-TPP) | Yes |
+| `CloudStorage:AccountName` | Storage account name (for Managed Identity in production) | Prod only |
+| `ClerkSettings:Authority` | Clerk JWT authority URL | No |
+| `ClerkSettings:RequireAuthenticationInDevelopment` | Enable Clerk auth in dev (`true`/`false`) | No |
 
-#### Cloud Storage
+Non-secret database settings (`Host`, `Database`, `Username`, `Port`) are in `appsettings.Development.json`.
 
-```json
-{
-  "CloudStorage": {
-    "ConnectionString": "your_connection_string",
-    "UseManagedIdentity": false,
-    "ChartSupplementsContainerName": "preflightapi-chart-supplements-centralus-test",
-    "AirportDiagramsContainerName": "preflightapi-airport-diagrams-centralus-test"
-  }
-}
-```
+### Azure Functions Configuration (`PreflightApi.Azure.Functions`)
 
-#### Clerk (Authentication)
+See `PreflightApi.Azure.Functions/user-secrets.example.json` for a copyable template.
 
-```json
-{
-  "ClerkSettings": {
-    "Authority": "https://your-instance.clerk.accounts.dev",
-    "RequireAuthenticationInDevelopment": false
-  }
-}
-```
+| Setting | Description | Required |
+|---------|-------------|----------|
+| **Database** | | |
+| `Database:Password` | PostgreSQL password | Yes |
+| **Cloud Storage** | | |
+| `CloudStorage:ConnectionString` | Azure Blob Storage connection string (for local dev) | Yes |
+| `CloudStorage:ChartSupplementsContainerName` | Blob container for FAA chart supplements | Yes |
+| `CloudStorage:TerminalProceduresContainerName` | Blob container for terminal procedure charts (d-TPP) | Yes |
+| `CloudStorage:AccountName` | Storage account name (for Managed Identity in production) | Prod only |
+| **NMS API** (NOTAM sync) | | |
+| `NmsSettings:ClientId` | FAA NMS OAuth2 client ID | Yes |
+| `NmsSettings:ClientSecret` | FAA NMS OAuth2 client secret | Yes |
+| `NmsSettings:BaseUrl` | NMS API base URL | Yes |
+| `NmsSettings:AuthBaseUrl` | NMS OAuth2 token endpoint base URL | Yes |
+| **Porkbun DNS** (certificate renewal) | | |
+| `Porkbun:ApiKey` | Porkbun DNS API key | No* |
+| `Porkbun:SecretApiKey` | Porkbun DNS secret API key | No* |
+| **Certificate Renewal** (Let's Encrypt via ACME) | | |
+| `CertificateRenewal:RootDomain` | Root domain for DNS challenges | No* |
+| `CertificateRenewal:KeyVaultName` | Azure Key Vault name for certificate storage | No* |
+| `CertificateRenewal:Domain` | Domain for the certificate (e.g., `api.yourdomain.io`) | No* |
+| `CertificateRenewal:CertificateName` | Certificate name in Key Vault | No* |
+| `CertificateRenewal:AcmeEmail` | Email for Let's Encrypt ACME registration | No* |
 
-Setting `RequireAuthenticationInDevelopment` to `false` bypasses authentication in development mode.
+*Porkbun and CertificateRenewal settings are only required if you run the certificate renewal function.
 
-#### NMS API (NOTAMs)
+Non-secret NMS settings (`CacheDurationMinutes`, `DefaultRouteCorridorRadiusNm`, `RequestTimeoutSeconds`, `DeltaSyncIntervalMinutes`) are in `appsettings.json`.
 
-```json
-{
-  "NmsSettings": {
-    "BaseUrl": "https://api-staging.cgifederal-aim.com/nmsapi",
-    "AuthBaseUrl": "https://api-staging.cgifederal-aim.com",
-    "ClientId": "your_client_id",
-    "ClientSecret": "your_client_secret",
-    "CacheDurationMinutes": 5,
-    "DefaultRouteCorridorRadiusNm": 25,
-    "RequestTimeoutSeconds": 30
-  }
-}
-```
+### Azure Functions `local.settings.json`
 
-### Azure Functions Configuration
-
-For Azure Functions, configuration is in `local.settings.json`:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AZURE_FUNCTIONS_ENVIRONMENT": "Development",
-    "DOTNET_ENVIRONMENT": "Development"
-  }
-}
-```
-
-To disable specific functions during development, add:
+The `local.settings.json` file controls Azure Functions runtime settings. It is already committed with function toggle defaults. To disable specific functions during development:
 
 ```json
 {
@@ -420,14 +372,16 @@ dotnet ef migrations script --project PreflightApi.Infrastructure --startup-proj
 dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj
 ```
 
+### Run Unit Tests Only (excludes integration tests that require Docker)
+
+```bash
+dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~BriefingTests.BriefingServiceTests"
+```
+
 ### Run Specific Tests
 
 ```bash
-# By test name pattern
 dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --filter "FullyQualifiedName~NavlogServiceTests"
-
-# By category
-dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --filter "Category=Unit"
 ```
 
 ### Run with Coverage
@@ -441,79 +395,100 @@ dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --collect:"XPlat Code C
 - **xUnit** - Test framework
 - **FluentAssertions** - Readable assertions
 - **NSubstitute** - Mocking framework
-- **Testcontainers.PostgreSql** - Integration tests with real database
+- **Testcontainers.PostgreSql** - Integration tests with real PostgreSQL + PostGIS database
 - **RichardSzalay.MockHttp** - HTTP client mocking
+- **Bogus** - Fake data generation
+- **MockQueryable.NSubstitute** - LINQ queryable mocking
+
+### Integration Tests
+
+Integration tests use Testcontainers to spin up a real PostgreSQL + PostGIS container. They are marked with `[Collection("Integration")]` and inherit from `PostgreSqlTestBase`. These tests require Docker to be running.
 
 ## API Documentation
 
-When the API is running, Swagger documentation is available at:
+When the API is running, full interactive documentation is available via Swagger:
 
 - **Swagger UI**: `http://localhost:7014/swagger`
 - **OpenAPI JSON**: `http://localhost:7014/swagger/v1/swagger.json`
 
-### Key Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/metar/{icao}` | Get METAR for an airport |
-| `GET /api/taf/{icao}` | Get TAF for an airport |
-| `GET /api/airport/search?query={term}` | Search airports |
-| `GET /api/airport/{id}` | Get airport details |
-| `GET /api/airspace/containing?lat={lat}&lon={lon}` | Get airspaces at a point |
-| `POST /api/navlog/calculate` | Calculate navigation log |
-| `GET /api/notam/airport/{icao}` | Get NOTAMs for an airport |
+All endpoints use URL-segment versioning: `/api/v1/...`
 
 ## Project Structure
 
 ```
 PreflightApi/
 ├── PreflightApi.Domain/                 # Core domain layer (no dependencies)
-│   ├── Entities/                 # Domain entities
-│   ├── Enums/                    # Domain enumerations
-│   ├── Exceptions/               # Domain exceptions
-│   ├── ValueObjects/             # Value objects (immutable)
-│   └── Utilities/                # Domain utilities
+│   ├── Entities/                        # Domain entities
+│   ├── Enums/                           # Domain enumerations
+│   ├── Exceptions/                      # Domain exceptions
+│   ├── ValueObjects/                    # Value objects (grouped by domain area)
+│   └── Utilities/                       # Unit conversions
 │
 ├── PreflightApi.Infrastructure/         # Data access and external services
 │   ├── Data/
-│   │   ├── PreflightApiDbContext.cs    # EF Core DbContext
-│   │   └── Configurations/       # Entity configurations
-│   ├── Migrations/               # EF Core migrations
-│   ├── Repositories/             # Data repositories
+│   │   ├── PreflightApiDbContext.cs     # EF Core DbContext (PostGIS enabled)
+│   │   └── Configurations/             # Entity type configurations
+│   ├── Migrations/                      # EF Core migrations
 │   ├── Services/
-│   │   ├── Weather/             # METAR, TAF, PIREP services
-│   │   ├── Airport/             # Airport, Runway services
-│   │   ├── Airspace/            # Airspace services
-│   │   ├── FlightPlanning/      # Navlog, Winds services
-│   │   ├── CloudStorage/        # Azure Blob Storage
-│   │   ├── Notam/               # NOTAM services
-│   │   └── Cron/                # Background sync services
-│   ├── Dtos/                     # Data transfer objects
-│   ├── Mappers/                  # Entity-DTO mappers
-│   ├── Interfaces/               # Service interfaces
-│   └── Settings/                 # Configuration classes
+│   │   ├── WeatherServices/            # Weather data query services
+│   │   ├── AirportInformationServices/ # Airport, runway, airspace, frequency, obstacle services
+│   │   ├── NotamServices/              # NOTAM query service, NMS API client, parsers
+│   │   ├── DocumentServices/           # Chart supplement, terminal procedure services
+│   │   ├── CronJobServices/            # Background sync services (organized by data source)
+│   │   ├── CloudStorage/               # Azure Blob Storage service
+│   │   ├── CertificateRenewal/         # SSL certificate renewal
+│   │   └── Telemetry/                  # Application Insights sync telemetry
+│   ├── Dtos/                            # Data transfer objects and mappers
+│   ├── Interfaces/                      # Service interfaces
+│   └── Settings/                        # Configuration model classes
 │
 ├── PreflightApi.API/                    # ASP.NET Core Web API
-│   ├── Controllers/              # API controllers
-│   ├── Authentication/           # Auth handlers
-│   ├── Configuration/            # Service registration
-│   ├── Middleware/               # Custom middleware
-│   └── Program.cs                # Application entry point
+│   ├── Controllers/                     # API controllers
+│   ├── Configuration/                   # Service registration, API version convention
+│   ├── Middleware/                       # Gateway secret, global exceptions, API version header
+│   ├── Models/                          # API request/response models
+│   ├── user-secrets.example.json        # Template for dotnet user-secrets (API)
+│   └── Program.cs                       # Application entry point
 │
-├── PreflightApi.Azure.Functions/        # Azure Functions
-│   ├── Functions/                # Timer-triggered functions
-│   └── Program.cs                # Functions host configuration
+├── PreflightApi.Azure.Functions/        # Azure Functions (timer-triggered data sync)
+│   ├── Functions/                       # Timer-triggered sync functions
+│   ├── user-secrets.example.json        # Template for dotnet user-secrets (Functions)
+│   └── Program.cs                       # Functions host configuration
 │
 ├── PreflightApi.Tests/                  # Test project
-│   ├── Unit/                     # Unit tests
-│   └── Integration/              # Integration tests
+│   ├── IntegrationTests/               # Database integration tests (Testcontainers)
+│   └── */                              # Unit tests organized by service area
 │
-├── .github/workflows/            # CI/CD pipelines
-├── docker-compose.local.yml      # Local development compose
-├── Dockerfile.local              # Development Dockerfile
-├── .env.example                  # Environment template
-└── PreflightApi.sln            # Solution file
+├── infra/                               # Azure infrastructure (Bicep templates)
+│   ├── main.bicep                       # Main deployment template
+│   ├── modules/                         # Bicep modules (APIM, App Service, Functions, PostgreSQL, etc.)
+│   └── parameters/                      # Environment parameter files
+│
+├── apim-policies/                       # Azure API Management policies
+├── docs/                                # Documentation
+├── .github/workflows/                   # CI/CD pipelines
+│   ├── develop-ci-cd.yml               # Develop branch: build, test, deploy to staging
+│   ├── main-ci-cd.yml                  # Main branch: build, test, release, deploy to prod
+│   └── pr-validation.yml              # Pull request validation
+├── docker-compose.local.yml             # Local development compose
+├── Dockerfile.local                     # Development Dockerfile
+├── .env.example                         # Environment template
+└── PreflightApi.sln                     # Solution file
 ```
+
+## Infrastructure
+
+The project includes full Azure infrastructure-as-code using Bicep templates in the `infra/` directory:
+
+- **Azure App Service** - Hosts the API
+- **Azure Functions** (Flex Consumption) - Runs cron job sync functions
+- **Azure PostgreSQL Flexible Server** - Database with PostGIS
+- **Azure Blob Storage** - Document PDF storage
+- **Azure API Management** - API gateway with subscription tiers and rate limiting
+- **Azure Key Vault** - Secret management
+- **Application Insights** - Monitoring and telemetry
+
+CI/CD is handled by GitHub Actions with OIDC authentication to Azure. See `docs/infrastructure-setup.md` for the full setup guide.
 
 ## Contributing
 

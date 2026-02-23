@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -15,7 +14,6 @@ namespace PreflightApi.API.Controllers;
 /// OAS numbers are returned by the navigation log endpoint for obstacles near a planned route —
 /// use the by-oas-numbers endpoint to retrieve full details for those obstacles.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/obstacles")]
 [Tags("Obstacles")]

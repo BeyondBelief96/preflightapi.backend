@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Infrastructure.Dtos;
@@ -12,7 +11,6 @@ namespace PreflightApi.API.Controllers;
 /// Airport Diagrams (APD), Minimums (MIN), Hot Spots (HOT), and more.
 /// Charts are returned as time-limited pre-signed URLs for PDF download.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/terminal-procedures")]
 [Tags("Terminal Procedures")]

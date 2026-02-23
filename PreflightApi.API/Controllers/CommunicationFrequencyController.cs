@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
@@ -13,7 +12,6 @@ namespace PreflightApi.API.Controllers;
 /// Includes tower, ground, ATIS, approach/departure, clearance delivery, and other radio frequencies
 /// associated with airports and air traffic control facilities.
 /// </summary>
-[ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/communication-frequencies")]
 [Tags("Communication Frequencies")]
