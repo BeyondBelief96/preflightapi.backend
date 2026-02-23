@@ -3,7 +3,7 @@
 		<base />
 		<!-- Maintenance mode: return 503 during deployments (toggled via CI/CD) -->
 		<choose>
-			<when condition="@("{{maintenance-mode}}" == "true")">
+			<when condition="@("{{maintenance-mode}}" == "true" && !context.Request.Url.Path.StartsWith("/health"))">
 				<return-response>
 					<set-status code="503" reason="Service Unavailable" />
 					<set-header name="Content-Type" exists-action="override">
@@ -141,6 +141,15 @@
 							new JProperty("quotaResetsAt", resetAt.ToString("o"))
 						).ToString();
 					}</set-body>
+				</return-response>
+			</when>
+			<when condition="@(context.LastError.Source == "forward-request")">
+				<return-response>
+					<set-status code="502" reason="Bad Gateway" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-body>{"status":"outage","message":"Backend service is unreachable."}</set-body>
 				</return-response>
 			</when>
 		</choose>
