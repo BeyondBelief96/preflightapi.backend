@@ -305,7 +305,7 @@ public class ObstacleService : IObstacleService
         return allAirportOasNumbers.Distinct().ToList();
     }
 
-    private LineString? BuildRouteLineString(List<WaypointDto> waypoints)
+    internal LineString? BuildRouteLineString(List<WaypointDto> waypoints)
     {
         if (waypoints.Count < 2)
             return null;

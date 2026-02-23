@@ -51,6 +51,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="PreflightApi.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
   </ItemGroup>
 
