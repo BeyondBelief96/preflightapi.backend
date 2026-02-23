@@ -253,7 +253,7 @@ public class NotamService : INotamService
             List<NotamDto> notams;
             try
             {
-                if (point.IsAirport)
+                if (IsAirportPoint(point))
                 {
                     var response = await GetNotamsForAirportAsync(point.AirportIdentifier!, request.Filters, ct);
                     notams = response.Notams;
@@ -441,7 +441,7 @@ public class NotamService : INotamService
         {
             var point = routePoints[i];
 
-            if (point.IsAirport)
+            if (IsAirportPoint(point))
             {
                 if (string.IsNullOrWhiteSpace(point.AirportIdentifier))
                 {
@@ -488,7 +488,7 @@ public class NotamService : INotamService
 
     private static string FormatRoutePointDescription(RoutePointDto point)
     {
-        if (point.IsAirport)
+        if (IsAirportPoint(point))
         {
             return point.AirportIdentifier!.ToUpperInvariant();
         }
@@ -505,6 +505,9 @@ public class NotamService : INotamService
 
         return $"{Math.Abs(lat):F4}{latDir}, {Math.Abs(lon):F4}{lonDir}";
     }
+
+    private static bool IsAirportPoint(RoutePointDto point) =>
+        !string.IsNullOrWhiteSpace(point.AirportIdentifier);
 
     private static string? GetNotamUniqueId(NotamDto notam)
     {

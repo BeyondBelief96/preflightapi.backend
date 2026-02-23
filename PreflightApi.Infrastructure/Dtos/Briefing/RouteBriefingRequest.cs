@@ -36,7 +36,4 @@ public record BriefingWaypoint
 
     /// <summary>Longitude in decimal degrees (-180 to 180). Required when AirportIdentifier is null.</summary>
     public decimal? Longitude { get; init; }
-
-    /// <summary>Whether this waypoint specifies an airport identifier.</summary>
-    public bool IsAirport => !string.IsNullOrWhiteSpace(AirportIdentifier);
 }

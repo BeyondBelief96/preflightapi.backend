@@ -61,7 +61,7 @@ public class BriefingService : IBriefingService
 
         // 3. Collect airport identifiers from waypoints (for airport-specific NOTAMs)
         var waypointAirportIdents = request.Waypoints
-            .Where(w => w.IsAirport)
+            .Where(IsAirportWaypoint)
             .Select(w => w.AirportIdentifier!.ToUpperInvariant().Trim())
             .Distinct()
             .ToList();
@@ -127,7 +127,7 @@ public class BriefingService : IBriefingService
         for (var i = 0; i < request.Waypoints.Count; i++)
         {
             var wp = request.Waypoints[i];
-            if (wp.IsAirport) continue;
+            if (IsAirportWaypoint(wp)) continue;
 
             if (!wp.Latitude.HasValue || !wp.Longitude.HasValue)
                 throw new ValidationException("waypoints", $"Waypoint {i + 1}: latitude and longitude are required for coordinate waypoints");
@@ -147,7 +147,7 @@ public class BriefingService : IBriefingService
 
         foreach (var wp in waypoints)
         {
-            if (wp.IsAirport)
+            if (IsAirportWaypoint(wp))
             {
                 var airport = await _airportService.GetAirportByIcaoCodeOrIdent(wp.AirportIdentifier!);
                 if (airport.LatDecimal == null || airport.LongDecimal == null)
@@ -176,7 +176,7 @@ public class BriefingService : IBriefingService
     private static string BuildRouteDescription(List<BriefingWaypoint> waypoints)
     {
         return string.Join(" -> ", waypoints.Select(wp =>
-            wp.IsAirport
+            IsAirportWaypoint(wp)
                 ? wp.AirportIdentifier!.ToUpperInvariant()
                 : $"{wp.Latitude:F4},{wp.Longitude:F4}"));
     }
@@ -288,6 +288,9 @@ public class BriefingService : IBriefingService
 
         return results;
     }
+
+    private static bool IsAirportWaypoint(BriefingWaypoint wp) =>
+        !string.IsNullOrWhiteSpace(wp.AirportIdentifier);
 
     private NotamDto? DeserializeNotam(Domain.Entities.Notam entity)
     {
