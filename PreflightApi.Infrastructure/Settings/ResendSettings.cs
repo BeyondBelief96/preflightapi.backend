@@ -6,6 +6,6 @@ namespace PreflightApi.Infrastructure.Settings
         public string FromAddress { get; init; } = "alerts@contact.preflightapi.io";
         public string? ReplyToAddress { get; init; } = "bberisford@preflightapi.io";
         public bool Enabled { get; init; } = false;
-        public int QuietPeriodMinutes { get; init; } = 60;
+        public int QuietPeriodMinutes { get; init; } = 1440;
     }
 }
