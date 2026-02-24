@@ -18,6 +18,8 @@ using PreflightApi.Infrastructure.Services.NotamServices;
 using PreflightApi.Infrastructure.Services.Telemetry;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
+using Clerk.Net.DependencyInjection;
+using Resend;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -80,6 +82,27 @@ builder.Services.AddScoped<ICertificateRenewalService, CertificateRenewalService
 builder.Services.AddSingleton<ISyncTelemetryService, SyncTelemetryService>();
 builder.Services.AddCloudStorageServices(builder.Configuration);
 builder.Services.AddResilientHttpClients();
+
+// Resend SDK for email notifications
+builder.Services.AddOptions();
+builder.Services.AddHttpClient<ResendClient>();
+builder.Services.Configure<ResendClientOptions>(o =>
+{
+    o.ApiToken = builder.Configuration["Resend:ApiToken"] ?? string.Empty;
+});
+builder.Services.AddTransient<IResend, ResendClient>();
+
+// Clerk SDK for user email fetching
+builder.Services.AddClerkApiClient(config =>
+{
+    config.SecretKey = builder.Configuration["Clerk:SecretKey"] ?? string.Empty;
+});
+
+// Alert services
+builder.Services.Configure<ResendSettings>(builder.Configuration.GetSection("Resend"));
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IClerkUserService, ClerkUserService>();
+builder.Services.AddScoped<IEmailNotificationService, ResendEmailNotificationService>();
 
 // Configure HttpClient for ArcGIS services with extended timeout (has its own Polly retry in ArcGisBaseService)
 builder.Services.AddHttpClient("ArcGis", client =>

@@ -102,6 +102,42 @@ namespace PreflightApi.Infrastructure.Services
             return results;
         }
 
+        public async Task UpdateAlertStateAsync(string syncType, string severity, CancellationToken ct = default)
+        {
+            try
+            {
+                var status = await _dbContext.DataSyncStatuses.FindAsync(new object[] { syncType }, ct);
+                if (status == null) return;
+
+                status.LastAlertSentUtc = DateTime.UtcNow;
+                status.LastAlertSeverity = severity;
+
+                await _dbContext.SaveChangesAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update alert state for '{SyncType}'", syncType);
+            }
+        }
+
+        public async Task ClearAlertStateAsync(string syncType, CancellationToken ct = default)
+        {
+            try
+            {
+                var status = await _dbContext.DataSyncStatuses.FindAsync(new object[] { syncType }, ct);
+                if (status == null) return;
+
+                status.LastAlertSentUtc = null;
+                status.LastAlertSeverity = null;
+
+                await _dbContext.SaveChangesAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear alert state for '{SyncType}'", syncType);
+            }
+        }
+
         private static DataFreshnessResult EvaluateTimeBased(DataSyncStatus status, DateTime now)
         {
             var threshold = status.StalenessThresholdMinutes ?? 60;
@@ -119,7 +155,9 @@ namespace PreflightApi.Infrastructure.Services
                     LastErrorMessage = status.LastErrorMessage,
                     AgeMinutes = null,
                     ThresholdMinutes = threshold,
-                    Message = $"{status.SyncType} has never been synced."
+                    Message = $"{status.SyncType} has never been synced.",
+                    LastAlertSentUtc = status.LastAlertSentUtc,
+                    LastAlertSeverity = status.LastAlertSeverity
                 };
             }
 
@@ -166,7 +204,9 @@ namespace PreflightApi.Infrastructure.Services
                 LastErrorMessage = status.LastErrorMessage,
                 AgeMinutes = Math.Round(ageMinutes, 1),
                 ThresholdMinutes = threshold,
-                Message = message
+                Message = message,
+                LastAlertSentUtc = status.LastAlertSentUtc,
+                LastAlertSeverity = status.LastAlertSeverity
             };
         }
 
@@ -183,7 +223,9 @@ namespace PreflightApi.Infrastructure.Services
                     LastSuccessfulSync = status.LastSuccessfulSyncUtc,
                     ConsecutiveFailures = status.ConsecutiveFailures,
                     LastErrorMessage = status.LastErrorMessage,
-                    Message = $"{status.SyncType}: no publication cycle found for '{status.PublicationType}'."
+                    Message = $"{status.SyncType}: no publication cycle found for '{status.PublicationType}'.",
+                    LastAlertSentUtc = status.LastAlertSentUtc,
+                    LastAlertSeverity = status.LastAlertSeverity
                 };
             }
 
@@ -202,7 +244,9 @@ namespace PreflightApi.Infrastructure.Services
                     ConsecutiveFailures = status.ConsecutiveFailures,
                     LastErrorMessage = status.LastErrorMessage,
                     CurrentCycleDate = currentCycleDate,
-                    Message = $"{status.SyncType} has never been synced (current cycle: {currentCycleDate:yyyy-MM-dd})."
+                    Message = $"{status.SyncType} has never been synced (current cycle: {currentCycleDate:yyyy-MM-dd}).",
+                    LastAlertSentUtc = status.LastAlertSentUtc,
+                    LastAlertSeverity = status.LastAlertSeverity
                 };
             }
 
@@ -220,7 +264,9 @@ namespace PreflightApi.Infrastructure.Services
                     LastErrorMessage = status.LastErrorMessage,
                     CurrentCycleDate = currentCycleDate,
                     DaysPastCycleWithoutUpdate = 0,
-                    Message = $"{status.SyncType} is current for cycle {currentCycleDate:yyyy-MM-dd}."
+                    Message = $"{status.SyncType} is current for cycle {currentCycleDate:yyyy-MM-dd}.",
+                    LastAlertSentUtc = status.LastAlertSentUtc,
+                    LastAlertSeverity = status.LastAlertSeverity
                 };
             }
 
@@ -257,7 +303,9 @@ namespace PreflightApi.Infrastructure.Services
                 LastErrorMessage = status.LastErrorMessage,
                 CurrentCycleDate = currentCycleDate,
                 DaysPastCycleWithoutUpdate = Math.Round(daysPast, 1),
-                Message = message
+                Message = message,
+                LastAlertSentUtc = status.LastAlertSentUtc,
+                LastAlertSeverity = status.LastAlertSeverity
             };
         }
     }

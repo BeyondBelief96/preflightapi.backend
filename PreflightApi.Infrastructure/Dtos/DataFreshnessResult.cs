@@ -14,5 +14,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public DateTime? CurrentCycleDate { get; init; }
         public double? DaysPastCycleWithoutUpdate { get; init; }
         public required string Message { get; init; }
+        public DateTime? LastAlertSentUtc { get; init; }
+        public string? LastAlertSeverity { get; init; }
     }
 }

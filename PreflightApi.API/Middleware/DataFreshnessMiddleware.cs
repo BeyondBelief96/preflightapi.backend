@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using PreflightApi.Domain.Constants;
-using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Middleware;
@@ -8,22 +6,6 @@ namespace PreflightApi.API.Middleware;
 public class DataFreshnessMiddleware
 {
     private readonly RequestDelegate _next;
-
-    private static readonly Dictionary<string, string[]> RouteToSyncTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["metars"] = [SyncTypes.Metar],
-        ["tafs"] = [SyncTypes.Taf],
-        ["pireps"] = [SyncTypes.Pirep],
-        ["sigmets"] = [SyncTypes.Sigmet],
-        ["g-airmets"] = [SyncTypes.GAirmet],
-        ["notams"] = [SyncTypes.NotamDelta],
-        ["airports"] = [SyncTypes.Airport],
-        ["communication-frequencies"] = [SyncTypes.Frequency],
-        ["airspaces"] = [SyncTypes.Airspace, SyncTypes.SpecialUseAirspace],
-        ["obstacles"] = [SyncTypes.Obstacle],
-        ["chart-supplements"] = [SyncTypes.ChartSupplement],
-        ["terminal-procedures"] = [SyncTypes.TerminalProcedure],
-    };
 
     private const string CacheKey = "data-freshness-all";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(2);
@@ -36,11 +18,11 @@ public class DataFreshnessMiddleware
     public async Task InvokeAsync(HttpContext context, IDataSyncStatusService dataSyncStatusService, IMemoryCache memoryCache)
     {
         // Determine matching sync types from the route before the response starts
-        var routeSegment = ExtractDataRouteSegment(context.Request.Path);
+        var routeSegment = DataRouteMapping.ExtractDataRouteSegment(context.Request.Path);
         string[]? syncTypes = null;
         if (routeSegment != null)
         {
-            RouteToSyncTypes.TryGetValue(routeSegment, out syncTypes);
+            DataRouteMapping.RouteToSyncTypes.TryGetValue(routeSegment, out syncTypes);
         }
 
         if (syncTypes != null)
@@ -87,19 +69,6 @@ public class DataFreshnessMiddleware
         }
 
         await _next(context);
-    }
-
-    private static string? ExtractDataRouteSegment(PathString path)
-    {
-        // Routes are /api/v{version}/{segment}/...
-        var value = path.Value;
-        if (value == null || !value.StartsWith("/api/v", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        // Find the segment after /api/vN/
-        var parts = value.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        // parts[0] = "api", parts[1] = "v1" (or similar), parts[2] = route segment
-        return parts.Length >= 3 ? parts[2] : null;
     }
 
     private static int SeverityRank(string severity) => severity switch

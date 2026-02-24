@@ -13,6 +13,7 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             builder.Property(e => e.StalenessMode).HasMaxLength(20);
             builder.Property(e => e.PublicationType).HasMaxLength(50);
             builder.Property(e => e.LastErrorMessage).HasMaxLength(2000);
+            builder.Property(e => e.LastAlertSeverity).HasMaxLength(20);
 
             builder.HasData(
                 // Time-based sync types
