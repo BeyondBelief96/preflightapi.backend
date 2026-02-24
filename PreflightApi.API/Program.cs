@@ -18,6 +18,7 @@ using PreflightApi.Infrastructure.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.HealthChecks;
+using PreflightApi.API.Filters;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,7 +60,10 @@ builder.Services.Configure<AzureFileLoggerOptions>(options =>
 });
 
 // Setup Controller Json Serialization Handling
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<DataFreshnessWarningFilter>();
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new GeometryJsonConverter());
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
@@ -228,7 +232,26 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, CancellationToken ct) =>
 {
     var freshness = await svc.GetAllFreshnessAsync(ct);
-    return Results.Ok(new { checkedAt = DateTime.UtcNow, dataTypes = freshness });
+    var staleCount = freshness.Count(f => !f.IsFresh);
+    var overallStatus = staleCount == 0 ? "healthy"
+        : freshness.Any(f => f.Severity == "critical") ? "critical"
+        : freshness.Any(f => f.Severity == "warning") ? "degraded"
+        : "info";
+
+    return Results.Ok(new
+    {
+        checkedAt = DateTime.UtcNow,
+        overallStatus,
+        summary = new
+        {
+            total = freshness.Count,
+            fresh = freshness.Count(f => f.IsFresh),
+            stale = staleCount,
+            bySeverity = freshness.GroupBy(f => f.Severity)
+                .ToDictionary(g => g.Key, g => g.Count())
+        },
+        dataTypes = freshness
+    });
 });
 
 // Full status page — all checks including external dependencies.

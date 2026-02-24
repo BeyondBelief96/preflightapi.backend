@@ -39,5 +39,11 @@ namespace PreflightApi.Domain.Entities
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+
+        [Column("last_alert_sent_utc")]
+        public DateTime? LastAlertSentUtc { get; set; }
+
+        [Column("last_alert_severity")]
+        public string? LastAlertSeverity { get; set; }
     }
 }
