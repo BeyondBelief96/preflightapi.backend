@@ -62,6 +62,7 @@ Both methods:
 | Property | Type | Default | Purpose |
 |----------|------|---------|---------|
 | `ApiToken` | `string` | `""` | Resend API key |
+<<<<<<< HEAD
 | `FromAddress` | `string` | `alerts@contact.preflightapi.io` | Sender address (must be on a verified Resend domain) |
 | `ReplyToAddress` | `string?` | `bberisford@preflightapi.io` | Reply-to address (routes replies to business inbox) |
 | `Enabled` | `bool` | `false` | Master on/off switch |
@@ -69,6 +70,12 @@ Both methods:
 
 **Email domain setup**: The `FromAddress` uses the `contact.preflightapi.io` subdomain which is verified in Resend with its own DKIM key and SPF record. The root domain `preflightapi.io` is owned by Google Workspace (DMARC `p=reject`), so sending from `@preflightapi.io` via Resend would fail authentication. The `ReplyToAddress` points to the Google Workspace inbox so replies from recipients are delivered correctly.
 
+=======
+| `FromAddress` | `string` | `alerts@preflightapi.com` | Sender address (must be verified in Resend) |
+| `Enabled` | `bool` | `false` | Master on/off switch |
+| `QuietPeriodMinutes` | `int` | `60` | Minimum interval between repeated alerts for the same type |
+
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
 ### 5. `DataFreshnessAlertFunction`
 
 Timer-triggered Azure Function running every 5 minutes (`0 */5 * * * *`).
@@ -76,7 +83,10 @@ Timer-triggered Azure Function running every 5 minutes (`0 */5 * * * *`).
 **Logic**:
 1. Fetch all 14 freshness results via `GetAllFreshnessAsync()`
 2. Identify types needing alerts (severity >= `warning`):
+<<<<<<< HEAD
    - **Skip types that have never synced** (`LastSuccessfulSync == null`) — prevents false alerts on fresh deployments before cron jobs have run
+=======
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
    - No prior alert sent (`LastAlertSentUtc == null`)
    - OR severity escalated (e.g. `warning` → `critical`)
    - OR quiet period elapsed (`now - LastAlertSentUtc > QuietPeriodMinutes`)
@@ -85,8 +95,11 @@ Timer-triggered Azure Function running every 5 minutes (`0 */5 * * * *`).
 5. Send recovery notice → clear `LastAlertSentUtc` / `LastAlertSeverity` per type
 6. Log if no action needed
 
+<<<<<<< HEAD
 **First-deploy safety**: On initial deployment, all 14 `data_sync_status` rows are seeded with `LastSuccessfulSyncUtc = null`. The alert function skips these entirely — no emails are sent until a sync type has successfully synced at least once and then subsequently goes stale. This prevents a flood of "14 types critically stale" emails before the cron jobs have had a chance to populate data.
 
+=======
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
 Has `ExponentialBackoffRetry(3, "00:00:30", "00:05:00")` retry policy.
 
 ### 6. `Accept-Warnings` Response Body Wrapping
@@ -187,8 +200,12 @@ The `/status` page now includes a **Data Sync Freshness** section below the exis
 {
   "Values": {
     "Resend:ApiToken": "<Resend API key (re_...)>",
+<<<<<<< HEAD
     "Resend:FromAddress": "alerts@contact.preflightapi.io",
     "Resend:ReplyToAddress": "bberisford@preflightapi.io",
+=======
+    "Resend:FromAddress": "alerts@preflightapi.com",
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
     "Resend:Enabled": "true",
     "Resend:QuietPeriodMinutes": "60",
     "Clerk:SecretKey": "<Clerk secret key (sk_test_... or sk_live_...)>"
@@ -198,8 +215,12 @@ The `/status` page now includes a **Data Sync Freshness** section below the exis
 
 **Notes**:
 - `Resend:Enabled` defaults to `false` — alerts are a no-op until explicitly enabled
+<<<<<<< HEAD
 - `Resend:FromAddress` must be on a domain verified in Resend (default: `contact.preflightapi.io`)
 - `Resend:ReplyToAddress` routes replies to your Google Workspace inbox
+=======
+- `Resend:FromAddress` must be a verified sender domain in your Resend dashboard
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
 - Recipients are fetched dynamically from Clerk (all users' primary emails)
 
 ### Production Environment Variables
@@ -207,7 +228,10 @@ The `/status` page now includes a **Data Sync Freshness** section below the exis
 Same keys, set as Azure Functions app settings:
 - `Resend__ApiToken`
 - `Resend__FromAddress`
+<<<<<<< HEAD
 - `Resend__ReplyToAddress`
+=======
+>>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13
 - `Resend__Enabled`
 - `Resend__QuietPeriodMinutes`
 - `Clerk__SecretKey`

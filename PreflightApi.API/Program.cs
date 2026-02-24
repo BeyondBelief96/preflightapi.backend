@@ -18,6 +18,7 @@ using PreflightApi.Infrastructure.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.HealthChecks;
+using PreflightApi.API.Filters;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,7 +60,10 @@ builder.Services.Configure<AzureFileLoggerOptions>(options =>
 });
 
 // Setup Controller Json Serialization Handling
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<DataFreshnessWarningFilter>();
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new GeometryJsonConverter());
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
@@ -165,6 +169,9 @@ builder.Services.AddScoped<INotamService, NotamService>();
 // Briefing Services
 builder.Services.AddScoped<IBriefingService, BriefingService>();
 
+// Data Sync Status
+builder.Services.AddScoped<IDataSyncStatusService, DataSyncStatusService>();
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -190,6 +197,7 @@ using (var scope = app.Services.CreateScope())
 app.UseGlobalExceptionHandling();
 app.UseGatewaySecretValidation();
 app.UseApiVersionHeader();
+app.UseDataFreshness();
 
 app.UseOpenApi();
 
@@ -218,6 +226,32 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
         [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
     },
     ResponseWriter = WriteHealthResponse
+});
+
+// Data freshness detail endpoint
+app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, CancellationToken ct) =>
+{
+    var freshness = await svc.GetAllFreshnessAsync(ct);
+    var staleCount = freshness.Count(f => !f.IsFresh);
+    var overallStatus = staleCount == 0 ? "healthy"
+        : freshness.Any(f => f.Severity == "critical") ? "critical"
+        : freshness.Any(f => f.Severity == "warning") ? "degraded"
+        : "info";
+
+    return Results.Ok(new
+    {
+        checkedAt = DateTime.UtcNow,
+        overallStatus,
+        summary = new
+        {
+            total = freshness.Count,
+            fresh = freshness.Count(f => f.IsFresh),
+            stale = staleCount,
+            bySeverity = freshness.GroupBy(f => f.Severity)
+                .ToDictionary(g => g.Key, g => g.Count())
+        },
+        dataTypes = freshness
+    });
 });
 
 // Full status page — all checks including external dependencies.

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -10,15 +11,18 @@ public class ObstacleFunction
 {
     private readonly IObstacleCronService _obstacleService;
     private readonly IFaaPublicationCycleService _publicationService;
+    private readonly IDataSyncStatusService _syncStatusService;
     private readonly ILogger<ObstacleFunction> _logger;
 
     public ObstacleFunction(
         IObstacleCronService obstacleService,
         IFaaPublicationCycleService publicationService,
+        IDataSyncStatusService syncStatusService,
         ILoggerFactory loggerFactory)
     {
         _obstacleService = obstacleService ?? throw new ArgumentNullException(nameof(obstacleService));
         _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+        _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
         _logger = loggerFactory.CreateLogger<ObstacleFunction>();
     }
 
@@ -35,9 +39,19 @@ public class ObstacleFunction
         {
             var sw = Stopwatch.StartNew();
             _logger.LogInformation("Starting obstacle data update process");
-            await _obstacleService.DownloadAndProcessObstaclesAsync(cancellationToken);
-            await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Obstacles, currentDate);
-            _logger.LogInformation("Obstacle data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+            try
+            {
+                await _obstacleService.DownloadAndProcessObstaclesAsync(cancellationToken);
+                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Obstacles, currentDate);
+                await _syncStatusService.RecordSuccessAsync(SyncTypes.Obstacle, ct: cancellationToken);
+                _logger.LogInformation("Obstacle data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                try { await _syncStatusService.RecordFailureAsync(SyncTypes.Obstacle, ex.Message, cancellationToken); }
+                catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for Obstacle"); }
+                throw;
+            }
         }
         else
         {

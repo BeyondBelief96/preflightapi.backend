@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -12,6 +13,7 @@ namespace PreflightApi.Azure.Functions.Functions
         private readonly IRunwayCronService _runwayService;
         private readonly IRunwayEndCronService _runwayEndService;
         private readonly IFaaPublicationCycleService _publicationService;
+        private readonly IDataSyncStatusService _syncStatusService;
         private readonly ILogger<AirportFunction> _logger;
 
         public AirportFunction(
@@ -19,12 +21,14 @@ namespace PreflightApi.Azure.Functions.Functions
             IRunwayCronService runwayService,
             IRunwayEndCronService runwayEndService,
             IFaaPublicationCycleService publicationService,
+            IDataSyncStatusService syncStatusService,
             ILoggerFactory loggerFactory)
         {
             _airportService = airportService ?? throw new ArgumentNullException(nameof(airportService));
             _runwayService = runwayService ?? throw new ArgumentNullException(nameof(runwayService));
             _runwayEndService = runwayEndService ?? throw new ArgumentNullException(nameof(runwayEndService));
             _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+            _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
             _logger = loggerFactory.CreateLogger<AirportFunction>();
         }
 
@@ -41,25 +45,34 @@ namespace PreflightApi.Azure.Functions.Functions
             {
                 var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting airport data update process");
+                try
+                {
+                    // Process airports first (APT_BASE.csv, APT_ATT.csv, APT_CON.csv)
+                    await _airportService.DownloadAndProcessDataAsync(cancellationToken);
+                    _logger.LogInformation("Airport base data processing completed");
 
-                // Process airports first (APT_BASE.csv, APT_ATT.csv, APT_CON.csv)
-                await _airportService.DownloadAndProcessDataAsync(cancellationToken);
-                _logger.LogInformation("Airport base data processing completed");
+                    // Process runways (APT_RWY.csv)
+                    await _runwayService.DownloadAndProcessDataAsync(cancellationToken);
+                    _logger.LogInformation("Runway data processing completed");
 
-                // Process runways (APT_RWY.csv)
-                await _runwayService.DownloadAndProcessDataAsync(cancellationToken);
-                _logger.LogInformation("Runway data processing completed");
+                    // Process runway ends (APT_RWY_END.csv)
+                    await _runwayEndService.DownloadAndProcessDataAsync(cancellationToken);
+                    _logger.LogInformation("Runway end data processing completed");
 
-                // Process runway ends (APT_RWY_END.csv)
-                await _runwayEndService.DownloadAndProcessDataAsync(cancellationToken);
-                _logger.LogInformation("Runway end data processing completed");
+                    // Link runway ends to their parent runways
+                    await _runwayEndService.LinkRunwayEndsToRunwaysAsync(cancellationToken);
+                    _logger.LogInformation("Runway end linking completed");
 
-                // Link runway ends to their parent runways
-                await _runwayEndService.LinkRunwayEndsToRunwaysAsync(cancellationToken);
-                _logger.LogInformation("Runway end linking completed");
-
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);
-                _logger.LogInformation("Airport data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);
+                    await _syncStatusService.RecordSuccessAsync(SyncTypes.Airport, ct: cancellationToken);
+                    _logger.LogInformation("Airport data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                }
+                catch (Exception ex)
+                {
+                    try { await _syncStatusService.RecordFailureAsync(SyncTypes.Airport, ex.Message, cancellationToken); }
+                    catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for Airport"); }
+                    throw;
+                }
             }
             else
             {
