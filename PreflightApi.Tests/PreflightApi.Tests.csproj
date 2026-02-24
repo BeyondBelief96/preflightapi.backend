@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PreflightApi.API\PreflightApi.API.csproj" />
+    <ProjectReference Include="..\PreflightApi.Azure.Functions\PreflightApi.Azure.Functions.csproj" />
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
     <ProjectReference Include="..\PreflightApi.Infrastructure\PreflightApi.Infrastructure.csproj" />
   </ItemGroup>

@@ -56,6 +56,7 @@ namespace PreflightApi.Azure.Functions.Functions
             else
             {
                 _logger.LogInformation("No terminal procedure update needed at this time");
+                await _syncStatusService.RecordSuccessAsync(SyncTypes.TerminalProcedure, ct: cancellationToken);
             }
         }
     }
