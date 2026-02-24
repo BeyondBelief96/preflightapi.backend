@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
@@ -11,15 +12,18 @@ namespace PreflightApi.Azure.Functions.Functions
     {
         private readonly IAirspaceCronService<SpecialUseAirspace> _specialUseAirspaceService;
         private readonly IFaaPublicationCycleService _publicationService;
+        private readonly IDataSyncStatusService _syncStatusService;
         private readonly ILogger<SpecialUseAirspaceFunction> _logger;
 
         public SpecialUseAirspaceFunction(
             IAirspaceCronService<SpecialUseAirspace> specialUseAirspaceService,
             IFaaPublicationCycleService publicationService,
+            IDataSyncStatusService syncStatusService,
             ILoggerFactory loggerFactory)
         {
             _specialUseAirspaceService = specialUseAirspaceService ?? throw new ArgumentNullException(nameof(specialUseAirspaceService));
             _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+            _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
             _logger = loggerFactory.CreateLogger<SpecialUseAirspaceFunction>();
         }
 
@@ -36,9 +40,19 @@ namespace PreflightApi.Azure.Functions.Functions
             {
                 var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting special use airspace update process");
-                await _specialUseAirspaceService.UpdateAirspacesAsync(cancellationToken);
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.SpecialUseAirspaces, currentDate);
-                _logger.LogInformation("Special use airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                try
+                {
+                    await _specialUseAirspaceService.UpdateAirspacesAsync(cancellationToken);
+                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.SpecialUseAirspaces, currentDate);
+                    await _syncStatusService.RecordSuccessAsync(SyncTypes.SpecialUseAirspace, ct: cancellationToken);
+                    _logger.LogInformation("Special use airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                }
+                catch (Exception ex)
+                {
+                    try { await _syncStatusService.RecordFailureAsync(SyncTypes.SpecialUseAirspace, ex.Message, cancellationToken); }
+                    catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for SpecialUseAirspace"); }
+                    throw;
+                }
             }
             else
             {

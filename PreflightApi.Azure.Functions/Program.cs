@@ -54,6 +54,7 @@ builder.Services.Configure<PorkbunSettings>(builder.Configuration.GetSection("Po
 builder.Services.Configure<CertificateRenewalSettings>(builder.Configuration.GetSection("CertificateRenewal"));
 
 // Register services
+builder.Services.AddScoped<IDataSyncStatusService, DataSyncStatusService>();
 builder.Services.AddScoped<IFaaPublicationCycleService, FaaPublicationCycleService>();
 builder.Services.AddScoped<IChartSupplementCronService, ChartSupplementCronService>();
 builder.Services.AddScoped<ITerminalProcedureCronService, TerminalProcedureCronService>();

@@ -42,6 +42,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Notam> Notams => Set<Notam>();
 
+        public virtual DbSet<DataSyncStatus> DataSyncStatuses => Set<DataSyncStatus>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

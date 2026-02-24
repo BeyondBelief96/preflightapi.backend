@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -10,15 +11,18 @@ namespace PreflightApi.Azure.Functions.Functions
     {
         private readonly ITerminalProcedureCronService _terminalProcedureService;
         private readonly IFaaPublicationCycleService _publicationService;
+        private readonly IDataSyncStatusService _syncStatusService;
         private readonly ILogger<TerminalProcedureFunction> _logger;
 
         public TerminalProcedureFunction(
             ITerminalProcedureCronService terminalProcedureService,
             IFaaPublicationCycleService publicationService,
+            IDataSyncStatusService syncStatusService,
             ILoggerFactory loggerFactory)
         {
             _terminalProcedureService = terminalProcedureService ?? throw new ArgumentNullException(nameof(terminalProcedureService));
             _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+            _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
             _logger = loggerFactory.CreateLogger<TerminalProcedureFunction>();
         }
 
@@ -35,9 +39,19 @@ namespace PreflightApi.Azure.Functions.Functions
             {
                 var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting terminal procedure update process");
-                await _terminalProcedureService.DownloadAndProcessTerminalProceduresAsync(cancellationToken);
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.TerminalProcedure, currentDate);
-                _logger.LogInformation("Terminal procedure update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                try
+                {
+                    await _terminalProcedureService.DownloadAndProcessTerminalProceduresAsync(cancellationToken);
+                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.TerminalProcedure, currentDate);
+                    await _syncStatusService.RecordSuccessAsync(SyncTypes.TerminalProcedure, ct: cancellationToken);
+                    _logger.LogInformation("Terminal procedure update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                }
+                catch (Exception ex)
+                {
+                    try { await _syncStatusService.RecordFailureAsync(SyncTypes.TerminalProcedure, ex.Message, cancellationToken); }
+                    catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for TerminalProcedure"); }
+                    throw;
+                }
             }
             else
             {
