@@ -216,7 +216,6 @@ try {
 dotnet ef database update --project PreflightApi.Infrastructure --startup-project PreflightApi.API
 ```
 
-<<<<<<< HEAD
 ## Phase 2
 
 All items originally deferred from Phase 1 have been implemented in Phase 2. See [data-staleness-phase2.md](data-staleness-phase2.md) for details:
@@ -228,13 +227,3 @@ All items originally deferred from Phase 1 have been implemented in Phase 2. See
 - Enhanced `/health/data-freshness` endpoint with `overallStatus` and `summary`
 - Shared `DataRouteMapping` extraction (deduplicated middleware + filter)
 - Alert tracking columns (`last_alert_sent_utc`, `last_alert_severity`) on `data_sync_status`
-=======
-## Phase 2 (Out of Scope)
-
-The following are deferred to a future iteration:
-
-- Resend email notifications on sustained staleness
-- `DataFreshnessAlertFunction` Azure Function for proactive alerting
-- Frontend status page / dashboard integration
-- `Accept-Warnings` header opt-in for response body wrapping (embedding staleness info in JSON responses)
->>>>>>> d4016c47889d9ed11b1cd84eb39e511940c14b13

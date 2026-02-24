@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.API.Filters;
+using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -238,19 +239,19 @@ app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, Cancella
         : freshness.Any(f => f.Severity == "warning") ? "degraded"
         : "info";
 
-    return Results.Ok(new
+    return Results.Ok(new DataFreshnessResponse
     {
-        checkedAt = DateTime.UtcNow,
-        overallStatus,
-        summary = new
+        CheckedAt = DateTime.UtcNow,
+        OverallStatus = overallStatus,
+        Summary = new DataFreshnessSummary
         {
-            total = freshness.Count,
-            fresh = freshness.Count(f => f.IsFresh),
-            stale = staleCount,
-            bySeverity = freshness.GroupBy(f => f.Severity)
+            Total = freshness.Count,
+            Fresh = freshness.Count(f => f.IsFresh),
+            Stale = staleCount,
+            BySeverity = freshness.GroupBy(f => f.Severity)
                 .ToDictionary(g => g.Key, g => g.Count())
         },
-        dataTypes = freshness
+        DataTypes = freshness
     });
 });
 
@@ -269,19 +270,19 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 async Task WriteHealthResponse(HttpContext context, HealthReport report)
 {
     context.Response.ContentType = "application/json";
-    var result = new
+    var result = new HealthCheckResponse
     {
-        status = report.Status.ToString(),
-        version = assemblyVersion,
-        totalDuration = report.TotalDuration.TotalMilliseconds,
-        checks = report.Entries.Select(e => new
+        Status = report.Status.ToString(),
+        Version = assemblyVersion,
+        TotalDuration = report.TotalDuration.TotalMilliseconds,
+        Checks = report.Entries.Select(e => new HealthCheckEntry
         {
-            name = e.Key,
-            status = e.Value.Status.ToString(),
-            duration = e.Value.Duration.TotalMilliseconds,
-            description = e.Value.Description,
-            tags = e.Value.Tags,
-            exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
+            Name = e.Key,
+            Status = e.Value.Status.ToString(),
+            Duration = e.Value.Duration.TotalMilliseconds,
+            Description = e.Value.Description,
+            Tags = e.Value.Tags,
+            Exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
         })
     };
     await context.Response.WriteAsJsonAsync(result);
