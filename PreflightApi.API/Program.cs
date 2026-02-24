@@ -165,6 +165,9 @@ builder.Services.AddScoped<INotamService, NotamService>();
 // Briefing Services
 builder.Services.AddScoped<IBriefingService, BriefingService>();
 
+// Data Sync Status
+builder.Services.AddScoped<IDataSyncStatusService, DataSyncStatusService>();
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -190,6 +193,7 @@ using (var scope = app.Services.CreateScope())
 app.UseGlobalExceptionHandling();
 app.UseGatewaySecretValidation();
 app.UseApiVersionHeader();
+app.UseDataFreshness();
 
 app.UseOpenApi();
 
@@ -218,6 +222,13 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
         [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
     },
     ResponseWriter = WriteHealthResponse
+});
+
+// Data freshness detail endpoint
+app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, CancellationToken ct) =>
+{
+    var freshness = await svc.GetAllFreshnessAsync(ct);
+    return Results.Ok(new { checkedAt = DateTime.UtcNow, dataTypes = freshness });
 });
 
 // Full status page — all checks including external dependencies.

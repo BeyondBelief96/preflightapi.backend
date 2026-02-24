@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
@@ -11,15 +12,18 @@ namespace PreflightApi.Azure.Functions.Functions
     {
         private readonly IAirspaceCronService<Airspace> _airspaceService;
         private readonly IFaaPublicationCycleService _publicationService;
+        private readonly IDataSyncStatusService _syncStatusService;
         private readonly ILogger<AirspaceFunction> _logger;
 
         public AirspaceFunction(
             IAirspaceCronService<Airspace> airspaceService,
             IFaaPublicationCycleService publicationService,
+            IDataSyncStatusService syncStatusService,
             ILoggerFactory loggerFactory)
         {
             _airspaceService = airspaceService ?? throw new ArgumentNullException(nameof(airspaceService));
             _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+            _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
             _logger = loggerFactory.CreateLogger<AirspaceFunction>();
         }
 
@@ -36,9 +40,19 @@ namespace PreflightApi.Azure.Functions.Functions
             {
                 var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting airspace update process");
-                await _airspaceService.UpdateAirspacesAsync(cancellationToken);
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Airspaces, currentDate);
-                _logger.LogInformation("Airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                try
+                {
+                    await _airspaceService.UpdateAirspacesAsync(cancellationToken);
+                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.Airspaces, currentDate);
+                    await _syncStatusService.RecordSuccessAsync(SyncTypes.Airspace, ct: cancellationToken);
+                    _logger.LogInformation("Airspace update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                }
+                catch (Exception ex)
+                {
+                    try { await _syncStatusService.RecordFailureAsync(SyncTypes.Airspace, ex.Message, cancellationToken); }
+                    catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for Airspace"); }
+                    throw;
+                }
             }
             else
             {

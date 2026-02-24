@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Constants;
 using PreflightApi.Domain.ValueObjects.FaaPublications;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -10,15 +11,18 @@ namespace PreflightApi.Azure.Functions.Functions
     {
         private readonly ICommunicationFrequencyCronService _frequencyService;
         private readonly IFaaPublicationCycleService _publicationService;
+        private readonly IDataSyncStatusService _syncStatusService;
         private readonly ILogger<FrequencyFunction> _logger;
 
         public FrequencyFunction(
             ICommunicationFrequencyCronService frequencyService,
             IFaaPublicationCycleService publicationService,
+            IDataSyncStatusService syncStatusService,
             ILoggerFactory loggerFactory)
         {
             _frequencyService = frequencyService ?? throw new ArgumentNullException(nameof(frequencyService));
             _publicationService = publicationService ?? throw new ArgumentNullException(nameof(publicationService));
+            _syncStatusService = syncStatusService ?? throw new ArgumentNullException(nameof(syncStatusService));
             _logger = loggerFactory.CreateLogger<FrequencyFunction>();
         }
 
@@ -35,9 +39,19 @@ namespace PreflightApi.Azure.Functions.Functions
             {
                 var sw = Stopwatch.StartNew();
                 _logger.LogInformation("Starting frequency data update process");
-                await _frequencyService.DownloadAndProcessDataAsync(cancellationToken);
-                await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Frequencies, currentDate);
-                _logger.LogInformation("Frequency data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                try
+                {
+                    await _frequencyService.DownloadAndProcessDataAsync(cancellationToken);
+                    await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Frequencies, currentDate);
+                    await _syncStatusService.RecordSuccessAsync(SyncTypes.Frequency, ct: cancellationToken);
+                    _logger.LogInformation("Frequency data update completed successfully in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                }
+                catch (Exception ex)
+                {
+                    try { await _syncStatusService.RecordFailureAsync(SyncTypes.Frequency, ex.Message, cancellationToken); }
+                    catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for Frequency"); }
+                    throw;
+                }
             }
             else
             {
