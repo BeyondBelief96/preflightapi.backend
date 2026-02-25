@@ -176,7 +176,10 @@
 			</when>
 			<otherwise>
 				<return-response>
-					<set-status code="@(context.Response.StatusCode)" reason="@(context.Response.StatusReason)" />
+					<set-status code="@{
+						var sc = context.Response.StatusCode;
+						return (sc >= 400 && sc < 600) ? sc : 500;
+					}" reason="@(context.Response.StatusReason ?? "Internal Server Error")" />
 					<set-header name="Content-Type" exists-action="override">
 						<value>application/json</value>
 					</set-header>
