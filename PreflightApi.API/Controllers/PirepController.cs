@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -66,14 +67,8 @@ public class PirepController(IPirepService pirepService, IAirportService airport
         [FromQuery] PaginationParams? pagination = null,
         CancellationToken ct = default)
     {
-        if (lat < -90 || lat > 90)
-            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
-        if (lon < -180 || lon > 180)
-            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
-        if (radiusNm <= 0)
-            throw new ValidationException("radiusNm", "Radius must be greater than 0");
-        if (radiusNm > 500)
-            throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
+        ValidationHelpers.ValidateCoordinates(lat, lon);
+        ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
@@ -108,10 +103,8 @@ public class PirepController(IPirepService pirepService, IAirportService airport
         [FromQuery] PaginationParams? pagination = null,
         CancellationToken ct = default)
     {
-        if (radiusNm <= 0)
-            throw new ValidationException("radiusNm", "Radius must be greater than 0");
-        if (radiusNm > 500)
-            throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
+        ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
 

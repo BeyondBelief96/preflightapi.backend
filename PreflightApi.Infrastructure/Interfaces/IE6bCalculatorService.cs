@@ -8,8 +8,9 @@ public interface IE6bCalculatorService
     /// Calculates crosswind components for all runways at an airport using current METAR data
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
+    /// <param name="ct">Cancellation token</param>
     /// <returns>Crosswind data for all runway ends</returns>
-    Task<AirportCrosswindResponseDto> GetCrosswindForAirportAsync(string icaoCodeOrIdent);
+    Task<AirportCrosswindResponseDto> GetCrosswindForAirportAsync(string icaoCodeOrIdent, CancellationToken ct = default);
 
     /// <summary>
     /// Calculates crosswind components using manual parameters
@@ -23,10 +24,12 @@ public interface IE6bCalculatorService
     /// </summary>
     /// <param name="icaoCodeOrIdent">ICAO code or airport identifier</param>
     /// <param name="request">Optional parameter overrides</param>
+    /// <param name="ct">Cancellation token</param>
     /// <returns>Density altitude calculation result</returns>
     Task<DensityAltitudeResponseDto> GetDensityAltitudeForAirportAsync(
         string icaoCodeOrIdent,
-        AirportDensityAltitudeRequestDto? request = null);
+        AirportDensityAltitudeRequestDto? request = null,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Calculates density altitude using manual parameters

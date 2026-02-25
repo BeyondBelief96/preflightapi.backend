@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -48,8 +49,8 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         [FromQuery] int? minHeightAgl = null,
         [FromQuery] PaginationParams? pagination = null)
     {
-        if (radiusNm <= 0)
-            throw new ValidationException("radiusNm", "Radius must be greater than 0");
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
+        ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
 
@@ -88,12 +89,8 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         [FromQuery] int? minHeightAgl = null,
         [FromQuery] PaginationParams? pagination = null)
     {
-        if (lat < -90 || lat > 90)
-            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
-        if (lon < -180 || lon > 180)
-            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
-        if (radiusNm <= 0)
-            throw new ValidationException("radiusNm", "Radius must be greater than 0");
+        ValidationHelpers.ValidateCoordinates(lat, lon);
+        ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
@@ -148,6 +145,7 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ObstacleDto>> GetByOasNumber(string oasNumber)
     {
+        ValidationHelpers.ValidateRequiredString(oasNumber, "oasNumber", "OAS number is required");
         var obstacle = await obstacleService.GetByOasNumber(oasNumber);
         if (obstacle == null)
         {

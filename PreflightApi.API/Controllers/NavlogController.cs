@@ -155,14 +155,15 @@ public class NavlogController(INavlogService navlogService)
     /// An external service required for the calculation is temporarily unavailable.
     /// This can be the NOAA magnetic variation API or the winds aloft data source.
     /// </response>
+    /// <param name="ct">Cancellation token</param>
     [HttpPost("calculate")]
     [ProducesResponseType(typeof(NavlogResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<NavlogResponseDto>> CalculateNavlog([FromBody] NavlogRequestDto request)
+    public async Task<ActionResult<NavlogResponseDto>> CalculateNavlog([FromBody] NavlogRequestDto request, CancellationToken ct)
     {
-        var response = await navlogService.CalculateNavlog(request);
+        var response = await navlogService.CalculateNavlog(request, ct);
         return Ok(response);
     }
 
@@ -210,6 +211,7 @@ public class NavlogController(INavlogService navlogService)
     /// <returns>
     /// <c>TrueCourse</c> (degrees), <c>MagneticCourse</c> (degrees), and <c>Distance</c> (nautical miles).
     /// </returns>
+    /// <param name="ct">Cancellation token</param>
     /// <response code="200">Returns the bearing and distance calculation</response>
     /// <response code="400">The coordinates are invalid (e.g., latitude outside -90 to 90 range)</response>
     /// <response code="503">The NOAA magnetic variation service is temporarily unavailable</response>
@@ -218,9 +220,9 @@ public class NavlogController(INavlogService navlogService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<BearingAndDistanceResponseDto>> CalculateBearingAndDistance(
-        [FromBody] BearingAndDistanceRequestDto request)
+        [FromBody] BearingAndDistanceRequestDto request, CancellationToken ct)
     {
-        var response = await navlogService.CalculateBearingAndDistance(request);
+        var response = await navlogService.CalculateBearingAndDistance(request, ct);
         return Ok(response);
     }
 
@@ -273,6 +275,7 @@ public class NavlogController(INavlogService navlogService)
     /// each with wind direction (degrees true), speed (knots), and temperature (Celsius)
     /// at standard altitude levels.
     /// </returns>
+    /// <param name="ct">Cancellation token</param>
     /// <response code="200">Returns the winds aloft forecast data</response>
     /// <response code="400">The forecast period is not 6, 12, or 24</response>
     /// <response code="503">The winds aloft data source is temporarily unavailable</response>
@@ -280,12 +283,12 @@ public class NavlogController(INavlogService navlogService)
     [ProducesResponseType(typeof(WindsAloftDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<WindsAloftDto>> GetWindsAloftData(int forecast)
+    public async Task<ActionResult<WindsAloftDto>> GetWindsAloftData(int forecast, CancellationToken ct)
     {
         if (forecast != 6 && forecast != 12 && forecast != 24)
             throw new ValidationException("Forecast", "Forecast period must be 6, 12, or 24 hours");
 
-        var response = await navlogService.GetWindsAloftData(forecast);
+        var response = await navlogService.GetWindsAloftData(forecast, ct);
         return Ok(response);
     }
 }

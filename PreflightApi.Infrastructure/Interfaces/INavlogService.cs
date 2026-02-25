@@ -4,7 +4,7 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface INavlogService
 {
-    Task<NavlogResponseDto> CalculateNavlog(NavlogRequestDto request);
-    Task<BearingAndDistanceResponseDto> CalculateBearingAndDistance(BearingAndDistanceRequestDto request);
-    Task<WindsAloftDto> GetWindsAloftData(int forecast);
+    Task<NavlogResponseDto> CalculateNavlog(NavlogRequestDto request, CancellationToken ct = default);
+    Task<BearingAndDistanceResponseDto> CalculateBearingAndDistance(BearingAndDistanceRequestDto request, CancellationToken ct = default);
+    Task<WindsAloftDto> GetWindsAloftData(int forecast, CancellationToken ct = default);
 }

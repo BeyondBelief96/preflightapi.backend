@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -85,14 +86,8 @@ namespace PreflightApi.API.Controllers
             [FromQuery] double radiusNm = 30,
             [FromQuery] PaginationParams? pagination = null)
         {
-            if (lat < -90 || lat > 90)
-                throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
-            if (lon < -180 || lon > 180)
-                throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
-            if (radiusNm <= 0)
-                throw new ValidationException("radiusNm", "Radius must be greater than 0");
-            if (radiusNm > 500)
-                throw new ValidationException("radiusNm", "Radius cannot exceed 500 nautical miles");
+            ValidationHelpers.ValidateCoordinates(lat, lon);
+            ValidationHelpers.ValidateRadius(radiusNm, 500);
 
             pagination ??= new PaginationParams();
             pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
@@ -111,6 +106,7 @@ namespace PreflightApi.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<AirportDto>> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent)
         {
+            ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
             var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
             return Ok(airport);
         }
@@ -159,6 +155,7 @@ namespace PreflightApi.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<RunwayDto>>> GetRunwaysByAirport(string icaoCodeOrIdent)
         {
+            ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
             var runways = await runwayService.GetRunwaysByAirportAsync(icaoCodeOrIdent);
             return Ok(runways);
         }

@@ -30,7 +30,7 @@ public class NavlogService : INavlogService
         _logger = logger;
     }
 
-    public async Task<NavlogResponseDto> CalculateNavlog(NavlogRequestDto request)
+    public async Task<NavlogResponseDto> CalculateNavlog(NavlogRequestDto request, CancellationToken ct = default)
     {
         try
         {
@@ -63,7 +63,7 @@ public class NavlogService : INavlogService
             };
 
             // Determine the forecast type and get winds aloft data
-            var (forecastType, windsAloftData) = await DetermineForecastType(request.TimeOfDeparture);
+            var (forecastType, windsAloftData) = await DetermineForecastType(request.TimeOfDeparture, ct);
             if (!forecastType.HasValue || windsAloftData == null)
             {
                 _logger.LogWarning("No suitable winds aloft forecast found for departure time");
@@ -87,7 +87,8 @@ public class NavlogService : INavlogService
                     waypointsAdjustedForCruisingAltitude[i + 1],
                     performanceData,
                     previousLegEndTime,
-                    windsAloftData);
+                    windsAloftData,
+                    ct);
 
                 response.Legs.Add(leg);
                 previousLegEndTime = leg.EndLegTime;
@@ -137,7 +138,7 @@ public class NavlogService : INavlogService
         }
     }
 
-    public async Task<BearingAndDistanceResponseDto> CalculateBearingAndDistance(BearingAndDistanceRequestDto request)
+    public async Task<BearingAndDistanceResponseDto> CalculateBearingAndDistance(BearingAndDistanceRequestDto request, CancellationToken ct = default)
     {
         var inverseGeodesicResult = CalculateInverseGeodesic(
             request.StartLatitude, request.StartLongitude,
@@ -150,7 +151,7 @@ public class NavlogService : INavlogService
         var trueCourse = NormalizeAzimuth(inverseGeodesicResult.Azimuth1);
 
         var magneticCourse = await CalculateMagneticCourse(
-            request.StartLatitude, request.StartLongitude, trueCourse);
+            request.StartLatitude, request.StartLongitude, trueCourse, ct);
 
         return new BearingAndDistanceResponseDto
         {
@@ -161,7 +162,7 @@ public class NavlogService : INavlogService
     }
 
 
-    public async Task<WindsAloftDto> GetWindsAloftData(int forecast)
+    public async Task<WindsAloftDto> GetWindsAloftData(int forecast, CancellationToken ct = default)
     {
         return await _windsAloftService.FetchWindsAloftData(forecast);
     }
@@ -332,7 +333,8 @@ public class NavlogService : INavlogService
         WaypointDto endPoint,
         NavlogPerformanceDataDto performance,
         DateTime previousLegEndTime,
-        WindsAloftDto? windsAloftData)
+        WindsAloftDto? windsAloftData,
+        CancellationToken ct = default)
     {
         var inverseGeodesicResult = CalculateInverseGeodesic(startPoint.Latitude, startPoint.Longitude, endPoint.Latitude, endPoint.Longitude);
         var leg = new NavigationLegDto
@@ -343,7 +345,7 @@ public class NavlogService : INavlogService
         };
 
         if (inverseGeodesicResult == null) return leg;
-        var magneticCourse = await CalculateMagneticCourse(startPoint.Latitude, startPoint.Longitude, inverseGeodesicResult.Azimuth1);
+        var magneticCourse = await CalculateMagneticCourse(startPoint.Latitude, startPoint.Longitude, inverseGeodesicResult.Azimuth1, ct);
 
         leg = new NavigationLegDto()
         {
@@ -380,11 +382,12 @@ public class NavlogService : INavlogService
         return course;
     }
 
-    private async Task<double> CalculateMagneticCourse(double latitude, double longitude, double trueCourse)
+    private async Task<double> CalculateMagneticCourse(double latitude, double longitude, double trueCourse, CancellationToken ct = default)
     {
         var magneticVariation = await _magneticVariationService.GetMagneticVariation(
             latitude,
-            longitude);
+            longitude,
+            ct);
         // West headings come out negative, so we need to (subtract, which would come out to adding) it to our true course.
         // Easterly headings come out positive, so they get subtracted from our true course.
         var magneticCourse = trueCourse - magneticVariation;
@@ -623,7 +626,7 @@ public class NavlogService : INavlogService
             };
         }
 
-        private async Task<(int? ForecastType, WindsAloftDto? WindsAloftData)> DetermineForecastType(DateTime departureTime)
+        private async Task<(int? ForecastType, WindsAloftDto? WindsAloftData)> DetermineForecastType(DateTime departureTime, CancellationToken ct = default)
         {
             int[] forecastTypes = { 6, 12, 24 };
 
