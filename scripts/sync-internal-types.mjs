@@ -32,7 +32,6 @@ const DEFAULT_OUTPUT = resolve(
 const SOURCE_FILES = [
   'DataFreshnessResult.cs',
   'DataFreshnessSummary.cs', // contains DataFreshnessSummary + DataFreshnessResponse
-  'DataWarning.cs',
   'HealthCheckResult.cs', // contains HealthCheckEntry + HealthCheckResponse
 ]
 

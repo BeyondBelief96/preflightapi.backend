@@ -18,7 +18,6 @@ using PreflightApi.Infrastructure.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.HealthChecks;
-using PreflightApi.API.Filters;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Utilities;
 
@@ -61,10 +60,7 @@ builder.Services.Configure<AzureFileLoggerOptions>(options =>
 });
 
 // Setup Controller Json Serialization Handling
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<DataFreshnessWarningFilter>();
-}).AddJsonOptions(options =>
+builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new GeometryJsonConverter());
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
