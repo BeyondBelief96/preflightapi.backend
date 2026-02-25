@@ -12,7 +12,15 @@
 					<set-header name="Retry-After" exists-action="override">
 						<value>300</value>
 					</set-header>
-					<set-body>{"status":"maintenance","message":"PreflightApi is undergoing a deployment. Please try again shortly."}</set-body>
+					<set-body>@{
+						return new JObject(
+							new JProperty("code", "MAINTENANCE"),
+							new JProperty("message", "PreflightApi is undergoing a deployment. Please try again shortly."),
+							new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
+							new JProperty("traceId", context.RequestId),
+							new JProperty("path", context.Request.Url.Path)
+						).ToString();
+					}</set-body>
 				</return-response>
 			</when>
 		</choose>
@@ -111,9 +119,12 @@
 						var match = System.Text.RegularExpressions.Regex.Match(msg, @"(\d+)\s*second");
 						var retryAfterSeconds = match.Success ? int.Parse(match.Groups[1].Value) : 60;
 						return new JObject(
-							new JProperty("error", "RateLimitExceeded"),
+							new JProperty("code", "RATE_LIMIT_EXCEEDED"),
 							new JProperty("message", "Too many requests. Please slow down and try again shortly."),
-							new JProperty("retryAfterSeconds", retryAfterSeconds)
+							new JProperty("retryAfterSeconds", retryAfterSeconds),
+							new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
+							new JProperty("traceId", context.RequestId),
+							new JProperty("path", context.Request.Url.Path)
 						).ToString();
 					}</set-body>
 				</return-response>
@@ -136,9 +147,12 @@
 							}
 						}
 						return new JObject(
-							new JProperty("error", "QuotaExceeded"),
+							new JProperty("code", "QUOTA_EXCEEDED"),
 							new JProperty("message", "You have reached your monthly API call limit."),
-							new JProperty("quotaResetsAt", resetAt.ToString("o"))
+							new JProperty("quotaResetsAt", resetAt.ToString("o")),
+							new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
+							new JProperty("traceId", context.RequestId),
+							new JProperty("path", context.Request.Url.Path)
 						).ToString();
 					}</set-body>
 				</return-response>
@@ -149,9 +163,44 @@
 					<set-header name="Content-Type" exists-action="override">
 						<value>application/json</value>
 					</set-header>
-					<set-body>{"status":"outage","message":"Backend service is unreachable."}</set-body>
+					<set-body>@{
+						return new JObject(
+							new JProperty("code", "BACKEND_UNAVAILABLE"),
+							new JProperty("message", "Backend service is unreachable. Please try again later."),
+							new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
+							new JProperty("traceId", context.RequestId),
+							new JProperty("path", context.Request.Url.Path)
+						).ToString();
+					}</set-body>
 				</return-response>
 			</when>
+			<otherwise>
+				<return-response>
+					<set-status code="@(context.Response.StatusCode)" reason="@(context.Response.StatusReason)" />
+					<set-header name="Content-Type" exists-action="override">
+						<value>application/json</value>
+					</set-header>
+					<set-body>@{
+						var statusCode = context.Response.StatusCode;
+						string code;
+						string message;
+						if (statusCode == 401) {
+							code = "UNAUTHORIZED";
+							message = "Invalid or missing API key.";
+						} else {
+							code = "INTERNAL_ERROR";
+							message = context.LastError.Message ?? "An unexpected gateway error occurred.";
+						}
+						return new JObject(
+							new JProperty("code", code),
+							new JProperty("message", message),
+							new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
+							new JProperty("traceId", context.RequestId),
+							new JProperty("path", context.Request.Url.Path)
+						).ToString();
+					}</set-body>
+				</return-response>
+			</otherwise>
 		</choose>
 		<base />
 	</on-error>

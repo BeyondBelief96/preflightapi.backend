@@ -46,4 +46,12 @@ public static class ErrorCodes
 
     // Navigation
     public const string NavlogCalculationError = "NAVLOG_CALCULATION_ERROR";
+
+    // Gateway (used by APIM policies — keep string values in sync)
+    public const string Unauthorized = "UNAUTHORIZED";
+    public const string RateLimitExceeded = "RATE_LIMIT_EXCEEDED";
+    public const string QuotaExceeded = "QUOTA_EXCEEDED";
+    public const string TierRestricted = "TIER_RESTRICTED";
+    public const string BackendUnavailable = "BACKEND_UNAVAILABLE";
+    public const string Maintenance = "MAINTENANCE";
 }
