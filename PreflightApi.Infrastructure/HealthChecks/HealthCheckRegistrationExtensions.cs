@@ -28,6 +28,18 @@ public static class HealthCheckRegistrationExtensions
             tags: new[] { "external" },
             timeout: TimeSpan.FromSeconds(5));
 
+        builder.AddCheck<FaaNmsHealthCheck>(
+            "faa-nms",
+            failureStatus: HealthStatus.Degraded,
+            tags: new[] { "external" },
+            timeout: TimeSpan.FromSeconds(5));
+
+        builder.AddCheck<DataFreshnessHealthCheck>(
+            "data-freshness",
+            failureStatus: HealthStatus.Degraded,
+            tags: new[] { "ready", "data-freshness" },
+            timeout: TimeSpan.FromSeconds(10));
+
         return builder;
     }
 }

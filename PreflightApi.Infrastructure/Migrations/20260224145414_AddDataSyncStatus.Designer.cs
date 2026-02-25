@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using PreflightApi.Infrastructure.Data;
 namespace PreflightApi.Infrastructure.Migrations
 {
     [DbContext(typeof(PreflightApiDbContext))]
-    partial class PreflightApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224145414_AddDataSyncStatus")]
+    partial class AddDataSyncStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -852,15 +855,6 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.Property<int>("ConsecutiveFailures")
                         .HasColumnType("integer")
                         .HasColumnName("consecutive_failures");
-
-                    b.Property<DateTime?>("LastAlertSentUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_alert_sent_utc");
-
-                    b.Property<string>("LastAlertSeverity")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("last_alert_severity");
 
                     b.Property<DateTime?>("LastAttemptedSyncUtc")
                         .HasColumnType("timestamp with time zone")

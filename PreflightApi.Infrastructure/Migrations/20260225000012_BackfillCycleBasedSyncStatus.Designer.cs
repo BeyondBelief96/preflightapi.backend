@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using PreflightApi.Infrastructure.Data;
 namespace PreflightApi.Infrastructure.Migrations
 {
     [DbContext(typeof(PreflightApiDbContext))]
-    partial class PreflightApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225000012_BackfillCycleBasedSyncStatus")]
+    partial class BackfillCycleBasedSyncStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
