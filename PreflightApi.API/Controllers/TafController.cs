@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
@@ -39,13 +40,14 @@ public class TafController(ITafService tafService) : ControllerBase
     public async Task<ActionResult<IEnumerable<TafDto>>> GetTafsBatch(
         [FromQuery] string ids)
     {
-        if (string.IsNullOrWhiteSpace(ids))
-            throw new ValidationException("ids", "At least one ICAO code or identifier is required");
+        ValidationHelpers.ValidateRequiredString(ids, "ids", "At least one ICAO code or identifier is required");
 
         var codesArray = ids.Split(',')
             .Select(s => s.Trim())
             .Where(s => s.Length > 0)
             .ToArray();
+
+        ValidationHelpers.ValidateBatchSize(codesArray.Length, 100, "ids");
 
         var tafs = await tafService.GetTafsForAirports(codesArray);
         return Ok(tafs);
@@ -70,6 +72,7 @@ public class TafController(ITafService tafService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TafDto>> GetTafByIcaoCodeOrIdent(string icaoCodeOrIdent)
     {
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         var taf = await tafService.GetTafByIcaoCode(icaoCodeOrIdent);
         return Ok(taf);
     }

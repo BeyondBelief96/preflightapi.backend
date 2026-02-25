@@ -36,6 +36,11 @@ public class GlobalExceptionMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogDebug("Request was cancelled by the client: {Path}", context.Request.Path);
+            context.Response.StatusCode = 499; // Client Closed Request (nginx convention)
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(context, ex);
@@ -49,11 +54,28 @@ public class GlobalExceptionMiddleware
         // Log the exception
         LogException(exception, statusCode, context.Request.Path);
 
-        // Write the response
-        context.Response.StatusCode = (int)statusCode;
-        context.Response.ContentType = "application/json";
+        // Don't attempt to write if the response has already started streaming
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning(
+                "Response has already started, cannot write error response for {ExceptionType} at {Path}",
+                exception.GetType().Name, context.Request.Path);
+            return;
+        }
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse, JsonOptions));
+        try
+        {
+            context.Response.StatusCode = (int)statusCode;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse, JsonOptions));
+        }
+        catch (Exception writeEx)
+        {
+            // Client may have disconnected during error response writing
+            _logger.LogDebug(writeEx,
+                "Failed to write error response for {ExceptionType} at {Path}",
+                exception.GetType().Name, context.Request.Path);
+        }
     }
 
     private (HttpStatusCode statusCode, ApiErrorResponse response) MapExceptionToResponse(
@@ -84,12 +106,17 @@ public class GlobalExceptionMiddleware
             // Domain exceptions - ExternalServiceException hierarchy
             ExternalServiceException serviceEx => (
                 HttpStatusCode.ServiceUnavailable,
-                CreateErrorResponse(serviceEx.ErrorCode, serviceEx.UserMessage, timestamp, traceId, path, exception)),
+                CreateErrorResponse(serviceEx.ErrorCode, serviceEx.UserMessage, timestamp, traceId, path, exception, serviceEx.ServiceName)),
 
             // Domain exceptions - Other domain exceptions
             DomainException domainEx => (
                 HttpStatusCode.BadRequest,
                 CreateErrorResponse(domainEx.ErrorCode, domainEx.UserMessage, timestamp, traceId, path, exception)),
+
+            // Raw HTTP failures from services that don't wrap in ExternalServiceException
+            HttpRequestException => (
+                HttpStatusCode.ServiceUnavailable,
+                CreateErrorResponse(ErrorCodes.ExternalServiceUnavailable, "An external service is temporarily unavailable. Please try again later.", timestamp, traceId, path, exception)),
 
             // Legacy exception types for backward compatibility
             KeyNotFoundException keyNotFoundEx => (
@@ -135,13 +162,15 @@ public class GlobalExceptionMiddleware
         string timestamp,
         string traceId,
         string? path,
-        Exception exception)
+        Exception exception,
+        string? service = null)
     {
         return new ApiErrorResponse
         {
             Code = code,
             Message = message,
             Details = _environment.IsDevelopment() ? exception.ToString() : null,
+            Service = service,
             Timestamp = timestamp,
             TraceId = traceId,
             Path = path

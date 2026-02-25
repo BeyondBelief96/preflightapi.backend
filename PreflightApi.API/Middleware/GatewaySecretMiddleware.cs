@@ -1,3 +1,7 @@
+using System.Text.Json;
+using PreflightApi.API.Models;
+using PreflightApi.Domain.Exceptions;
+
 namespace PreflightApi.API.Middleware;
 
 /// <summary>
@@ -48,7 +52,20 @@ public class GatewaySecretMiddleware
         {
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"error\":\"Direct access to this API is not allowed.\"}");
+            var errorResponse = new ApiErrorResponse
+            {
+                Code = ErrorCodes.Forbidden,
+                Message = "Direct access to this API is not allowed.",
+                Timestamp = DateTime.UtcNow.ToString("o"),
+                TraceId = context.TraceIdentifier,
+                Path = context.Request.Path.Value
+            };
+            await context.Response.WriteAsync(
+                JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false
+                }));
             return;
         }
 

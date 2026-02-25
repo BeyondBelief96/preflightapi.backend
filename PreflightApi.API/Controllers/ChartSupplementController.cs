@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -39,6 +40,7 @@ public class ChartSupplementController(IChartSupplementService chartSupplementSe
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ChartSupplementsResponseDto>> GetChartSupplements(string icaoCodeOrIdent)
     {
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         var supplements = await chartSupplementService.GetChartSupplementsByAirportCode(icaoCodeOrIdent);
         return Ok(supplements);
     }

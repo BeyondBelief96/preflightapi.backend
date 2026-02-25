@@ -67,6 +67,31 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
+// Transform model binding / validation errors into ApiErrorResponse format
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(e => e.Value?.Errors.Count > 0)
+            .ToDictionary(
+                e => e.Key,
+                e => e.Value!.Errors.Select(err => err.ErrorMessage).ToList());
+
+        var response = new PreflightApi.API.Models.ApiErrorResponse
+        {
+            Code = PreflightApi.Domain.Exceptions.ErrorCodes.ValidationError,
+            Message = "One or more validation errors occurred.",
+            ValidationErrors = errors,
+            Timestamp = DateTime.UtcNow.ToString("o"),
+            TraceId = context.HttpContext.TraceIdentifier,
+            Path = context.HttpContext.Request.Path.Value
+        };
+
+        return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(response);
+    };
+});
+
 // Derive API URL version from assembly major version
 var apiMajorVersion = Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 1;
 

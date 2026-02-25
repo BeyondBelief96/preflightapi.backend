@@ -38,7 +38,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         _logger = logger;
     }
 
-    public async Task<AirportCrosswindResponseDto> GetCrosswindForAirportAsync(string icaoCodeOrIdent)
+    public async Task<AirportCrosswindResponseDto> GetCrosswindForAirportAsync(string icaoCodeOrIdent, CancellationToken ct = default)
     {
         _logger.LogInformation("Calculating crosswind for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
@@ -46,7 +46,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
                 a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
+                a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
         if (airport == null)
         {
@@ -66,7 +66,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         var runways = await _context.Runways
             .Include(r => r.RunwayEnds)
             .Where(r => r.SiteNo == airport.SiteNo)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         // Parse wind direction (handle VRB)
         bool isVariableWind = metar.WindDirDegrees == "VRB" ||
@@ -174,7 +174,8 @@ public class E6bCalculatorService : IE6bCalculatorService
 
     public async Task<DensityAltitudeResponseDto> GetDensityAltitudeForAirportAsync(
         string icaoCodeOrIdent,
-        AirportDensityAltitudeRequestDto? request = null)
+        AirportDensityAltitudeRequestDto? request = null,
+        CancellationToken ct = default)
     {
         _logger.LogInformation("Calculating density altitude for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
@@ -182,7 +183,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
                 a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
+                a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
         if (airport == null)
         {

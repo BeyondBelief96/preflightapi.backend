@@ -27,6 +27,13 @@ public class ApiErrorResponse
     public string? Details { get; init; }
 
     /// <summary>
+    /// Name of the external service that failed (only included for 503 errors).
+    /// </summary>
+    [JsonPropertyName("service")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Service { get; init; }
+
+    /// <summary>
     /// Field-level validation errors (only for validation failures).
     /// </summary>
     [JsonPropertyName("validationErrors")]

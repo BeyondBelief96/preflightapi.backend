@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -48,8 +49,7 @@ public class CommunicationFrequencyController(ICommunicationFrequencyService fre
         string servicedFacility,
         [FromQuery] PaginationParams pagination)
     {
-        if (string.IsNullOrWhiteSpace(servicedFacility))
-            throw new ValidationException("servicedFacility", "Serviced facility identifier is required");
+        ValidationHelpers.ValidateRequiredString(servicedFacility, "servicedFacility", "Serviced facility identifier is required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await frequencyService.GetFrequenciesByServicedFacility(servicedFacility, pagination.Cursor, pagination.Limit));

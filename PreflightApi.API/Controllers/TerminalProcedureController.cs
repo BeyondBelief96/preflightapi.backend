@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -42,6 +43,7 @@ public class TerminalProcedureController(ITerminalProcedureService terminalProce
         string icaoCodeOrIdent,
         [FromQuery] string? chartCode = null)
     {
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         var procedures = await terminalProcedureService.GetTerminalProceduresByAirportCode(icaoCodeOrIdent, chartCode);
         return Ok(procedures);
     }
