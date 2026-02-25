@@ -634,7 +634,7 @@ public class NavlogService : INavlogService
             {
                 try
                 {
-                    var windsAloftData = await _windsAloftService.FetchWindsAloftData(forecastType);
+                    var windsAloftData = await _windsAloftService.FetchWindsAloftData(forecastType, ct);
 
                     if (departureTime >= windsAloftData.ForUseStartTime &&
                         departureTime < windsAloftData.ForUseEndTime)

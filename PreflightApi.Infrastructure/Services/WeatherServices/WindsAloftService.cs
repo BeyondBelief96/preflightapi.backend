@@ -22,7 +22,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             _logger = logger;
         }
 
-        public async Task<WindsAloftDto> FetchWindsAloftData(int fcstHours)
+        public async Task<WindsAloftDto> FetchWindsAloftData(int fcstHours, CancellationToken ct = default)
         {
             try
             {
@@ -38,7 +38,8 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 var textResponse = await FetchWithStatusHandlingAsync(
                     httpClient,
                     $"{baseUrl}?region=us&level=low&fcst={formattedFcst}",
-                    "winds aloft data");
+                    "winds aloft data",
+                    ct);
 
                 if (textResponse == null)
                 {
@@ -271,14 +272,14 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             return null;
         }
 
-        private async Task<string?> FetchWithStatusHandlingAsync(HttpClient httpClient, string url, string dataDescription)
+        private async Task<string?> FetchWithStatusHandlingAsync(HttpClient httpClient, string url, string dataDescription, CancellationToken ct = default)
         {
-            using var response = await httpClient.GetAsync(url);
+            using var response = await httpClient.GetAsync(url, ct);
 
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
-                    return await response.Content.ReadAsStringAsync();
+                    return await response.Content.ReadAsStringAsync(ct);
 
                 case HttpStatusCode.NoContent:
                     return null;
