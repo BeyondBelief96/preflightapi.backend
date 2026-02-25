@@ -57,7 +57,6 @@ namespace PreflightApi.Azure.Functions.Functions
             else
             {
                 _logger.LogInformation("No special use airspace update needed at this time");
-                await _syncStatusService.RecordSuccessAsync(SyncTypes.SpecialUseAirspace, ct: cancellationToken);
             }
         }
     }

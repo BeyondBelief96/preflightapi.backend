@@ -56,7 +56,6 @@ namespace PreflightApi.Azure.Functions.Functions
             else
             {
                 _logger.LogInformation("No chart supplement update needed at this time");
-                await _syncStatusService.RecordSuccessAsync(SyncTypes.ChartSupplement, ct: cancellationToken);
             }
         }
     }

@@ -56,7 +56,6 @@ public class ObstacleFunction
         else
         {
             _logger.LogInformation("No obstacle data update needed at this time");
-            await _syncStatusService.RecordSuccessAsync(SyncTypes.Obstacle, ct: cancellationToken);
         }
     }
 }

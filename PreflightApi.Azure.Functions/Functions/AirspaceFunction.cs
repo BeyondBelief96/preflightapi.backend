@@ -57,7 +57,6 @@ namespace PreflightApi.Azure.Functions.Functions
             else
             {
                 _logger.LogInformation("No airspace update needed at this time");
-                await _syncStatusService.RecordSuccessAsync(SyncTypes.Airspace, ct: cancellationToken);
             }
         }
     }
