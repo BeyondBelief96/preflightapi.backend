@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos.Navlog;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
@@ -27,25 +28,25 @@ public class MagneticVariationService : IMagneticVariationService
         _cache = new MemoryCache(new MemoryCacheOptions());
     }
 
-    public async Task<double> GetMagneticVariation(double latitude, double longitude)
+    public async Task<double> GetMagneticVariation(double latitude, double longitude, CancellationToken ct = default)
     {
+        string cacheKey = $"{latitude},{longitude}";
+
+        if (_cache.TryGetValue(cacheKey, out double cachedVariation))
+        {
+            return cachedVariation;
+        }
+
         try
         {
-            string cacheKey = $"{latitude},{longitude}";
-            
-            if (_cache.TryGetValue(cacheKey, out double cachedVariation))
-            {
-                return cachedVariation;
-            }
-            
             var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.MagVarHttpClient);
             var response = await client.GetAsync(
                 $"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?" +
-                $"lat1={latitude}&lon1={longitude}&key={_apiKey}&resultFormat=json");
+                $"lat1={latitude}&lon1={longitude}&key={_apiKey}&resultFormat=json", ct);
 
             response.EnsureSuccessStatusCode();
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(ct);
             var result = JsonSerializer.Deserialize<MagneticVariationResponseDto>(content);
 
             if (result?.Result == null || result.Result.Length == 0)
@@ -54,17 +55,25 @@ public class MagneticVariationService : IMagneticVariationService
             }
 
             var declination = result.Result[0].Declination;
-            
+
             // Cache the result
             _cache.Set(cacheKey, declination, CacheDuration);
 
             return declination;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Error getting magnetic variation for lat: {Latitude}, lon: {Longitude}", 
+            _logger.LogError(ex, "HTTP error getting magnetic variation for lat: {Latitude}, lon: {Longitude}",
                 latitude, longitude);
-            throw;
+            throw new MagneticVariationServiceException(
+                "The NOAA magnetic variation service is temporarily unavailable. Please try again later.", ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid API response getting magnetic variation for lat: {Latitude}, lon: {Longitude}",
+                latitude, longitude);
+            throw new MagneticVariationServiceException(
+                "The NOAA magnetic variation service returned an invalid response.", ex);
         }
     }
 }

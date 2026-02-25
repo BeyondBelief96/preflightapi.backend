@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
@@ -107,10 +108,7 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
         [FromQuery] PaginationParams? pagination = null,
         CancellationToken ct = default)
     {
-        if (lat < -90 || lat > 90)
-            throw new ValidationException("lat", "Latitude must be between -90 and 90 degrees");
-        if (lon < -180 || lon > 180)
-            throw new ValidationException("lon", "Longitude must be between -180 and 180 degrees");
+        ValidationHelpers.ValidateCoordinates(lat, lon);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -36,6 +37,7 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MetarDto>> GetMetarForAirport(string icaoCodeOrIdent)
     {
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         var metar = await metarService.GetMetarForAirport(icaoCodeOrIdent);
         return Ok(metar);
     }
@@ -62,13 +64,14 @@ public class MetarController(IMetarService metarService) : ControllerBase
     public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsBatch(
         [FromQuery] string ids)
     {
-        if (string.IsNullOrWhiteSpace(ids))
-            throw new ValidationException("ids", "At least one ICAO code or identifier is required");
+        ValidationHelpers.ValidateRequiredString(ids, "ids", "At least one ICAO code or identifier is required");
 
         var codesArray = ids.Split(',')
             .Select(s => s.Trim())
             .Where(s => s.Length > 0)
             .ToArray();
+
+        ValidationHelpers.ValidateBatchSize(codesArray.Length, 100, "ids");
 
         var metars = await metarService.GetMetarsForAirports(codesArray);
         return Ok(metars);

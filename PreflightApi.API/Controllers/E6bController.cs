@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos.Performance;
 using PreflightApi.Infrastructure.Interfaces;
 
@@ -105,6 +106,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// Crosswind data for every runway end at the airport, the METAR wind conditions used,
     /// and the recommended runway identifier.
     /// </returns>
+    /// <param name="ct">Cancellation token</param>
     /// <response code="200">Returns crosswind data for all runways with a recommended runway</response>
     /// <response code="400">The METAR is missing wind direction or wind speed data</response>
     /// <response code="404">The airport was not found, or no current METAR is available for this airport</response>
@@ -113,9 +115,10 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<AirportCrosswindResponseDto>> GetCrosswindForAirport(string icaoCodeOrIdent)
+    public async Task<ActionResult<AirportCrosswindResponseDto>> GetCrosswindForAirport(string icaoCodeOrIdent, CancellationToken ct)
     {
-        var result = await e6bCalculatorService.GetCrosswindForAirportAsync(icaoCodeOrIdent);
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
+        var result = await e6bCalculatorService.GetCrosswindForAirportAsync(icaoCodeOrIdent, ct);
         return Ok(result);
     }
 
@@ -196,6 +199,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// If omitted, values are taken from the latest METAR.
     /// </param>
     /// <returns>Density altitude, pressure altitude, ISA temperature, temperature deviation, and the METAR data used</returns>
+    /// <param name="ct">Cancellation token</param>
     /// <response code="200">Returns density altitude data for the airport</response>
     /// <response code="400">The METAR is missing temperature or altimeter data and no override was provided</response>
     /// <response code="404">The airport was not found, or no current METAR is available</response>
@@ -206,10 +210,12 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<DensityAltitudeResponseDto>> GetDensityAltitudeForAirport(
         string icaoCodeOrIdent,
-        [FromQuery] AirportDensityAltitudeRequestDto? request = null)
+        [FromQuery] AirportDensityAltitudeRequestDto? request = null,
+        CancellationToken ct = default)
     {
+        ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         var result = await e6bCalculatorService.GetDensityAltitudeForAirportAsync(
-            icaoCodeOrIdent, request);
+            icaoCodeOrIdent, request, ct);
         return Ok(result);
     }
 
