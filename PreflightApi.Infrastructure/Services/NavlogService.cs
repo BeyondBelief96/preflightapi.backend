@@ -164,7 +164,7 @@ public class NavlogService : INavlogService
 
     public async Task<WindsAloftDto> GetWindsAloftData(int forecast, CancellationToken ct = default)
     {
-        return await _windsAloftService.FetchWindsAloftData(forecast);
+        return await _windsAloftService.FetchWindsAloftData(forecast, ct);
     }
 
     private List<WaypointDto> AdjustWaypointsForCruisingAltitude(
