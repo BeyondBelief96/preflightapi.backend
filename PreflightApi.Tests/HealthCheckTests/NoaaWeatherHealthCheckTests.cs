@@ -18,7 +18,7 @@ public class NoaaWeatherHealthCheckTests
     {
         _mockHttp = new MockHttpMessageHandler();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient)
+        httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient)
             .Returns(_ => _mockHttp.ToHttpClient());
         _healthCheck = new NoaaWeatherHealthCheck(httpClientFactory);
     }

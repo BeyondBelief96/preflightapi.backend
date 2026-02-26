@@ -24,7 +24,7 @@ public class NoaaWeatherHealthCheck : IHealthCheck
     {
         try
         {
-            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.WeatherHttpClient);
+            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient);
             using var request = new HttpRequestMessage(HttpMethod.Head, HealthCheckUri);
             using var response = await client.SendAsync(request, cancellationToken);
 

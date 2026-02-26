@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using PreflightApi.Infrastructure.Settings;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.HealthChecks;
 
@@ -27,7 +28,7 @@ public class FaaNmsHealthCheck : IHealthCheck
     {
         try
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient);
             using var request = new HttpRequestMessage(HttpMethod.Head, _healthCheckUrl);
             using var response = await client.SendAsync(request, cancellationToken);
 

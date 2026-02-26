@@ -27,7 +27,7 @@ public class NoaaMagVarHealthCheck : IHealthCheck
     {
         try
         {
-            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.MagVarHttpClient);
+            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient);
             var url = $"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination" +
                       $"?lat1=0&lon1=0&key={_apiKey}&resultFormat=json";
             using var response = await client.GetAsync(url, cancellationToken);

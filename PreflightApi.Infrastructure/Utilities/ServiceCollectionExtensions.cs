@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
     public const string WeatherHttpClient = "Weather";
     public const string FaaDataHttpClient = "FaaData";
     public const string MagVarHttpClient = "MagVar";
+    public const string HealthCheckHttpClient = "HealthCheck";
 
     /// <summary>
     /// Registers Azure Blob Storage services for cloud storage.
@@ -55,6 +56,12 @@ public static class ServiceCollectionExtensions
             .AddPolicyHandler(CreateRetryPolicy())
             .AddPolicyHandler(CreateCircuitBreakerPolicy());
 
+        services.AddHttpClient(HealthCheckHttpClient, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(3);
+        })
+        .AddPolicyHandler(CreateHealthCheckRetryPolicy());
+
         return services;
     }
 
@@ -68,6 +75,17 @@ public static class ServiceCollectionExtensions
             .WaitAndRetryAsync(
                 retryCount: 3,
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+    }
+
+    public static IAsyncPolicy<HttpResponseMessage> CreateHealthCheckRetryPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<HttpIOException>()
+            .Or<TaskCanceledException>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: _ => TimeSpan.FromSeconds(1));
     }
 
     public static IAsyncPolicy<HttpResponseMessage> CreateCircuitBreakerPolicy()
