@@ -15,8 +15,6 @@ using PreflightApi.Infrastructure.Services.DocumentServices;
 using PreflightApi.Infrastructure.Services.NotamServices;
 using PreflightApi.Infrastructure.Services.WeatherServices;
 using PreflightApi.Infrastructure.Settings;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Utilities;
@@ -161,9 +159,16 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
 // Health checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<PreflightApiDbContext>("database",
-        failureStatus: HealthStatus.Unhealthy,
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
         tags: new[] { "ready" })
     .AddInfrastructureHealthChecks();
+
+// Background health monitor
+builder.Services.Configure<HealthMonitorSettings>(
+    builder.Configuration.GetSection("HealthMonitor"));
+builder.Services.AddSingleton<HealthSnapshotStore>();
+builder.Services.AddSingleton<IHealthSnapshotStore>(sp => sp.GetRequiredService<HealthSnapshotStore>());
+builder.Services.AddHostedService<HealthMonitorService>();
 
 // Configure Services
 builder.Services.AddMemoryCache();
@@ -219,7 +224,7 @@ using (var scope = app.Services.CreateScope())
 app.UseGlobalExceptionHandling();
 app.UseGatewaySecretValidation();
 app.UseApiVersionHeader();
-app.UseDataFreshness();
+app.UseDataCurrency();
 
 app.UseOpenApi();
 
@@ -230,41 +235,64 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
-// Liveness probe — is the process alive? Always returns 200.
-app.MapHealthChecks("/health/live", new HealthCheckOptions
-{
-    Predicate = _ => false,
-    ResponseWriter = WriteHealthResponse
-});
 
-// Readiness probe — can the API serve traffic? Checks database + blob storage.
-app.MapHealthChecks("/health/ready", new HealthCheckOptions
+// Cached health status — served from background monitor snapshot.
+app.MapGet("/health", (IHealthSnapshotStore snapshotStore) =>
 {
-    Predicate = check => check.Tags.Contains("ready"),
-    ResultStatusCodes =
+    var snapshot = snapshotStore.Current;
+
+    if (snapshot is null)
     {
-        [HealthStatus.Healthy] = StatusCodes.Status200OK,
-        [HealthStatus.Degraded] = StatusCodes.Status200OK,
-        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
-    },
-    ResponseWriter = WriteHealthResponse
+        var starting = new HealthCheckResponse
+        {
+            Status = "Starting",
+            Version = assemblyVersion,
+            TotalDuration = 0,
+            LastCheckedAt = null,
+            Checks = []
+        };
+        return Results.Json(starting, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    var response = new HealthCheckResponse
+    {
+        Status = snapshot.OverallStatus.ToString(),
+        Version = assemblyVersion,
+        TotalDuration = snapshot.TotalDuration,
+        LastCheckedAt = snapshot.LastCheckedAt,
+        Checks = snapshot.Entries.Select(e => new HealthCheckEntry
+        {
+            Name = e.Name,
+            Status = e.Status.ToString(),
+            Duration = e.Duration,
+            Description = e.Description,
+            Tags = e.Tags,
+            Exception = app.Environment.IsDevelopment() ? e.Exception : null
+        })
+    };
+
+    var statusCode = snapshot.OverallStatus == Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy
+        ? StatusCodes.Status503ServiceUnavailable
+        : StatusCodes.Status200OK;
+
+    return Results.Json(response, statusCode: statusCode);
 });
 
 // Data freshness detail endpoint
-app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, CancellationToken ct) =>
+app.MapGet("/health/data-currency", async (IDataSyncStatusService svc, CancellationToken ct) =>
 {
-    var freshness = await svc.GetAllFreshnessAsync(ct);
+    var freshness = await svc.GetAllCurrencyAsync(ct);
     var staleCount = freshness.Count(f => !f.IsFresh);
     var overallStatus = staleCount == 0 ? "healthy"
         : freshness.Any(f => f.Severity == "critical") ? "critical"
         : freshness.Any(f => f.Severity == "warning") ? "degraded"
         : "info";
 
-    return Results.Ok(new DataFreshnessResponse
+    return Results.Ok(new DataCurrencyResponse
     {
         CheckedAt = DateTime.UtcNow,
         OverallStatus = overallStatus,
-        Summary = new DataFreshnessSummary
+        Summary = new DataCurrencySummary
         {
             Total = freshness.Count,
             Fresh = freshness.Count(f => f.IsFresh),
@@ -276,36 +304,4 @@ app.MapGet("/health/data-freshness", async (IDataSyncStatusService svc, Cancella
     });
 });
 
-// Full status page — all checks including external dependencies.
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    ResultStatusCodes =
-    {
-        [HealthStatus.Healthy] = StatusCodes.Status200OK,
-        [HealthStatus.Degraded] = StatusCodes.Status200OK,
-        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
-    },
-    ResponseWriter = WriteHealthResponse
-});
-
-async Task WriteHealthResponse(HttpContext context, HealthReport report)
-{
-    context.Response.ContentType = "application/json";
-    var result = new HealthCheckResponse
-    {
-        Status = report.Status.ToString(),
-        Version = assemblyVersion,
-        TotalDuration = report.TotalDuration.TotalMilliseconds,
-        Checks = report.Entries.Select(e => new HealthCheckEntry
-        {
-            Name = e.Key,
-            Status = e.Value.Status.ToString(),
-            Duration = e.Value.Duration.TotalMilliseconds,
-            Description = e.Value.Description,
-            Tags = e.Value.Tags,
-            Exception = app.Environment.IsDevelopment() ? e.Value.Exception?.Message : null
-        })
-    };
-    await context.Response.WriteAsJsonAsync(result);
-}
 await app.RunAsync();

@@ -293,7 +293,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 50, lastSync: null));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -311,7 +311,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 100, lastSync: DateTime.UtcNow.AddMinutes(-50)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -326,7 +326,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 100, lastSync: DateTime.UtcNow.AddMinutes(-120)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -341,7 +341,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 100, lastSync: DateTime.UtcNow.AddMinutes(-170)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -356,7 +356,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 100, lastSync: DateTime.UtcNow.AddMinutes(-250)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -373,7 +373,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 1000, lastSync: DateTime.UtcNow.AddMinutes(-1001)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Single().Severity.Should().Be("info");
@@ -388,7 +388,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 1000, lastSync: DateTime.UtcNow.AddMinutes(-1501)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Single().Severity.Should().Be("warning");
@@ -403,7 +403,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 1000, lastSync: DateTime.UtcNow.AddMinutes(-2001)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Single().Severity.Should().Be("critical");
@@ -418,7 +418,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(status);
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -434,7 +434,7 @@ public class DataSyncStatusServiceTests : IDisposable
         SeedStatus(MakeTimeBased("Metar", threshold: 200, lastSync: DateTime.UtcNow.AddMinutes(-50)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -452,7 +452,7 @@ public class DataSyncStatusServiceTests : IDisposable
             lastAlertSent: alertTime, lastAlertSeverity: "warning"));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -472,7 +472,7 @@ public class DataSyncStatusServiceTests : IDisposable
             lastSync: DateTime.UtcNow.AddDays(-1)));
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -495,7 +495,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -520,7 +520,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -544,7 +544,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -568,7 +568,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -592,7 +592,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -616,7 +616,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Single().Severity.Should().Be("warning");
@@ -637,7 +637,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Single().Severity.Should().Be("critical");
@@ -659,7 +659,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert — cycle date should equal knownDate (since <1000 days elapsed)
         var result = results.Single();
@@ -681,7 +681,7 @@ public class DataSyncStatusServiceTests : IDisposable
         });
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         var result = results.Single();
@@ -758,7 +758,7 @@ public class DataSyncStatusServiceTests : IDisposable
         // No cycle seeded → cycle-based gets "warning" (no cycle found)
 
         // Act
-        var results = await _service.GetAllFreshnessAsync();
+        var results = await _service.GetAllCurrencyAsync();
 
         // Assert
         results.Should().HaveCount(2);

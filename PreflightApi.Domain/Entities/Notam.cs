@@ -58,7 +58,7 @@ public class Notam
     /// <summary>
     /// ICAO series letter (e.g., "A", "B", "C")
     /// </summary>
-    [Column("series", TypeName = "varchar(2)")]
+    [Column("series", TypeName = "varchar(10)")]
     public string? Series { get; set; }
 
     /// <summary>

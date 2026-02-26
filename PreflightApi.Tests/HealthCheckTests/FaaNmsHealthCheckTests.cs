@@ -59,7 +59,7 @@ public class FaaNmsHealthCheckTests
 
         // Assert
         result.Status.Should().Be(HealthStatus.Healthy);
-        result.Description.Should().Contain("401");
+        result.Description.Should().Contain("reachable");
     }
 
     [Fact]

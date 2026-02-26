@@ -1,6 +1,6 @@
 using PreflightApi.Domain.Constants;
 
-namespace PreflightApi.API;
+namespace PreflightApi.API.Middleware;
 
 public static class DataRouteMapping
 {

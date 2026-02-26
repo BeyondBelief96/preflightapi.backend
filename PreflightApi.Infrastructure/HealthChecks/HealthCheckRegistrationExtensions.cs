@@ -34,10 +34,10 @@ public static class HealthCheckRegistrationExtensions
             tags: new[] { "external" },
             timeout: TimeSpan.FromSeconds(5));
 
-        builder.AddCheck<DataFreshnessHealthCheck>(
-            "data-freshness",
+        builder.AddCheck<DataCurrencyHealthCheck>(
+            "data-currency",
             failureStatus: HealthStatus.Degraded,
-            tags: new[] { "ready", "data-freshness" },
+            tags: new[] { "ready", "data-currency" },
             timeout: TimeSpan.FromSeconds(10));
 
         return builder;

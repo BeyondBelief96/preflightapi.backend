@@ -9,28 +9,28 @@ using Xunit;
 
 namespace PreflightApi.Tests.HealthCheckTests;
 
-public class DataFreshnessHealthCheckTests
+public class DataCurrencyHealthCheckTests
 {
     private readonly IDataSyncStatusService _syncService;
-    private readonly DataFreshnessHealthCheck _healthCheck;
+    private readonly DataCurrencyHealthCheck _healthCheck;
 
-    public DataFreshnessHealthCheckTests()
+    public DataCurrencyHealthCheckTests()
     {
         _syncService = Substitute.For<IDataSyncStatusService>();
-        _healthCheck = new DataFreshnessHealthCheck(_syncService);
+        _healthCheck = new DataCurrencyHealthCheck(_syncService);
     }
 
     private HealthCheckContext CreateContext()
     {
         return new HealthCheckContext
         {
-            Registration = new HealthCheckRegistration("data-freshness", _healthCheck, null, null)
+            Registration = new HealthCheckRegistration("data-currency", _healthCheck, null, null)
         };
     }
 
-    private static DataFreshnessResult MakeResult(string syncType, bool isFresh, string severity = "none")
+    private static DataCurrencyResult MakeResult(string syncType, bool isFresh, string severity = "none")
     {
-        return new DataFreshnessResult
+        return new DataCurrencyResult
         {
             SyncType = syncType,
             IsFresh = isFresh,
@@ -45,8 +45,8 @@ public class DataFreshnessHealthCheckTests
     public async Task CheckHealth_AllFresh_ReturnsHealthy()
     {
         // Arrange
-        _syncService.GetAllFreshnessAsync(Arg.Any<CancellationToken>())
-            .Returns(new List<DataFreshnessResult>
+        _syncService.GetAllCurrencyAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<DataCurrencyResult>
             {
                 MakeResult("Metar", isFresh: true),
                 MakeResult("Taf", isFresh: true)
@@ -64,8 +64,8 @@ public class DataFreshnessHealthCheckTests
     public async Task CheckHealth_SomeStale_ReturnsDegraded()
     {
         // Arrange
-        _syncService.GetAllFreshnessAsync(Arg.Any<CancellationToken>())
-            .Returns(new List<DataFreshnessResult>
+        _syncService.GetAllCurrencyAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<DataCurrencyResult>
             {
                 MakeResult("Metar", isFresh: true),
                 MakeResult("Taf", isFresh: false, severity: "warning")
@@ -76,15 +76,16 @@ public class DataFreshnessHealthCheckTests
 
         // Assert
         result.Status.Should().Be(HealthStatus.Degraded);
-        result.Description.Should().Contain("Taf");
+        result.Description.Should().Contain("1 data source is stale");
+        result.Description.Should().Contain("Data Currency");
     }
 
     [Fact]
-    public async Task CheckHealth_StaleTypesIncludedInData()
+    public async Task CheckHealth_MultipleStale_ShowsCount()
     {
         // Arrange
-        _syncService.GetAllFreshnessAsync(Arg.Any<CancellationToken>())
-            .Returns(new List<DataFreshnessResult>
+        _syncService.GetAllCurrencyAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<DataCurrencyResult>
             {
                 MakeResult("Metar", isFresh: false, severity: "warning"),
                 MakeResult("Taf", isFresh: false, severity: "critical")
@@ -95,15 +96,15 @@ public class DataFreshnessHealthCheckTests
 
         // Assert
         result.Status.Should().Be(HealthStatus.Degraded);
-        result.Data.Should().ContainKey("Metar");
-        result.Data.Should().ContainKey("Taf");
+        result.Description.Should().Contain("2 data sources are stale");
+        result.Description.Should().Contain("Data Currency");
     }
 
     [Fact]
     public async Task CheckHealth_ServiceThrows_ReturnsDegraded()
     {
         // Arrange
-        _syncService.GetAllFreshnessAsync(Arg.Any<CancellationToken>())
+        _syncService.GetAllCurrencyAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("DB error"));
 
         // Act

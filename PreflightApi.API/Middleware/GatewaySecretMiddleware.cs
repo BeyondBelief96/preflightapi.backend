@@ -35,7 +35,7 @@ public class GatewaySecretMiddleware
 
         // Allow Azure platform health probes, OpenAPI, and Swagger through without the secret.
         // /health/live and /health/ready are lightweight probes used by Azure App Service.
-        // Other /health endpoints (e.g. /health, /health/data-freshness) require the secret.
+        // Other /health endpoints (e.g. /health, /health/data-currency) require the secret.
         if (context.Request.Path.StartsWithSegments("/health/live") ||
             context.Request.Path.StartsWithSegments("/health/ready") ||
             context.Request.Path.StartsWithSegments("/openapi") ||

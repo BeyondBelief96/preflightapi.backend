@@ -31,11 +31,11 @@ public class FaaNmsHealthCheck : IHealthCheck
             using var request = new HttpRequestMessage(HttpMethod.Head, _healthCheckUrl);
             using var response = await client.SendAsync(request, cancellationToken);
 
-            return HealthCheckResult.Healthy($"FAA NMS API is reachable (HTTP {(int)response.StatusCode}).");
+            return HealthCheckResult.Healthy("FAA NOTAM Management Service is reachable.");
         }
         catch (Exception ex)
         {
-            return HealthCheckResult.Degraded("FAA NMS API is unreachable.", ex);
+            return HealthCheckResult.Degraded("FAA NOTAM Management Service is unreachable.", ex);
         }
     }
 }
