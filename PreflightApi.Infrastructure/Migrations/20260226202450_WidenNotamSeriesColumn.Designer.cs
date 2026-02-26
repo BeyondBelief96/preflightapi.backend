@@ -1436,7 +1436,7 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnName("notam_year");
 
                     b.Property<string>("Series")
-                        .HasMaxLength(2)
+                        .HasMaxLength(10)
                         .HasColumnType("varchar(10)")
                         .HasColumnName("series");
 

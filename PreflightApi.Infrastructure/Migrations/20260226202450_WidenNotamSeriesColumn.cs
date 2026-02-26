@@ -14,7 +14,7 @@ namespace PreflightApi.Infrastructure.Migrations
                 name: "series",
                 table: "notams",
                 type: "varchar(10)",
-                maxLength: 2,
+                maxLength: 10,
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "varchar(2)",
