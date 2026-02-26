@@ -73,7 +73,7 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        public async Task<IReadOnlyList<DataFreshnessResult>> GetAllFreshnessAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<DataCurrencyResult>> GetAllCurrencyAsync(CancellationToken ct = default)
         {
             var statuses = await _dbContext.DataSyncStatuses.AsNoTracking().ToListAsync(ct);
             var now = DateTime.UtcNow;
@@ -84,7 +84,7 @@ namespace PreflightApi.Infrastructure.Services
                 c => c.PublicationType.ToString(),
                 c => c);
 
-            var results = new List<DataFreshnessResult>(statuses.Count);
+            var results = new List<DataCurrencyResult>(statuses.Count);
 
             foreach (var status in statuses)
             {
@@ -138,13 +138,13 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        private static DataFreshnessResult EvaluateTimeBased(DataSyncStatus status, DateTime now)
+        private static DataCurrencyResult EvaluateTimeBased(DataSyncStatus status, DateTime now)
         {
             var threshold = status.StalenessThresholdMinutes ?? 60;
 
             if (status.LastSuccessfulSyncUtc == null)
             {
-                return new DataFreshnessResult
+                return new DataCurrencyResult
                 {
                     SyncType = status.SyncType,
                     IsFresh = false,
@@ -193,7 +193,7 @@ namespace PreflightApi.Infrastructure.Services
                 message = $"{status.SyncType} is critically stale ({ageMinutes:F0}m old, threshold {threshold}m).";
             }
 
-            return new DataFreshnessResult
+            return new DataCurrencyResult
             {
                 SyncType = status.SyncType,
                 IsFresh = isFresh,
@@ -210,11 +210,11 @@ namespace PreflightApi.Infrastructure.Services
             };
         }
 
-        private static DataFreshnessResult EvaluateCycleBased(DataSyncStatus status, DateTime now, FaaPublicationCycle? cycle)
+        private static DataCurrencyResult EvaluateCycleBased(DataSyncStatus status, DateTime now, FaaPublicationCycle? cycle)
         {
             if (cycle == null)
             {
-                return new DataFreshnessResult
+                return new DataCurrencyResult
                 {
                     SyncType = status.SyncType,
                     IsFresh = false,
@@ -234,7 +234,7 @@ namespace PreflightApi.Infrastructure.Services
 
             if (status.LastSuccessfulSyncUtc == null)
             {
-                return new DataFreshnessResult
+                return new DataCurrencyResult
                 {
                     SyncType = status.SyncType,
                     IsFresh = false,
@@ -253,7 +253,7 @@ namespace PreflightApi.Infrastructure.Services
             // Fresh if synced after current cycle started
             if (status.LastSuccessfulSyncUtc >= currentCycleDate)
             {
-                return new DataFreshnessResult
+                return new DataCurrencyResult
                 {
                     SyncType = status.SyncType,
                     IsFresh = true,
@@ -292,7 +292,7 @@ namespace PreflightApi.Infrastructure.Services
                 message = $"{status.SyncType} is {daysPast:F1} days past cycle {currentCycleDate:yyyy-MM-dd} without update.";
             }
 
-            return new DataFreshnessResult
+            return new DataCurrencyResult
             {
                 SyncType = status.SyncType,
                 IsFresh = false,

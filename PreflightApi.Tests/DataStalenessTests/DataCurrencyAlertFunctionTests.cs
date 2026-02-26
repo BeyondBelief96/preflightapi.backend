@@ -12,15 +12,15 @@ using Xunit;
 
 namespace PreflightApi.Tests.DataStalenessTests;
 
-public class DataFreshnessAlertFunctionTests
+public class DataCurrencyAlertFunctionTests
 {
     private readonly IDataSyncStatusService _syncService;
     private readonly IEmailNotificationService _emailService;
     private readonly ResendSettings _settings;
-    private readonly DataFreshnessAlertFunction _function;
+    private readonly DataCurrencyAlertFunction _function;
     private readonly FunctionContext _context;
 
-    public DataFreshnessAlertFunctionTests()
+    public DataCurrencyAlertFunctionTests()
     {
         _syncService = Substitute.For<IDataSyncStatusService>();
         _emailService = Substitute.For<IEmailNotificationService>();
@@ -29,7 +29,7 @@ public class DataFreshnessAlertFunctionTests
         var loggerFactory = Substitute.For<ILoggerFactory>();
         loggerFactory.CreateLogger(Arg.Any<string>()).Returns(Substitute.For<ILogger>());
 
-        _function = new DataFreshnessAlertFunction(
+        _function = new DataCurrencyAlertFunction(
             _syncService,
             _emailService,
             Options.Create(_settings),
@@ -40,7 +40,7 @@ public class DataFreshnessAlertFunctionTests
 
     #region Helpers
 
-    private static DataFreshnessResult MakeResult(
+    private static DataCurrencyResult MakeResult(
         string syncType,
         string severity = "none",
         bool isFresh = true,
@@ -48,7 +48,7 @@ public class DataFreshnessAlertFunctionTests
         DateTime? lastAlertSentUtc = null,
         string? lastAlertSeverity = null)
     {
-        return new DataFreshnessResult
+        return new DataCurrencyResult
         {
             SyncType = syncType,
             Severity = severity,
@@ -61,15 +61,15 @@ public class DataFreshnessAlertFunctionTests
         };
     }
 
-    private void SetupFreshness(params DataFreshnessResult[] results)
+    private void SetupCurrency(params DataCurrencyResult[] results)
     {
-        _syncService.GetAllFreshnessAsync(Arg.Any<CancellationToken>())
+        _syncService.GetAllCurrencyAsync(Arg.Any<CancellationToken>())
             .Returns(results.ToList().AsReadOnly());
     }
 
     private static bool InvokeSeverityEscalated(string? previous, string current)
     {
-        var method = typeof(DataFreshnessAlertFunction)
+        var method = typeof(DataCurrencyAlertFunction)
             .GetMethod("SeverityEscalated", BindingFlags.NonPublic | BindingFlags.Static);
         return (bool)method!.Invoke(null, new object?[] { previous, current })!;
     }
@@ -82,7 +82,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_AllFresh_NoAlertsSent()
     {
         // Arrange
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true, lastSuccessfulSync: DateTime.UtcNow),
             MakeResult("Taf", "none", isFresh: true, lastSuccessfulSync: DateTime.UtcNow));
 
@@ -91,14 +91,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_StaleWithNoAlertHistory_SendsAlert()
     {
         // Arrange — severity=warning, no prior alert
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3),
                 lastAlertSentUtc: null, lastAlertSeverity: null));
@@ -108,7 +108,7 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.Received(1).SendStalenessAlertAsync(
-            Arg.Is<IReadOnlyList<DataFreshnessResult>>(l => l.Count == 1 && l[0].SyncType == "Metar"),
+            Arg.Is<IReadOnlyList<DataCurrencyResult>>(l => l.Count == 1 && l[0].SyncType == "Metar"),
             Arg.Any<CancellationToken>());
     }
 
@@ -116,7 +116,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_StaleWithinQuietPeriod_DoesNotSendAlert()
     {
         // Arrange — alerted 10 min ago, quiet period = 60 min, same severity
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3),
                 lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
@@ -127,14 +127,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_StaleQuietPeriodExpired_SendsAlert()
     {
         // Arrange — alerted 70 min ago, quiet period = 60 min
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3),
                 lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-70),
@@ -145,14 +145,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.Received(1).SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_SeverityEscalated_SendsAlertEvenDuringQuietPeriod()
     {
         // Arrange — was warning, now critical, alerted 10 min ago (within quiet period)
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "critical", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-5),
                 lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
@@ -163,14 +163,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.Received(1).SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_SeverityDeescalated_DoesNotSendDuringQuietPeriod()
     {
         // Arrange — was critical, now warning, alerted 10 min ago (within quiet period)
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3),
                 lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
@@ -181,14 +181,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_NeverSyncedType_SkipsAlert()
     {
         // Arrange — severity=critical but LastSuccessfulSync=null (fresh deploy)
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "critical", isFresh: false,
                 lastSuccessfulSync: null));
 
@@ -197,14 +197,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_InfoSeverity_DoesNotTriggerAlert()
     {
         // Arrange — severity=info (rank < warning)
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "info", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-1)));
 
@@ -213,14 +213,14 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Run_NoneSeverity_DoesNotTriggerAlert()
     {
         // Arrange
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true, lastSuccessfulSync: DateTime.UtcNow));
 
         // Act
@@ -228,7 +228,7 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -239,7 +239,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_PreviouslyAlertedNowFresh_SendsRecoveryNotice()
     {
         // Arrange — was alerted (warning), now fresh
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true,
                 lastSuccessfulSync: DateTime.UtcNow,
                 lastAlertSentUtc: DateTime.UtcNow.AddHours(-1),
@@ -258,7 +258,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_NeverAlertedAndFresh_NoRecovery()
     {
         // Arrange — fresh, no prior alert
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true,
                 lastSuccessfulSync: DateTime.UtcNow,
                 lastAlertSentUtc: null, lastAlertSeverity: null));
@@ -275,7 +275,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_StillStale_NoRecovery()
     {
         // Arrange — still stale, has prior alert
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3),
                 lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
@@ -297,7 +297,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_AlertSent_UpdatesAlertStateForEachType()
     {
         // Arrange — 2 types need alerts
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3)),
             MakeResult("Taf", "critical", isFresh: false,
@@ -315,7 +315,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_RecoverySent_ClearsAlertStateForEachType()
     {
         // Arrange — 2 types recovered
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true,
                 lastSuccessfulSync: DateTime.UtcNow,
                 lastAlertSeverity: "warning"),
@@ -339,7 +339,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_MixedStaleAndRecovered_SendsBothAlertAndRecovery()
     {
         // Arrange
-        SetupFreshness(
+        SetupCurrency(
             // Stale type needing alert (no prior alert)
             MakeResult("Metar", "warning", isFresh: false,
                 lastSuccessfulSync: DateTime.UtcNow.AddHours(-3)),
@@ -353,7 +353,7 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert
         await _emailService.Received(1).SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
         await _emailService.Received(1).SendRecoveryNoticeAsync(
             Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
     }
@@ -362,7 +362,7 @@ public class DataFreshnessAlertFunctionTests
     public async Task Run_NoActionNeeded_LogsNoAction()
     {
         // Arrange — all fresh, no prior alerts
-        SetupFreshness(
+        SetupCurrency(
             MakeResult("Metar", "none", isFresh: true, lastSuccessfulSync: DateTime.UtcNow),
             MakeResult("Taf", "none", isFresh: true, lastSuccessfulSync: DateTime.UtcNow));
 
@@ -371,7 +371,7 @@ public class DataFreshnessAlertFunctionTests
 
         // Assert — no emails sent
         await _emailService.DidNotReceive().SendStalenessAlertAsync(
-            Arg.Any<IReadOnlyList<DataFreshnessResult>>(), Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<DataCurrencyResult>>(), Arg.Any<CancellationToken>());
         await _emailService.DidNotReceive().SendRecoveryNoticeAsync(
             Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
     }

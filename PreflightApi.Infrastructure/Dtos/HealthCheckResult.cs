@@ -15,6 +15,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public required string Status { get; init; }
         public required string Version { get; init; }
         public double TotalDuration { get; init; }
+        public DateTime? LastCheckedAt { get; init; }
         public IEnumerable<HealthCheckEntry> Checks { get; init; } = [];
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.Infrastructure.Settings;
+using PreflightApi.Infrastructure.Utilities;
 using RichardSzalay.MockHttp;
 using Xunit;
 
@@ -16,7 +17,7 @@ public class FaaNmsHealthCheckTests
     private static FaaNmsHealthCheck CreateHealthCheck(MockHttpMessageHandler mockHttp)
     {
         var factory = Substitute.For<IHttpClientFactory>();
-        factory.CreateClient(Arg.Any<string>()).Returns(mockHttp.ToHttpClient());
+        factory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient).Returns(mockHttp.ToHttpClient());
 
         var settings = Options.Create(new NmsSettings { AuthBaseUrl = AuthBaseUrl });
         return new FaaNmsHealthCheck(factory, settings);
@@ -59,7 +60,7 @@ public class FaaNmsHealthCheckTests
 
         // Assert
         result.Status.Should().Be(HealthStatus.Healthy);
-        result.Description.Should().Contain("401");
+        result.Description.Should().Contain("reachable");
     }
 
     [Fact]
