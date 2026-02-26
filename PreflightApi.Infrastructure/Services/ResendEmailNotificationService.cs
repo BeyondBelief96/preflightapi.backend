@@ -1,28 +1,25 @@
+using System.Net.Http.Json;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
-using Resend;
 
 namespace PreflightApi.Infrastructure.Services
 {
     public class ResendEmailNotificationService : IEmailNotificationService
     {
-        private readonly IResend _resend;
-        private readonly IClerkUserService _clerkUserService;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ResendSettings _settings;
         private readonly ILogger<ResendEmailNotificationService> _logger;
 
         public ResendEmailNotificationService(
-            IResend resend,
-            IClerkUserService clerkUserService,
+            IHttpClientFactory httpClientFactory,
             IOptions<ResendSettings> settings,
             ILogger<ResendEmailNotificationService> logger)
         {
-            _resend = resend;
-            _clerkUserService = clerkUserService;
+            _httpClientFactory = httpClientFactory;
             _settings = settings.Value;
             _logger = logger;
         }
@@ -35,17 +32,10 @@ namespace PreflightApi.Infrastructure.Services
                 return;
             }
 
-            var recipients = await _clerkUserService.GetAllUserEmailsAsync(ct);
-            if (recipients.Count == 0)
-            {
-                _logger.LogWarning("No user emails found — skipping staleness alert");
-                return;
-            }
-
             var subject = $"[PreflightApi] Data staleness alert — {staleTypes.Count} type(s) stale";
             var html = BuildStalenessHtml(staleTypes);
 
-            await SendToAllAsync(recipients, subject, html, ct);
+            await SendBroadcastAsync(subject, html, ct);
         }
 
         public async Task SendRecoveryNoticeAsync(IReadOnlyList<string> recoveredTypes, CancellationToken ct = default)
@@ -56,50 +46,39 @@ namespace PreflightApi.Infrastructure.Services
                 return;
             }
 
-            var recipients = await _clerkUserService.GetAllUserEmailsAsync(ct);
-            if (recipients.Count == 0)
-            {
-                _logger.LogWarning("No user emails found — skipping recovery notice");
-                return;
-            }
-
             var typeList = string.Join(", ", recoveredTypes);
             var subject = $"[PreflightApi] Data recovered — {typeList}";
             var html = BuildRecoveryHtml(recoveredTypes);
 
-            await SendToAllAsync(recipients, subject, html, ct);
+            await SendBroadcastAsync(subject, html, ct);
         }
 
-        private async Task SendToAllAsync(IReadOnlyList<string> recipients, string subject, string html, CancellationToken ct)
+        private async Task SendBroadcastAsync(string subject, string html, CancellationToken ct)
         {
-            foreach (var email in recipients)
+            var client = _httpClientFactory.CreateClient("Resend");
+
+            var payload = new
             {
-                try
-                {
-                    ct.ThrowIfCancellationRequested();
+                name = subject,
+                segment_id = _settings.DataAlertsSegmentId,
+                topic_id = _settings.DataAlertsTopicId,
+                from = _settings.FromAddress,
+                reply_to = _settings.ReplyToAddress,
+                subject,
+                html,
+                send = true
+            };
 
-                    var message = new EmailMessage
-                    {
-                        From = _settings.FromAddress,
-                        Subject = subject,
-                        HtmlBody = html,
-                        ReplyTo = _settings.ReplyToAddress
-                    };
-                    message.To.Add(email);
+            var response = await client.PostAsJsonAsync("/broadcasts", payload, ct);
 
-                    await _resend.EmailSendAsync(message, ct);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to send alert email to {Email}", email);
-                }
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(ct);
+                throw new HttpRequestException(
+                    $"Resend broadcast API returned {(int)response.StatusCode}: {body}");
             }
 
-            _logger.LogInformation("Sent '{Subject}' to {Count} recipient(s)", subject, recipients.Count);
+            _logger.LogInformation("Sent broadcast '{Subject}' via Resend", subject);
         }
 
         private static string BuildStalenessHtml(IReadOnlyList<DataFreshnessResult> staleTypes)
@@ -135,6 +114,7 @@ namespace PreflightApi.Infrastructure.Services
 
             sb.AppendLine("</table>");
             sb.AppendLine($"<p style='color:#999; font-size:12px;'>Alert generated at {DateTime.UtcNow:u}</p>");
+            sb.AppendLine("<p style='color:#999; font-size:12px;'><a href=\"{{{RESEND_UNSUBSCRIBE_URL}}}\">Unsubscribe from data alerts</a></p>");
             sb.AppendLine("</body></html>");
             return sb.ToString();
         }
@@ -152,6 +132,7 @@ namespace PreflightApi.Infrastructure.Services
             }
             sb.AppendLine("</ul>");
             sb.AppendLine($"<p style='color:#999; font-size:12px;'>Notice generated at {DateTime.UtcNow:u}</p>");
+            sb.AppendLine("<p style='color:#999; font-size:12px;'><a href=\"{{{RESEND_UNSUBSCRIBE_URL}}}\">Unsubscribe from data alerts</a></p>");
             sb.AppendLine("</body></html>");
             return sb.ToString();
         }
