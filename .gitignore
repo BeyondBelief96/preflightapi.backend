@@ -368,3 +368,7 @@ FodyWeavers.xsd
 .env.*
 !.env.example
 /docs/azure-cost-optimization-guide.docx
+
+# Email verification test config and output
+**/testsettings.json
+**/EmailVerificationOutput/

@@ -27,6 +27,9 @@
     <PackageReference Include="Npgsql.NetTopologySuite" Version="9.0.3" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="PreflightApi.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
     <ProjectReference Include="..\PreflightApi.Infrastructure\PreflightApi.Infrastructure.csproj" />
   </ItemGroup>

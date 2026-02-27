@@ -48,7 +48,7 @@ jobs:
           dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj
           --configuration ${{ env.CONFIGURATION }}
           --no-build --verbosity normal
-          --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~BriefingTests.BriefingServiceTests"
+          --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~BriefingTests.BriefingServiceTests&FullyQualifiedName!~EmailVerificationTests"
 
       # Publish API
       - name: Publish API
