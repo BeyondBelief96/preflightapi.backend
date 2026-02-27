@@ -51,6 +51,7 @@ namespace PreflightApi.Infrastructure.Services
         // Health check service → (affected API endpoints, human-readable impact)
         private static readonly Dictionary<string, (string[] Endpoints, string Impact)> HealthCheckInfo = new(StringComparer.OrdinalIgnoreCase)
         {
+            ["api"] = (["All endpoints"], "The API is unreachable. All endpoints are unavailable until connectivity is restored."),
             ["database"] = (["All endpoints"], "All API requests will fail. No aviation data can be served until database connectivity is restored."),
             ["blob-storage"] = (["/chart-supplements", "/terminal-procedures"], "Chart supplement and terminal procedure PDFs cannot be retrieved. Pilots will be unable to view approach plates, departure procedures, or chart supplements."),
             ["noaa-weather"] = (["/metars", "/tafs", "/pireps", "/sigmets", "/g-airmets", "/briefing/route"], "Weather data cannot be refreshed. METARs, TAFs, PIREPs, SIGMETs, and G-AIRMETs will become increasingly stale until the NOAA API recovers."),
