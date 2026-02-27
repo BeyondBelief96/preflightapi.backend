@@ -7,35 +7,51 @@ using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Settings;
-using Resend;
 using Xunit;
 
 namespace PreflightApi.Tests.DataStalenessTests;
 
 public class ResendEmailNotificationServiceTests
 {
-    private readonly IResend _resend;
-    private readonly IClerkUserService _clerkUserService;
+    private readonly IBroadcastService _broadcastService;
+    private readonly ICloudStorageService _cloudStorageService;
     private readonly ResendSettings _settings;
     private readonly ILogger<ResendEmailNotificationService> _logger;
     private readonly ResendEmailNotificationService _service;
 
     public ResendEmailNotificationServiceTests()
     {
-        _resend = Substitute.For<IResend>();
-        _clerkUserService = Substitute.For<IClerkUserService>();
+        _broadcastService = Substitute.For<IBroadcastService>();
+        _cloudStorageService = Substitute.For<ICloudStorageService>();
         _settings = new ResendSettings
         {
             Enabled = true,
             FromAddress = "alerts@test.io",
             ReplyToAddress = "reply@test.io",
-            QuietPeriodMinutes = 60
+            QuietPeriodMinutes = 60,
+            SegmentAllId = "seg-all-123",
+            TopicAlertsId = "topic-alerts-456"
         };
         _logger = Substitute.For<ILogger<ResendEmailNotificationService>>();
 
+        _broadcastService.SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns("broadcast-id-123");
+
+        _cloudStorageService.GeneratePresignedUrlAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan>())
+            .Returns("https://storage.test/branding/logo.png?sig=fake");
+
+        var cloudStorageSettings = new CloudStorageSettings
+        {
+            PreflightApiResourcesContainerName = "preflightapi-resources"
+        };
+
         _service = new ResendEmailNotificationService(
-            _resend,
-            _clerkUserService,
+            _broadcastService,
+            _cloudStorageService,
+            Options.Create(cloudStorageSettings),
             Options.Create(_settings),
             _logger);
     }
@@ -55,12 +71,6 @@ public class ResendEmailNotificationServiceTests
         }).ToList();
     }
 
-    private void SetupRecipients(params string[] emails)
-    {
-        _clerkUserService.GetAllUserEmailsAsync(Arg.Any<CancellationToken>())
-            .Returns(emails.ToList().AsReadOnly());
-    }
-
     private ResendEmailNotificationService CreateDisabledService()
     {
         var disabledSettings = new ResendSettings
@@ -69,7 +79,11 @@ public class ResendEmailNotificationServiceTests
             FromAddress = "alerts@test.io"
         };
         return new ResendEmailNotificationService(
-            _resend, _clerkUserService, Options.Create(disabledSettings), _logger);
+            _broadcastService,
+            _cloudStorageService,
+            Options.Create(new CloudStorageSettings()),
+            Options.Create(disabledSettings),
+            _logger);
     }
 
     #endregion
@@ -77,7 +91,7 @@ public class ResendEmailNotificationServiceTests
     #region SendStalenessAlertAsync
 
     [Fact]
-    public async Task SendStalenessAlert_Disabled_DoesNotSendOrFetchRecipients()
+    public async Task SendStalenessAlert_Disabled_DoesNotSendBroadcast()
     {
         // Arrange
         var service = CreateDisabledService();
@@ -86,91 +100,99 @@ public class ResendEmailNotificationServiceTests
         await service.SendStalenessAlertAsync(MakeStaleTypes(2));
 
         // Assert
-        await _clerkUserService.DidNotReceive().GetAllUserEmailsAsync(Arg.Any<CancellationToken>());
-        await _resend.DidNotReceive().EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        await _broadcastService.DidNotReceive().SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SendStalenessAlert_NoRecipients_LogsWarningAndReturns()
+    public async Task SendStalenessAlert_SendsSingleBroadcast()
     {
-        // Arrange
-        SetupRecipients();
-
         // Act
-        await _service.SendStalenessAlertAsync(MakeStaleTypes(2));
+        await _service.SendStalenessAlertAsync(MakeStaleTypes(3));
 
-        // Assert
-        await _resend.DidNotReceive().EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
-        _logger.Received().Log(
-            LogLevel.Warning,
-            Arg.Any<EventId>(),
-            Arg.Is<object>(o => o.ToString()!.Contains("No user emails found")),
-            Arg.Any<Exception?>(),
-            Arg.Any<Func<object, Exception?, string>>());
+        // Assert — single broadcast call, not per-recipient
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SendStalenessAlert_SendsToAllRecipients()
+    public async Task SendStalenessAlert_UsesCorrectSegmentAndTopic()
     {
-        // Arrange
-        SetupRecipients("a@test.io", "b@test.io", "c@test.io");
-
         // Act
-        await _service.SendStalenessAlertAsync(MakeStaleTypes(2));
+        await _service.SendStalenessAlertAsync(MakeStaleTypes(1));
 
         // Assert
-        await _resend.Received(3).EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            "seg-all-123",
+            "topic-alerts-456",
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task SendStalenessAlert_SubjectContainsCount()
     {
-        // Arrange
-        SetupRecipients("a@test.io");
-
         // Act
         await _service.SendStalenessAlertAsync(MakeStaleTypes(3));
 
         // Assert
-        await _resend.Received(1).EmailSendAsync(
-            Arg.Is<EmailMessage>(m => m.Subject.Contains("3 type(s) stale")),
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("3 type(s) stale")),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SendStalenessAlert_SetsFromAndReplyTo()
+    public async Task SendStalenessAlert_HtmlContainsUnsubscribeLink()
     {
-        // Arrange
-        SetupRecipients("a@test.io");
-
         // Act
         await _service.SendStalenessAlertAsync(MakeStaleTypes(1));
 
         // Assert
-        var call = _resend.ReceivedCalls().Single();
-        var message = (EmailMessage)call.GetArguments()[0]!;
-        message.From.ToString().Should().Contain("alerts@test.io");
-        string.Join(",", message.ReplyTo).Should().Contain("reply@test.io");
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(html => html.Contains("{{{RESEND_UNSUBSCRIBE_URL}}}")),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SendStalenessAlert_OneRecipientFails_OthersStillReceive()
+    public async Task SendStalenessAlert_HtmlContainsSyncTypeAndSeverity()
     {
         // Arrange
-        SetupRecipients("a@test.io", "b@test.io", "c@test.io");
-        var callCount = 0;
-        _resend.When(x => x.EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>()))
-            .Do(_ =>
+        var staleTypes = new List<DataCurrencyResult>
+        {
+            new()
             {
-                if (Interlocked.Increment(ref callCount) == 2)
-                    throw new HttpRequestException("API error");
-            });
+                SyncType = "Metar",
+                Severity = "critical",
+                IsFresh = false,
+                StalenessMode = "TimeBased",
+                Message = "Metar is critically stale",
+                LastSuccessfulSync = DateTime.UtcNow.AddHours(-2)
+            }
+        };
 
         // Act
-        await _service.SendStalenessAlertAsync(MakeStaleTypes(1));
+        await _service.SendStalenessAlertAsync(staleTypes);
 
-        // Assert — all 3 calls were attempted
-        await _resend.Received(3).EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(html => html.Contains("Metar") && html.Contains("critical")),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -187,48 +209,171 @@ public class ResendEmailNotificationServiceTests
         await service.SendRecoveryNoticeAsync(new List<string> { "Metar", "Taf" });
 
         // Assert
-        await _resend.DidNotReceive().EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        await _broadcastService.DidNotReceive().SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SendRecoveryNotice_NoRecipients_LogsWarningAndReturns()
+    public async Task SendRecoveryNotice_SendsSingleBroadcast()
     {
-        // Arrange
-        SetupRecipients();
-
         // Act
-        await _service.SendRecoveryNoticeAsync(new List<string> { "Metar" });
+        await _service.SendRecoveryNoticeAsync(new List<string> { "Metar", "Taf" });
 
         // Assert
-        await _resend.DidNotReceive().EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task SendRecoveryNotice_SendsToAllRecipients()
-    {
-        // Arrange
-        SetupRecipients("a@test.io", "b@test.io");
-
-        // Act
-        await _service.SendRecoveryNoticeAsync(new List<string> { "Metar" });
-
-        // Assert
-        await _resend.Received(2).EmailSendAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task SendRecoveryNotice_SubjectContainsTypeNames()
     {
-        // Arrange
-        SetupRecipients("a@test.io");
-
         // Act
         await _service.SendRecoveryNoticeAsync(new List<string> { "Metar", "Taf" });
 
         // Assert
-        await _resend.Received(1).EmailSendAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.Subject.Contains("Metar") && m.Subject.Contains("Taf")),
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("Metar") && s.Contains("Taf")),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendRecoveryNotice_UsesCorrectSegmentAndTopic()
+    {
+        // Act
+        await _service.SendRecoveryNoticeAsync(new List<string> { "Metar" });
+
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            "seg-all-123",
+            "topic-alerts-456",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendRecoveryNotice_HtmlContainsUnsubscribeLink()
+    {
+        // Act
+        await _service.SendRecoveryNoticeAsync(new List<string> { "Metar" });
+
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(html => html.Contains("{{{RESEND_UNSUBSCRIBE_URL}}}")),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region SendServiceOutageAlertAsync
+
+    [Fact]
+    public async Task SendServiceOutageAlert_Disabled_DoesNotSend()
+    {
+        // Arrange
+        var service = CreateDisabledService();
+        var checks = new List<HealthCheckEntry>
+        {
+            new() { Name = "database", Status = "Unhealthy", Description = "Connection failed" }
+        };
+
+        // Act
+        await service.SendServiceOutageAlertAsync(checks);
+
+        // Assert
+        await _broadcastService.DidNotReceive().SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendServiceOutageAlert_SendsSingleBroadcast()
+    {
+        // Arrange
+        var checks = new List<HealthCheckEntry>
+        {
+            new() { Name = "database", Status = "Unhealthy", Description = "Connection failed" },
+            new() { Name = "blob-storage", Status = "Degraded", Description = "Slow responses" }
+        };
+
+        // Act
+        await _service.SendServiceOutageAlertAsync(checks);
+
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("2 service(s) affected")),
+            Arg.Is<string>(html => html.Contains("database") && html.Contains("blob-storage")),
+            "seg-all-123",
+            "topic-alerts-456",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendServiceOutageAlert_HtmlContainsStatusColors()
+    {
+        // Arrange
+        var checks = new List<HealthCheckEntry>
+        {
+            new() { Name = "database", Status = "Unhealthy", Description = "Down" }
+        };
+
+        // Act
+        await _service.SendServiceOutageAlertAsync(checks);
+
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(html => html.Contains("#991B1B") && html.Contains("Unhealthy")),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region SendServiceRecoveryNoticeAsync
+
+    [Fact]
+    public async Task SendServiceRecoveryNotice_Disabled_DoesNotSend()
+    {
+        // Arrange
+        var service = CreateDisabledService();
+
+        // Act
+        await service.SendServiceRecoveryNoticeAsync(new List<string> { "database" });
+
+        // Assert
+        await _broadcastService.DidNotReceive().SendBroadcastAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendServiceRecoveryNotice_SendsSingleBroadcast()
+    {
+        // Act
+        await _service.SendServiceRecoveryNoticeAsync(new List<string> { "database", "blob-storage" });
+
+        // Assert
+        await _broadcastService.Received(1).SendBroadcastAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("database") && s.Contains("blob-storage")),
+            Arg.Any<string>(),
+            "seg-all-123",
+            "topic-alerts-456",
             Arg.Any<CancellationToken>());
     }
 
@@ -240,9 +385,12 @@ public class ResendEmailNotificationServiceTests
     public async Task SendStalenessAlert_CancellationRequested_Throws()
     {
         // Arrange
-        SetupRecipients("a@test.io", "b@test.io");
         using var cts = new CancellationTokenSource();
         cts.Cancel();
+        _broadcastService.SendBroadcastAsync(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new OperationCanceledException());
 
         // Act
         var act = () => _service.SendStalenessAlertAsync(MakeStaleTypes(1), cts.Token);

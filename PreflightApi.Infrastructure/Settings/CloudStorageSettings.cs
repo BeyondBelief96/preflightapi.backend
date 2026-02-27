@@ -32,6 +32,11 @@ public class CloudStorageSettings
     public string TerminalProceduresContainerName { get; set; } = "terminal-procedures";
 
     /// <summary>
+    /// Container name for shared resources (logos, branding assets, etc.).
+    /// </summary>
+    public string PreflightApiResourcesContainerName { get; set; } = "preflightapi-resources";
+
+    /// <summary>
     /// Use Azure Managed Identity for authentication instead of explicit credentials.
     /// Recommended for production environments.
     /// </summary>
