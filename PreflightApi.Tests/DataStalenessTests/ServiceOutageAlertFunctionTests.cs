@@ -374,7 +374,7 @@ public class ServiceOutageAlertFunctionTests
     #region FetchHealthChecksAsync
 
     [Fact]
-    public async Task FetchHealthChecks_ValidResponse_ReturnsChecks()
+    public async Task FetchHealthChecks_ValidResponse_ReturnsChecksWithSucceeded()
     {
         // Arrange
         SetupHealthResponse(
@@ -382,29 +382,75 @@ public class ServiceOutageAlertFunctionTests
             MakeCheck("blob-storage", "Degraded", "Slow"));
 
         // Act
-        var result = await _function.FetchHealthChecksAsync(CancellationToken.None);
+        var (checks, succeeded) = await _function.FetchHealthChecksAsync(CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(2);
-        result[0].Name.Should().Be("database");
-        result[1].Name.Should().Be("blob-storage");
+        succeeded.Should().BeTrue();
+        checks.Should().HaveCount(2);
+        checks[0].Name.Should().Be("database");
+        checks[1].Name.Should().Be("blob-storage");
     }
 
     [Fact]
-    public async Task FetchHealthChecks_HttpError_ReturnsSyntheticApiCheck()
+    public async Task FetchHealthChecks_HttpError_ReturnsSyntheticApiCheckWithFailed()
     {
         // Arrange
         _mockHttp.When(HttpMethod.Get, "https://api.example.com/health")
             .Respond(HttpStatusCode.InternalServerError);
 
         // Act
-        var result = await _function.FetchHealthChecksAsync(CancellationToken.None);
+        var (checks, succeeded) = await _function.FetchHealthChecksAsync(CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(1);
-        result[0].Name.Should().Be("api");
-        result[0].Status.Should().Be("Unhealthy");
-        result[0].Description.Should().Contain("Health endpoint unreachable");
+        succeeded.Should().BeFalse();
+        checks.Should().HaveCount(1);
+        checks[0].Name.Should().Be("api");
+        checks[0].Status.Should().Be("Unhealthy");
+        checks[0].Description.Should().Contain("Health endpoint unreachable");
+    }
+
+    #endregion
+
+    #region Orphaned Recovery (synthetic "api" check)
+
+    [Fact]
+    public async Task Run_SyntheticApiAlertThenApiRecovers_SendsRecoveryForApi()
+    {
+        // Arrange — API is now reachable and healthy, but prior state has a synthetic "api" alert
+        SetupHealthResponse(
+            MakeCheck("database", "Healthy"),
+            MakeCheck("blob-storage", "Healthy"));
+        SetupPriorStates(MakePriorState("api", "Unhealthy",
+            lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
+            lastAlertSeverity: "unhealthy"));
+
+        // Act
+        await _function.Run(null!, _context);
+
+        // Assert — recovery sent for orphaned "api" service
+        await _emailService.Received(1).SendServiceRecoveryNoticeAsync(
+            Arg.Is<IReadOnlyList<string>>(list =>
+                list.Count == 1 && list[0] == "api"),
+            Arg.Any<CancellationToken>());
+        await _alertStateService.Received(1).ClearAlertStateAsync("api", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Run_SyntheticApiAlertAndApiStillDown_NoOrphanedRecovery()
+    {
+        // Arrange — API is still unreachable, so synthetic "api" check is still returned
+        _mockHttp.When(HttpMethod.Get, "https://api.example.com/health")
+            .Respond(HttpStatusCode.ServiceUnavailable);
+        SetupPriorStates(MakePriorState("api", "Unhealthy",
+            lastAlertSentUtc: DateTime.UtcNow.AddMinutes(-10),
+            lastAlertSeverity: "unhealthy"));
+
+        // Act
+        await _function.Run(null!, _context);
+
+        // Assert — no recovery since fetch failed (api still in the returned checks)
+        await _emailService.DidNotReceive().SendServiceRecoveryNoticeAsync(
+            Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
     }
 
     #endregion

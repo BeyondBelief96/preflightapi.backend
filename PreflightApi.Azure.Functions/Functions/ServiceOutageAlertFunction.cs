@@ -46,7 +46,7 @@ public class ServiceOutageAlertFunction
         _logger.LogInformation("ServiceOutageAlertFunction executed at: {Time}", DateTime.UtcNow);
 
         var ct = context.CancellationToken;
-        var healthChecks = await FetchHealthChecksAsync(ct);
+        var (healthChecks, fetchSucceeded) = await FetchHealthChecksAsync(ct);
         var priorStates = await _alertStateService.GetAllAsync(ct);
         var priorStateMap = priorStates.ToDictionary(s => s.ServiceName);
         var now = DateTime.UtcNow;
@@ -54,9 +54,11 @@ public class ServiceOutageAlertFunction
 
         var servicesNeedingAlert = new List<HealthCheckEntry>();
         var recoveredServices = new List<string>();
+        var checkedServiceNames = new HashSet<string>();
 
         foreach (var check in healthChecks)
         {
+            checkedServiceNames.Add(check.Name);
             var severity = MapStatusToSeverity(check.Status);
             var isHealthy = severity == "none";
 
@@ -79,6 +81,20 @@ public class ServiceOutageAlertFunction
             {
                 // Was alerted before and is now healthy → recovery
                 recoveredServices.Add(check.Name);
+            }
+        }
+
+        // Detect recovery for services that were previously alerted but are no longer
+        // in the health response (e.g., synthetic "api" check when endpoint was unreachable).
+        // If the fetch succeeded, these orphaned alert states represent recovered services.
+        if (fetchSucceeded)
+        {
+            foreach (var (serviceName, state) in priorStateMap)
+            {
+                if (state.LastAlertSeverity != null && !checkedServiceNames.Contains(serviceName))
+                {
+                    recoveredServices.Add(serviceName);
+                }
             }
         }
 
@@ -119,8 +135,22 @@ public class ServiceOutageAlertFunction
         }
     }
 
-    internal async Task<IReadOnlyList<HealthCheckEntry>> FetchHealthChecksAsync(CancellationToken ct)
+    internal async Task<(IReadOnlyList<HealthCheckEntry> Checks, bool Succeeded)> FetchHealthChecksAsync(CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(_settings.HealthEndpointUrl))
+        {
+            _logger.LogError("HealthEndpointUrl is not configured — cannot check service health");
+            return (new List<HealthCheckEntry>
+            {
+                new()
+                {
+                    Name = "api",
+                    Status = "Unhealthy",
+                    Description = "HealthEndpointUrl is not configured in ResendSettings"
+                }
+            }, false);
+        }
+
         try
         {
             var response = await _httpClient.GetAsync(_settings.HealthEndpointUrl, ct);
@@ -128,16 +158,16 @@ public class ServiceOutageAlertFunction
 
             var healthResponse = await response.Content.ReadFromJsonAsync<HealthCheckResponse>(ct);
             if (healthResponse?.Checks == null)
-                return [];
+                return ([], true);
 
-            return healthResponse.Checks.ToList();
+            return (healthResponse.Checks.ToList(), true);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to fetch health checks from {Url} — treating API as unhealthy",
                 _settings.HealthEndpointUrl);
 
-            return new List<HealthCheckEntry>
+            return (new List<HealthCheckEntry>
             {
                 new()
                 {
@@ -145,7 +175,7 @@ public class ServiceOutageAlertFunction
                     Status = "Unhealthy",
                     Description = $"Health endpoint unreachable: {ex.Message}"
                 }
-            };
+            }, false);
         }
     }
 
