@@ -44,6 +44,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<DataSyncStatus> DataSyncStatuses => Set<DataSyncStatus>();
 
+        public virtual DbSet<ServiceHealthAlertState> ServiceHealthAlertStates => Set<ServiceHealthAlertState>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,0 +1,8 @@
+{
+  "EmailVerification": {
+    "SendLiveEmails": false,
+    "TestEmailAddress": "your-email@example.com",
+    "ResendApiToken": "re_your_api_token_here",
+    "FromAddress": "PreflightAPI Test <alerts@contact.preflightapi.io>"
+  }
+}

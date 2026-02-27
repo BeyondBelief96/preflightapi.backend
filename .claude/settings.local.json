@@ -61,7 +61,10 @@
       "Bash(gh auth:*)",
       "WebFetch(domain:modelcontextprotocol.github.io)",
       "WebFetch(domain:www.nuget.org)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:resend.com)",
+      "Bash(dotnet:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []
