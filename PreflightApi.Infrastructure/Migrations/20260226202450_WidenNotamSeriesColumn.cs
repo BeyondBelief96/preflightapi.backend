@@ -33,7 +33,7 @@ namespace PreflightApi.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "varchar(10)",
-                oldMaxLength: 2,
+                oldMaxLength: 10,
                 oldNullable: true);
         }
     }

@@ -95,26 +95,33 @@ public class HealthSnapshotStore : IHealthSnapshotStore
                 return rawStatus;
             }
 
-            if (rawStatus == HealthStatus.Healthy)
+            if (rawStatus > _smoothedStatus)
             {
+                // Raw status is better than smoothed — recovery signal
                 _consecutiveSuccesses++;
                 _consecutiveFailures = 0;
 
                 if (_consecutiveSuccesses >= recoveryThreshold)
                 {
-                    _smoothedStatus = HealthStatus.Healthy;
+                    _smoothedStatus = rawStatus;
                 }
             }
-            else
+            else if (rawStatus < _smoothedStatus)
             {
+                // Raw status is worse than smoothed — degradation signal
                 _consecutiveFailures++;
                 _consecutiveSuccesses = 0;
 
                 if (_consecutiveFailures >= failureThreshold)
                 {
-                    // Use the worst (lowest enum value) status seen
-                    _smoothedStatus = rawStatus < _smoothedStatus ? rawStatus : _smoothedStatus;
+                    _smoothedStatus = rawStatus;
                 }
+            }
+            else
+            {
+                // Stable — reset both counters
+                _consecutiveFailures = 0;
+                _consecutiveSuccesses = 0;
             }
 
             return _smoothedStatus.Value;
