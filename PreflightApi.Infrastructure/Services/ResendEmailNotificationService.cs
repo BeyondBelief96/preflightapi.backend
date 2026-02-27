@@ -27,7 +27,7 @@ namespace PreflightApi.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task SendStalenessAlertAsync(IReadOnlyList<DataFreshnessResult> staleTypes, CancellationToken ct = default)
+        public async Task SendStalenessAlertAsync(IReadOnlyList<DataCurrencyResult> staleTypes, CancellationToken ct = default)
         {
             if (!_settings.Enabled)
             {
@@ -102,7 +102,7 @@ namespace PreflightApi.Infrastructure.Services
             _logger.LogInformation("Sent '{Subject}' to {Count} recipient(s)", subject, recipients.Count);
         }
 
-        private static string BuildStalenessHtml(IReadOnlyList<DataFreshnessResult> staleTypes)
+        private static string BuildStalenessHtml(IReadOnlyList<DataCurrencyResult> staleTypes)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<html><body style='font-family:sans-serif;'>");

@@ -1,5 +1,5 @@
 using FluentAssertions;
-using PreflightApi.API;
+using PreflightApi.API.Middleware;
 using PreflightApi.Domain.Constants;
 using Xunit;
 

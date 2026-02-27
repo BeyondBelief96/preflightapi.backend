@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using PreflightApi.Infrastructure.Settings;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.HealthChecks;
 
@@ -27,15 +28,15 @@ public class FaaNmsHealthCheck : IHealthCheck
     {
         try
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = _httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient);
             using var request = new HttpRequestMessage(HttpMethod.Head, _healthCheckUrl);
             using var response = await client.SendAsync(request, cancellationToken);
 
-            return HealthCheckResult.Healthy($"FAA NMS API is reachable (HTTP {(int)response.StatusCode}).");
+            return HealthCheckResult.Healthy("FAA NOTAM Management Service is reachable.");
         }
         catch (Exception ex)
         {
-            return HealthCheckResult.Degraded("FAA NMS API is unreachable.", ex);
+            return HealthCheckResult.Degraded("FAA NOTAM Management Service is unreachable.", ex);
         }
     }
 }

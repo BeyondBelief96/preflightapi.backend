@@ -42,9 +42,9 @@ public class ResendEmailNotificationServiceTests
 
     #region Helpers
 
-    private static List<DataFreshnessResult> MakeStaleTypes(int count)
+    private static List<DataCurrencyResult> MakeStaleTypes(int count)
     {
-        return Enumerable.Range(1, count).Select(i => new DataFreshnessResult
+        return Enumerable.Range(1, count).Select(i => new DataCurrencyResult
         {
             SyncType = $"Type{i}",
             Severity = "warning",

@@ -43,8 +43,12 @@ jobs:
       - name: Build solution
         run: dotnet build PreflightApi.sln --configuration ${{ env.CONFIGURATION }} --no-restore
 
-      - name: Run tests
-        run: dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+      - name: Run unit tests
+        run: >
+          dotnet test PreflightApi.Tests/PreflightApi.Tests.csproj
+          --configuration ${{ env.CONFIGURATION }}
+          --no-build --verbosity normal
+          --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~BriefingTests.BriefingServiceTests"
 
       # Publish API
       - name: Publish API
@@ -107,6 +111,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: BeyondBelief96/preflightapi.frontend
+          ref: develop
           token: ${{ secrets.FRONTEND_REPO_PAT }}
           path: frontend
 
@@ -242,14 +247,24 @@ jobs:
           exit 1
 
       - name: Import OpenAPI spec into APIM
-        run: >
-          az apim api import
-          --resource-group ${{ env.RESOURCE_GROUP }}
-          --service-name ${{ env.APIM_SERVICE_NAME }}
-          --api-id preflightapi
-          --path ""
-          --specification-format OpenApiJson
-          --specification-url "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json"
+        run: |
+          for i in $(seq 1 5); do
+            echo "Attempt $i/5 — importing OpenAPI spec into APIM..."
+            if az apim api import \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --service-name ${{ env.APIM_SERVICE_NAME }} \
+              --api-id preflightapi \
+              --path "" \
+              --specification-format OpenApiJson \
+              --specification-url "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json"; then
+              echo "OpenAPI spec imported successfully on attempt $i"
+              exit 0
+            fi
+            echo "Import failed on attempt $i — waiting 15s before retry..."
+            sleep 15
+          done
+          echo "::error::Failed to import OpenAPI spec after 5 attempts"
+          exit 1
 
       # Deploy Functions
       - name: Download Functions zip

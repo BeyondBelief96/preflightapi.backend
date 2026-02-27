@@ -1,6 +1,6 @@
 namespace PreflightApi.Infrastructure.Dtos
 {
-    public class DataFreshnessResult
+    public class DataCurrencyResult
     {
         public required string SyncType { get; init; }
         public bool IsFresh { get; init; }

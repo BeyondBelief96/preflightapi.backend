@@ -21,7 +21,7 @@ public class NoaaMagVarHealthCheckTests
     {
         _mockHttp = new MockHttpMessageHandler();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(ServiceCollectionExtensions.MagVarHttpClient)
+        httpClientFactory.CreateClient(ServiceCollectionExtensions.HealthCheckHttpClient)
             .Returns(_ => _mockHttp.ToHttpClient());
         var settings = Options.Create(new NOAASettings { NOAAApiKey = ApiKey });
         _healthCheck = new NoaaMagVarHealthCheck(httpClientFactory, settings);

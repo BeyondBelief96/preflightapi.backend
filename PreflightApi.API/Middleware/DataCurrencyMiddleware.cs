@@ -3,14 +3,14 @@ using PreflightApi.Infrastructure.Interfaces;
 
 namespace PreflightApi.API.Middleware;
 
-public class DataFreshnessMiddleware
+public class DataCurrencyMiddleware
 {
     private readonly RequestDelegate _next;
 
-    private const string CacheKey = "data-freshness-all";
+    private const string CacheKey = "data-currency-all";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(2);
 
-    public DataFreshnessMiddleware(RequestDelegate next)
+    public DataCurrencyMiddleware(RequestDelegate next)
     {
         _next = next;
     }
@@ -40,7 +40,7 @@ public class DataFreshnessMiddleware
                     var allFreshness = await cache.GetOrCreateAsync(CacheKey, async entry =>
                     {
                         entry.AbsoluteExpirationRelativeToNow = CacheTtl;
-                        return await svc.GetAllFreshnessAsync(CancellationToken.None);
+                        return await svc.GetAllCurrencyAsync(CancellationToken.None);
                     });
 
                     if (allFreshness == null) return;
@@ -51,7 +51,7 @@ public class DataFreshnessMiddleware
                     // Use worst severity for the route
                     var worst = relevant.OrderByDescending(r => SeverityRank(r.Severity)).First();
 
-                    ctx.Response.Headers["X-Data-Freshness"] = worst.IsFresh ? "fresh" : $"stale:{worst.Severity}";
+                    ctx.Response.Headers["X-Data-Currency"] = worst.IsFresh ? "fresh" : $"stale:{worst.Severity}";
                     if (worst.LastSuccessfulSync.HasValue)
                     {
                         ctx.Response.Headers["X-Data-Last-Updated"] = worst.LastSuccessfulSync.Value.ToString("o");
@@ -80,8 +80,8 @@ public class DataFreshnessMiddleware
     };
 }
 
-public static class DataFreshnessMiddlewareExtensions
+public static class DataCurrencyMiddlewareExtensions
 {
-    public static IApplicationBuilder UseDataFreshness(this IApplicationBuilder app)
-        => app.UseMiddleware<DataFreshnessMiddleware>();
+    public static IApplicationBuilder UseDataCurrency(this IApplicationBuilder app)
+        => app.UseMiddleware<DataCurrencyMiddleware>();
 }

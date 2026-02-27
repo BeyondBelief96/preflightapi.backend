@@ -30,8 +30,8 @@ const DEFAULT_OUTPUT = resolve(
 
 // C# files to process (order matters — dependencies first)
 const SOURCE_FILES = [
-  'DataFreshnessResult.cs',
-  'DataFreshnessSummary.cs', // contains DataFreshnessSummary + DataFreshnessResponse
+  'DataCurrencyResult.cs',
+  'DataCurrencySummary.cs', // contains DataCurrencySummary + DataCurrencyResponse
   'HealthCheckResult.cs', // contains HealthCheckEntry + HealthCheckResponse
 ]
 

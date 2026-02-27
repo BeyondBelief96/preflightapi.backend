@@ -7,7 +7,7 @@ using PreflightApi.Infrastructure.Settings;
 
 namespace PreflightApi.Azure.Functions.Functions;
 
-public class DataFreshnessAlertFunction
+public class DataCurrencyAlertFunction
 {
     private readonly IDataSyncStatusService _syncStatusService;
     private readonly IEmailNotificationService _emailService;
@@ -22,7 +22,7 @@ public class DataFreshnessAlertFunction
         ["critical"] = 3
     };
 
-    public DataFreshnessAlertFunction(
+    public DataCurrencyAlertFunction(
         IDataSyncStatusService syncStatusService,
         IEmailNotificationService emailService,
         IOptions<ResendSettings> settings,
@@ -31,26 +31,26 @@ public class DataFreshnessAlertFunction
         _syncStatusService = syncStatusService;
         _emailService = emailService;
         _settings = settings.Value;
-        _logger = loggerFactory.CreateLogger<DataFreshnessAlertFunction>();
+        _logger = loggerFactory.CreateLogger<DataCurrencyAlertFunction>();
     }
 
-    [Function("DataFreshnessAlertFunction")]
+    [Function("DataCurrencyAlertFunction")]
     [ExponentialBackoffRetry(3, "00:00:30", "00:05:00")]
     public async Task Run(
         [TimerTrigger("0 */5 * * * *", RunOnStartup = false)] TimerInfo myTimer,
         FunctionContext context)
     {
-        _logger.LogInformation("DataFreshnessAlertFunction executed at: {Time}", DateTime.UtcNow);
+        _logger.LogInformation("DataCurrencyAlertFunction executed at: {Time}", DateTime.UtcNow);
 
         var ct = context.CancellationToken;
-        var allFreshness = await _syncStatusService.GetAllFreshnessAsync(ct);
+        var allFreshness = await _syncStatusService.GetAllCurrencyAsync(ct);
         var now = DateTime.UtcNow;
         var quietPeriod = TimeSpan.FromMinutes(_settings.QuietPeriodMinutes);
 
         // Identify types needing alerts (severity >= warning)
         // Skip types that have never synced successfully — they haven't had a chance yet
         // (e.g. fresh deployment before cron jobs run). Only alert once data was flowing and then stopped.
-        var typesNeedingAlert = new List<DataFreshnessResult>();
+        var typesNeedingAlert = new List<DataCurrencyResult>();
         foreach (var item in allFreshness)
         {
             if (!SeverityRanks.TryGetValue(item.Severity, out var rank) || rank < SeverityRanks["warning"])

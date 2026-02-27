@@ -20,25 +20,19 @@ public static class HealthCheckRegistrationExtensions
             "noaa-weather",
             failureStatus: HealthStatus.Degraded,
             tags: new[] { "external" },
-            timeout: TimeSpan.FromSeconds(5));
+            timeout: TimeSpan.FromSeconds(15));
 
         builder.AddCheck<NoaaMagVarHealthCheck>(
             "noaa-magvar",
             failureStatus: HealthStatus.Degraded,
             tags: new[] { "external" },
-            timeout: TimeSpan.FromSeconds(5));
+            timeout: TimeSpan.FromSeconds(15));
 
         builder.AddCheck<FaaNmsHealthCheck>(
             "faa-nms",
             failureStatus: HealthStatus.Degraded,
             tags: new[] { "external" },
-            timeout: TimeSpan.FromSeconds(5));
-
-        builder.AddCheck<DataFreshnessHealthCheck>(
-            "data-freshness",
-            failureStatus: HealthStatus.Degraded,
-            tags: new[] { "ready", "data-freshness" },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(15));
 
         return builder;
     }
