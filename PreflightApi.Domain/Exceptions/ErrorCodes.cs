@@ -21,6 +21,9 @@ public static class ErrorCodes
     // Obstacles
     public const string ObstacleNotFound = "OBSTACLE_NOT_FOUND";
 
+    // Navaids
+    public const string NavaidNotFound = "NAVAID_NOT_FOUND";
+
     // Weather
     public const string MetarNotFound = "METAR_NOT_FOUND";
     public const string TafNotFound = "TAF_NOT_FOUND";
