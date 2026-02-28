@@ -87,7 +87,7 @@ public class SigmetService : ISigmetService
             if (isBackward)
             {
                 hasPrevious = hasExtra;
-                hasMore = true;
+                hasMore = page.Count > 0;
                 previousCursor = hasPrevious && page.Count > 0
                     ? CursorHelper.EncodePrevious(page[0].Id)
                     : null;

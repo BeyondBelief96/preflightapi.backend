@@ -68,80 +68,17 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     throw new AirportNotFoundException(servicedFacility);
                 }
 
-                // Decode cursor if provided
-                var decoded = CursorHelper.DecodeGuidWithDirection(cursor);
-                var isBackward = decoded?.Direction == CursorDirection.Backward;
-                var hasCursor = decoded != null;
-
                 var query = _context.CommunicationFrequencies
+                    .AsNoTracking()
                     .Where(f => f.ServicedFacility == strippedCode);
 
-                // Apply cursor filter
-                if (decoded != null)
-                {
-                    query = isBackward
-                        ? query.Where(f => f.Id.CompareTo(decoded.Value) < 0)
-                        : query.Where(f => f.Id.CompareTo(decoded.Value) > 0);
-                }
-
-                // Order by Id for pagination
-                query = isBackward
-                    ? query.OrderByDescending(f => f.Id)
-                    : query.OrderBy(f => f.Id);
-
-                // Fetch limit + 1 to determine if there are more results
-                var items = await query.Take(limit + 1).ToListAsync();
-
-                var hasExtra = items.Count > limit;
-                if (hasExtra)
-                    items = items.Take(limit).ToList();
-
-                if (isBackward)
-                    items.Reverse();
-
-                bool hasMore, hasPrevious;
-                string? nextCursor, previousCursor;
-
-                if (isBackward)
-                {
-                    hasPrevious = hasExtra;
-                    hasMore = true;
-                    previousCursor = hasPrevious && items.Count > 0
-                        ? CursorHelper.EncodePrevious(items[0].Id)
-                        : null;
-                    nextCursor = items.Count > 0
-                        ? CursorHelper.EncodeNext(items[^1].Id)
-                        : null;
-                }
-                else
-                {
-                    hasMore = hasExtra;
-                    hasPrevious = hasCursor;
-                    nextCursor = hasMore && items.Count > 0
-                        ? CursorHelper.EncodeNext(items[^1].Id)
-                        : null;
-                    previousCursor = hasCursor && items.Count > 0
-                        ? CursorHelper.EncodePrevious(items[0].Id)
-                        : null;
-                }
-
-                var data = items.Select(CommunicationFrequencyMapper.ToDto);
+                var result = await query.ToPaginatedAsync(
+                    f => f.Id, CommunicationFrequencyMapper.ToDto, cursor, limit);
 
                 _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}, hasMore: {HasMore}",
-                    items.Count, servicedFacility, hasMore);
+                    result.Data.Count(), servicedFacility, result.Pagination.HasMore);
 
-                return new PaginatedResponse<CommunicationFrequencyDto>
-                {
-                    Data = data,
-                    Pagination = new PaginationMetadata
-                    {
-                        Limit = limit,
-                        NextCursor = nextCursor,
-                        HasMore = hasMore,
-                        PreviousCursor = previousCursor,
-                        HasPrevious = hasPrevious
-                    }
-                };
+                return result;
             }
             catch (Exception ex) when (ex is not AirportNotFoundException)
             {

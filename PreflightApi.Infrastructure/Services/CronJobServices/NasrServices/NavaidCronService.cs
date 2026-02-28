@@ -229,6 +229,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             var keys = dataByKey.Keys.ToList();
             var totalUpdated = 0;
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             for (var i = 0; i < keys.Count; i += DbBatchSize)
             {
                 var batchKeys = keys.Skip(i).Take(DbBatchSize).ToList();
@@ -264,6 +266,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
                 _logger.LogInformation("Updated {Count} navaids with {Column} data (batch {Batch})",
                     navaids.Count, columnName, (i / DbBatchSize) + 1);
             }
+
+            await transaction.CommitAsync(cancellationToken);
 
             _logger.LogInformation("Completed updating {Total} navaids with {Column} data", totalUpdated, columnName);
         }

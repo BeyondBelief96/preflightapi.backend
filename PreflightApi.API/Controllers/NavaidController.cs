@@ -139,7 +139,8 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     }
 
     /// <summary>
-    /// Searches for navaids near a geographic point.
+    /// Searches for navaids near a geographic point. Results are filtered by radius but not sorted by distance;
+    /// pagination order is deterministic but arbitrary.
     /// </summary>
     /// <remarks>
     /// <code>

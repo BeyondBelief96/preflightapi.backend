@@ -167,7 +167,7 @@ public static class PaginationExtensions
         if (isBackward)
         {
             hasPrevious = hasExtra;
-            hasMore = true; // We came from a forward page, so there are items after us
+            hasMore = items.Count > 0; // Items after us if we actually have results
             previousCursor = hasPrevious && items.Count > 0
                 ? CursorHelper.EncodePrevious(keyToString(items[0]))
                 : null;
