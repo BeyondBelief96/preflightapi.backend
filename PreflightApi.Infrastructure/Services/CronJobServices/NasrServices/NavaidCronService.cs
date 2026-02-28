@@ -229,45 +229,49 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             var keys = dataByKey.Keys.ToList();
             var totalUpdated = 0;
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            for (var i = 0; i < keys.Count; i += DbBatchSize)
+            var strategy = _dbContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                var batchKeys = keys.Skip(i).Take(DbBatchSize).ToList();
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                // Find existing navaids matching these keys in a single query
-                var navIds = batchKeys
-                    .Select(k => k.Split('|'))
-                    .Where(p => p.Length == 4)
-                    .Select(p => p[0])
-                    .Distinct()
-                    .ToList();
-
-                var navaids = (await _dbContext.Navaids
-                        .Where(n => navIds.Contains(n.NavId))
-                        .ToListAsync(cancellationToken))
-                    .Where(n => batchKeys.Contains(n.CreateUniqueKey()))
-                    .ToList();
-
-                foreach (var navaid in navaids)
+                for (var i = 0; i < keys.Count; i += DbBatchSize)
                 {
-                    var key = navaid.CreateUniqueKey();
-                    if (dataByKey.TryGetValue(key, out var items))
+                    var batchKeys = keys.Skip(i).Take(DbBatchSize).ToList();
+
+                    // Find existing navaids matching these keys in a single query
+                    var navIds = batchKeys
+                        .Select(k => k.Split('|'))
+                        .Where(p => p.Length == 4)
+                        .Select(p => p[0])
+                        .Distinct()
+                        .ToList();
+
+                    var navaids = (await _dbContext.Navaids
+                            .Where(n => navIds.Contains(n.NavId))
+                            .ToListAsync(cancellationToken))
+                        .Where(n => batchKeys.Contains(n.CreateUniqueKey()))
+                        .ToList();
+
+                    foreach (var navaid in navaids)
                     {
-                        var json = JsonSerializer.Serialize(items);
-                        setJsonColumn(navaid, json);
-                        _dbContext.Entry(navaid).State = EntityState.Modified;
-                        totalUpdated++;
+                        var key = navaid.CreateUniqueKey();
+                        if (dataByKey.TryGetValue(key, out var items))
+                        {
+                            var json = JsonSerializer.Serialize(items);
+                            setJsonColumn(navaid, json);
+                            _dbContext.Entry(navaid).State = EntityState.Modified;
+                            totalUpdated++;
+                        }
                     }
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    _logger.LogInformation("Updated {Count} navaids with {Column} data (batch {Batch})",
+                        navaids.Count, columnName, (i / DbBatchSize) + 1);
                 }
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Updated {Count} navaids with {Column} data (batch {Batch})",
-                    navaids.Count, columnName, (i / DbBatchSize) + 1);
-            }
-
-            await transaction.CommitAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            });
 
             _logger.LogInformation("Completed updating {Total} navaids with {Column} data", totalUpdated, columnName);
         }
