@@ -170,7 +170,10 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        private static string BuildEmailWrapper(string title, string? logoUrl, Action<StringBuilder> contentBuilder)
+        private string BuildEmailWrapper(string title, string? logoUrl, Action<StringBuilder> contentBuilder) =>
+            BuildEmailWrapper(title, logoUrl, _settings.StatusPageUrl, contentBuilder);
+
+        private static string BuildEmailWrapper(string title, string? logoUrl, string? statusPageUrl, Action<StringBuilder> contentBuilder)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<!DOCTYPE html>");
@@ -223,6 +226,12 @@ namespace PreflightApi.Infrastructure.Services
             sb.AppendLine($"<td style=\"background-color:{ColorCardBg}; padding:0 32px 24px 32px; border-left:1px solid {ColorBorder}; border-right:1px solid {ColorBorder}; border-bottom:1px solid {ColorBorder}; border-radius:0 0 8px 8px;\">");
             sb.AppendLine($"<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
             sb.AppendLine($"<tr><td colspan=\"2\" style=\"border-top:1px solid {ColorBorder}; padding-top:16px;\"></td></tr>");
+            if (!string.IsNullOrWhiteSpace(statusPageUrl))
+            {
+                sb.AppendLine("<tr><td colspan=\"2\" style=\"padding-bottom:8px;\">");
+                sb.AppendLine($"<p style=\"margin:0; font-size:14px;\"><a href=\"{Encode(statusPageUrl)}\" style=\"color:{ColorAccent}; text-decoration:underline;\">View live service status</a></p>");
+                sb.AppendLine("</td></tr>");
+            }
             sb.AppendLine("<tr>");
             sb.AppendLine($"<td style=\"color:{ColorMuted}; font-size:12px;\">Generated at {DateTime.UtcNow:u}</td>");
             sb.AppendLine($"<td style=\"color:{ColorMuted}; font-size:12px; text-align:right;\"><a href=\"{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}\" style=\"color:{ColorAccent}; text-decoration:underline;\">Manage your email preferences</a></td>");

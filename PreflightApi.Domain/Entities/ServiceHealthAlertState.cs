@@ -19,6 +19,9 @@ namespace PreflightApi.Domain.Entities
         [Column("last_alert_severity")]
         public string? LastAlertSeverity { get; set; }
 
+        [Column("consecutive_failure_count")]
+        public int ConsecutiveFailureCount { get; set; }
+
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
     }

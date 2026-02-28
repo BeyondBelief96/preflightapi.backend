@@ -69,13 +69,27 @@ public class ServiceOutageAlertFunction
 
             if (!isHealthy)
             {
-                var shouldAlert =
-                    prior?.LastAlertSentUtc == null
-                    || SeverityEscalated(prior.LastAlertSeverity, severity)
-                    || (now - prior.LastAlertSentUtc.Value) > quietPeriod;
+                // prior?.ConsecutiveFailureCount is from BEFORE this run's upsert;
+                // +1 accounts for this run's failure
+                var consecutiveFailures = (prior?.ConsecutiveFailureCount ?? 0) + 1;
+                var meetsThreshold = consecutiveFailures >= _settings.FailureThresholdBeforeAlert;
 
-                if (shouldAlert)
-                    servicesNeedingAlert.Add(check);
+                if (meetsThreshold)
+                {
+                    var shouldAlert =
+                        prior?.LastAlertSentUtc == null
+                        || SeverityEscalated(prior.LastAlertSeverity, severity)
+                        || (now - prior.LastAlertSentUtc.Value) > quietPeriod;
+
+                    if (shouldAlert)
+                        servicesNeedingAlert.Add(check);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Service {Service} unhealthy ({Count}/{Threshold} consecutive failures)",
+                        check.Name, consecutiveFailures, _settings.FailureThresholdBeforeAlert);
+                }
             }
             else if (prior?.LastAlertSeverity != null)
             {
