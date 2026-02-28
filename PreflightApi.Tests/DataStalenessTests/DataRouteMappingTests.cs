@@ -51,9 +51,9 @@ public class DataRouteMappingTests
     #region RouteToSyncTypes Dictionary
 
     [Fact]
-    public void RouteToSyncTypes_ContainsAll12DataRoutes()
+    public void RouteToSyncTypes_ContainsAll13DataRoutes()
     {
-        DataRouteMapping.RouteToSyncTypes.Should().HaveCount(12);
+        DataRouteMapping.RouteToSyncTypes.Should().HaveCount(13);
     }
 
     [Fact]
@@ -85,6 +85,7 @@ public class DataRouteMappingTests
     [InlineData("obstacles", SyncTypes.Obstacle)]
     [InlineData("chart-supplements", SyncTypes.ChartSupplement)]
     [InlineData("terminal-procedures", SyncTypes.TerminalProcedure)]
+    [InlineData("navaids", SyncTypes.Navaid)]
     public void RouteToSyncTypes_EachSingleRouteMapsSingleType(string route, string expectedType)
     {
         var types = DataRouteMapping.RouteToSyncTypes[route];

@@ -9,5 +9,6 @@ namespace PreflightApi.Domain.ValueObjects.FaaPublications
         Airspaces = 4,
         SpecialUseAirspaces = 5,
         Obstacles = 6,
+        NasrSubscription_Navaids = 7,
     }
 }

@@ -3,6 +3,7 @@ namespace PreflightApi.Infrastructure.Enums
     public enum NasrDataType
     {
         APT,
-        FRQ
+        FRQ,
+        NAV
     }
 }

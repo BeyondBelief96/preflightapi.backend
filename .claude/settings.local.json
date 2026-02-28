@@ -64,7 +64,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:resend.com)",
       "Bash(dotnet:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(PGPASSWORD=postgres psql:*)"
     ],
     "deny": [],
     "ask": []
