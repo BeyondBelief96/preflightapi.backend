@@ -28,7 +28,9 @@ namespace PreflightApi.Azure.Functions.Functions
 
         [Function("NavaidFunction")]
         [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-        public async Task Run([TimerTrigger("0 45 10 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
+        [Function("NavaidFunction")]
+        [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
+        public async Task Run([TimerTrigger("0 45 10 * * *")] TimerInfo myTimer, FunctionContext context)
         {
             _logger.LogInformation("Navaid Function executed at: {Time}", DateTime.UtcNow);
             var cancellationToken = context.CancellationToken;
