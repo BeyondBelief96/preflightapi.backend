@@ -10,7 +10,7 @@
 			var epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;
 			return key + &quot;|&quot; + epoch;
 		}" />
-		<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->
+		<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, E6B, and navaids -->
 		<set-variable name="is-blocked" value="@{
 			var path = context.Request.Url.Path.ToLower();
 			var blockedPrefixes = new[] {
@@ -18,7 +18,8 @@
 				"/api/v1/notams",
 				"/api/v1/airport-diagrams",
 				"/api/v1/chart-supplements",
-				"/api/v1/e6b"
+				"/api/v1/e6b",
+				"/api/v1/navaids"
 			};
 			return blockedPrefixes.Any(p => path.StartsWith(p));
 		}" />
