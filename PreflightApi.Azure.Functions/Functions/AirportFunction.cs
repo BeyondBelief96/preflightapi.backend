@@ -70,11 +70,14 @@ namespace PreflightApi.Azure.Functions.Functions
                     try
                     {
                         await _runwayGeometryService.UpdateRunwayGeometriesAsync(cancellationToken);
+                        await _syncStatusService.RecordSuccessAsync(SyncTypes.RunwayGeometry, ct: cancellationToken);
                         _logger.LogInformation("Runway geometry sync completed");
                     }
                     catch (Exception geoEx)
                     {
                         _logger.LogWarning(geoEx, "Runway geometry sync failed — airport/runway data was still updated successfully");
+                        try { await _syncStatusService.RecordFailureAsync(SyncTypes.RunwayGeometry, geoEx.Message, cancellationToken); }
+                        catch (Exception inner) { _logger.LogWarning(inner, "Failed to record sync failure for RunwayGeometry"); }
                     }
 
                     await _publicationService.UpdateLastSuccessfulRunAsync(PublicationType.NasrSubscription_Airport, currentDate);

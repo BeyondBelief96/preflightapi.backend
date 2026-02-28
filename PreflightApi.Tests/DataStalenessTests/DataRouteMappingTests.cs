@@ -51,9 +51,9 @@ public class DataRouteMappingTests
     #region RouteToSyncTypes Dictionary
 
     [Fact]
-    public void RouteToSyncTypes_ContainsAll13DataRoutes()
+    public void RouteToSyncTypes_ContainsAll14DataRoutes()
     {
-        DataRouteMapping.RouteToSyncTypes.Should().HaveCount(13);
+        DataRouteMapping.RouteToSyncTypes.Should().HaveCount(14);
     }
 
     [Fact]
@@ -71,6 +71,15 @@ public class DataRouteMappingTests
         types.Should().HaveCount(2);
         types.Should().Contain(SyncTypes.Airspace);
         types.Should().Contain(SyncTypes.SpecialUseAirspace);
+    }
+
+    [Fact]
+    public void RouteToSyncTypes_RunwaysMapsToAirportAndRunwayGeometry()
+    {
+        var types = DataRouteMapping.RouteToSyncTypes["runways"];
+        types.Should().HaveCount(2);
+        types.Should().Contain(SyncTypes.Airport);
+        types.Should().Contain(SyncTypes.RunwayGeometry);
     }
 
     [Theory]

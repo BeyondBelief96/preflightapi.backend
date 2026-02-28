@@ -32,7 +32,8 @@ namespace PreflightApi.Infrastructure.Data.Configurations
                 new DataSyncStatus { SyncType = SyncTypes.Obstacle, StalenessMode = "CycleBased", PublicationType = "Obstacles" },
                 new DataSyncStatus { SyncType = SyncTypes.ChartSupplement, StalenessMode = "CycleBased", PublicationType = "ChartSupplement" },
                 new DataSyncStatus { SyncType = SyncTypes.TerminalProcedure, StalenessMode = "CycleBased", PublicationType = "TerminalProcedure" },
-                new DataSyncStatus { SyncType = SyncTypes.Navaid, StalenessMode = "CycleBased", PublicationType = "NasrSubscription_Navaids" }
+                new DataSyncStatus { SyncType = SyncTypes.Navaid, StalenessMode = "CycleBased", PublicationType = "NasrSubscription_Navaids" },
+                new DataSyncStatus { SyncType = SyncTypes.RunwayGeometry, StalenessMode = "CycleBased", PublicationType = "RunwayGeometry" }
             );
         }
     }

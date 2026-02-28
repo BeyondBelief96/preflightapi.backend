@@ -69,6 +69,14 @@ namespace PreflightApi.Infrastructure.Data.Configurations
                 // KnownValidDate uses the release date (2 days after "Reflects Changes To")
                 KnownValidDate = new DateTime(2025, 10, 28, 0, 0, 0, DateTimeKind.Utc),
                 LastSuccessfulUpdate = null
+            },
+            new FaaPublicationCycle
+            {
+                Id = 9,
+                PublicationType = PublicationType.RunwayGeometry,
+                CycleLengthDays = 56,
+                KnownValidDate = new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc),
+                LastSuccessfulUpdate = null
             });
         }
     }
