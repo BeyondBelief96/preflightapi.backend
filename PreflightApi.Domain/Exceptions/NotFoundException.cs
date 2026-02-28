@@ -104,6 +104,17 @@ public class RunwayNotFoundException : NotFoundException
 }
 
 /// <summary>
+/// Exception thrown when a navaid cannot be found by identifier.
+/// </summary>
+public class NavaidNotFoundException : NotFoundException
+{
+    public NavaidNotFoundException(string navId)
+        : base(ErrorCodes.NavaidNotFound, $"No navaids were found with identifier '{navId}'.")
+    {
+    }
+}
+
+/// <summary>
 /// Exception thrown when a NOTAM cannot be found by NMS ID.
 /// </summary>
 public class NotamNotFoundException : NotFoundException

@@ -1,0 +1,68 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "NAV_RMK.csv",
+  "description": "NAVAID remark data from the FAA NASR 28-day subscription. Contains free-form remarks associated with NAVAID records.",
+  "entity": "NavaidRemark",
+  "lastVerified": "2026-02-27",
+  "columns": {
+    "EFF_DATE": {
+      "entityProperty": null,
+      "dataType": "date",
+      "required": true,
+      "description": "The 28 Day NASR Subscription Effective Date (YYYY/MM/DD)."
+    },
+    "NAV_ID": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Identifier (key column for joining to NAV_BASE)."
+    },
+    "NAV_TYPE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Type (key column for joining to NAV_BASE)."
+    },
+    "STATE_CODE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "description": "Associated State Post Office Code (common column)."
+    },
+    "CITY": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "Associated City Name (key column for joining to NAV_BASE)."
+    },
+    "COUNTRY_CODE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "Country Post Office Code (key column for joining to NAV_BASE)."
+    },
+    "TAB_NAME": {
+      "entityProperty": "TabName",
+      "dataType": "string",
+      "required": true,
+      "description": "NASR table associated with remark."
+    },
+    "REF_COL_NAME": {
+      "entityProperty": "ReferenceColumnName",
+      "dataType": "string",
+      "required": true,
+      "description": "NASR column name associated with remark. Non-specific remarks are identified as such."
+    },
+    "REF_COL_SEQ_NO": {
+      "entityProperty": "SequenceNumber",
+      "dataType": "int",
+      "required": true,
+      "description": "Sequence number assigned to reference column remark."
+    },
+    "REMARK": {
+      "entityProperty": "Remark",
+      "dataType": "string",
+      "required": true,
+      "description": "Remark text (free form text that further describes a specific information item)."
+    }
+  }
+}

@@ -46,6 +46,7 @@ namespace PreflightApi.Infrastructure.Services
             ["ObstacleDailyChange"] = (["/obstacles"], "Daily obstacle change data is stale. Recently added or modified obstacles may not be listed."),
             ["ChartSupplement"] = (["/chart-supplements"], "Chart supplement PDFs may be from a previous publication cycle."),
             ["TerminalProcedure"] = (["/terminal-procedures"], "Terminal procedure charts (IAPs, DPs, STARs) may be from a previous publication cycle."),
+            ["Navaid"] = (["/navaids"], "NAVAID data may be outdated. VOR, VORTAC, NDB, and DME locations, frequencies, and operational status may not reflect the latest FAA publication cycle."),
         };
 
         // Health check service → (affected API endpoints, human-readable impact)
@@ -153,15 +154,23 @@ namespace PreflightApi.Infrastructure.Services
 
         // ── Shared helpers ────────────────────────────────────────────────
 
-        private async Task<string> GetLogoUrlAsync()
+        private async Task<string?> GetLogoUrlAsync()
         {
-            return await _cloudStorageService.GeneratePresignedUrlAsync(
-                _cloudStorageSettings.PreflightApiResourcesContainerName,
-                LogoBlobPath,
-                LogoUrlExpiry);
+            try
+            {
+                return await _cloudStorageService.GeneratePresignedUrlAsync(
+                    _cloudStorageSettings.PreflightApiResourcesContainerName,
+                    LogoBlobPath,
+                    LogoUrlExpiry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to generate logo URL — emails will be sent without logo");
+                return null;
+            }
         }
 
-        private static string BuildEmailWrapper(string title, string logoUrl, Action<StringBuilder> contentBuilder)
+        private static string BuildEmailWrapper(string title, string? logoUrl, Action<StringBuilder> contentBuilder)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<!DOCTYPE html>");
@@ -184,7 +193,10 @@ namespace PreflightApi.Infrastructure.Services
             // Header with logo
             sb.AppendLine("<tr>");
             sb.AppendLine($"<td style=\"background-color:{ColorHeaderBg}; padding:20px 32px; border-radius:8px 8px 0 0;\">");
-            sb.AppendLine($"<img src=\"{Encode(logoUrl)}\" alt=\"PreflightAPI\" height=\"40\" style=\"display:block; max-height:40px; width:auto; border:0;\" />");
+            if (!string.IsNullOrEmpty(logoUrl))
+                sb.AppendLine($"<img src=\"{Encode(logoUrl)}\" alt=\"PreflightAPI\" height=\"40\" style=\"display:block; max-height:40px; width:auto; border:0;\" />");
+            else
+                sb.AppendLine($"<span style=\"font-size:18px; font-weight:700; color:#FFFFFF;\">PreflightAPI</span>");
             sb.AppendLine("</td></tr>");
 
             // Accent line

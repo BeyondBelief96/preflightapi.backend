@@ -28,9 +28,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: version
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          while git ls-remote --tags origin "refs/tags/v${MAJOR}.${MINOR}.${PATCH}" | grep -q .; do
+            echo "Tag v${MAJOR}.${MINOR}.${PATCH} exists — incrementing patch"
+            PATCH=$((PATCH + 1))
+          done
+          FINAL="${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=${FINAL}" >> $GITHUB_OUTPUT
+          if [ "$FINAL" != "$VERSION" ]; then
+            sed -i "s|<Version>${VERSION}</Version>|<Version>${FINAL}</Version>|" Directory.Build.props
+            sed -i "s|<AssemblyVersion>${VERSION}</AssemblyVersion>|<AssemblyVersion>${FINAL}</AssemblyVersion>|" Directory.Build.props
+            sed -i "s|<FileVersion>${VERSION}</FileVersion>|<FileVersion>${FINAL}</FileVersion>|" Directory.Build.props
+            echo "Auto-bumped: ${VERSION} → ${FINAL}"
+          else
+            echo "Version ${FINAL} is available — no bump needed"
+          fi
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -97,6 +119,18 @@ jobs:
           name: ef-bundle
           path: efbundle
           if-no-files-found: error
+
+      - name: Push version bump
+        run: |
+          if git diff --quiet Directory.Build.props; then
+            echo "No version change to push"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Directory.Build.props
+          git commit -m "chore: auto-bump version to v${{ steps.version.outputs.version }} [skip ci]"
+          git push || echo "::warning::Could not push version bump — release will still be created"
 
   sync-types:
     needs: build
@@ -330,35 +364,18 @@ jobs:
           echo "Maintenance mode disabled — APIM is back to normal"
 
   release:
-    needs: deploy
+    needs: [deploy, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extract version from Directory.Build.props
-        id: version
-        run: |
-          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
-      - name: Check if tag already exists
-        id: tag-check
-        run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} already exists — skipping release"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Create GitHub Release
-        if: steps.tag-check.outputs.exists == 'false'
         run: >
-          gh release create "v${{ steps.version.outputs.version }}"
-          --title "v${{ steps.version.outputs.version }}"
+          gh release create "v${{ needs.build.outputs.version }}"
+          --title "v${{ needs.build.outputs.version }}"
           --generate-notes
+          --target ${{ github.sha }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

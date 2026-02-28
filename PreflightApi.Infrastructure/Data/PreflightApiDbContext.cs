@@ -42,6 +42,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<Notam> Notams => Set<Notam>();
 
+        public virtual DbSet<Navaid> Navaids => Set<Navaid>();
+
         public virtual DbSet<DataSyncStatus> DataSyncStatuses => Set<DataSyncStatus>();
 
         public virtual DbSet<ServiceHealthAlertState> ServiceHealthAlertStates => Set<ServiceHealthAlertState>();

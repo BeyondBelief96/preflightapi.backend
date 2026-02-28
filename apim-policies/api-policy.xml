@@ -45,7 +45,7 @@
 			if (path.Contains("/airport-diagrams") || path.Contains("/chart-supplements")) { return 600; }
 			// NASR/static data: 15 min
 			if (path.Contains("/airports") || path.Contains("/communication-frequencies")) { return 900; }
-			if (path.Contains("/airspaces") || path.Contains("/obstacles")) { return 900; }
+			if (path.Contains("/airspaces") || path.Contains("/obstacles") || path.Contains("/navaids")) { return 900; }
 			return 0;
 		}" />
 		<!-- Build a deterministic cache key from the URL path + sorted query string -->
