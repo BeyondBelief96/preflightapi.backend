@@ -65,7 +65,8 @@
       "WebFetch(domain:resend.com)",
       "Bash(dotnet:*)",
       "Bash(gh api:*)",
-      "Bash(PGPASSWORD=postgres psql:*)"
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "WebFetch(domain:services6.arcgis.com)"
     ],
     "deny": [],
     "ask": []

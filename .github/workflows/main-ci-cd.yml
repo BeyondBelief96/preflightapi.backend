@@ -237,6 +237,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
 
+      - name: Stop Function App (prevent alerts during deployment)
+        run: >
+          az functionapp stop
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+
       - name: Enable maintenance mode
         run: |
           SUB_ID=$(az account show --query id -o tsv)
@@ -266,12 +272,12 @@ jobs:
           echo "API_HOSTNAME=$API_HOSTNAME" >> $GITHUB_ENV
           echo "Resolved API hostname: $API_HOSTNAME"
 
-      - name: Wait for API to start
+      - name: Wait for API and download swagger spec
         run: |
           echo "Waiting for API to become healthy..."
           for i in $(seq 1 30); do
-            if curl -sf "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json" -o /dev/null; then
-              echo "API is ready after attempt $i"
+            if curl -sf "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json" -o swagger.json; then
+              echo "API is ready after attempt $i — swagger spec saved locally"
               exit 0
             fi
             echo "Attempt $i/30 — waiting 10s..."
@@ -282,23 +288,13 @@ jobs:
 
       - name: Import OpenAPI spec into APIM
         run: |
-          for i in $(seq 1 5); do
-            echo "Attempt $i/5 — importing OpenAPI spec into APIM..."
-            if az apim api import \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --service-name ${{ env.APIM_SERVICE_NAME }} \
-              --api-id preflightapi \
-              --path "" \
-              --specification-format OpenApiJson \
-              --specification-url "https://${{ env.API_HOSTNAME }}/swagger/v1/swagger.json"; then
-              echo "OpenAPI spec imported successfully on attempt $i"
-              exit 0
-            fi
-            echo "Import failed on attempt $i — waiting 15s before retry..."
-            sleep 15
-          done
-          echo "::error::Failed to import OpenAPI spec after 5 attempts"
-          exit 1
+          az apim api import \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --service-name ${{ env.APIM_SERVICE_NAME }} \
+            --api-id preflightapi \
+            --path "" \
+            --specification-format OpenApiJson \
+            --specification-path swagger.json
 
       # Deploy Functions
       - name: Download Functions zip
@@ -314,8 +310,9 @@ jobs:
           --src functionapp.zip
 
       - name: Restart Function App
+        if: always()
         run: >
-          az functionapp restart
+          az functionapp start
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
 

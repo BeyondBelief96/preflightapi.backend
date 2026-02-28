@@ -19,6 +19,7 @@ public static class DataRouteMapping
         ["chart-supplements"] = [SyncTypes.ChartSupplement],
         ["terminal-procedures"] = [SyncTypes.TerminalProcedure],
         ["navaids"] = [SyncTypes.Navaid],
+        ["runways"] = [SyncTypes.Airport, SyncTypes.RunwayGeometry],
     };
 
     public static string? ExtractDataRouteSegment(string? path)

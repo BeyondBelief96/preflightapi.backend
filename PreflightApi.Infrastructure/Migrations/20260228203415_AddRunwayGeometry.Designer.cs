@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using PreflightApi.Infrastructure.Data;
 namespace PreflightApi.Infrastructure.Migrations
 {
     [DbContext(typeof(PreflightApiDbContext))]
-    partial class PreflightApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260228203415_AddRunwayGeometry")]
+    partial class AddRunwayGeometry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1056,16 +1059,6 @@ namespace PreflightApi.Infrastructure.Migrations
                             PublicationType = "NasrSubscription_Navaids",
                             StalenessMode = "CycleBased",
                             UpdatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            SyncType = "RunwayGeometry",
-                            ConsecutiveFailures = 0,
-                            LastSuccessfulRecordCount = 0,
-                            LastSyncSucceeded = true,
-                            PublicationType = "RunwayGeometry",
-                            StalenessMode = "CycleBased",
-                            UpdatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
 
@@ -1150,13 +1143,6 @@ namespace PreflightApi.Infrastructure.Migrations
                             CycleLengthDays = 56,
                             KnownValidDate = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
                             PublicationType = "Obstacles"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            CycleLengthDays = 56,
-                            KnownValidDate = new DateTime(2024, 12, 26, 0, 0, 0, 0, DateTimeKind.Utc),
-                            PublicationType = "RunwayGeometry"
                         });
                 });
 

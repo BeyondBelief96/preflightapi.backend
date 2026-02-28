@@ -18,8 +18,7 @@ namespace PreflightApi.API.Controllers
     [Route("api/v{version:apiVersion}/airports")]
     [Tags("Airports")]
     public class AirportController(
-        IAirportService airportService,
-        IRunwayService runwayService)
+        IAirportService airportService)
         : ControllerBase
     {
         /// <summary>
@@ -141,23 +140,5 @@ namespace PreflightApi.API.Controllers
             return Ok(airports);
         }
 
-        /// <summary>
-        /// Gets runways for a specific airport, including dimensions, surface type, lighting,
-        /// and detailed runway end information (approach types, markings, obstacles).
-        /// Runway heading data can be used with the E6B crosswind calculator endpoint.
-        /// </summary>
-        /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
-        /// <returns>Runways and runway end details for the airport</returns>
-        /// <response code="200">Returns the airport's runways</response>
-        /// <response code="404">If the airport is not found</response>
-        [HttpGet("{icaoCodeOrIdent}/runways")]
-        [ProducesResponseType(typeof(IEnumerable<RunwayDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<IEnumerable<RunwayDto>>> GetRunwaysByAirport(string icaoCodeOrIdent)
-        {
-            ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-            var runways = await runwayService.GetRunwaysByAirportAsync(icaoCodeOrIdent);
-            return Ok(runways);
-        }
     }
 }
