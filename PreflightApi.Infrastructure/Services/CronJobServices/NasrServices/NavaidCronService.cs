@@ -233,24 +233,19 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.NasrServices
             {
                 var batchKeys = keys.Skip(i).Take(DbBatchSize).ToList();
 
-                // Find existing navaids matching these keys
-                var navaids = new List<Navaid>();
-                foreach (var key in batchKeys)
-                {
-                    var parts = key.Split('|');
-                    if (parts.Length != 4) continue;
+                // Find existing navaids matching these keys in a single query
+                var navIds = batchKeys
+                    .Select(k => k.Split('|'))
+                    .Where(p => p.Length == 4)
+                    .Select(p => p[0])
+                    .Distinct()
+                    .ToList();
 
-                    var navaid = await _dbContext.Navaids
-                        .FirstOrDefaultAsync(n =>
-                            n.NavId == parts[0] &&
-                            n.NavType == parts[1] &&
-                            n.CountryCode == parts[2] &&
-                            n.City == parts[3],
-                            cancellationToken);
-
-                    if (navaid != null)
-                        navaids.Add(navaid);
-                }
+                var navaids = (await _dbContext.Navaids
+                        .Where(n => navIds.Contains(n.NavId))
+                        .ToListAsync(cancellationToken))
+                    .Where(n => batchKeys.Contains(n.CreateUniqueKey()))
+                    .ToList();
 
                 foreach (var navaid in navaids)
                 {
