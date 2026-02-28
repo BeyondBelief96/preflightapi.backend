@@ -1,18 +1,5 @@
-using System.Text.Json.Serialization;
-
 namespace PreflightApi.Infrastructure.Dtos
 {
-    /// <summary>
-    /// GeoJSON geometry representing an airspace boundary.
-    /// </summary>
-    public class GeoJsonGeometry
-    {
-        /// <summary>Geometry type (e.g., Polygon, MultiPolygon).</summary>
-        public string Type { get; set; } = string.Empty;
-        /// <summary>Coordinate array defining the geometry boundary.</summary>
-        public double[][][] Coordinates { get; set; } = [];
-    }
-
     /// <summary>
     /// Controlled airspace data (Class B, C, D, E) sourced from FAA ArcGIS.
     /// Use the GlobalId to cross-reference with navigation log results — the navlog response's
