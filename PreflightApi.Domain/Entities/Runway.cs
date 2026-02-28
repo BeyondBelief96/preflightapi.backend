@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
 
 namespace PreflightApi.Domain.Entities;
 
@@ -119,6 +120,10 @@ public class Runway : INasrEntity<Runway>
     /// <summary>FAA NASR field: LENGTH_SOURCE_DATE. Date of runway length source information.</summary>
     [Column("length_source_date")]
     public DateTime? LengthSourceDate { get; set; }
+
+    /// <summary>ArcGIS runway polygon geometry (SRID 4326). Managed exclusively by the ArcGIS geometry sync — not part of NASR data.</summary>
+    [Column("geometry", TypeName = "geometry(Polygon, 4326)")]
+    public Geometry? Geometry { get; set; }
 
     /// <summary>Navigation property to the runway ends (typically two per runway, one for each direction).</summary>
     public virtual ICollection<RunwayEnd> RunwayEnds { get; set; } = new List<RunwayEnd>();

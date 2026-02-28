@@ -1,3 +1,4 @@
+using NetTopologySuite.Geometries;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
 
@@ -5,6 +6,37 @@ namespace PreflightApi.Infrastructure.Dtos.Mappers;
 
 public static class RunwayMapper
 {
+    public static RunwayDto ToDto(Runway runway, Airport airport, bool includeGeometry = false)
+    {
+        return new RunwayDto
+        {
+            AirportIcaoCode = airport.IcaoId,
+            AirportArptId = airport.ArptId,
+            AirportName = airport.ArptName,
+            Id = runway.Id,
+            RunwayId = runway.RunwayId,
+            Length = runway.Length,
+            Width = runway.Width,
+            SurfaceType = ParseSurfaceType(runway.SurfaceTypeCode),
+            SurfaceTreatment = ParseSurfaceTreatment(runway.SurfaceTreatmentCode),
+            PavementClassification = runway.PavementClassification,
+            EdgeLightIntensity = ParseEdgeLightIntensity(runway.EdgeLightIntensity),
+            WeightBearingSingleWheel = runway.WeightBearingSingleWheel,
+            WeightBearingDualWheel = runway.WeightBearingDualWheel,
+            WeightBearingDualTandem = runway.WeightBearingDualTandem,
+            WeightBearingDoubleDualTandem = runway.WeightBearingDoubleDualTandem,
+            SurfaceCondition = runway.SurfaceCondition,
+            PavementTypeCode = runway.PavementTypeCode,
+            SubgradeStrengthCode = runway.SubgradeStrengthCode,
+            TirePressureCode = runway.TirePressureCode,
+            DeterminationMethodCode = runway.DeterminationMethodCode,
+            RunwayLengthSource = runway.RunwayLengthSource,
+            LengthSourceDate = runway.LengthSourceDate,
+            Geometry = includeGeometry && runway.Geometry != null ? ConvertToGeoJson(runway.Geometry) : null,
+            RunwayEnds = runway.RunwayEnds?.Select(ToDto).ToList() ?? new List<RunwayEndDto>()
+        };
+    }
+
     public static RunwayDto ToDto(Runway runway)
     {
         return new RunwayDto
@@ -357,6 +389,71 @@ public static class RunwayMapper
             "MR" => RunwayVisualRangeEquipmentType.MidfieldRollout,
             "TMR" => RunwayVisualRangeEquipmentType.TouchdownMidfieldRollout,
             _ => RunwayVisualRangeEquipmentType.Unknown
+        };
+    }
+
+    /// <summary>
+    /// Converts a RunwaySurfaceType enum value back to the FAA database code for filtering.
+    /// </summary>
+    public static string? ToDbCode(RunwaySurfaceType surfaceType)
+    {
+        return surfaceType switch
+        {
+            RunwaySurfaceType.Concrete => "CONC",
+            RunwaySurfaceType.Asphalt => "ASPH",
+            RunwaySurfaceType.Snow => "SNOW",
+            RunwaySurfaceType.Ice => "ICE",
+            RunwaySurfaceType.Mats => "MATS",
+            RunwaySurfaceType.Treated => "TREATED",
+            RunwaySurfaceType.Gravel => "GRAVEL",
+            RunwaySurfaceType.Turf => "TURF",
+            RunwaySurfaceType.Dirt => "DIRT",
+            RunwaySurfaceType.PartiallyPaved => "PEM",
+            RunwaySurfaceType.Rooftop => "ROOF-TOP",
+            RunwaySurfaceType.Water => "WATER",
+            RunwaySurfaceType.Aluminum => "ALUMINUM",
+            RunwaySurfaceType.Brick => "BRICK",
+            RunwaySurfaceType.Caliche => "CALICHE",
+            RunwaySurfaceType.Coral => "CORAL",
+            RunwaySurfaceType.Deck => "DECK",
+            RunwaySurfaceType.Grass => "GRASS",
+            RunwaySurfaceType.Metal => "METAL",
+            RunwaySurfaceType.NonStandard => "NSTD",
+            RunwaySurfaceType.OilChip => "OIL&CHIP",
+            RunwaySurfaceType.Psp => "PSP",
+            RunwaySurfaceType.Sand => "SAND",
+            RunwaySurfaceType.Sod => "SOD",
+            RunwaySurfaceType.Steel => "STEEL",
+            RunwaySurfaceType.Wood => "WOOD",
+            _ => null
+        };
+    }
+
+    private static GeoJsonGeometry ConvertToGeoJson(Geometry geometry)
+    {
+        if (geometry is not Polygon polygon)
+        {
+            return new GeoJsonGeometry
+            {
+                Type = geometry.GeometryType,
+                Coordinates = []
+            };
+        }
+
+        var exteriorRing = polygon.ExteriorRing.Coordinates
+            .Select(c => new[] { c.X, c.Y })
+            .ToArray();
+
+        var interiorRings = polygon.InteriorRings.Select(ring =>
+            ring.Coordinates.Select(c => new[] { c.X, c.Y }).ToArray()
+        ).ToArray();
+
+        var allRings = new[] { exteriorRing }.Concat(interiorRings).ToArray();
+
+        return new GeoJsonGeometry
+        {
+            Type = "Polygon",
+            Coordinates = allRings
         };
     }
 }

@@ -14,14 +14,12 @@ namespace PreflightApi.Tests.ObstacleTests;
 public class AirportControllerNearbyTests
 {
     private readonly IAirportService _airportService;
-    private readonly IRunwayService _runwayService;
     private readonly AirportController _sut;
 
     public AirportControllerNearbyTests()
     {
         _airportService = Substitute.For<IAirportService>();
-        _runwayService = Substitute.For<IRunwayService>();
-        _sut = new AirportController(_airportService, _runwayService)
+        _sut = new AirportController(_airportService)
         {
             ControllerContext = new ControllerContext
             {

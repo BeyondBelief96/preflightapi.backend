@@ -37,6 +37,13 @@ public class RunwayConfiguration : IEntityTypeConfiguration<Runway>
         builder.HasIndex(r => new { r.SiteNo, r.RunwayId })
             .IsUnique();
 
+        // Geometry column (ArcGIS runway polygon)
+        builder.Property(e => e.Geometry)
+            .HasColumnType("geometry(Polygon, 4326)");
+
+        builder.HasIndex(e => e.Geometry)
+            .HasMethod("gist");
+
         // Query indexes
         builder.HasIndex(r => r.SiteNo);
         builder.HasIndex(r => r.Length);

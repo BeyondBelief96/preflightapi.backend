@@ -12,6 +12,13 @@ public class PaginatedResponse<T>
     public IEnumerable<T> Data { get; init; } = [];
     /// <summary>Pagination metadata including the cursor to fetch the next page.</summary>
     public PaginationMetadata Pagination { get; init; } = new();
+
+    /// <summary>Returns an empty paginated response with the given limit.</summary>
+    public static PaginatedResponse<T> Empty(int limit) => new()
+    {
+        Data = [],
+        Pagination = new PaginationMetadata { Limit = limit }
+    };
 }
 
 /// <summary>

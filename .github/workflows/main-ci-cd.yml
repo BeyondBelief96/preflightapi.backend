@@ -237,6 +237,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
 
+      - name: Stop Function App (prevent alerts during deployment)
+        run: >
+          az functionapp stop
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+
       - name: Enable maintenance mode
         run: |
           SUB_ID=$(az account show --query id -o tsv)
@@ -281,10 +287,11 @@ jobs:
           exit 1
 
       - name: Import OpenAPI spec into APIM
+        timeout-minutes: 10
         run: |
           for i in $(seq 1 5); do
             echo "Attempt $i/5 — importing OpenAPI spec into APIM..."
-            if az apim api import \
+            if timeout 90 az apim api import \
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --service-name ${{ env.APIM_SERVICE_NAME }} \
               --api-id preflightapi \
@@ -314,8 +321,9 @@ jobs:
           --src functionapp.zip
 
       - name: Restart Function App
+        if: always()
         run: >
-          az functionapp restart
+          az functionapp start
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
 
