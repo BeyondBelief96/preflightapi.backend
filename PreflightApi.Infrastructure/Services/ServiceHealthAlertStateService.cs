@@ -25,18 +25,22 @@ namespace PreflightApi.Infrastructure.Services
         {
             var existing = await _dbContext.ServiceHealthAlertStates.FindAsync([serviceName], ct);
 
+            var isHealthy = string.Equals(status, "Healthy", StringComparison.OrdinalIgnoreCase);
+
             if (existing == null)
             {
                 _dbContext.ServiceHealthAlertStates.Add(new ServiceHealthAlertState
                 {
                     ServiceName = serviceName,
                     LastKnownStatus = status,
+                    ConsecutiveFailureCount = isHealthy ? 0 : 1,
                     UpdatedAt = DateTime.UtcNow
                 });
             }
             else
             {
                 existing.LastKnownStatus = status;
+                existing.ConsecutiveFailureCount = isHealthy ? 0 : existing.ConsecutiveFailureCount + 1;
                 existing.UpdatedAt = DateTime.UtcNow;
             }
 

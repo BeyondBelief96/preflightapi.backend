@@ -33,7 +33,8 @@ public class ServiceOutageAlertFunctionTests
         {
             Enabled = true,
             QuietPeriodMinutes = 60,
-            HealthEndpointUrl = "https://api.example.com/health"
+            HealthEndpointUrl = "https://api.example.com/health",
+            FailureThresholdBeforeAlert = 1
         };
 
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
@@ -88,13 +89,15 @@ public class ServiceOutageAlertFunctionTests
         string serviceName,
         string lastKnownStatus = "Healthy",
         DateTime? lastAlertSentUtc = null,
-        string? lastAlertSeverity = null) =>
+        string? lastAlertSeverity = null,
+        int consecutiveFailureCount = 0) =>
         new()
         {
             ServiceName = serviceName,
             LastKnownStatus = lastKnownStatus,
             LastAlertSentUtc = lastAlertSentUtc,
             LastAlertSeverity = lastAlertSeverity,
+            ConsecutiveFailureCount = consecutiveFailureCount,
             UpdatedAt = DateTime.UtcNow
         };
 
@@ -451,6 +454,130 @@ public class ServiceOutageAlertFunctionTests
         // Assert — no recovery since fetch failed (api still in the returned checks)
         await _emailService.DidNotReceive().SendServiceRecoveryNoticeAsync(
             Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region Failure Threshold
+
+    [Fact]
+    public async Task Run_BelowFailureThreshold_DoesNotAlert()
+    {
+        // Arrange — threshold is 3, no prior state (first failure → count = 1)
+        var settings = new ResendSettings
+        {
+            Enabled = true,
+            QuietPeriodMinutes = 60,
+            HealthEndpointUrl = "https://api.example.com/health",
+            FailureThresholdBeforeAlert = 3
+        };
+
+        var mockHttp = new MockHttpMessageHandler();
+        var response = new HealthCheckResponse
+        {
+            Status = "Unhealthy",
+            Version = "1.0.0",
+            Checks = [MakeCheck("database", "Unhealthy", "Connection refused")]
+        };
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        mockHttp.When(HttpMethod.Get, "https://api.example.com/health")
+            .Respond("application/json", json);
+
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient("HealthEndpoint").Returns(mockHttp.ToHttpClient());
+
+        var alertStateService = Substitute.For<IServiceHealthAlertStateService>();
+        alertStateService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ServiceHealthAlertState>());
+
+        var emailService = Substitute.For<IEmailNotificationService>();
+
+        var loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger(Arg.Any<string>()).Returns(Substitute.For<ILogger>());
+
+        var function = new ServiceOutageAlertFunction(
+            httpClientFactory, alertStateService, emailService,
+            Options.Create(settings), loggerFactory);
+
+        // Act
+        await function.Run(null!, _context);
+
+        // Assert — below threshold, no alert
+        await emailService.DidNotReceive().SendServiceOutageAlertAsync(
+            Arg.Any<IReadOnlyList<HealthCheckEntry>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Run_MeetsFailureThreshold_SendsAlert()
+    {
+        // Arrange — threshold is 3, prior state has 2 consecutive failures → this run makes 3
+        var settings = new ResendSettings
+        {
+            Enabled = true,
+            QuietPeriodMinutes = 60,
+            HealthEndpointUrl = "https://api.example.com/health",
+            FailureThresholdBeforeAlert = 3
+        };
+
+        var mockHttp = new MockHttpMessageHandler();
+        var response = new HealthCheckResponse
+        {
+            Status = "Unhealthy",
+            Version = "1.0.0",
+            Checks = [MakeCheck("database", "Unhealthy", "Connection refused")]
+        };
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        mockHttp.When(HttpMethod.Get, "https://api.example.com/health")
+            .Respond("application/json", json);
+
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient("HealthEndpoint").Returns(mockHttp.ToHttpClient());
+
+        var alertStateService = Substitute.For<IServiceHealthAlertStateService>();
+        alertStateService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ServiceHealthAlertState>
+            {
+                MakePriorState("database", "Unhealthy", consecutiveFailureCount: 2)
+            });
+
+        var emailService = Substitute.For<IEmailNotificationService>();
+
+        var loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger(Arg.Any<string>()).Returns(Substitute.For<ILogger>());
+
+        var function = new ServiceOutageAlertFunction(
+            httpClientFactory, alertStateService, emailService,
+            Options.Create(settings), loggerFactory);
+
+        // Act
+        await function.Run(null!, _context);
+
+        // Assert — meets threshold, alert sent
+        await emailService.Received(1).SendServiceOutageAlertAsync(
+            Arg.Is<IReadOnlyList<HealthCheckEntry>>(list =>
+                list.Count == 1 && list[0].Name == "database"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Run_HealthyAfterFailures_UpsertsStatusWithHealthy()
+    {
+        // Arrange — prior state had failures, now healthy
+        SetupHealthResponse(MakeCheck("database", "Healthy"));
+        SetupPriorStates(MakePriorState("database", "Unhealthy",
+            consecutiveFailureCount: 5));
+
+        // Act
+        await _function.Run(null!, _context);
+
+        // Assert — upsert called with Healthy (service will reset counter)
+        await _alertStateService.Received(1).UpsertStatusAsync("database", "Healthy", Arg.Any<CancellationToken>());
     }
 
     #endregion

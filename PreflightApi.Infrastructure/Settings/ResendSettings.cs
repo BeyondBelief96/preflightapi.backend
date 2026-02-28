@@ -13,5 +13,7 @@ namespace PreflightApi.Infrastructure.Settings
         public string TopicAlertsId { get; init; } = string.Empty;
         public string ApiBaseUrl { get; init; } = "https://api.resend.com";
         public string HealthEndpointUrl { get; init; } = string.Empty;
+        public int FailureThresholdBeforeAlert { get; init; } = 3;
+        public string StatusPageUrl { get; init; } = "https://preflightapi.io/status";
     }
 }

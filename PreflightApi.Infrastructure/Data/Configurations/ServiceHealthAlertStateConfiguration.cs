@@ -11,6 +11,7 @@ namespace PreflightApi.Infrastructure.Data.Configurations
             builder.Property(e => e.ServiceName).HasMaxLength(100);
             builder.Property(e => e.LastKnownStatus).HasMaxLength(20);
             builder.Property(e => e.LastAlertSeverity).HasMaxLength(20);
+            builder.Property(e => e.ConsecutiveFailureCount).HasDefaultValue(0);
         }
     }
 }
