@@ -203,14 +203,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANTID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTIONID }}
 
-      - name: Enable maintenance mode
-        run: |
-          SUB_ID=$(az account show --query id -o tsv)
-          az rest --method put \
-            --url "https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/namedValues/maintenance-mode?api-version=2024-05-01" \
-            --body '{"properties":{"displayName":"maintenance-mode","value":"true"}}'
-          echo "Maintenance mode enabled — APIM will return 503 to API requests"
-
       - name: Download API artifact
         uses: actions/download-artifact@v4
         with:
@@ -231,6 +223,41 @@ jobs:
           API_HOSTNAME=$(az webapp show --name ${{ env.API_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query defaultHostName -o tsv)
           echo "API_HOSTNAME=$API_HOSTNAME" >> $GITHUB_ENV
           echo "Resolved API hostname: $API_HOSTNAME"
+
+      # Deploy APIM Policies (before OpenAPI import to avoid management plane conflicts)
+      - name: Checkout for APIM policies
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: apim-policies
+          path: repo
+
+      - name: Deploy APIM API-level policy
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}"
+          API_VERSION="2024-05-01"
+
+          echo "Deploying API-level policy"
+          policy_content=$(python3 -c "import json; print(json.dumps(open('repo/apim-policies/api-policy.xml').read()))")
+          az rest --method put \
+            --url "${BASE_URL}/apis/preflightapi/policies/policy?api-version=${API_VERSION}" \
+            --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+
+      - name: Deploy APIM product policies
+        run: |
+          SUB_ID=$(az account show --query id -o tsv)
+          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/products"
+          API_VERSION="2024-05-01"
+
+          for policy_file in repo/apim-policies/*-policy.xml; do
+            [ "$(basename "$policy_file")" = "api-policy.xml" ] && continue
+            product_id=$(basename "$policy_file" | sed 's/-policy\.xml//')
+            echo "Deploying policy for product: ${product_id}"
+            policy_content=$(python3 -c "import json; print(json.dumps(open('${policy_file}').read()))")
+            az rest --method put \
+              --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
+              --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+          done
 
       - name: Wait for API and download swagger spec
         run: |
@@ -275,46 +302,3 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
 
-      # Deploy APIM Policies
-      - name: Checkout for APIM policies
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: apim-policies
-          path: repo
-
-      - name: Deploy APIM API-level policy
-        run: |
-          SUB_ID=$(az account show --query id -o tsv)
-          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}"
-          API_VERSION="2024-05-01"
-
-          echo "Deploying API-level policy"
-          policy_content=$(python3 -c "import json; print(json.dumps(open('repo/apim-policies/api-policy.xml').read()))")
-          az rest --method put \
-            --url "${BASE_URL}/apis/preflightapi/policies/policy?api-version=${API_VERSION}" \
-            --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
-
-      - name: Deploy APIM product policies
-        run: |
-          SUB_ID=$(az account show --query id -o tsv)
-          BASE_URL="https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/products"
-          API_VERSION="2024-05-01"
-
-          for policy_file in repo/apim-policies/*-policy.xml; do
-            [ "$(basename "$policy_file")" = "api-policy.xml" ] && continue
-            product_id=$(basename "$policy_file" | sed 's/-policy\.xml//')
-            echo "Deploying policy for product: ${product_id}"
-            policy_content=$(python3 -c "import json; print(json.dumps(open('${policy_file}').read()))")
-            az rest --method put \
-              --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
-              --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
-          done
-
-      - name: Disable maintenance mode
-        if: always()
-        run: |
-          SUB_ID=$(az account show --query id -o tsv)
-          az rest --method put \
-            --url "https://management.azure.com/subscriptions/${SUB_ID}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ApiManagement/service/${{ env.APIM_SERVICE_NAME }}/namedValues/maintenance-mode?api-version=2024-05-01" \
-            --body '{"properties":{"displayName":"maintenance-mode","value":"false"}}'
-          echo "Maintenance mode disabled — APIM is back to normal"
