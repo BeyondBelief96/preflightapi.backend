@@ -11,6 +11,15 @@ public record RunwayDto
     /// <summary>System-generated unique identifier.</summary>
     public Guid Id { get; init; }
 
+    /// <summary>ICAO code of the parent airport (e.g., KDFW). Included when queried via the Runways endpoints.</summary>
+    public string? AirportIcaoCode { get; init; }
+
+    /// <summary>FAA identifier of the parent airport (e.g., DFW). Included when queried via the Runways endpoints.</summary>
+    public string? AirportArptId { get; init; }
+
+    /// <summary>Name of the parent airport. Included when queried via the Runways endpoints.</summary>
+    public string? AirportName { get; init; }
+
     /// <summary>FAA NASR field: RWY_ID. Runway identification (e.g., "01/19", "09L/27R", "H1" for helipad).</summary>
     public string RunwayId { get; init; } = string.Empty;
 
@@ -83,6 +92,9 @@ public record RunwayDto
 
     /// <summary>FAA NASR field: LENGTH_SOURCE_DATE. Date of runway length source information.</summary>
     public DateTime? LengthSourceDate { get; init; }
+
+    /// <summary>GeoJSON polygon geometry of the physical runway boundary. Only included when includeGeometry=true.</summary>
+    public GeoJsonGeometry? Geometry { get; init; }
 
     /// <summary>Runway end details for each direction (typically two per runway).</summary>
     public List<RunwayEndDto> RunwayEnds { get; init; } = new();

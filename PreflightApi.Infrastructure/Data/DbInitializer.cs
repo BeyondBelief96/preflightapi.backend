@@ -26,7 +26,8 @@ namespace PreflightApi.Infrastructure.Data
                 { PublicationType.Airspaces, (5, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) },
                 { PublicationType.SpecialUseAirspaces, (6, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) },
                 { PublicationType.Obstacles, (7, 56, new DateTime(2025, 10, 28, 0, 0, 0, DateTimeKind.Utc)) },
-                { PublicationType.NasrSubscription_Navaids, (8, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) }
+                { PublicationType.NasrSubscription_Navaids, (8, 28, new DateTime(2025, 1, 23, 0, 0, 0, DateTimeKind.Utc)) },
+                { PublicationType.RunwayGeometry, (9, 56, new DateTime(2024, 12, 26, 0, 0, 0, DateTimeKind.Utc)) }
             };
             
             // Get existing records
