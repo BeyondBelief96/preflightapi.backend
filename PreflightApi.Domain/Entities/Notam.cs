@@ -22,13 +22,13 @@ public class Notam
     /// <summary>
     /// Domestic location code (e.g., "CLT")
     /// </summary>
-    [Column("location", TypeName = "varchar(10)")]
+    [Column("location", TypeName = "varchar(20)")]
     public string? Location { get; set; }
 
     /// <summary>
     /// ICAO location code (e.g., "KCLT")
     /// </summary>
-    [Column("icao_location", TypeName = "varchar(10)")]
+    [Column("icao_location", TypeName = "varchar(20)")]
     public string? IcaoLocation { get; set; }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class Notam
     /// <summary>
     /// Bare NOTAM sequence number (e.g., "420", "3997")
     /// </summary>
-    [Column("notam_number", TypeName = "varchar(10)")]
+    [Column("notam_number", TypeName = "varchar(20)")]
     public string? NotamNumber { get; set; }
 
     /// <summary>
@@ -65,7 +65,7 @@ public class Notam
     /// <summary>
     /// Accountability code (e.g., "BNA", "FDC")
     /// </summary>
-    [Column("account_id", TypeName = "varchar(10)")]
+    [Column("account_id", TypeName = "varchar(20)")]
     public string? AccountId { get; set; }
 
     /// <summary>

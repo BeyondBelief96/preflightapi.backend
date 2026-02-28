@@ -17,10 +17,10 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
             .IsRequired();
 
         builder.Property(e => e.Location)
-            .HasMaxLength(10);
+            .HasMaxLength(20);
 
         builder.Property(e => e.IcaoLocation)
-            .HasMaxLength(10);
+            .HasMaxLength(20);
 
         builder.Property(e => e.Classification)
             .HasMaxLength(20);
@@ -29,16 +29,16 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
             .HasMaxLength(5);
 
         builder.Property(e => e.NotamNumber)
-            .HasMaxLength(10);
+            .HasMaxLength(20);
 
         builder.Property(e => e.NotamYear)
             .HasMaxLength(4);
 
         builder.Property(e => e.Series)
-            .HasMaxLength(2);
+            .HasMaxLength(10);
 
         builder.Property(e => e.AccountId)
-            .HasMaxLength(10);
+            .HasMaxLength(20);
 
         builder.Property(e => e.AirportName)
             .HasMaxLength(100);
