@@ -1,0 +1,13 @@
+{
+  "$schema": "nasr-common-columns-v1",
+  "dataset": "NAV",
+  "description": "COMMON TO ALL columns present in every CSV file within the FAA NASR NAV dataset (NAV_BASE, NAV_CKPT, NAV_RMK). These columns carry the same values across all sub-files for a given NAVAID.",
+  "columns": [
+    "EFF_DATE",
+    "NAV_ID",
+    "NAV_TYPE",
+    "STATE_CODE",
+    "CITY",
+    "COUNTRY_CODE"
+  ]
+}

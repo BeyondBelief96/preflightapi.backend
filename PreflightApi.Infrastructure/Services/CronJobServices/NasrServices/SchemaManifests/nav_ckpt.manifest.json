@@ -1,0 +1,79 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "NAV_CKPT.csv",
+  "description": "NAVAID checkpoint data from the FAA NASR 28-day subscription. Contains air and ground checkpoints for verifying NAVAID accuracy.",
+  "entity": "NavaidCheckpoint",
+  "lastVerified": "2026-02-27",
+  "columns": {
+    "EFF_DATE": {
+      "entityProperty": null,
+      "dataType": "date",
+      "required": true,
+      "description": "The 28 Day NASR Subscription Effective Date (YYYY/MM/DD)."
+    },
+    "NAV_ID": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Identifier (key column for joining to NAV_BASE)."
+    },
+    "NAV_TYPE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Type (key column for joining to NAV_BASE)."
+    },
+    "STATE_CODE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "description": "Associated State Post Office Code (common column)."
+    },
+    "CITY": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "Associated City Name (key column for joining to NAV_BASE)."
+    },
+    "COUNTRY_CODE": {
+      "entityProperty": null,
+      "dataType": "string",
+      "required": true,
+      "description": "Country Post Office Code (key column for joining to NAV_BASE)."
+    },
+    "ALTITUDE": {
+      "entityProperty": "Altitude",
+      "dataType": "int",
+      "description": "Altitude only when checkpoint is in air."
+    },
+    "BRG": {
+      "entityProperty": "Bearing",
+      "dataType": "int",
+      "required": true,
+      "description": "Bearing of checkpoint."
+    },
+    "AIR_GND_CODE": {
+      "entityProperty": "AirGroundCode",
+      "dataType": "string",
+      "required": true,
+      "description": "Air/Ground Code: A=AIR, G=GROUND, G1=GROUND ONE.",
+      "enumeratedValues": ["A", "G", "G1"]
+    },
+    "CHK_DESC": {
+      "entityProperty": "Description",
+      "dataType": "string",
+      "required": true,
+      "description": "Narrative description associated with the checkpoint."
+    },
+    "ARPT_ID": {
+      "entityProperty": "AirportId",
+      "dataType": "string",
+      "description": "Airport ID associated with the checkpoint."
+    },
+    "STATE_CHK_CODE": {
+      "entityProperty": "StateCode",
+      "dataType": "string",
+      "required": true,
+      "description": "State code in which associated city is located."
+    }
+  }
+}

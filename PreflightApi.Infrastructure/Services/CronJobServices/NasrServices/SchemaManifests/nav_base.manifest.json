@@ -1,0 +1,405 @@
+{
+  "$schema": "nasr-schema-manifest-v1",
+  "csvFile": "NAV_BASE.csv",
+  "description": "Navigation Aid (NAVAID) base data from the FAA NASR 28-day subscription. Contains VOR, VORTAC, NDB, DME, TACAN, and other navigation aid data including location, frequencies, and operational status.",
+  "entity": "Navaid",
+  "lastVerified": "2026-02-27",
+  "columns": {
+    "EFF_DATE": {
+      "entityProperty": "EffectiveDate",
+      "dataType": "date",
+      "required": true,
+      "description": "The 28 Day NASR Subscription Effective Date (YYYY/MM/DD)."
+    },
+    "NAV_ID": {
+      "entityProperty": "NavId",
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Identifier."
+    },
+    "NAV_TYPE": {
+      "entityProperty": "NavType",
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Facility Type.",
+      "enumeratedValues": ["VOR", "VORTAC", "VOR/DME", "NDB", "NDB/DME", "TACAN", "DME", "FAN MARKER", "VOT", "UHF/NDB", "MARINE NDB", "MARINE NDB/DME"]
+    },
+    "STATE_CODE": {
+      "entityProperty": "StateCode",
+      "dataType": "string",
+      "description": "Associated State Post Office Code."
+    },
+    "CITY": {
+      "entityProperty": "City",
+      "dataType": "string",
+      "required": true,
+      "description": "Associated City Name."
+    },
+    "COUNTRY_CODE": {
+      "entityProperty": "CountryCode",
+      "dataType": "string",
+      "required": true,
+      "description": "Country Post Office Code NAVAID Located."
+    },
+    "NAV_STATUS": {
+      "entityProperty": "NavStatus",
+      "dataType": "string",
+      "required": true,
+      "description": "Navigation Aid Status."
+    },
+    "NAME": {
+      "entityProperty": "Name",
+      "dataType": "string",
+      "required": true,
+      "description": "Name of NAVAID."
+    },
+    "STATE_NAME": {
+      "entityProperty": "StateName",
+      "dataType": "string",
+      "description": "Associated State Name."
+    },
+    "REGION_CODE": {
+      "entityProperty": "RegionCode",
+      "dataType": "string",
+      "description": "FAA Region responsible for NAVAID (code)."
+    },
+    "COUNTRY_NAME": {
+      "entityProperty": "CountryName",
+      "dataType": "string",
+      "required": true,
+      "description": "Country Name NAVAID Located."
+    },
+    "FAN_MARKER": {
+      "entityProperty": "FanMarker",
+      "dataType": "string",
+      "description": "Name of FAN MARKER."
+    },
+    "OWNER": {
+      "entityProperty": "Owner",
+      "dataType": "string",
+      "description": "A Concatenation of the NAVAID OWNER CODE - NAVAID OWNER NAME."
+    },
+    "OPERATOR": {
+      "entityProperty": "Operator",
+      "dataType": "string",
+      "description": "A Concatenation of the NAVAID OPERATOR CODE - NAVAID OPERATOR NAME."
+    },
+    "NAS_USE_FLAG": {
+      "entityProperty": "NasUseFlag",
+      "dataType": "string",
+      "required": true,
+      "description": "Common System Usage. Defines how the NAVAID is used.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "PUBLIC_USE_FLAG": {
+      "entityProperty": "PublicUseFlag",
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID PUBLIC USE. Defines by whom the NAVAID is used.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "NDB_CLASS_CODE": {
+      "entityProperty": "NdbClassCode",
+      "dataType": "string",
+      "description": "Class of NDB."
+    },
+    "OPER_HOURS": {
+      "entityProperty": "OperHours",
+      "dataType": "string",
+      "description": "Hours of Operation of NAVAID."
+    },
+    "HIGH_ALT_ARTCC_ID": {
+      "entityProperty": "HighAltArtccId",
+      "dataType": "string",
+      "description": "Identifier of ARTCC with High Altitude Boundary That the NAVAID Falls Within."
+    },
+    "HIGH_ARTCC_NAME": {
+      "entityProperty": "HighArtccName",
+      "dataType": "string",
+      "description": "Name of ARTCC with High Altitude Boundary That the NAVAID Falls Within."
+    },
+    "LOW_ALT_ARTCC_ID": {
+      "entityProperty": "LowAltArtccId",
+      "dataType": "string",
+      "description": "Identifier of ARTCC with Low Altitude Boundary That the NAVAID Falls Within."
+    },
+    "LOW_ARTCC_NAME": {
+      "entityProperty": "LowArtccName",
+      "dataType": "string",
+      "description": "Name of ARTCC with Low Altitude Boundary That the NAVAID Falls Within."
+    },
+    "LAT_DEG": {
+      "entityProperty": "LatDeg",
+      "dataType": "int",
+      "required": true,
+      "description": "NAVAID Latitude Degrees."
+    },
+    "LAT_MIN": {
+      "entityProperty": "LatMin",
+      "dataType": "int",
+      "required": true,
+      "description": "NAVAID Latitude Minutes."
+    },
+    "LAT_SEC": {
+      "entityProperty": "LatSec",
+      "dataType": "decimal",
+      "required": true,
+      "description": "NAVAID Latitude Seconds."
+    },
+    "LAT_HEMIS": {
+      "entityProperty": "LatHemis",
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Latitude Hemisphere.",
+      "enumeratedValues": ["N", "S"]
+    },
+    "LAT_DECIMAL": {
+      "entityProperty": "LatDecimal",
+      "dataType": "decimal",
+      "required": true,
+      "description": "NAVAID Latitude in Decimal Format."
+    },
+    "LONG_DEG": {
+      "entityProperty": "LongDeg",
+      "dataType": "int",
+      "required": true,
+      "description": "NAVAID Longitude Degrees."
+    },
+    "LONG_MIN": {
+      "entityProperty": "LongMin",
+      "dataType": "int",
+      "required": true,
+      "description": "NAVAID Longitude Minutes."
+    },
+    "LONG_SEC": {
+      "entityProperty": "LongSec",
+      "dataType": "decimal",
+      "required": true,
+      "description": "NAVAID Longitude Seconds."
+    },
+    "LONG_HEMIS": {
+      "entityProperty": "LongHemis",
+      "dataType": "string",
+      "required": true,
+      "description": "NAVAID Longitude Hemisphere.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "LONG_DECIMAL": {
+      "entityProperty": "LongDecimal",
+      "dataType": "decimal",
+      "required": true,
+      "description": "NAVAID Longitude in Decimal Format."
+    },
+    "SURVEY_ACCURACY_CODE": {
+      "entityProperty": "SurveyAccuracyCode",
+      "dataType": "string",
+      "description": "Latitude/Longitude Survey Accuracy (Code)."
+    },
+    "TACAN_DME_STATUS": {
+      "entityProperty": "TacanDmeStatus",
+      "dataType": "string",
+      "description": "Status of TACAN or DME Equipment."
+    },
+    "TACAN_DME_LAT_DEG": {
+      "entityProperty": "TacanDmeLatDeg",
+      "dataType": "int",
+      "description": "Latitude Degrees of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LAT_MIN": {
+      "entityProperty": "TacanDmeLatMin",
+      "dataType": "int",
+      "description": "Latitude Minutes of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LAT_SEC": {
+      "entityProperty": "TacanDmeLatSec",
+      "dataType": "decimal",
+      "description": "Latitude Seconds of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LAT_HEMIS": {
+      "entityProperty": "TacanDmeLatHemis",
+      "dataType": "string",
+      "description": "Latitude Hemisphere of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LAT_DECIMAL": {
+      "entityProperty": "TacanDmeLatDecimal",
+      "dataType": "decimal",
+      "description": "Latitude in Decimal Format of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LONG_DEG": {
+      "entityProperty": "TacanDmeLongDeg",
+      "dataType": "int",
+      "description": "Longitude Degrees of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LONG_MIN": {
+      "entityProperty": "TacanDmeLongMin",
+      "dataType": "int",
+      "description": "Longitude Minutes of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LONG_SEC": {
+      "entityProperty": "TacanDmeLongSec",
+      "dataType": "decimal",
+      "description": "Longitude Seconds of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LONG_HEMIS": {
+      "entityProperty": "TacanDmeLongHemis",
+      "dataType": "string",
+      "description": "Longitude Hemisphere of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "TACAN_DME_LONG_DECIMAL": {
+      "entityProperty": "TacanDmeLongDecimal",
+      "dataType": "decimal",
+      "description": "Longitude in Decimal Format of TACAN Portion of VORTAC when TACAN is not sited with VOR."
+    },
+    "ELEV": {
+      "entityProperty": "Elev",
+      "dataType": "decimal",
+      "description": "Elevation in Tenth of a Foot (MSL)."
+    },
+    "MAG_VARN": {
+      "entityProperty": "MagVarn",
+      "dataType": "int",
+      "description": "Magnetic Variation Degrees."
+    },
+    "MAG_VARN_HEMIS": {
+      "entityProperty": "MagVarnHemis",
+      "dataType": "string",
+      "description": "Magnetic Variation Direction.",
+      "enumeratedValues": ["E", "W"]
+    },
+    "MAG_VARN_YEAR": {
+      "entityProperty": "MagVarnYear",
+      "dataType": "int",
+      "description": "Magnetic Variation Epoch Year."
+    },
+    "SIMUL_VOICE_FLAG": {
+      "entityProperty": "SimulVoiceFlag",
+      "dataType": "string",
+      "description": "Simultaneous Voice Feature.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "PWR_OUTPUT": {
+      "entityProperty": "PwrOutput",
+      "dataType": "int",
+      "description": "Power Output (In Watts)."
+    },
+    "AUTO_VOICE_ID_FLAG": {
+      "entityProperty": "AutoVoiceIdFlag",
+      "dataType": "string",
+      "description": "Automatic Voice Identification Feature.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "MNT_CAT_CODE": {
+      "entityProperty": "MntCatCode",
+      "dataType": "string",
+      "description": "Monitoring Category."
+    },
+    "VOICE_CALL": {
+      "entityProperty": "VoiceCall",
+      "dataType": "string",
+      "description": "Radio Voice Call (Name) or Trans Signal."
+    },
+    "CHAN": {
+      "entityProperty": "Chan",
+      "dataType": "string",
+      "description": "Channel (TACAN) NAVAID Transmits On."
+    },
+    "FREQ": {
+      "entityProperty": "Freq",
+      "dataType": "decimal",
+      "description": "Frequency the NAVAID Transmits On (Except TACAN)."
+    },
+    "MKR_IDENT": {
+      "entityProperty": "MkrIdent",
+      "dataType": "string",
+      "description": "Transmitted Fan Marker/Marine Radio Beacon Identifier."
+    },
+    "MKR_SHAPE": {
+      "entityProperty": "MkrShape",
+      "dataType": "string",
+      "description": "Fan Marker Type.",
+      "enumeratedValues": ["E"]
+    },
+    "MKR_BRG": {
+      "entityProperty": "MkrBrg",
+      "dataType": "int",
+      "description": "Marker Bearing."
+    },
+    "ALT_CODE": {
+      "entityProperty": "AltCode",
+      "dataType": "string",
+      "description": "VOR Standard Service Volume."
+    },
+    "DME_SSV": {
+      "entityProperty": "DmeSsv",
+      "dataType": "string",
+      "description": "DME Standard Service Volume."
+    },
+    "LOW_NAV_ON_HIGH_CHART_FLAG": {
+      "entityProperty": "LowNavOnHighChartFlag",
+      "dataType": "string",
+      "description": "Low Altitude Facility Used in High Structure.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "Z_MKR_FLAG": {
+      "entityProperty": "ZMkrFlag",
+      "dataType": "string",
+      "description": "NAVAID Z Marker Available.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "FSS_ID": {
+      "entityProperty": "FssId",
+      "dataType": "string",
+      "description": "Associated/Controlling FSS (IDENT)."
+    },
+    "FSS_NAME": {
+      "entityProperty": "FssName",
+      "dataType": "string",
+      "description": "Associated/Controlling FSS (Name)."
+    },
+    "FSS_HOURS": {
+      "entityProperty": "FssHours",
+      "dataType": "string",
+      "description": "Hours of Operation of Controlling FSS."
+    },
+    "NOTAM_ID": {
+      "entityProperty": "NotamId",
+      "dataType": "string",
+      "description": "NOTAM Accountability Code (IDENT)."
+    },
+    "QUAD_IDENT": {
+      "entityProperty": "QuadIdent",
+      "dataType": "string",
+      "description": "Quadrant Identification and Range Leg Bearing (LFR Only)."
+    },
+    "PITCH_FLAG": {
+      "entityProperty": "PitchFlag",
+      "dataType": "string",
+      "description": "Pitch Flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "CATCH_FLAG": {
+      "entityProperty": "CatchFlag",
+      "dataType": "string",
+      "description": "Catch Flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "SUA_ATCAA_FLAG": {
+      "entityProperty": "SuaAtcaaFlag",
+      "dataType": "string",
+      "description": "SUA/ATCAA Flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "RESTRICTION_FLAG": {
+      "entityProperty": "RestrictionFlag",
+      "dataType": "string",
+      "description": "NAVAID Restriction Flag.",
+      "enumeratedValues": ["Y", "N"]
+    },
+    "HIWAS_FLAG": {
+      "entityProperty": "HiwasFlag",
+      "dataType": "string",
+      "description": "HIWAS Flag.",
+      "enumeratedValues": ["Y", "N"]
+    }
+  }
+}

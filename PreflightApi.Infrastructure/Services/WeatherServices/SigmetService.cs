@@ -61,15 +61,51 @@ public class SigmetService : ISigmetService
                 .Where(a => a.Hazard != null && a.Hazard.Type == hazardTypeString)
                 .ToList();
 
-            var decodedCursor = CursorHelper.DecodeInt(cursor);
-            if (decodedCursor.HasValue)
-                filtered = filtered.Where(s => s.Id > decodedCursor.Value).ToList();
+            var decoded = CursorHelper.DecodeIntWithDirection(cursor);
+            var isBackward = decoded?.Direction == CursorDirection.Backward;
+            var hasCursor = decoded != null;
 
-            var hasMore = filtered.Count > limit;
+            if (decoded != null)
+            {
+                filtered = isBackward
+                    ? filtered.Where(s => s.Id < decoded.Value).ToList()
+                    : filtered.Where(s => s.Id > decoded.Value).ToList();
+            }
+
+            if (isBackward)
+                filtered.Reverse();
+
+            var hasExtra = filtered.Count > limit;
             var page = filtered.Take(limit).ToList();
-            var nextCursor = hasMore && page.Count > 0
-                ? CursorHelper.Encode(page[^1].Id)
-                : null;
+
+            if (isBackward)
+                page.Reverse();
+
+            bool hasMore, hasPrevious;
+            string? nextCursor, previousCursor;
+
+            if (isBackward)
+            {
+                hasPrevious = hasExtra;
+                hasMore = page.Count > 0;
+                previousCursor = hasPrevious && page.Count > 0
+                    ? CursorHelper.EncodePrevious(page[0].Id)
+                    : null;
+                nextCursor = page.Count > 0
+                    ? CursorHelper.EncodeNext(page[^1].Id)
+                    : null;
+            }
+            else
+            {
+                hasMore = hasExtra;
+                hasPrevious = hasCursor;
+                nextCursor = hasMore && page.Count > 0
+                    ? CursorHelper.EncodeNext(page[^1].Id)
+                    : null;
+                previousCursor = hasCursor && page.Count > 0
+                    ? CursorHelper.EncodePrevious(page[0].Id)
+                    : null;
+            }
 
             return new PaginatedResponse<SigmetDto>
             {
@@ -78,6 +114,8 @@ public class SigmetService : ISigmetService
                 {
                     NextCursor = nextCursor,
                     HasMore = hasMore,
+                    PreviousCursor = previousCursor,
+                    HasPrevious = hasPrevious,
                     Limit = limit
                 }
             };

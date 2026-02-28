@@ -24,6 +24,10 @@ public class PaginationMetadata
     public string? NextCursor { get; init; }
     /// <summary>True if more results are available beyond this page; false if this is the last page.</summary>
     public bool HasMore { get; init; }
+    /// <summary>Opaque cursor value to pass as the <c>cursor</c> query parameter to fetch the previous page. Null on the first page.</summary>
+    public string? PreviousCursor { get; init; }
+    /// <summary>True if there are results before this page; false if this is the first page.</summary>
+    public bool HasPrevious { get; init; }
     /// <summary>Maximum number of items returned per page (1-500, default 100).</summary>
     public int Limit { get; init; }
 }

@@ -67,6 +67,7 @@ builder.Services.AddScoped<IAirspaceCronService<Airspace>, AirspaceCronService>(
 builder.Services.AddScoped<IAirspaceCronService<SpecialUseAirspace>, SpecialUseAirspaceCronService>();
 builder.Services.AddScoped<IAirportCronService, AirportCronService>();
 builder.Services.AddScoped<ICommunicationFrequencyCronService, CommunicationFrequencyCronService>();
+builder.Services.AddScoped<INavaidCronService, NavaidCronService>();
 builder.Services.AddScoped<IRunwayCronService, RunwayCronService>();
 builder.Services.AddScoped<IRunwayEndCronService, RunwayEndCronService>();
 builder.Services.AddScoped<IObstacleCronService, ObstacleCronService>();

@@ -19,5 +19,6 @@ namespace PreflightApi.Domain.Constants
         public const string Obstacle = "Obstacle";
         public const string ChartSupplement = "ChartSupplement";
         public const string TerminalProcedure = "TerminalProcedure";
+        public const string Navaid = "Navaid";
     }
 }
