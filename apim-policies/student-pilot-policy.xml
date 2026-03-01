@@ -17,6 +17,7 @@
 				"/api/v1/metars",
 				"/api/v1/tafs",
 				"/api/v1/airports",
+				"/api/v1/runways",
 				"/api/v1/communication-frequencies"
 			};
 			return allowedPrefixes.Any(p => path.StartsWith(p));

@@ -189,7 +189,7 @@ jobs:
           --rule-name github-runner-${{ github.run_id }}
           --yes
 
-  deploy:
+  deploy-api:
     needs: [build, migrations]
     runs-on: ubuntu-latest
     permissions:
@@ -283,7 +283,20 @@ jobs:
             --specification-format OpenApiJson \
             --specification-path swagger.json
 
-      # Deploy Functions
+  deploy-functions:
+    needs: [build, migrations]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GITHUB_DEPLOYMENT_APP_REGISTRATION_CLIENTID }}
+          tenant-id: ${{ secrets.AZURE_TENANTID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTIONID }}
+
       - name: Download Functions zip
         uses: actions/download-artifact@v4
         with:

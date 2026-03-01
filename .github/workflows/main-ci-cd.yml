@@ -223,7 +223,7 @@ jobs:
           --rule-name github-runner-${{ github.run_id }}
           --yes
 
-  deploy:
+  deploy-api:
     needs: [build, migrations]
     runs-on: ubuntu-latest
     permissions:
@@ -236,12 +236,6 @@ jobs:
           client-id: ${{ secrets.AZURE_GITHUB_DEPLOYMENT_PRD_CLIENTID }}
           tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
-
-      - name: Stop Function App (prevent alerts during deployment)
-        run: >
-          az functionapp stop
-          --resource-group ${{ env.RESOURCE_GROUP }}
-          --name ${{ env.FUNCTION_APP_NAME }}
 
       - name: Download API artifact
         uses: actions/download-artifact@v4
@@ -323,7 +317,26 @@ jobs:
             --specification-format OpenApiJson \
             --specification-path swagger.json
 
-      # Deploy Functions
+  deploy-functions:
+    needs: [build, migrations]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GITHUB_DEPLOYMENT_PRD_CLIENTID }}
+          tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
+
+      - name: Stop Function App (prevent alerts during deployment)
+        run: >
+          az functionapp stop
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          --name ${{ env.FUNCTION_APP_NAME }}
+
       - name: Download Functions zip
         uses: actions/download-artifact@v4
         with:
@@ -336,7 +349,7 @@ jobs:
           --name ${{ env.FUNCTION_APP_NAME }}
           --src functionapp.zip
 
-      - name: Restart Function App
+      - name: Start Function App
         if: always()
         run: >
           az functionapp start
@@ -345,7 +358,7 @@ jobs:
 
 
   release:
-    needs: [deploy, build]
+    needs: [deploy-api, deploy-functions, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
