@@ -175,7 +175,7 @@ public class NavlogService : INavlogService
         {
             var isTerminal = index == 0 || index == waypoints.Count - 1;
             var isRefuelStop = (waypoint.IsRefuelingStop ?? false);
-            var isBottomOfDescent = waypoint.Id?.StartsWith("BOD-", StringComparison.OrdinalIgnoreCase) ?? false;
+            var isBottomOfDescent = waypoint.Id.StartsWith("BOD-", StringComparison.OrdinalIgnoreCase);
 
             // Preserve altitude for terminal points, refuel stops, and BOD (which is at TPA)
             if (isTerminal || isRefuelStop || isBottomOfDescent)
