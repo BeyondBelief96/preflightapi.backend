@@ -83,6 +83,10 @@ namespace PreflightApi.Infrastructure.Services
             }
 
             var logoUrl = await GetLogoUrlAsync();
+            if(logoUrl == null)
+            {
+                _logger.LogWarning("Logo URL could not be generated — emails will be sent without logo");
+            }
             var subject = $"[PreflightApi] Data staleness alert — {staleTypes.Count} type(s) stale";
             var html = BuildStalenessHtml(staleTypes, logoUrl);
             var name = $"data-staleness-alert-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
@@ -271,7 +275,7 @@ namespace PreflightApi.Infrastructure.Services
 
         // ── Template builders ─────────────────────────────────────────────
 
-        private string BuildStalenessHtml(IReadOnlyList<DataCurrencyResult> staleTypes, string logoUrl)
+        private string BuildStalenessHtml(IReadOnlyList<DataCurrencyResult> staleTypes, string? logoUrl)
         {
             return BuildEmailWrapper("Data Staleness Alert", logoUrl, sb =>
             {
@@ -317,7 +321,7 @@ namespace PreflightApi.Infrastructure.Services
             });
         }
 
-        private string BuildRecoveryHtml(IReadOnlyList<string> recoveredTypes, string logoUrl)
+        private string BuildRecoveryHtml(IReadOnlyList<string> recoveredTypes, string? logoUrl)
         {
             return BuildEmailWrapper("Data Recovery Notice", logoUrl, sb =>
             {
@@ -352,7 +356,7 @@ namespace PreflightApi.Infrastructure.Services
             });
         }
 
-        private string BuildServiceOutageHtml(IReadOnlyList<HealthCheckEntry> degradedServices, string logoUrl)
+        private string BuildServiceOutageHtml(IReadOnlyList<HealthCheckEntry> degradedServices, string? logoUrl)
         {
             return BuildEmailWrapper("Service Outage Alert", logoUrl, sb =>
             {
@@ -396,7 +400,7 @@ namespace PreflightApi.Infrastructure.Services
             });
         }
 
-        private string BuildServiceRecoveryHtml(IReadOnlyList<string> recoveredServices, string logoUrl)
+        private string BuildServiceRecoveryHtml(IReadOnlyList<string> recoveredServices, string? logoUrl)
         {
             return BuildEmailWrapper("Service Recovery Notice", logoUrl, sb =>
             {
