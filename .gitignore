@@ -372,3 +372,5 @@ FodyWeavers.xsd
 # Email verification test config and output
 **/testsettings.json
 **/EmailVerificationOutput/
+/PreflightApi.API/.postman/config.json
+/PreflightApi.API/postman/collections/PreflightAPI/api/v1
