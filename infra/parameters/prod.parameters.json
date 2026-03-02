@@ -1,0 +1,174 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "resourceGroupName": {
+      "value": "rg-eastus-preflightapi-prd"
+    },
+    "logAnalyticsName": {
+      "value": "preflightapi-log-analytics-workspace-apim-eastus-prd"
+    },
+    "apiAppInsightsName": {
+      "value": "was-eastus-preflightapi-prd"
+    },
+    "functionAppInsightsName": {
+      "value": "function-app-eastus-preflightapi-prd"
+    },
+    "postgresServerName": {
+      "value": "pgsql-eastus2-preflightapi-prd"
+    },
+    "postgresLocation": {
+      "value": "eastus2"
+    },
+    "storageAccountName": {
+      "value": "saeastuspreflightapiprd"
+    },
+    "terminalProceduresContainerName": {
+      "value": "sa-eastus-container-preflightapi-terminalprocedures-prd"
+    },
+    "chartSupplementsContainerName": {
+      "value": "sa-eastus-container-preflightapi-chartsupplements-prd"
+    },
+    "preflightApiResourcesContainerName": {
+      "value": "sa-eastus-container-preflightapi-resources-prd"
+    },
+    "appServicePlanName": {
+      "value": "ASP-rgeastuspreflightapiprd-95a4"
+    },
+    "webAppName": {
+      "value": "was-eastus-preflightapi-prd"
+    },
+    "webAppPlatform": {
+      "value": "linux"
+    },
+    "functionsPlanName": {
+      "value": "ASP-rgeastuspreflightapiprd-82d5"
+    },
+    "functionAppName": {
+      "value": "function-app-eastus-preflightapi-prd"
+    },
+    "functionsStorageName": {
+      "value": "rgeastuspreflightapb08e"
+    },
+    "keyVaultName": {
+      "value": "KeyVaultPreflightApiPrd"
+    },
+    "apimServiceName": {
+      "value": "apim-eastus-preflightapi-prd"
+    },
+    "dbAdminLogin": {
+      "value": "preflightapi_admin"
+    },
+    "dbAdminPassword": {
+      "value": ""
+    },
+    "databaseName": {
+      "value": "preflightapi"
+    },
+    "dbSkuName": {
+      "value": "Standard_B1ms"
+    },
+    "dbSkuTier": {
+      "value": "Burstable"
+    },
+    "dbStorageSizeGB": {
+      "value": 32
+    },
+    "dbVersion": {
+      "value": "16"
+    },
+    "storageSkuName": {
+      "value": "Standard_RAGRS"
+    },
+    "apiSkuName": {
+      "value": "B2"
+    },
+    "apiSkuTier": {
+      "value": "Basic"
+    },
+    "apimPublisherEmail": {
+      "value": ""
+    },
+    "apimSkuName": {
+      "value": "BasicV2"
+    },
+    "apimSkuCapacity": {
+      "value": 1
+    },
+    "noaaApiKey": {
+      "value": ""
+    },
+    "gatewaySecret": {
+      "value": ""
+    },
+    "nmsBaseUrl": {
+      "value": "https://api-nms.aim.faa.gov/nmsapi"
+    },
+    "nmsAuthBaseUrl": {
+      "value": "https://api-nms.aim.faa.gov"
+    },
+    "nmsClientId": {
+      "value": ""
+    },
+    "nmsClientSecret": {
+      "value": ""
+    },
+    "clerkAuthority": {
+      "value": ""
+    },
+    "clerkSecretKey": {
+      "value": ""
+    },
+    "certificateAcmeEmail": {
+      "value": ""
+    },
+    "certificateCertName": {
+      "value": ""
+    },
+    "certificateDomain": {
+      "value": ""
+    },
+    "certificateRootDomain": {
+      "value": ""
+    },
+    "porkbunApiKey": {
+      "value": ""
+    },
+    "porkbunSecretApiKey": {
+      "value": ""
+    },
+    "resendApiToken": {
+      "value": ""
+    },
+    "resendEnabled": {
+      "value": "true"
+    },
+    "resendFromAddress": {
+      "value": "alerts@contact.preflightapi.io"
+    },
+    "resendQuietPeriodMinutes": {
+      "value": "1440"
+    },
+    "resendReplyToAddress": {
+      "value": "bberisford@preflightapi.io"
+    },
+    "resendSegmentAllId": {
+      "value": ""
+    },
+    "resendTopicAlertsId": {
+      "value": ""
+    },
+    "githubDeploymentPrincipalId": {
+      "value": ""
+    },
+    "apimServicePrincipalId": {
+      "value": ""
+    }
+  }
+}

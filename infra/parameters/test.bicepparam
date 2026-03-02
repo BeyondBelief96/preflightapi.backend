@@ -6,38 +6,42 @@ param environment = 'test'
 // ─── Resource Names (matching actual TST infrastructure) ─────────────────────
 
 param resourceGroupName = 'rg-preflightapi-eastus-test'
-param logAnalyticsName = 'log-preflightapi-eastus-test'
-param appInsightsName = 'appi-preflightapi-eastus-test'
+param logAnalyticsName = 'preflightapi-log-analytics-workspace-eastus-tst'
+param apiAppInsightsName = 'preflightapi-eastus-web-api-test'
+param functionAppInsightsName = 'az-func-preflightapi-eastus-test'
 param postgresServerName = 'pgsql-preflightapi-eastus-test'
 param postgresLocation = 'eastus2'
 param storageAccountName = 'rgpreflightapieastusad'
-param terminalProceduresContainerName = 'preflightapi-terminal-procedures-eastus-test'
-param chartSupplementsContainerName = 'preflightapi-chart-supplements-eastus-test'
-param appServicePlanName = 'asp-preflightapi-eastus-api-test'
+param terminalProceduresContainerName = 'preflightapi-terminal-procedures-centralus-test'
+param chartSupplementsContainerName = 'preflightapi-chart-supplements-centralus-test'
+param preflightApiResourcesContainerName = 'sa-eastus-container-preflightapi-resources-tst'
+param appServicePlanName = 'ASP-rgpreflightapieastustest-ac44'
 param webAppName = 'preflightapi-eastus-web-api-test'
-param functionsPlanName = 'asp-preflightapi-eastus-func-test'
+param webAppPlatform = 'windows'
+param functionsPlanName = 'ASP-rgpreflightapieastustest-9578'
 param functionAppName = 'az-func-preflightapi-eastus-test'
-param functionsStorageName = 'stpreflightapifntest'
+param functionsStorageName = '' // TST uses a single storage account for both data and functions
+param keyVaultName = 'KeyVaultPreflightApiTest'
 param apimServiceName = 'preflightapi-apim-service-test'
 
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
 
 param dbAdminLogin = 'preflightapi_admin'
 param dbAdminPassword = readEnvironmentVariable('DB_ADMIN_PASSWORD')
-param databaseName = 'preflightapi'
+param databaseName = 'preflightapi-eastus-test-database'
 param dbSkuName = 'Standard_B1ms'
 param dbSkuTier = 'Burstable'
 param dbStorageSizeGB = 32
-param dbVersion = '16'
+param dbVersion = '15'
 
 // ─── Storage ─────────────────────────────────────────────────────────────────
 
-param storageSkuName = 'Standard_LRS'
+param storageSkuName = 'Standard_RAGRS'
 
 // ─── App Service ─────────────────────────────────────────────────────────────
 
-param apiSkuName = 'B1'
-param apiSkuTier = 'Basic'
+param apiSkuName = 'F1'
+param apiSkuTier = 'Free'
 
 // ─── APIM ────────────────────────────────────────────────────────────────────
 
@@ -60,7 +64,31 @@ param nmsClientSecret = readEnvironmentVariable('NMS_CLIENT_SECRET')
 // ─── Clerk Settings ──────────────────────────────────────────────────────────
 
 param clerkAuthority = readEnvironmentVariable('CLERK_AUTHORITY', '')
+param clerkSecretKey = readEnvironmentVariable('CLERK_SECRET_KEY', '')
+
+// ─── Certificate Renewal ────────────────────────────────────────────────────
+
+param certificateAcmeEmail = readEnvironmentVariable('CERTIFICATE_ACME_EMAIL', '')
+param certificateCertName = readEnvironmentVariable('CERTIFICATE_CERT_NAME', '')
+param certificateDomain = readEnvironmentVariable('CERTIFICATE_DOMAIN', '')
+param certificateRootDomain = readEnvironmentVariable('CERTIFICATE_ROOT_DOMAIN', '')
+
+// ─── Porkbun DNS ────────────────────────────────────────────────────────────
+
+param porkbunApiKey = readEnvironmentVariable('PORKBUN_API_KEY', '')
+param porkbunSecretApiKey = readEnvironmentVariable('PORKBUN_SECRET_API_KEY', '')
+
+// ─── Resend Email ───────────────────────────────────────────────────────────
+
+param resendApiToken = readEnvironmentVariable('RESEND_API_TOKEN', '')
+param resendEnabled = 'false'
+param resendSegmentAllId = readEnvironmentVariable('RESEND_SEGMENT_ALL_ID', '')
+param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', '')
 
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 
 param githubDeploymentPrincipalId = readEnvironmentVariable('GITHUB_DEPLOYMENT_PRINCIPAL_ID', '')
+
+// ─── APIM Service Principal (optional for TST) ─────────────────────────────
+
+param apimServicePrincipalId = readEnvironmentVariable('APIM_SERVICE_PRINCIPAL_ID', '')

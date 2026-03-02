@@ -7,11 +7,15 @@ param planName string
 @description('Web App name')
 param webAppName string
 
-@description('App Service Plan SKU name (e.g., B1)')
+@description('App Service Plan SKU name (e.g., F1, B1, B2)')
 param skuName string = 'B1'
 
-@description('App Service Plan SKU tier (e.g., Basic)')
+@description('App Service Plan SKU tier (e.g., Free, Basic)')
 param skuTier string = 'Basic'
+
+@description('Web App platform (linux or windows)')
+@allowed(['linux', 'windows'])
+param webAppPlatform string = 'linux'
 
 @description('Environment (test, prod)')
 param environment string
@@ -45,17 +49,21 @@ param chartSupplementsContainerName string
 @description('APIM-to-API shared secret for gateway validation')
 param gatewaySecret string
 
-// App Service Plan (Linux)
+@secure()
+@description('NOAA API key for weather data')
+param noaaApiKey string
+
+// App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: planName
   location: location
-  kind: 'linux'
+  kind: webAppPlatform == 'linux' ? 'linux' : 'app'
   sku: {
     name: skuName
     tier: skuTier
   }
   properties: {
-    reserved: true // Required for Linux
+    reserved: webAppPlatform == 'linux'
   }
 }
 
@@ -70,10 +78,14 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|8.0'
-      alwaysOn: true
-      ftpsState: 'Disabled'
+      linuxFxVersion: webAppPlatform == 'linux' ? 'DOTNETCORE|8.0' : null
+      netFrameworkVersion: webAppPlatform == 'windows' ? 'v8.0' : null
+      alwaysOn: skuTier != 'Free'
+      ftpsState: 'FtpsOnly'
       minTlsVersion: '1.2'
+      httpLoggingEnabled: true
+      detailedErrorLoggingEnabled: true
+      requestTracingEnabled: true
       appSettings: [
         {
           name: 'ASPNETCORE_ENVIRONMENT'
@@ -122,6 +134,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'GatewaySecret'
           value: gatewaySecret
+        }
+        {
+          name: 'NOAASettings__NOAAApiKey'
+          value: noaaApiKey
         }
         {
           name: 'ApplicationInsightsAgent_EXTENSION_VERSION'

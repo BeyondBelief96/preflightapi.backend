@@ -6,18 +6,22 @@ param environment = 'prod'
 // ─── Resource Names (matching actual PRD infrastructure) ─────────────────────
 
 param resourceGroupName = 'rg-eastus-preflightapi-prd'
-param logAnalyticsName = 'log-eastus-preflightapi-prd'
-param appInsightsName = 'was-eastus-preflightapi-prd' // Portal named AI same as web app
+param logAnalyticsName = 'preflightapi-log-analytics-workspace-apim-eastus-prd'
+param apiAppInsightsName = 'was-eastus-preflightapi-prd'
+param functionAppInsightsName = 'function-app-eastus-preflightapi-prd'
 param postgresServerName = 'pgsql-eastus2-preflightapi-prd'
 param postgresLocation = 'eastus2'
-param storageAccountName = 'stpreflightapiprod'
-param terminalProceduresContainerName = 'preflightapi-terminal-procedures-eastus-prod'
-param chartSupplementsContainerName = 'preflightapi-chart-supplements-eastus-prod'
-param appServicePlanName = 'asp-eastus-preflightapi-api-prd'
+param storageAccountName = 'saeastuspreflightapiprd'
+param terminalProceduresContainerName = 'sa-eastus-container-preflightapi-terminalprocedures-prd'
+param chartSupplementsContainerName = 'sa-eastus-container-preflightapi-chartsupplements-prd'
+param preflightApiResourcesContainerName = 'sa-eastus-container-preflightapi-resources-prd'
+param appServicePlanName = 'ASP-rgeastuspreflightapiprd-95a4'
 param webAppName = 'was-eastus-preflightapi-prd'
-param functionsPlanName = 'asp-eastus-preflightapi-func-prd'
+param webAppPlatform = 'linux'
+param functionsPlanName = 'ASP-rgeastuspreflightapiprd-82d5'
 param functionAppName = 'function-app-eastus-preflightapi-prd'
-param functionsStorageName = 'stpreflightapifnprd'
+param functionsStorageName = 'rgeastuspreflightapb08e' // PRD uses a separate storage account for functions
+param keyVaultName = 'KeyVaultPreflightApiPrd'
 param apimServiceName = 'apim-eastus-preflightapi-prd'
 
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
@@ -32,11 +36,11 @@ param dbVersion = '16'
 
 // ─── Storage ─────────────────────────────────────────────────────────────────
 
-param storageSkuName = 'Standard_LRS'
+param storageSkuName = 'Standard_RAGRS'
 
 // ─── App Service ─────────────────────────────────────────────────────────────
 
-param apiSkuName = 'B1'
+param apiSkuName = 'B2'
 param apiSkuTier = 'Basic'
 
 // ─── APIM ────────────────────────────────────────────────────────────────────
@@ -60,9 +64,35 @@ param nmsClientSecret = readEnvironmentVariable('NMS_CLIENT_SECRET')
 // ─── Clerk Settings ──────────────────────────────────────────────────────────
 
 param clerkAuthority = readEnvironmentVariable('CLERK_AUTHORITY', '')
+param clerkSecretKey = readEnvironmentVariable('CLERK_SECRET_KEY', '')
+
+// ─── Certificate Renewal ────────────────────────────────────────────────────
+
+param certificateAcmeEmail = readEnvironmentVariable('CERTIFICATE_ACME_EMAIL', '')
+param certificateCertName = readEnvironmentVariable('CERTIFICATE_CERT_NAME', '')
+param certificateDomain = readEnvironmentVariable('CERTIFICATE_DOMAIN', '')
+param certificateRootDomain = readEnvironmentVariable('CERTIFICATE_ROOT_DOMAIN', '')
+
+// ─── Porkbun DNS ────────────────────────────────────────────────────────────
+
+param porkbunApiKey = readEnvironmentVariable('PORKBUN_API_KEY', '')
+param porkbunSecretApiKey = readEnvironmentVariable('PORKBUN_SECRET_API_KEY', '')
+
+// ─── Resend Email ───────────────────────────────────────────────────────────
+
+param resendApiToken = readEnvironmentVariable('RESEND_API_TOKEN', '')
+param resendEnabled = 'true'
+param resendSegmentAllId = readEnvironmentVariable('RESEND_SEGMENT_ALL_ID', '')
+param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', '')
 
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 // Object ID of the existing App Registration service principal used for
 // GitHub Actions OIDC. Provides Contributor RBAC on the resource group.
 
 param githubDeploymentPrincipalId = readEnvironmentVariable('GITHUB_DEPLOYMENT_PRINCIPAL_ID', '')
+
+// ─── APIM Service Principal ─────────────────────────────────────────────────
+// Object ID of the APIM management SP used by the frontend for subscription
+// management and analytics.
+
+param apimServicePrincipalId = readEnvironmentVariable('APIM_SERVICE_PRINCIPAL_ID', '')

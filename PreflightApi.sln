@@ -29,6 +29,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D44F098A-9385-4741-8876-47ABEBFA992E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{1A80306F-2913-4132-96C0-371DF2D6C173}"
+	ProjectSection(SolutionItems) = preProject
+		infra\main.bicep = infra\main.bicep
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{6E50947F-9F17-4FE3-B017-BE38774A996A}"
 	ProjectSection(SolutionItems) = preProject
@@ -63,6 +66,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{8F5BA3
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FAA NMS Docs", "FAA NMS Docs", "{A7C3CBB3-C1B8-4E77-93D8-3C1A9B525196}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{645BE597-69BF-43AF-BC64-E160FB6784AC}"
+	ProjectSection(SolutionItems) = preProject
+		infra\scripts\cleanup-orphans.ps1 = infra\scripts\cleanup-orphans.ps1
+		infra\scripts\cleanup-orphans.sh = infra\scripts\cleanup-orphans.sh
+		infra\scripts\deploy.ps1 = infra\scripts\deploy.ps1
+		infra\scripts\deploy.sh = infra\scripts\deploy.sh
+		infra\scripts\setup-github-oidc.sh = infra\scripts\setup-github-oidc.sh
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +137,7 @@ Global
 		{7DA957D5-2FB2-42F2-9AE7-BBA9486FA9A9} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
 		{8F5BA337-9853-4AF3-9C64-50FF5F1FFE58} = {C381B140-85CE-46A5-BEF7-D9B6760FD686}
 		{A7C3CBB3-C1B8-4E77-93D8-3C1A9B525196} = {D44F098A-9385-4741-8876-47ABEBFA992E}
+		{645BE597-69BF-43AF-BC64-E160FB6784AC} = {1A80306F-2913-4132-96C0-371DF2D6C173}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E778AF9-90E9-4492-934B-23D115DAE3FB}

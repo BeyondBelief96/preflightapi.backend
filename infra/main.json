@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.40.2.10011",
-      "templateHash": "2549703735505780594"
+      "templateHash": "13124849905956341294"
     }
   },
   "parameters": {
@@ -37,10 +37,16 @@
         "description": "Log Analytics workspace name"
       }
     },
-    "appInsightsName": {
+    "apiAppInsightsName": {
       "type": "string",
       "metadata": {
-        "description": "Application Insights resource name"
+        "description": "Application Insights resource name for the API"
+      }
+    },
+    "functionAppInsightsName": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Insights resource name for the Function App"
       }
     },
     "postgresServerName": {
@@ -74,6 +80,12 @@
         "description": "Chart supplements blob container name"
       }
     },
+    "preflightApiResourcesContainerName": {
+      "type": "string",
+      "metadata": {
+        "description": "PreflightApi resources blob container name"
+      }
+    },
     "appServicePlanName": {
       "type": "string",
       "metadata": {
@@ -84,6 +96,17 @@
       "type": "string",
       "metadata": {
         "description": "Web App name for the API"
+      }
+    },
+    "webAppPlatform": {
+      "type": "string",
+      "defaultValue": "linux",
+      "allowedValues": [
+        "linux",
+        "windows"
+      ],
+      "metadata": {
+        "description": "Web App platform (linux or windows)"
       }
     },
     "functionsPlanName": {
@@ -100,8 +123,15 @@
     },
     "functionsStorageName": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "Storage account name for Functions runtime (AzureWebJobsStorage)"
+        "description": "Storage account name for Functions runtime (leave empty to share the data account)"
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Key Vault name"
       }
     },
     "apimServiceName": {
@@ -201,7 +231,7 @@
     "noaaApiKey": {
       "type": "securestring",
       "metadata": {
-        "description": "NOAA API key for weather data synchronization (used by Functions)"
+        "description": "NOAA API key for weather data (used by API and Functions)"
       }
     },
     "gatewaySecret": {
@@ -241,11 +271,116 @@
         "description": "Clerk JWT authority URL (leave empty to omit from app settings)"
       }
     },
+    "clerkSecretKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Clerk secret key (leave empty to omit)"
+      }
+    },
+    "certificateAcmeEmail": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "ACME email for certificate renewal"
+      }
+    },
+    "certificateCertName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Certificate name in Key Vault"
+      }
+    },
+    "certificateDomain": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Domain for certificate renewal"
+      }
+    },
+    "certificateRootDomain": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Root domain for DNS challenge"
+      }
+    },
+    "porkbunApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Porkbun API key"
+      }
+    },
+    "porkbunSecretApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Porkbun secret API key"
+      }
+    },
+    "resendApiToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resend API token"
+      }
+    },
+    "resendEnabled": {
+      "type": "string",
+      "defaultValue": "false",
+      "metadata": {
+        "description": "Enable Resend email notifications"
+      }
+    },
+    "resendFromAddress": {
+      "type": "string",
+      "defaultValue": "alerts@contact.preflightapi.io",
+      "metadata": {
+        "description": "Resend from address"
+      }
+    },
+    "resendQuietPeriodMinutes": {
+      "type": "string",
+      "defaultValue": "1440",
+      "metadata": {
+        "description": "Quiet period in minutes between alerts"
+      }
+    },
+    "resendReplyToAddress": {
+      "type": "string",
+      "defaultValue": "bberisford@preflightapi.io",
+      "metadata": {
+        "description": "Resend reply-to address"
+      }
+    },
+    "resendSegmentAllId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resend segment ID for all users"
+      }
+    },
+    "resendTopicAlertsId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resend topic ID for alerts"
+      }
+    },
     "githubDeploymentPrincipalId": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "Object ID of the GitHub deployment service principal"
+      }
+    },
+    "apimServicePrincipalId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Object ID of the APIM management service principal"
       }
     }
   },
@@ -273,8 +408,11 @@
           "logAnalyticsName": {
             "value": "[parameters('logAnalyticsName')]"
           },
-          "appInsightsName": {
-            "value": "[parameters('appInsightsName')]"
+          "apiAppInsightsName": {
+            "value": "[parameters('apiAppInsightsName')]"
+          },
+          "functionAppInsightsName": {
+            "value": "[parameters('functionAppInsightsName')]"
           }
         },
         "template": {
@@ -284,7 +422,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "4692277009119192766"
+              "templateHash": "12632576015069851616"
             }
           },
           "parameters": {
@@ -300,10 +438,16 @@
                 "description": "Log Analytics workspace name"
               }
             },
-            "appInsightsName": {
+            "apiAppInsightsName": {
               "type": "string",
               "metadata": {
-                "description": "Application Insights resource name"
+                "description": "Application Insights resource name for the API"
+              }
+            },
+            "functionAppInsightsName": {
+              "type": "string",
+              "metadata": {
+                "description": "Application Insights resource name for the Function App"
               }
             }
           },
@@ -323,7 +467,22 @@
             {
               "type": "Microsoft.Insights/components",
               "apiVersion": "2020-02-02",
-              "name": "[parameters('appInsightsName')]",
+              "name": "[parameters('apiAppInsightsName')]",
+              "location": "[parameters('location')]",
+              "kind": "web",
+              "properties": {
+                "Application_Type": "web",
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]",
+                "RetentionInDays": 90
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[parameters('functionAppInsightsName')]",
               "location": "[parameters('location')]",
               "kind": "web",
               "properties": {
@@ -337,19 +496,19 @@
             }
           ],
           "outputs": {
-            "appInsightsConnectionString": {
+            "apiAppInsightsConnectionString": {
               "type": "string",
               "metadata": {
-                "description": "Application Insights connection string"
+                "description": "API Application Insights connection string"
               },
-              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ConnectionString]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('apiAppInsightsName')), '2020-02-02').ConnectionString]"
             },
-            "appInsightsInstrumentationKey": {
+            "functionAppInsightsConnectionString": {
               "type": "string",
               "metadata": {
-                "description": "Application Insights instrumentation key"
+                "description": "Function App Application Insights connection string"
               },
-              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').InstrumentationKey]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('functionAppInsightsName')), '2020-02-02').ConnectionString]"
             },
             "logAnalyticsWorkspaceId": {
               "type": "string",
@@ -357,6 +516,13 @@
                 "description": "Log Analytics workspace ID"
               },
               "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]"
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace name"
+              },
+              "value": "[parameters('logAnalyticsName')]"
             }
           }
         }
@@ -600,6 +766,12 @@
           },
           "chartSupplementsContainerName": {
             "value": "[parameters('chartSupplementsContainerName')]"
+          },
+          "preflightApiResourcesContainerName": {
+            "value": "[parameters('preflightApiResourcesContainerName')]"
+          },
+          "functionsStorageName": {
+            "value": "[parameters('functionsStorageName')]"
           }
         },
         "template": {
@@ -609,7 +781,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "2937387460836753486"
+              "templateHash": "7110798899947795931"
             }
           },
           "parameters": {
@@ -622,7 +794,7 @@
             "storageAccountName": {
               "type": "string",
               "metadata": {
-                "description": "Storage account name (must be globally unique, 3-24 lowercase alphanumeric)"
+                "description": "Storage account name for blob data (globally unique, 3-24 lowercase alphanumeric)"
               }
             },
             "skuName": {
@@ -643,7 +815,23 @@
               "metadata": {
                 "description": "Chart supplements blob container name"
               }
+            },
+            "preflightApiResourcesContainerName": {
+              "type": "string",
+              "metadata": {
+                "description": "PreflightApi resources blob container name"
+              }
+            },
+            "functionsStorageName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Separate storage account name for Functions runtime (leave empty to share the data account)"
+              }
             }
+          },
+          "variables": {
+            "createFunctionsStorage": "[and(not(empty(parameters('functionsStorageName'))), not(equals(parameters('functionsStorageName'), parameters('storageAccountName'))))]"
           },
           "resources": [
             {
@@ -691,6 +879,33 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
               ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('preflightApiResourcesContainerName'))]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
+              ]
+            },
+            {
+              "condition": "[variables('createFunctionsStorage')]",
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('functionsStorageName')]",
+              "location": "[parameters('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false
+              }
             }
           ],
           "outputs": {
@@ -721,6 +936,121 @@
                 "description": "Chart supplements container name"
               },
               "value": "[parameters('chartSupplementsContainerName')]"
+            },
+            "preflightApiResourcesContainerName": {
+              "type": "string",
+              "metadata": {
+                "description": "PreflightApi resources container name"
+              },
+              "value": "[parameters('preflightApiResourcesContainerName')]"
+            },
+            "functionsStorageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Functions storage account name (shared or dedicated)"
+              },
+              "value": "[if(variables('createFunctionsStorage'), parameters('functionsStorageName'), parameters('storageAccountName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[format('key-vault-{0}', parameters('environment'))]",
+      "resourceGroup": "[parameters('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "keyVaultName": {
+            "value": "[parameters('keyVaultName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.40.2.10011",
+              "templateHash": "101313176469860647"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for the Key Vault"
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault name"
+              }
+            },
+            "tenantId": {
+              "type": "string",
+              "defaultValue": "[subscription().tenantId]",
+              "metadata": {
+                "description": "Azure AD tenant ID (defaults to current subscription tenant)"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[parameters('keyVaultName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "tenantId": "[parameters('tenantId')]",
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "enableRbacAuthorization": true,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "bypass": "None",
+                  "defaultAction": "Allow"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault name"
+              },
+              "value": "[parameters('keyVaultName')]"
+            },
+            "keyVaultUri": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault URI"
+              },
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), '2023-07-01').vaultUri]"
+            },
+            "keyVaultId": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault resource ID"
+              },
+              "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
             }
           }
         }
@@ -755,11 +1085,14 @@
           "skuTier": {
             "value": "[parameters('apiSkuTier')]"
           },
+          "webAppPlatform": {
+            "value": "[parameters('webAppPlatform')]"
+          },
           "environment": {
             "value": "[parameters('environment')]"
           },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.apiAppInsightsConnectionString.value]"
           },
           "databaseHost": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
@@ -784,6 +1117,9 @@
           },
           "gatewaySecret": {
             "value": "[parameters('gatewaySecret')]"
+          },
+          "noaaApiKey": {
+            "value": "[parameters('noaaApiKey')]"
           }
         },
         "template": {
@@ -793,7 +1129,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "16530486527755960320"
+              "templateHash": "18088795540368489493"
             }
           },
           "parameters": {
@@ -819,14 +1155,25 @@
               "type": "string",
               "defaultValue": "B1",
               "metadata": {
-                "description": "App Service Plan SKU name (e.g., B1)"
+                "description": "App Service Plan SKU name (e.g., F1, B1, B2)"
               }
             },
             "skuTier": {
               "type": "string",
               "defaultValue": "Basic",
               "metadata": {
-                "description": "App Service Plan SKU tier (e.g., Basic)"
+                "description": "App Service Plan SKU tier (e.g., Free, Basic)"
+              }
+            },
+            "webAppPlatform": {
+              "type": "string",
+              "defaultValue": "linux",
+              "allowedValues": [
+                "linux",
+                "windows"
+              ],
+              "metadata": {
+                "description": "Web App platform (linux or windows)"
               }
             },
             "environment": {
@@ -888,6 +1235,12 @@
               "metadata": {
                 "description": "APIM-to-API shared secret for gateway validation"
               }
+            },
+            "noaaApiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "NOAA API key for weather data"
+              }
             }
           },
           "resources": [
@@ -896,13 +1249,13 @@
               "apiVersion": "2023-12-01",
               "name": "[parameters('planName')]",
               "location": "[parameters('location')]",
-              "kind": "linux",
+              "kind": "[if(equals(parameters('webAppPlatform'), 'linux'), 'linux', 'app')]",
               "sku": {
                 "name": "[parameters('skuName')]",
                 "tier": "[parameters('skuTier')]"
               },
               "properties": {
-                "reserved": true
+                "reserved": "[equals(parameters('webAppPlatform'), 'linux')]"
               }
             },
             {
@@ -917,10 +1270,14 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
                 "httpsOnly": true,
                 "siteConfig": {
-                  "linuxFxVersion": "DOTNETCORE|8.0",
-                  "alwaysOn": true,
-                  "ftpsState": "Disabled",
+                  "linuxFxVersion": "[if(equals(parameters('webAppPlatform'), 'linux'), 'DOTNETCORE|8.0', null())]",
+                  "netFrameworkVersion": "[if(equals(parameters('webAppPlatform'), 'windows'), 'v8.0', null())]",
+                  "alwaysOn": "[not(equals(parameters('skuTier'), 'Free'))]",
+                  "ftpsState": "FtpsOnly",
                   "minTlsVersion": "1.2",
+                  "httpLoggingEnabled": true,
+                  "detailedErrorLoggingEnabled": true,
+                  "requestTracingEnabled": true,
                   "appSettings": [
                     {
                       "name": "ASPNETCORE_ENVIRONMENT",
@@ -969,6 +1326,10 @@
                     {
                       "name": "GatewaySecret",
                       "value": "[parameters('gatewaySecret')]"
+                    },
+                    {
+                      "name": "NOAASettings__NOAAApiKey",
+                      "value": "[parameters('noaaApiKey')]"
                     },
                     {
                       "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
@@ -1060,11 +1421,11 @@
           "functionAppName": {
             "value": "[parameters('functionAppName')]"
           },
-          "functionsStorageName": {
-            "value": "[parameters('functionsStorageName')]"
+          "functionsStorageAccountName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.functionsStorageAccountName.value]"
           },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppInsightsConnectionString.value]"
           },
           "databaseHost": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverFqdn.value]"
@@ -1087,6 +1448,9 @@
           "chartSupplementsContainerName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.chartSupplementsContainerName.value]"
           },
+          "preflightApiResourcesContainerName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.preflightApiResourcesContainerName.value]"
+          },
           "nmsBaseUrl": {
             "value": "[parameters('nmsBaseUrl')]"
           },
@@ -1107,6 +1471,54 @@
           },
           "clerkAuthority": {
             "value": "[parameters('clerkAuthority')]"
+          },
+          "clerkSecretKey": {
+            "value": "[parameters('clerkSecretKey')]"
+          },
+          "certificateAcmeEmail": {
+            "value": "[parameters('certificateAcmeEmail')]"
+          },
+          "certificateCertName": {
+            "value": "[parameters('certificateCertName')]"
+          },
+          "certificateDomain": {
+            "value": "[parameters('certificateDomain')]"
+          },
+          "certificateKeyVaultName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment'))), '2025-04-01').outputs.keyVaultName.value]"
+          },
+          "certificateRootDomain": {
+            "value": "[parameters('certificateRootDomain')]"
+          },
+          "porkbunApiKey": {
+            "value": "[parameters('porkbunApiKey')]"
+          },
+          "porkbunSecretApiKey": {
+            "value": "[parameters('porkbunSecretApiKey')]"
+          },
+          "resendApiToken": {
+            "value": "[parameters('resendApiToken')]"
+          },
+          "resendEnabled": {
+            "value": "[parameters('resendEnabled')]"
+          },
+          "resendFromAddress": {
+            "value": "[parameters('resendFromAddress')]"
+          },
+          "resendHealthEndpointUrl": {
+            "value": "[format('https://{0}/health', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppHostName.value)]"
+          },
+          "resendQuietPeriodMinutes": {
+            "value": "[parameters('resendQuietPeriodMinutes')]"
+          },
+          "resendReplyToAddress": {
+            "value": "[parameters('resendReplyToAddress')]"
+          },
+          "resendSegmentAllId": {
+            "value": "[parameters('resendSegmentAllId')]"
+          },
+          "resendTopicAlertsId": {
+            "value": "[parameters('resendTopicAlertsId')]"
           }
         },
         "template": {
@@ -1116,7 +1528,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "17146812085942124383"
+              "templateHash": "13172112159544007181"
             }
           },
           "parameters": {
@@ -1138,10 +1550,10 @@
                 "description": "Function App name"
               }
             },
-            "functionsStorageName": {
+            "functionsStorageAccountName": {
               "type": "string",
               "metadata": {
-                "description": "Storage account name for Functions runtime (AzureWebJobsStorage)"
+                "description": "Functions storage account name (created by storage module)"
               }
             },
             "appInsightsConnectionString": {
@@ -1192,6 +1604,12 @@
                 "description": "Chart supplements blob container name"
               }
             },
+            "preflightApiResourcesContainerName": {
+              "type": "string",
+              "metadata": {
+                "description": "PreflightApi resources blob container name"
+              }
+            },
             "nmsBaseUrl": {
               "type": "string",
               "metadata": {
@@ -1234,27 +1652,127 @@
               "metadata": {
                 "description": "Clerk JWT authority URL (leave empty to omit)"
               }
+            },
+            "clerkSecretKey": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Clerk secret key (leave empty to omit)"
+              }
+            },
+            "certificateAcmeEmail": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "ACME email for certificate renewal"
+              }
+            },
+            "certificateCertName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Certificate name in Key Vault"
+              }
+            },
+            "certificateDomain": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Domain for certificate renewal"
+              }
+            },
+            "certificateKeyVaultName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Key Vault name for certificate storage"
+              }
+            },
+            "certificateRootDomain": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Root domain for DNS challenge"
+              }
+            },
+            "porkbunApiKey": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Porkbun API key"
+              }
+            },
+            "porkbunSecretApiKey": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Porkbun secret API key"
+              }
+            },
+            "resendApiToken": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Resend API token"
+              }
+            },
+            "resendEnabled": {
+              "type": "string",
+              "defaultValue": "false",
+              "metadata": {
+                "description": "Enable Resend email notifications"
+              }
+            },
+            "resendFromAddress": {
+              "type": "string",
+              "defaultValue": "alerts@contact.preflightapi.io",
+              "metadata": {
+                "description": "Resend from address"
+              }
+            },
+            "resendHealthEndpointUrl": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Health endpoint URL for outage monitoring"
+              }
+            },
+            "resendQuietPeriodMinutes": {
+              "type": "string",
+              "defaultValue": "1440",
+              "metadata": {
+                "description": "Quiet period in minutes between alerts"
+              }
+            },
+            "resendReplyToAddress": {
+              "type": "string",
+              "defaultValue": "bberisford@preflightapi.io",
+              "metadata": {
+                "description": "Resend reply-to address"
+              }
+            },
+            "resendSegmentAllId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Resend segment ID for all users"
+              }
+            },
+            "resendTopicAlertsId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Resend topic ID for alerts"
+              }
             }
           },
           "variables": {
-            "clerkSettings": "[if(empty(parameters('clerkAuthority')), createArray(), createArray(createObject('name', 'ClerkSettings__Authority', 'value', parameters('clerkAuthority')), createObject('name', 'ClerkSettings__RequireAuthenticationInDevelopment', 'value', 'true')))]"
+            "clerkSettings": "[if(and(empty(parameters('clerkAuthority')), empty(parameters('clerkSecretKey'))), createArray(), concat(if(empty(parameters('clerkAuthority')), createArray(), createArray(createObject('name', 'ClerkSettings__Authority', 'value', parameters('clerkAuthority')), createObject('name', 'ClerkSettings__RequireAuthenticationInDevelopment', 'value', 'true'))), if(empty(parameters('clerkSecretKey')), createArray(), createArray(createObject('name', 'ClerkSettings__SecretKey', 'value', parameters('clerkSecretKey'))))))]",
+            "certificateSettings": "[if(empty(parameters('certificateAcmeEmail')), createArray(), createArray(createObject('name', 'CertificateRenewal__AcmeEmail', 'value', parameters('certificateAcmeEmail')), createObject('name', 'CertificateRenewal__CertificateName', 'value', parameters('certificateCertName')), createObject('name', 'CertificateRenewal__Domain', 'value', parameters('certificateDomain')), createObject('name', 'CertificateRenewal__KeyVaultName', 'value', parameters('certificateKeyVaultName')), createObject('name', 'CertificateRenewal__RootDomain', 'value', parameters('certificateRootDomain'))))]",
+            "porkbunSettings": "[if(empty(parameters('porkbunApiKey')), createArray(), createArray(createObject('name', 'Porkbun__ApiKey', 'value', parameters('porkbunApiKey')), createObject('name', 'Porkbun__SecretApiKey', 'value', parameters('porkbunSecretApiKey'))))]",
+            "resendSettings": "[if(empty(parameters('resendApiToken')), createArray(), createArray(createObject('name', 'Resend__ApiToken', 'value', parameters('resendApiToken')), createObject('name', 'Resend__Enabled', 'value', parameters('resendEnabled')), createObject('name', 'Resend__FromAddress', 'value', parameters('resendFromAddress')), createObject('name', 'Resend__HealthEndpointUrl', 'value', parameters('resendHealthEndpointUrl')), createObject('name', 'Resend__QuietPeriodMinutes', 'value', parameters('resendQuietPeriodMinutes')), createObject('name', 'Resend__ReplyToAddress', 'value', parameters('resendReplyToAddress')), createObject('name', 'Resend__SegmentAllId', 'value', parameters('resendSegmentAllId')), createObject('name', 'Resend__TopicAlertsId', 'value', parameters('resendTopicAlertsId'))))]"
           },
           "resources": [
-            {
-              "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2023-05-01",
-              "name": "[parameters('functionsStorageName')]",
-              "location": "[parameters('location')]",
-              "kind": "StorageV2",
-              "sku": {
-                "name": "Standard_LRS"
-              },
-              "properties": {
-                "supportsHttpsTrafficOnly": true,
-                "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": false
-              }
-            },
             {
               "type": "Microsoft.Web/serverfarms",
               "apiVersion": "2023-12-01",
@@ -1271,7 +1789,7 @@
             },
             {
               "type": "Microsoft.Web/sites",
-              "apiVersion": "2023-12-01",
+              "apiVersion": "2024-04-01",
               "name": "[parameters('functionAppName')]",
               "location": "[parameters('location')]",
               "kind": "functionapp,linux",
@@ -1281,14 +1799,33 @@
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
                 "httpsOnly": true,
+                "functionAppConfig": {
+                  "deployment": {
+                    "storage": {
+                      "type": "blobContainer",
+                      "value": "[format('https://{0}.blob.{1}/app-package-{2}', parameters('functionsStorageAccountName'), environment().suffixes.storage, parameters('functionAppName'))]",
+                      "authentication": {
+                        "type": "StorageAccountConnectionString",
+                        "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING"
+                      }
+                    }
+                  },
+                  "runtime": {
+                    "name": "dotnet-isolated",
+                    "version": "8.0"
+                  },
+                  "scaleAndConcurrency": {
+                    "instanceMemoryMB": 4096,
+                    "maximumInstanceCount": 100
+                  }
+                },
                 "siteConfig": {
                   "minTlsVersion": "1.2",
-                  "appSettings": "[concat(createArray(createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'DEPLOYMENT_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName')), '2023-05-01').keys[0].value)), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', parameters('appInsightsConnectionString')), createObject('name', 'Database__Host', 'value', parameters('databaseHost')), createObject('name', 'Database__Database', 'value', parameters('databaseName')), createObject('name', 'Database__Username', 'value', parameters('databaseUsername')), createObject('name', 'Database__Password', 'value', parameters('databasePassword')), createObject('name', 'Database__Port', 'value', '5432'), createObject('name', 'CloudStorage__UseManagedIdentity', 'value', 'true'), createObject('name', 'CloudStorage__AccountName', 'value', parameters('storageAccountName')), createObject('name', 'CloudStorage__TerminalProceduresContainerName', 'value', parameters('terminalProceduresContainerName')), createObject('name', 'CloudStorage__ChartSupplementsContainerName', 'value', parameters('chartSupplementsContainerName')), createObject('name', 'NmsSettings__BaseUrl', 'value', parameters('nmsBaseUrl')), createObject('name', 'NmsSettings__AuthBaseUrl', 'value', parameters('nmsAuthBaseUrl')), createObject('name', 'NmsSettings__ClientId', 'value', parameters('nmsClientId')), createObject('name', 'NmsSettings__ClientSecret', 'value', parameters('nmsClientSecret')), createObject('name', 'NOAASettings__NOAAApiKey', 'value', parameters('noaaApiKey')), createObject('name', 'GatewaySecret', 'value', parameters('gatewaySecret'))), variables('clerkSettings'))]"
+                  "appSettings": "[concat(createArray(createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageAccountName')), '2023-05-01').keys[0].value)), createObject('name', 'DEPLOYMENT_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('functionsStorageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageAccountName')), '2023-05-01').keys[0].value)), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', parameters('appInsightsConnectionString')), createObject('name', 'Database__Host', 'value', parameters('databaseHost')), createObject('name', 'Database__Database', 'value', parameters('databaseName')), createObject('name', 'Database__Username', 'value', parameters('databaseUsername')), createObject('name', 'Database__Password', 'value', parameters('databasePassword')), createObject('name', 'Database__Port', 'value', '5432'), createObject('name', 'CloudStorage__UseManagedIdentity', 'value', 'true'), createObject('name', 'CloudStorage__AccountName', 'value', parameters('storageAccountName')), createObject('name', 'CloudStorage__TerminalProceduresContainerName', 'value', parameters('terminalProceduresContainerName')), createObject('name', 'CloudStorage__ChartSupplementsContainerName', 'value', parameters('chartSupplementsContainerName')), createObject('name', 'CloudStorage__PreflightApiResourcesContainerName', 'value', parameters('preflightApiResourcesContainerName')), createObject('name', 'NmsSettings__BaseUrl', 'value', parameters('nmsBaseUrl')), createObject('name', 'NmsSettings__AuthBaseUrl', 'value', parameters('nmsAuthBaseUrl')), createObject('name', 'NmsSettings__ClientId', 'value', parameters('nmsClientId')), createObject('name', 'NmsSettings__ClientSecret', 'value', parameters('nmsClientSecret')), createObject('name', 'NOAASettings__NOAAApiKey', 'value', parameters('noaaApiKey')), createObject('name', 'GatewaySecret', 'value', parameters('gatewaySecret'))), variables('clerkSettings'), variables('certificateSettings'), variables('porkbunSettings'), variables('resendSettings'))]"
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('functionsStorageName'))]"
+                "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]"
               ]
             }
           ],
@@ -1305,14 +1842,14 @@
               "metadata": {
                 "description": "Function App default hostname"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01').defaultHostName]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01').defaultHostName]"
             },
             "functionAppPrincipalId": {
               "type": "string",
               "metadata": {
                 "description": "Function App system-assigned managed identity principal ID"
               },
-              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]"
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01', 'full').identity.principalId]"
             },
             "functionAppId": {
               "type": "string",
@@ -1320,18 +1857,13 @@
                 "description": "Function App resource ID"
               },
               "value": "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
-            },
-            "functionsStorageAccountName": {
-              "type": "string",
-              "metadata": {
-                "description": "Functions storage account name"
-              },
-              "value": "[parameters('functionsStorageName')]"
             }
           }
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]",
@@ -1378,7 +1910,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "6547509364083201698"
+              "templateHash": "1436037895772368634"
             }
           },
           "parameters": {
@@ -1435,9 +1967,9 @@
             }
           },
           "variables": {
-            "$fxv#0": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"override\">\r\n\t\t\t<value>{{apim-gateway-secret}}</value>\r\n\t\t</set-header>\r\n\t\t<!-- Determine cache duration based on endpoint -->\r\n\t\t<set-variable name=\"cacheDuration\" value=\"@{\r\n\t\t\tif (context.Request.Method != \"GET\") { return 0; }\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\t// Real-time weather: 2 min\r\n\t\t\tif (path.Contains(\"/metars\") || path.Contains(\"/pireps\")) { return 120; }\r\n\t\t\t// E6B GET endpoints use live METAR: 2 min\r\n\t\t\tif (path.Contains(\"/e6b/\")) { return 120; }\r\n\t\t\t// Forecast weather, NOTAMs: 5 min\r\n\t\t\tif (path.Contains(\"/tafs\") || path.Contains(\"/sigmets\") || path.Contains(\"/g-airmets\")) { return 300; }\r\n\t\t\tif (path.Contains(\"/notams\")) { return 300; }\r\n\t\t\t// Winds aloft: 5 min\r\n\t\t\tif (path.Contains(\"/navlog/winds-aloft\")) { return 300; }\r\n\t\t\t// Presigned URLs: 10 min\r\n\t\t\tif (path.Contains(\"/airport-diagrams\") || path.Contains(\"/chart-supplements\")) { return 600; }\r\n\t\t\t// NASR/static data: 15 min\r\n\t\t\tif (path.Contains(\"/airports\") || path.Contains(\"/communication-frequencies\")) { return 900; }\r\n\t\t\tif (path.Contains(\"/airspaces\") || path.Contains(\"/obstacles\")) { return 900; }\r\n\t\t\treturn 0;\r\n\t\t}\" />\r\n\t\t<!-- Build a deterministic cache key from the URL path + sorted query string -->\r\n\t\t<set-variable name=\"cacheKey\" value=\"@{\r\n\t\t\tvar key = context.Request.Url.Path;\r\n\t\t\tvar query = context.Request.Url.Query;\r\n\t\t\tif (query != null && query.Count > 0) {\r\n\t\t\t\tvar sorted = query\r\n\t\t\t\t\t.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)\r\n\t\t\t\t\t.SelectMany(kvp => kvp.Value.Select(v => kvp.Key + \"=\" + v));\r\n\t\t\t\tkey += \"|\" + string.Join(\"&\", sorted);\r\n\t\t\t}\r\n\t\t\treturn key;\r\n\t\t}\" />\r\n\t\t<!-- Check cache for cacheable GET requests -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@((int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-lookup-value key=\"@((string)context.Variables[\"cacheKey\"])\" variable-name=\"cachedBody\" caching-type=\"internal\" />\r\n\t\t\t\t<choose>\r\n\t\t\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cachedBody\"))\">\r\n\t\t\t\t\t\t<!-- Cache hit: return cached body with fresh per-user rate-limit headers -->\r\n\t\t\t\t\t\t<return-response>\r\n\t\t\t\t\t\t\t<set-status code=\"200\" reason=\"OK\" />\r\n\t\t\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Remaining\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlRemaining\") ? ((int)context.Variables[\"rlRemaining\"]).ToString() : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Limit\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlLimit\") ? (string)context.Variables[\"rlLimit\"] : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-body>@((string)context.Variables[\"cachedBody\"])</set-body>\r\n\t\t\t\t\t\t</return-response>\r\n\t\t\t\t\t</when>\r\n\t\t\t\t</choose>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t\t<!-- Strip the secret header from the response so it's never exposed to callers -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"delete\" />\r\n\t\t<!-- Cache the response body for cacheable 200 responses -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cacheDuration\") && (int)context.Variables[\"cacheDuration\"] > 0 && context.Response.StatusCode == 200)\">\r\n\t\t\t\t<cache-store-value key=\"@((string)context.Variables[\"cacheKey\"])\" value=\"@(context.Response.Body.As<string>(preserveContent: true))\" duration=\"@((int)context.Variables[\"cacheDuration\"])\" caching-type=\"internal\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"rate-limit-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Too Many Requests\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-header name=\"Retry-After\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>@{\r\n\t\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\t\treturn match.Success ? match.Groups[1].Value : \"60\";\r\n\t\t\t\t\t\t}</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\tvar retryAfterSeconds = match.Success ? int.Parse(match.Groups[1].Value) : 60;\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"error\", \"RateLimitExceeded\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"Too many requests. Please slow down and try again shortly.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"retryAfterSeconds\", retryAfterSeconds)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"quota-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Quota Exceeded\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar idx = msg.LastIndexOf(\"in \");\r\n\t\t\t\t\t\tvar resetAt = DateTime.UtcNow;\r\n\t\t\t\t\t\tif (idx >= 0) {\r\n\t\t\t\t\t\t\tvar tsPart = msg.Substring(idx + 3).TrimEnd('.');\r\n\t\t\t\t\t\t\tTimeSpan remaining;\r\n\t\t\t\t\t\t\tif (TimeSpan.TryParse(tsPart, out remaining)) {\r\n\t\t\t\t\t\t\t\tresetAt = DateTime.UtcNow.Add(remaining);\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"error\", \"QuotaExceeded\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"You have reached your monthly API call limit.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"quotaResetsAt\", resetAt.ToString(\"o\"))\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
-            "$fxv#1": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"10\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"5000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Free tier only allows basic weather and airports -->\r\n\t\t<set-variable name=\"is-allowed\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar allowedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/metars\",\r\n\t\t\t\t\"/api/v1/tafs\",\r\n\t\t\t\t\"/api/v1/airports\",\r\n\t\t\t\t\"/api/v1/communication-frequencies\"\r\n\t\t\t};\r\n\t\t\treturn allowedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Free tier. Please upgrade to Starter or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
-            "$fxv#2": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"60\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"150000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, and E6B -->\r\n\t\t<set-variable name=\"is-blocked\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar blockedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/navlog\",\r\n\t\t\t\t\"/api/v1/notams\",\r\n\t\t\t\t\"/api/v1/airport-diagrams\",\r\n\t\t\t\t\"/api/v1/chart-supplements\",\r\n\t\t\t\t\"/api/v1/e6b\"\r\n\t\t\t};\r\n\t\t\treturn blockedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>{\"error\": \"This endpoint is not available on the Starter tier. Please upgrade to Commercial or higher.\"}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#0": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<!-- Inject gateway secret header so the backend API can verify requests came through APIM -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"override\">\r\n\t\t\t<value>{{apim-gateway-secret}}</value>\r\n\t\t</set-header>\r\n\t\t<!-- Determine cache duration based on endpoint -->\r\n\t\t<set-variable name=\"cacheDuration\" value=\"@{\r\n\t\t\tif (context.Request.Method != \"GET\") { return 0; }\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\t// Real-time weather: 2 min\r\n\t\t\tif (path.Contains(\"/metars\") || path.Contains(\"/pireps\")) { return 120; }\r\n\t\t\t// E6B GET endpoints use live METAR: 2 min\r\n\t\t\tif (path.Contains(\"/e6b/\")) { return 120; }\r\n\t\t\t// Forecast weather, NOTAMs: 5 min\r\n\t\t\tif (path.Contains(\"/tafs\") || path.Contains(\"/sigmets\") || path.Contains(\"/g-airmets\")) { return 300; }\r\n\t\t\tif (path.Contains(\"/notams\")) { return 300; }\r\n\t\t\t// Winds aloft: 5 min\r\n\t\t\tif (path.Contains(\"/navlog/winds-aloft\")) { return 300; }\r\n\t\t\t// Presigned URLs: 10 min\r\n\t\t\tif (path.Contains(\"/airport-diagrams\") || path.Contains(\"/chart-supplements\")) { return 600; }\r\n\t\t\t// NASR/static data: 15 min\r\n\t\t\tif (path.Contains(\"/airports\") || path.Contains(\"/communication-frequencies\")) { return 900; }\r\n\t\t\tif (path.Contains(\"/airspaces\") || path.Contains(\"/obstacles\") || path.Contains(\"/navaids\")) { return 900; }\r\n\t\t\treturn 0;\r\n\t\t}\" />\r\n\t\t<!-- Build a deterministic cache key from the URL path + sorted query string -->\r\n\t\t<set-variable name=\"cacheKey\" value=\"@{\r\n\t\t\tvar key = context.Request.Url.Path;\r\n\t\t\tvar query = context.Request.Url.Query;\r\n\t\t\tif (query != null && query.Count > 0) {\r\n\t\t\t\tvar sorted = query\r\n\t\t\t\t\t.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)\r\n\t\t\t\t\t.SelectMany(kvp => kvp.Value.Select(v => kvp.Key + \"=\" + v));\r\n\t\t\t\tkey += \"|\" + string.Join(\"&\", sorted);\r\n\t\t\t}\r\n\t\t\treturn key;\r\n\t\t}\" />\r\n\t\t<!-- Check cache for cacheable GET requests -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@((int)context.Variables[\"cacheDuration\"] > 0)\">\r\n\t\t\t\t<cache-lookup-value key=\"@((string)context.Variables[\"cacheKey\"])\" variable-name=\"cachedBody\" caching-type=\"internal\" />\r\n\t\t\t\t<choose>\r\n\t\t\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cachedBody\"))\">\r\n\t\t\t\t\t\t<!-- Cache hit: return cached body with fresh per-user rate-limit headers -->\r\n\t\t\t\t\t\t<return-response>\r\n\t\t\t\t\t\t\t<set-status code=\"200\" reason=\"OK\" />\r\n\t\t\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Remaining\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlRemaining\") ? ((int)context.Variables[\"rlRemaining\"]).ToString() : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-header name=\"X-RateLimit-Limit\" exists-action=\"override\">\r\n\t\t\t\t\t\t\t\t<value>@(context.Variables.ContainsKey(\"rlLimit\") ? (string)context.Variables[\"rlLimit\"] : \"\")</value>\r\n\t\t\t\t\t\t\t</set-header>\r\n\t\t\t\t\t\t\t<set-body>@((string)context.Variables[\"cachedBody\"])</set-body>\r\n\t\t\t\t\t\t</return-response>\r\n\t\t\t\t\t</when>\r\n\t\t\t\t</choose>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t\t<!-- Strip the secret header from the response so it's never exposed to callers -->\r\n\t\t<set-header name=\"X-Api-Gateway-Secret\" exists-action=\"delete\" />\r\n\t\t<!-- Cache the response body for cacheable 200 responses -->\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.ContainsKey(\"cacheDuration\") && (int)context.Variables[\"cacheDuration\"] > 0 && context.Response.StatusCode == 200)\">\r\n\t\t\t\t<cache-store-value key=\"@((string)context.Variables[\"cacheKey\"])\" value=\"@(context.Response.Body.As<string>(preserveContent: true))\" duration=\"@((int)context.Variables[\"cacheDuration\"])\" caching-type=\"internal\" />\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"rate-limit-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Too Many Requests\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-header name=\"Retry-After\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>@{\r\n\t\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\t\treturn match.Success ? match.Groups[1].Value : \"60\";\r\n\t\t\t\t\t\t}</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar match = System.Text.RegularExpressions.Regex.Match(msg, @\"(\\d+)\\s*second\");\r\n\t\t\t\t\t\tvar retryAfterSeconds = match.Success ? int.Parse(match.Groups[1].Value) : 60;\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"code\", \"RATE_LIMIT_EXCEEDED\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"Too many requests. Please slow down and try again shortly.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"retryAfterSeconds\", retryAfterSeconds),\r\n\t\t\t\t\t\t\tnew JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n\t\t\t\t\t\t\tnew JProperty(\"traceId\", context.RequestId),\r\n\t\t\t\t\t\t\tnew JProperty(\"path\", context.Request.Url.Path)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"quota-by-key\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"429\" reason=\"Quota Exceeded\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar msg = context.LastError.Message ?? \"\";\r\n\t\t\t\t\t\tvar idx = msg.LastIndexOf(\"in \");\r\n\t\t\t\t\t\tvar resetAt = DateTime.UtcNow;\r\n\t\t\t\t\t\tif (idx >= 0) {\r\n\t\t\t\t\t\t\tvar tsPart = msg.Substring(idx + 3).TrimEnd('.');\r\n\t\t\t\t\t\t\tTimeSpan remaining;\r\n\t\t\t\t\t\t\tif (TimeSpan.TryParse(tsPart, out remaining)) {\r\n\t\t\t\t\t\t\t\tresetAt = DateTime.UtcNow.Add(remaining);\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"code\", \"QUOTA_EXCEEDED\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"You have reached your monthly API call limit.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"quotaResetsAt\", resetAt.ToString(\"o\")),\r\n\t\t\t\t\t\t\tnew JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n\t\t\t\t\t\t\tnew JProperty(\"traceId\", context.RequestId),\r\n\t\t\t\t\t\t\tnew JProperty(\"path\", context.Request.Url.Path)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t\t<when condition=\"@(context.LastError.Source == \"forward-request\")\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"502\" reason=\"Bad Gateway\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"code\", \"BACKEND_UNAVAILABLE\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", \"Backend service is unreachable. Please try again later.\"),\r\n\t\t\t\t\t\t\tnew JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n\t\t\t\t\t\t\tnew JProperty(\"traceId\", context.RequestId),\r\n\t\t\t\t\t\t\tnew JProperty(\"path\", context.Request.Url.Path)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t\t<otherwise>\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"@{\r\n\t\t\t\t\t\tvar sc = context.Response.StatusCode;\r\n\t\t\t\t\t\treturn (sc >= 400 && sc < 600) ? sc : 500;\r\n\t\t\t\t\t}\" reason=\"@(context.Response.StatusReason ?? \"Internal Server Error\")\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n\t\t\t\t\t\tvar statusCode = context.Response.StatusCode;\r\n\t\t\t\t\t\tstring code;\r\n\t\t\t\t\t\tstring message;\r\n\t\t\t\t\t\tif (statusCode == 401) {\r\n\t\t\t\t\t\t\tcode = \"UNAUTHORIZED\";\r\n\t\t\t\t\t\t\tmessage = \"Invalid or missing API key.\";\r\n\t\t\t\t\t\t} else {\r\n\t\t\t\t\t\t\tcode = \"INTERNAL_ERROR\";\r\n\t\t\t\t\t\t\tmessage = context.LastError.Message ?? \"An unexpected gateway error occurred.\";\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn new JObject(\r\n\t\t\t\t\t\t\tnew JProperty(\"code\", code),\r\n\t\t\t\t\t\t\tnew JProperty(\"message\", message),\r\n\t\t\t\t\t\t\tnew JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n\t\t\t\t\t\t\tnew JProperty(\"traceId\", context.RequestId),\r\n\t\t\t\t\t\t\tnew JProperty(\"path\", context.Request.Url.Path)\r\n\t\t\t\t\t\t).ToString();\r\n\t\t\t\t\t}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</otherwise>\r\n\t\t</choose>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#1": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"10\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"5000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Free tier only allows basic weather and airports -->\r\n\t\t<set-variable name=\"is-allowed\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar allowedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/metars\",\r\n\t\t\t\t\"/api/v1/tafs\",\r\n\t\t\t\t\"/api/v1/airports\",\r\n\t\t\t\t\"/api/v1/runways\",\r\n\t\t\t\t\"/api/v1/communication-frequencies\"\r\n\t\t\t};\r\n\t\t\treturn allowedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(!context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-allowed&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n    return new JObject(\r\n        new JProperty(\"code\", \"TIER_RESTRICTED\"),\r\n        new JProperty(\"message\", \"This endpoint is not available on the Free tier. Please upgrade to Starter or higher.\"),\r\n        new JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n        new JProperty(\"traceId\", context.RequestId),\r\n        new JProperty(\"path\", context.Request.Url.Path)\r\n    ).ToString();\r\n}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
+            "$fxv#2": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"60\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"150000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- Endpoint gating: Starter tier blocks navlog, NOTAMs, diagrams, chart supplements, E6B, and navaids -->\r\n\t\t<set-variable name=\"is-blocked\" value=\"@{\r\n\t\t\tvar path = context.Request.Url.Path.ToLower();\r\n\t\t\tvar blockedPrefixes = new[] {\r\n\t\t\t\t\"/api/v1/navlog\",\r\n\t\t\t\t\"/api/v1/notams\",\r\n\t\t\t\t\"/api/v1/airport-diagrams\",\r\n\t\t\t\t\"/api/v1/chart-supplements\",\r\n\t\t\t\t\"/api/v1/e6b\",\r\n\t\t\t\t\"/api/v1/navaids\"\r\n\t\t\t};\r\n\t\t\treturn blockedPrefixes.Any(p => path.StartsWith(p));\r\n\t\t}\" />\r\n\t\t<choose>\r\n\t\t\t<when condition=\"@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;is-blocked&quot;))\">\r\n\t\t\t\t<return-response>\r\n\t\t\t\t\t<set-status code=\"403\" reason=\"Forbidden\" />\r\n\t\t\t\t\t<set-header name=\"Content-Type\" exists-action=\"override\">\r\n\t\t\t\t\t\t<value>application/json</value>\r\n\t\t\t\t\t</set-header>\r\n\t\t\t\t\t<set-body>@{\r\n    return new JObject(\r\n        new JProperty(\"code\", \"TIER_RESTRICTED\"),\r\n        new JProperty(\"message\", \"This endpoint is not available on the Starter tier. Please upgrade to Professional or higher.\"),\r\n        new JProperty(\"timestamp\", DateTime.UtcNow.ToString(\"o\")),\r\n        new JProperty(\"traceId\", context.RequestId),\r\n        new JProperty(\"path\", context.Request.Url.Path)\r\n    ).ToString();\r\n}</set-body>\r\n\t\t\t\t</return-response>\r\n\t\t\t</when>\r\n\t\t</choose>\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
             "$fxv#3": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"300\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"750000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- No endpoint gating: Professional tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n",
             "$fxv#4": "<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-variable name=\"rlLimit\" value=\"500\" />\r\n\t\t<rate-limit-by-key calls=\"@(int.Parse((string)context.Variables[\"rlLimit\"]))\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? &quot;anonymous&quot;)\" remaining-calls-header-name=\"X-RateLimit-Remaining\" total-calls-header-name=\"X-RateLimit-Limit\" retry-after-header-name=\"Retry-After\" remaining-calls-variable-name=\"rlRemaining\" />\r\n\t\t<quota-by-key calls=\"2000000\" renewal-period=\"2628000\" counter-key=\"@{\r\n\t\t\tvar key = context.Subscription?.Key ?? &quot;anonymous&quot;;\r\n\t\t\tvar name = context.Subscription?.Name ?? &quot;&quot;;\r\n\t\t\tvar sep = name.LastIndexOf('|');\r\n\t\t\tvar epoch = sep >= 0 ? name.Substring(sep + 1) : &quot;0&quot;;\r\n\t\t\treturn key + &quot;|&quot; + epoch;\r\n\t\t}\" />\r\n\t\t<!-- No endpoint gating: ATP tier has access to all endpoints -->\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>\r\n"
           },
@@ -1467,6 +1999,18 @@
                 "displayName": "apim-gateway-secret",
                 "value": "[parameters('gatewaySecret')]",
                 "secret": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/namedValues",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'maintenance-mode')]",
+              "properties": {
+                "displayName": "maintenance-mode",
+                "value": "false"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
@@ -1503,7 +2047,8 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'preflightapi')]",
-                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('apimName'), 'apim-gateway-secret')]"
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('apimName'), 'apim-gateway-secret')]",
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('apimName'), 'maintenance-mode')]"
               ]
             },
             {
@@ -1692,17 +2237,32 @@
         },
         "mode": "Incremental",
         "parameters": {
+          "storageAccountName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
+          },
           "webAppPrincipalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment'))), '2025-04-01').outputs.webAppPrincipalId.value]"
           },
           "functionAppPrincipalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppPrincipalId.value]"
           },
-          "storageAccountId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountId.value]"
-          },
           "githubDeploymentPrincipalId": {
             "value": "[parameters('githubDeploymentPrincipalId')]"
+          },
+          "keyVaultName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment'))), '2025-04-01').outputs.keyVaultName.value]"
+          },
+          "postgresServerName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment'))), '2025-04-01').outputs.serverName.value]"
+          },
+          "apimName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimName.value]"
+          },
+          "logAnalyticsWorkspaceName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.logAnalyticsWorkspaceName.value]"
+          },
+          "apimServicePrincipalId": {
+            "value": "[parameters('apimServicePrincipalId')]"
           }
         },
         "template": {
@@ -1712,10 +2272,16 @@
             "_generator": {
               "name": "bicep",
               "version": "0.40.2.10011",
-              "templateHash": "6550081935519801717"
+              "templateHash": "12264740632550308661"
             }
           },
           "parameters": {
+            "storageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Storage account name for blob data"
+              }
+            },
             "webAppPrincipalId": {
               "type": "string",
               "metadata": {
@@ -1728,30 +2294,58 @@
                 "description": "Principal ID of the Function App managed identity"
               }
             },
-            "storageAccountId": {
-              "type": "string",
-              "metadata": {
-                "description": "Resource ID of the storage account for blob data access"
-              }
-            },
             "githubDeploymentPrincipalId": {
               "type": "string",
               "defaultValue": "",
               "metadata": {
                 "description": "Principal ID of the GitHub deployment identity (optional)"
               }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault name for RBAC assignments"
+              }
+            },
+            "postgresServerName": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL server name for RBAC assignments"
+              }
+            },
+            "apimName": {
+              "type": "string",
+              "metadata": {
+                "description": "APIM service name for RBAC assignments"
+              }
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace name for RBAC assignments"
+              }
+            },
+            "apimServicePrincipalId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "APIM service principal ID for frontend management (optional)"
+              }
             }
           },
           "variables": {
             "storageBlobDataContributorRoleId": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
-            "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+            "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+            "keyVaultSecretsUserRoleId": "4633458b-17de-408a-b874-0445c86b69e6",
+            "apiManagementServiceContributorRoleId": "312a565d-c81f-4fd8-895a-4e21e48d571c",
+            "logAnalyticsReaderRoleId": "73c42c96-874c-492b-b04d-ab87d138a893"
           },
           "resources": [
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.Storage/storageAccounts', last(split(parameters('storageAccountId'), '/')))]",
-              "name": "[guid(parameters('storageAccountId'), parameters('webAppPrincipalId'), variables('storageBlobDataContributorRoleId'))]",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('webAppPrincipalId'), variables('storageBlobDataContributorRoleId'))]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('storageBlobDataContributorRoleId'))]",
                 "principalId": "[parameters('webAppPrincipalId')]",
@@ -1761,10 +2355,21 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.Storage/storageAccounts', last(split(parameters('storageAccountId'), '/')))]",
-              "name": "[guid(parameters('storageAccountId'), parameters('functionAppPrincipalId'), variables('storageBlobDataContributorRoleId'))]",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppPrincipalId'), variables('storageBlobDataContributorRoleId'))]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('storageBlobDataContributorRoleId'))]",
+                "principalId": "[parameters('functionAppPrincipalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), parameters('functionAppPrincipalId'), variables('keyVaultSecretsUserRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('keyVaultSecretsUserRoleId'))]",
                 "principalId": "[parameters('functionAppPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
@@ -1779,13 +2384,65 @@
                 "principalId": "[parameters('githubDeploymentPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
+            },
+            {
+              "condition": "[not(empty(parameters('githubDeploymentPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName'))]",
+              "name": "[guid(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName')), parameters('githubDeploymentPrincipalId'), variables('contributorRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]",
+                "principalId": "[parameters('githubDeploymentPrincipalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('githubDeploymentPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+              "name": "[guid(resourceId('Microsoft.ApiManagement/service', parameters('apimName')), parameters('githubDeploymentPrincipalId'), variables('apiManagementServiceContributorRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('apiManagementServiceContributorRoleId'))]",
+                "principalId": "[parameters('githubDeploymentPrincipalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('apimServicePrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+              "name": "[guid(resourceId('Microsoft.ApiManagement/service', parameters('apimName')), parameters('apimServicePrincipalId'), variables('apiManagementServiceContributorRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('apiManagementServiceContributorRoleId'))]",
+                "principalId": "[parameters('apimServicePrincipalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('apimServicePrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
+              "name": "[guid(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), parameters('apimServicePrincipalId'), variables('logAnalyticsReaderRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('logAnalyticsReaderRoleId'))]",
+                "principalId": "[parameters('apimServicePrincipalId')]",
+                "principalType": "ServicePrincipal"
+              }
             }
           ]
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('app-service-{0}', parameters('environment')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('function-app-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('postgresql-{0}', parameters('environment')))]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment')))]"
       ]
@@ -1848,6 +2505,13 @@
       },
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.storageAccountName.value]"
     },
+    "functionsStorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Functions storage account name"
+      },
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-{0}', parameters('environment'))), '2025-04-01').outputs.functionsStorageAccountName.value]"
+    },
     "apimGatewayUrl": {
       "type": "string",
       "metadata": {
@@ -1862,12 +2526,33 @@
       },
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('apim-{0}', parameters('environment'))), '2025-04-01').outputs.apimName.value]"
     },
-    "appInsightsConnectionString": {
+    "apiAppInsightsConnectionString": {
       "type": "string",
       "metadata": {
-        "description": "Application Insights connection string"
+        "description": "API Application Insights connection string"
       },
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.appInsightsConnectionString.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.apiAppInsightsConnectionString.value]"
+    },
+    "functionAppInsightsConnectionString": {
+      "type": "string",
+      "metadata": {
+        "description": "Function App Application Insights connection string"
+      },
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('monitoring-{0}', parameters('environment'))), '2025-04-01').outputs.functionAppInsightsConnectionString.value]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Key Vault name"
+      },
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment'))), '2025-04-01').outputs.keyVaultName.value]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "metadata": {
+        "description": "Key Vault URI"
+      },
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('key-vault-{0}', parameters('environment'))), '2025-04-01').outputs.keyVaultUri.value]"
     }
   }
 }
