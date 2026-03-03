@@ -6,7 +6,7 @@ namespace PreflightApi.Infrastructure.Dtos;
 /// Airport data from the FAA National Airspace System Resources (NASR) database.
 /// Combines data from APT_BASE, APT_ATT, and APT_CON CSV files.
 /// Use the airport's IcaoId or ArptId to query related endpoints such as runways
-/// (<c>GET /api/v1/airports/{icaoCodeOrIdent}/runways</c>), communication frequencies
+/// (<c>GET /api/v1/runways/airport/{icaoCodeOrIdent}</c>), communication frequencies
 /// (<c>GET /api/v1/communication-frequencies/{servicedFacility}</c>), METARs
 /// (<c>GET /api/v1/metars/{icaoCodeOrIdent}</c>), TAFs (<c>GET /api/v1/tafs/{icaoCodeOrIdent}</c>),
 /// airport diagrams (<c>GET /api/v1/airport-diagrams/{icaoCodeOrIdent}</c>), and
