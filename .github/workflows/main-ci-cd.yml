@@ -372,6 +372,7 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
           --src functionapp.zip
+          --timeout 0
 
       - name: Start Function App
         if: always()
