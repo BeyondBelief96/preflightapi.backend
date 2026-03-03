@@ -20,7 +20,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$EnvFile = Join-Path $ScriptDir ".env.$Environment"
+$EnvFile = Join-Path $ScriptDir "..\.env.$Environment"
 
 if (-not (Test-Path $EnvFile)) {
     Write-Error "Error: $EnvFile not found. Copy from .env.example and fill in your secrets."
@@ -47,8 +47,8 @@ Write-Host ""
 
 az deployment sub create `
     --location eastus `
-    --template-file "$ScriptDir/main.bicep" `
-    --parameters "$ScriptDir/parameters/$Environment.bicepparam" `
+    --template-file "$ScriptDir/../main.bicep" `
+    --parameters "$ScriptDir/../parameters/$Environment.bicepparam" `
     --name $deploymentName
 
 if ($LASTEXITCODE -ne 0) {
