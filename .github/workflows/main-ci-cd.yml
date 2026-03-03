@@ -355,12 +355,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_PRD_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_PRD_SUBSCRIPTION_ID }}
 
-      - name: Stop Function App (prevent alerts during deployment)
-        run: >
-          az functionapp stop
-          --resource-group ${{ env.RESOURCE_GROUP }}
-          --name ${{ env.FUNCTION_APP_NAME }}
-
       - name: Download Functions zip
         uses: actions/download-artifact@v4
         with:
@@ -372,14 +366,6 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }}
           --name ${{ env.FUNCTION_APP_NAME }}
           --src functionapp.zip
-          --timeout 0
-
-      - name: Start Function App
-        if: always()
-        run: >
-          az functionapp start
-          --resource-group ${{ env.RESOURCE_GROUP }}
-          --name ${{ env.FUNCTION_APP_NAME }}
 
 
   release:
