@@ -10,8 +10,8 @@ namespace PreflightApi.Tests.IntegrationTests
     public class PostgreSqlTestBase : IAsyncLifetime
     {
         private readonly PostgreSqlContainer _dbContainer;
-        protected PreflightApiDbContext DbContext { get; private set; }
-        protected string ConnectionString { get; private set; }
+        protected PreflightApiDbContext DbContext { get; private set; } = null!;
+        protected string ConnectionString { get; private set; } = null!;
 
         protected PostgreSqlTestBase()
         {
@@ -60,7 +60,10 @@ namespace PreflightApi.Tests.IntegrationTests
 
         public async Task DisposeAsync()
         {
-            await DbContext.DisposeAsync();
+            if (DbContext != null)
+            {
+                await DbContext.DisposeAsync();
+            }
             await _dbContainer.StopAsync();
         }
     }

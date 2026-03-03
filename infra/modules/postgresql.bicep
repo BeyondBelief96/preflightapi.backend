@@ -65,9 +65,14 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-0
 }
 
 // Enable PostGIS and PostGIS Topology extensions
+// dependsOn database to serialize child resource operations — the server reports
+// as "created" before it's ready to accept concurrent configuration changes.
 resource postgisConfig 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
   parent: postgresServer
   name: 'azure.extensions'
+  dependsOn: [
+    database
+  ]
   properties: {
     value: 'POSTGIS,POSTGIS_TOPOLOGY'
     source: 'user-override'

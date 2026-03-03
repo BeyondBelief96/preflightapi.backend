@@ -23,6 +23,12 @@ param backendWebAppHostName string
 @description('APIM-to-API shared secret for gateway validation')
 param gatewaySecret string
 
+@description('Custom domain hostname for APIM gateway (e.g., api.preflightapi.io). Leave empty to skip.')
+param apimCustomDomainHostName string = ''
+
+@description('Key Vault certificate URI for custom domain SSL (e.g., https://myvault.vault.azure.net/secrets/cert-name). Leave empty to skip.')
+param keyVaultCertificateUri string = ''
+
 // API Management Service
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' = {
   name: apimName
@@ -37,6 +43,15 @@ resource apim 'Microsoft.ApiManagement/service@2024-05-01' = {
   properties: {
     publisherEmail: publisherEmail
     publisherName: publisherName
+    hostnameConfigurations: !empty(apimCustomDomainHostName) ? [
+      {
+        type: 'Proxy'
+        hostName: apimCustomDomainHostName
+        keyVaultId: keyVaultCertificateUri
+        negotiateClientCertificate: false
+        defaultSslBinding: true
+      }
+    ] : null
   }
 }
 
@@ -51,20 +66,14 @@ resource gatewaySecretNamedValue 'Microsoft.ApiManagement/service/namedValues@20
   }
 }
 
-// Named value for maintenance mode (toggled by CI/CD during deployments)
-resource maintenanceModeNamedValue 'Microsoft.ApiManagement/service/namedValues@2024-05-01' = {
-  parent: apim
-  name: 'maintenance-mode'
-  properties: {
-    displayName: 'maintenance-mode'
-    value: 'false'
-  }
-}
-
 // API definition pointing to the backend Web App
+// Serialize after gateway secret to avoid concurrent APIM config writes
 resource api 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apim
   name: 'preflightapi'
+  dependsOn: [
+    gatewaySecretNamedValue
+  ]
   properties: {
     displayName: 'PreflightApi'
     path: ''
@@ -88,7 +97,6 @@ resource apiPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = 
   }
   dependsOn: [
     gatewaySecretNamedValue
-    maintenanceModeNamedValue
   ]
 }
 
@@ -128,6 +136,9 @@ resource studentPilotPolicy 'Microsoft.ApiManagement/service/products/policies@2
 resource privatePilotProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
   parent: apim
   name: 'private-pilot'
+  dependsOn: [
+    studentPilotProduct
+  ]
   properties: {
     displayName: 'Private Pilot'
     description: 'Starter tier — weather, airports, airspace, and more'
@@ -158,6 +169,9 @@ resource privatePilotPolicy 'Microsoft.ApiManagement/service/products/policies@2
 resource commercialPilotProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
   parent: apim
   name: 'commercial-pilot'
+  dependsOn: [
+    privatePilotProduct
+  ]
   properties: {
     displayName: 'Commercial Pilot'
     description: 'Professional tier — full access to all endpoints'
@@ -188,6 +202,9 @@ resource commercialPilotPolicy 'Microsoft.ApiManagement/service/products/policie
 resource atpProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
   parent: apim
   name: 'atp'
+  dependsOn: [
+    commercialPilotProduct
+  ]
   properties: {
     displayName: 'ATP'
     description: 'Enterprise tier — full access to all endpoints with highest limits'
@@ -224,3 +241,6 @@ output apimGatewayUrl string = apim.properties.gatewayUrl
 
 @description('APIM resource ID')
 output apimId string = apim.id
+
+@description('APIM system-assigned managed identity principal ID')
+output apimPrincipalId string = apim.identity.principalId

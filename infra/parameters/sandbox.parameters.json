@@ -1,0 +1,180 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "test"
+    },
+    "resourceGroupName": {
+      "value": "rg-preflightapi-eastus-sandbox"
+    },
+    "logAnalyticsName": {
+      "value": "log-preflightapi-sandbox"
+    },
+    "apiAppInsightsName": {
+      "value": "appi-preflightapi-api-sandbox"
+    },
+    "functionAppInsightsName": {
+      "value": "appi-preflightapi-func-sandbox"
+    },
+    "postgresServerName": {
+      "value": "pgsql-preflightapi-sandbox"
+    },
+    "postgresLocation": {
+      "value": "eastus2"
+    },
+    "storageAccountName": {
+      "value": "stpreflightapisandbox"
+    },
+    "terminalProceduresContainerName": {
+      "value": "terminal-procedures"
+    },
+    "chartSupplementsContainerName": {
+      "value": "chart-supplements"
+    },
+    "preflightApiResourcesContainerName": {
+      "value": "preflightapi-resources"
+    },
+    "appServicePlanName": {
+      "value": "asp-preflightapi-api-sandbox"
+    },
+    "webAppName": {
+      "value": "preflightapi-web-sandbox"
+    },
+    "webAppPlatform": {
+      "value": "windows"
+    },
+    "functionsPlanName": {
+      "value": "asp-preflightapi-func-sandbox"
+    },
+    "functionAppName": {
+      "value": "preflightapi-func-sandbox"
+    },
+    "functionsStorageName": {
+      "value": ""
+    },
+    "keyVaultName": {
+      "value": "kv-preflightapi-sandbox"
+    },
+    "apimServiceName": {
+      "value": "apim-preflightapi-sandbox"
+    },
+    "dbAdminLogin": {
+      "value": "preflightapi_admin"
+    },
+    "dbAdminPassword": {
+      "value": ""
+    },
+    "databaseName": {
+      "value": "preflightapi-sandbox-database"
+    },
+    "dbSkuName": {
+      "value": "Standard_B1ms"
+    },
+    "dbSkuTier": {
+      "value": "Burstable"
+    },
+    "dbStorageSizeGB": {
+      "value": 32
+    },
+    "dbVersion": {
+      "value": "15"
+    },
+    "storageSkuName": {
+      "value": "Standard_RAGRS"
+    },
+    "apiSkuName": {
+      "value": "F1"
+    },
+    "apiSkuTier": {
+      "value": "Free"
+    },
+    "apimPublisherEmail": {
+      "value": ""
+    },
+    "apimSkuName": {
+      "value": "Developer"
+    },
+    "apimSkuCapacity": {
+      "value": 1
+    },
+    "apimCustomDomainHostName": {
+      "value": ""
+    },
+    "apimKeyVaultCertificateName": {
+      "value": ""
+    },
+    "noaaApiKey": {
+      "value": ""
+    },
+    "gatewaySecret": {
+      "value": ""
+    },
+    "nmsBaseUrl": {
+      "value": "https://api-staging.cgifederal-aim.com/nmsapi"
+    },
+    "nmsAuthBaseUrl": {
+      "value": "https://api-staging.cgifederal-aim.com"
+    },
+    "nmsClientId": {
+      "value": ""
+    },
+    "nmsClientSecret": {
+      "value": ""
+    },
+    "clerkAuthority": {
+      "value": ""
+    },
+    "clerkSecretKey": {
+      "value": ""
+    },
+    "certificateAcmeEmail": {
+      "value": ""
+    },
+    "certificateCertName": {
+      "value": ""
+    },
+    "certificateDomain": {
+      "value": ""
+    },
+    "certificateRootDomain": {
+      "value": ""
+    },
+    "porkbunApiKey": {
+      "value": ""
+    },
+    "porkbunSecretApiKey": {
+      "value": ""
+    },
+    "resendApiToken": {
+      "value": ""
+    },
+    "resendEnabled": {
+      "value": "false"
+    },
+    "resendFromAddress": {
+      "value": "alerts@contact.preflightapi.io"
+    },
+    "resendQuietPeriodMinutes": {
+      "value": "1440"
+    },
+    "resendReplyToAddress": {
+      "value": "bberisford@preflightapi.io"
+    },
+    "resendSegmentAllId": {
+      "value": ""
+    },
+    "resendTopicAlertsId": {
+      "value": ""
+    },
+    "githubDeploymentPrincipalId": {
+      "value": ""
+    },
+    "apimServicePrincipalId": {
+      "value": ""
+    }
+  }
+}

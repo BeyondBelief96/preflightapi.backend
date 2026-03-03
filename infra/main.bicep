@@ -20,8 +20,11 @@ param resourceGroupName string
 @description('Log Analytics workspace name')
 param logAnalyticsName string
 
-@description('Application Insights resource name')
-param appInsightsName string
+@description('Application Insights resource name for the API')
+param apiAppInsightsName string
+
+@description('Application Insights resource name for the Function App')
+param functionAppInsightsName string
 
 @description('PostgreSQL flexible server name')
 param postgresServerName string
@@ -38,11 +41,18 @@ param terminalProceduresContainerName string
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
 
+@description('PreflightApi resources blob container name')
+param preflightApiResourcesContainerName string
+
 @description('App Service Plan name for the API')
 param appServicePlanName string
 
 @description('Web App name for the API')
 param webAppName string
+
+@description('Web App platform (linux or windows)')
+@allowed(['linux', 'windows'])
+param webAppPlatform string = 'linux'
 
 @description('Function App Flex Consumption plan name')
 param functionsPlanName string
@@ -50,8 +60,11 @@ param functionsPlanName string
 @description('Function App name')
 param functionAppName string
 
-@description('Storage account name for Functions runtime (AzureWebJobsStorage)')
-param functionsStorageName string
+@description('Storage account name for Functions runtime (leave empty to share the data account)')
+param functionsStorageName string = ''
+
+@description('Key Vault name')
+param keyVaultName string
 
 @description('API Management service name')
 param apimServiceName string
@@ -104,10 +117,16 @@ param apimSkuName string = 'BasicV2'
 @description('APIM SKU capacity')
 param apimSkuCapacity int = 1
 
+@description('Custom domain hostname for APIM gateway (e.g., api.preflightapi.io). Leave empty to skip.')
+param apimCustomDomainHostName string = ''
+
+@description('Certificate name in Key Vault for APIM custom domain SSL. Leave empty to skip.')
+param apimKeyVaultCertificateName string = ''
+
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 @secure()
-@description('NOAA API key for weather data synchronization (used by Functions)')
+@description('NOAA API key for weather data (used by API and Functions)')
 param noaaApiKey string
 
 @secure()
@@ -135,6 +154,58 @@ param nmsClientSecret string
 @description('Clerk JWT authority URL (leave empty to omit from app settings)')
 param clerkAuthority string = ''
 
+@secure()
+@description('Clerk secret key (leave empty to omit)')
+param clerkSecretKey string = ''
+
+// ─── Certificate Renewal (Azure Functions) ──────────────────────────────────
+
+@description('ACME email for certificate renewal')
+param certificateAcmeEmail string = ''
+
+@description('Certificate name in Key Vault')
+param certificateCertName string = ''
+
+@description('Domain for certificate renewal')
+param certificateDomain string = ''
+
+@description('Root domain for DNS challenge')
+param certificateRootDomain string = ''
+
+// ─── Porkbun DNS (Azure Functions) ──────────────────────────────────────────
+
+@secure()
+@description('Porkbun API key')
+param porkbunApiKey string = ''
+
+@secure()
+@description('Porkbun secret API key')
+param porkbunSecretApiKey string = ''
+
+// ─── Resend Email (Azure Functions) ─────────────────────────────────────────
+
+@secure()
+@description('Resend API token')
+param resendApiToken string = ''
+
+@description('Enable Resend email notifications')
+param resendEnabled string = 'false'
+
+@description('Resend from address')
+param resendFromAddress string = 'alerts@contact.preflightapi.io'
+
+@description('Quiet period in minutes between alerts')
+param resendQuietPeriodMinutes string = '1440'
+
+@description('Resend reply-to address')
+param resendReplyToAddress string = 'bberisford@preflightapi.io'
+
+@description('Resend segment ID for all users')
+param resendSegmentAllId string = ''
+
+@description('Resend topic ID for alerts')
+param resendTopicAlertsId string = ''
+
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 // Provide the Object ID of your GitHub deployment service principal (App
 // Registration or Managed Identity). Used for Contributor RBAC on the resource
@@ -142,6 +213,13 @@ param clerkAuthority string = ''
 
 @description('Object ID of the GitHub deployment service principal')
 param githubDeploymentPrincipalId string = ''
+
+// ─── APIM Service Principal (optional) ──────────────────────────────────────
+// Object ID of the APIM management service principal used by the frontend.
+// Used for APIM Contributor and Log Analytics Reader RBAC. Leave empty to skip.
+
+@description('Object ID of the APIM management service principal')
+param apimServicePrincipalId string = ''
 
 // ─── Resource Group ──────────────────────────────────────────────────────────
 
@@ -158,7 +236,8 @@ module monitoring 'modules/monitoring.bicep' = {
   params: {
     location: location
     logAnalyticsName: logAnalyticsName
-    appInsightsName: appInsightsName
+    apiAppInsightsName: apiAppInsightsName
+    functionAppInsightsName: functionAppInsightsName
   }
 }
 
@@ -187,6 +266,17 @@ module storage 'modules/storage.bicep' = {
     skuName: storageSkuName
     terminalProceduresContainerName: terminalProceduresContainerName
     chartSupplementsContainerName: chartSupplementsContainerName
+    preflightApiResourcesContainerName: preflightApiResourcesContainerName
+    functionsStorageName: functionsStorageName
+  }
+}
+
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'key-vault-${environment}'
+  scope: rg
+  params: {
+    location: location
+    keyVaultName: keyVaultName
   }
 }
 
@@ -199,8 +289,9 @@ module appService 'modules/app-service.bicep' = {
     webAppName: webAppName
     skuName: apiSkuName
     skuTier: apiSkuTier
+    webAppPlatform: webAppPlatform
     environment: environment
-    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    appInsightsConnectionString: monitoring.outputs.apiAppInsightsConnectionString
     databaseHost: postgresql.outputs.serverFqdn
     databaseName: databaseName
     databaseUsername: dbAdminLogin
@@ -209,6 +300,7 @@ module appService 'modules/app-service.bicep' = {
     terminalProceduresContainerName: storage.outputs.terminalProceduresContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
     gatewaySecret: gatewaySecret
+    noaaApiKey: noaaApiKey
   }
 }
 
@@ -219,8 +311,8 @@ module functionApp 'modules/function-app.bicep' = {
     location: location
     planName: functionsPlanName
     functionAppName: functionAppName
-    functionsStorageName: functionsStorageName
-    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    functionsStorageAccountName: storage.outputs.functionsStorageAccountName
+    appInsightsConnectionString: monitoring.outputs.functionAppInsightsConnectionString
     databaseHost: postgresql.outputs.serverFqdn
     databaseName: databaseName
     databaseUsername: dbAdminLogin
@@ -228,6 +320,7 @@ module functionApp 'modules/function-app.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     terminalProceduresContainerName: storage.outputs.terminalProceduresContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
+    preflightApiResourcesContainerName: storage.outputs.preflightApiResourcesContainerName
     nmsBaseUrl: nmsBaseUrl
     nmsAuthBaseUrl: nmsAuthBaseUrl
     nmsClientId: nmsClientId
@@ -235,6 +328,22 @@ module functionApp 'modules/function-app.bicep' = {
     noaaApiKey: noaaApiKey
     gatewaySecret: gatewaySecret
     clerkAuthority: clerkAuthority
+    clerkSecretKey: clerkSecretKey
+    certificateAcmeEmail: certificateAcmeEmail
+    certificateCertName: certificateCertName
+    certificateDomain: certificateDomain
+    certificateKeyVaultName: keyVault.outputs.keyVaultName
+    certificateRootDomain: certificateRootDomain
+    porkbunApiKey: porkbunApiKey
+    porkbunSecretApiKey: porkbunSecretApiKey
+    resendApiToken: resendApiToken
+    resendEnabled: resendEnabled
+    resendFromAddress: resendFromAddress
+    resendHealthEndpointUrl: 'https://${appService.outputs.webAppHostName}/health'
+    resendQuietPeriodMinutes: resendQuietPeriodMinutes
+    resendReplyToAddress: resendReplyToAddress
+    resendSegmentAllId: resendSegmentAllId
+    resendTopicAlertsId: resendTopicAlertsId
   }
 }
 
@@ -249,6 +358,8 @@ module apim 'modules/apim.bicep' = {
     skuCapacity: apimSkuCapacity
     backendWebAppHostName: appService.outputs.webAppHostName
     gatewaySecret: gatewaySecret
+    apimCustomDomainHostName: apimCustomDomainHostName
+    keyVaultCertificateUri: !empty(apimKeyVaultCertificateName) ? '${keyVault.outputs.keyVaultUri}secrets/${apimKeyVaultCertificateName}' : ''
   }
 }
 
@@ -256,10 +367,16 @@ module roleAssignments 'modules/role-assignments.bicep' = {
   name: 'role-assignments-${environment}'
   scope: rg
   params: {
+    storageAccountName: storage.outputs.storageAccountName
     webAppPrincipalId: appService.outputs.webAppPrincipalId
     functionAppPrincipalId: functionApp.outputs.functionAppPrincipalId
-    storageAccountId: storage.outputs.storageAccountId
     githubDeploymentPrincipalId: githubDeploymentPrincipalId
+    keyVaultName: keyVault.outputs.keyVaultName
+    postgresServerName: postgresql.outputs.serverName
+    apimName: apim.outputs.apimName
+    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+    apimServicePrincipalId: apimServicePrincipalId
+    apimPrincipalId: apim.outputs.apimPrincipalId
   }
 }
 
@@ -289,11 +406,23 @@ output functionAppHostName string = functionApp.outputs.functionAppHostName
 @description('Storage account name')
 output storageAccountName string = storage.outputs.storageAccountName
 
+@description('Functions storage account name')
+output functionsStorageAccountName string = storage.outputs.functionsStorageAccountName
+
 @description('APIM gateway URL')
 output apimGatewayUrl string = apim.outputs.apimGatewayUrl
 
 @description('APIM service name')
 output apimServiceName string = apim.outputs.apimName
 
-@description('Application Insights connection string')
-output appInsightsConnectionString string = monitoring.outputs.appInsightsConnectionString
+@description('API Application Insights connection string')
+output apiAppInsightsConnectionString string = monitoring.outputs.apiAppInsightsConnectionString
+
+@description('Function App Application Insights connection string')
+output functionAppInsightsConnectionString string = monitoring.outputs.functionAppInsightsConnectionString
+
+@description('Key Vault name')
+output keyVaultName string = keyVault.outputs.keyVaultName
+
+@description('Key Vault URI')
+output keyVaultUri string = keyVault.outputs.keyVaultUri

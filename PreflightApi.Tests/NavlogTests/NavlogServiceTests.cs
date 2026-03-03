@@ -339,7 +339,7 @@ namespace PreflightApi.Tests.NavlogTests
 
                 // Return null from FetchWindsAloftData to simulate no winds data
                 _windsAloftService.FetchWindsAloftData(Arg.Any<int>())
-                    .Returns((WindsAloftDto?)null);
+                    .Returns((WindsAloftDto)null!);
 
                 // Act
                 var result = await _navlogService.CalculateNavlog(request);

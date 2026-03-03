@@ -1,0 +1,180 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "test"
+    },
+    "resourceGroupName": {
+      "value": "rg-preflightapi-eastus-test"
+    },
+    "logAnalyticsName": {
+      "value": "preflightapi-log-analytics-workspace-eastus-tst"
+    },
+    "apiAppInsightsName": {
+      "value": "preflightapi-eastus-web-api-test"
+    },
+    "functionAppInsightsName": {
+      "value": "az-func-preflightapi-eastus-test"
+    },
+    "postgresServerName": {
+      "value": "pgsql-preflightapi-eastus-test"
+    },
+    "postgresLocation": {
+      "value": "eastus2"
+    },
+    "storageAccountName": {
+      "value": "rgpreflightapieastusad"
+    },
+    "terminalProceduresContainerName": {
+      "value": "preflightapi-terminal-procedures-centralus-test"
+    },
+    "chartSupplementsContainerName": {
+      "value": "preflightapi-chart-supplements-centralus-test"
+    },
+    "preflightApiResourcesContainerName": {
+      "value": "sa-eastus-container-preflightapi-resources-tst"
+    },
+    "appServicePlanName": {
+      "value": "ASP-rgpreflightapieastustest-ac44"
+    },
+    "webAppName": {
+      "value": "preflightapi-eastus-web-api-test"
+    },
+    "webAppPlatform": {
+      "value": "windows"
+    },
+    "functionsPlanName": {
+      "value": "ASP-rgpreflightapieastustest-9578"
+    },
+    "functionAppName": {
+      "value": "az-func-preflightapi-eastus-test"
+    },
+    "functionsStorageName": {
+      "value": ""
+    },
+    "keyVaultName": {
+      "value": "KeyVaultPreflightApiTest"
+    },
+    "apimServiceName": {
+      "value": "preflightapi-apim-service-test"
+    },
+    "dbAdminLogin": {
+      "value": "preflightapi_admin"
+    },
+    "dbAdminPassword": {
+      "value": ""
+    },
+    "databaseName": {
+      "value": "preflightapi-eastus-test-database"
+    },
+    "dbSkuName": {
+      "value": "Standard_B1ms"
+    },
+    "dbSkuTier": {
+      "value": "Burstable"
+    },
+    "dbStorageSizeGB": {
+      "value": 32
+    },
+    "dbVersion": {
+      "value": "15"
+    },
+    "storageSkuName": {
+      "value": "Standard_RAGRS"
+    },
+    "apiSkuName": {
+      "value": "F1"
+    },
+    "apiSkuTier": {
+      "value": "Free"
+    },
+    "apimPublisherEmail": {
+      "value": ""
+    },
+    "apimSkuName": {
+      "value": "Developer"
+    },
+    "apimSkuCapacity": {
+      "value": 1
+    },
+    "apimCustomDomainHostName": {
+      "value": ""
+    },
+    "apimKeyVaultCertificateName": {
+      "value": ""
+    },
+    "noaaApiKey": {
+      "value": ""
+    },
+    "gatewaySecret": {
+      "value": ""
+    },
+    "nmsBaseUrl": {
+      "value": "https://api-staging.cgifederal-aim.com/nmsapi"
+    },
+    "nmsAuthBaseUrl": {
+      "value": "https://api-staging.cgifederal-aim.com"
+    },
+    "nmsClientId": {
+      "value": ""
+    },
+    "nmsClientSecret": {
+      "value": ""
+    },
+    "clerkAuthority": {
+      "value": ""
+    },
+    "clerkSecretKey": {
+      "value": ""
+    },
+    "certificateAcmeEmail": {
+      "value": ""
+    },
+    "certificateCertName": {
+      "value": ""
+    },
+    "certificateDomain": {
+      "value": ""
+    },
+    "certificateRootDomain": {
+      "value": ""
+    },
+    "porkbunApiKey": {
+      "value": ""
+    },
+    "porkbunSecretApiKey": {
+      "value": ""
+    },
+    "resendApiToken": {
+      "value": ""
+    },
+    "resendEnabled": {
+      "value": "false"
+    },
+    "resendFromAddress": {
+      "value": "alerts@contact.preflightapi.io"
+    },
+    "resendQuietPeriodMinutes": {
+      "value": "1440"
+    },
+    "resendReplyToAddress": {
+      "value": "bberisford@preflightapi.io"
+    },
+    "resendSegmentAllId": {
+      "value": ""
+    },
+    "resendTopicAlertsId": {
+      "value": ""
+    },
+    "githubDeploymentPrincipalId": {
+      "value": ""
+    },
+    "apimServicePrincipalId": {
+      "value": ""
+    }
+  }
+}

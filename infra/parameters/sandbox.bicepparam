@@ -3,32 +3,32 @@ using '../main.bicep'
 param location = 'eastus'
 param environment = 'test'
 
-// ─── Resource Names (matching actual TST infrastructure) ─────────────────────
+// ─── Resource Names (sandbox — all unique names) ────────────────────────────
 
-param resourceGroupName = 'rg-preflightapi-eastus-test'
-param logAnalyticsName = 'preflightapi-log-analytics-workspace-eastus-tst'
-param apiAppInsightsName = 'preflightapi-eastus-web-api-test'
-param functionAppInsightsName = 'az-func-preflightapi-eastus-test'
-param postgresServerName = 'pgsql-preflightapi-eastus-test'
+param resourceGroupName = 'rg-preflightapi-eastus-sandbox'
+param logAnalyticsName = 'log-preflightapi-sandbox'
+param apiAppInsightsName = 'appi-preflightapi-api-sandbox'
+param functionAppInsightsName = 'appi-preflightapi-func-sandbox'
+param postgresServerName = 'pgsql-preflightapi-sandbox'
 param postgresLocation = 'eastus2'
-param storageAccountName = 'rgpreflightapieastusad'
-param terminalProceduresContainerName = 'preflightapi-terminal-procedures-centralus-test'
-param chartSupplementsContainerName = 'preflightapi-chart-supplements-centralus-test'
-param preflightApiResourcesContainerName = 'sa-eastus-container-preflightapi-resources-tst'
-param appServicePlanName = 'ASP-rgpreflightapieastustest-ac44'
-param webAppName = 'preflightapi-eastus-web-api-test'
+param storageAccountName = 'stpreflightapisandbox'
+param terminalProceduresContainerName = 'terminal-procedures'
+param chartSupplementsContainerName = 'chart-supplements'
+param preflightApiResourcesContainerName = 'preflightapi-resources'
+param appServicePlanName = 'asp-preflightapi-api-sandbox'
+param webAppName = 'preflightapi-web-sandbox'
 param webAppPlatform = 'windows'
-param functionsPlanName = 'ASP-rgpreflightapieastustest-9578'
-param functionAppName = 'az-func-preflightapi-eastus-test'
-param functionsStorageName = '' // TST uses a single storage account for both data and functions
-param keyVaultName = 'KeyVaultPreflightApiTest'
-param apimServiceName = 'preflightapi-apim-service-test'
+param functionsPlanName = 'asp-preflightapi-func-sandbox'
+param functionAppName = 'preflightapi-func-sandbox'
+param functionsStorageName = '' // Shared storage account (same as TST)
+param keyVaultName = 'kv-preflightapi-sandbox'
+param apimServiceName = 'apim-preflightapi-sandbox'
 
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
 
 param dbAdminLogin = 'preflightapi_admin'
 param dbAdminPassword = readEnvironmentVariable('DB_ADMIN_PASSWORD')
-param databaseName = 'preflightapi-eastus-test-database'
+param databaseName = 'preflightapi-sandbox-database'
 param dbSkuName = 'Standard_B1ms'
 param dbSkuTier = 'Burstable'
 param dbStorageSizeGB = 32
@@ -91,6 +91,6 @@ param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', ''
 
 param githubDeploymentPrincipalId = readEnvironmentVariable('GITHUB_DEPLOYMENT_PRINCIPAL_ID', '')
 
-// ─── APIM Service Principal (optional for TST) ─────────────────────────────
+// ─── APIM Service Principal (optional) ───────────────────────────────────────
 
 param apimServicePrincipalId = readEnvironmentVariable('APIM_SERVICE_PRINCIPAL_ID', '')

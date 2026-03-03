@@ -7,8 +7,8 @@ param planName string
 @description('Function App name')
 param functionAppName string
 
-@description('Storage account name for Functions runtime (AzureWebJobsStorage)')
-param functionsStorageName string
+@description('Functions storage account name (created by storage module)')
+param functionsStorageAccountName string
 
 @description('Application Insights connection string')
 param appInsightsConnectionString string
@@ -35,6 +35,9 @@ param terminalProceduresContainerName string
 @description('Chart supplements blob container name')
 param chartSupplementsContainerName string
 
+@description('PreflightApi resources blob container name')
+param preflightApiResourcesContainerName string
+
 @description('NMS API base URL')
 param nmsBaseUrl string
 
@@ -60,19 +63,69 @@ param gatewaySecret string
 @description('Clerk JWT authority URL (leave empty to omit)')
 param clerkAuthority string = ''
 
-// Storage Account for Azure Functions (AzureWebJobsStorage)
-resource functionsStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: functionsStorageName
-  location: location
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
-  properties: {
-    supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
-    allowBlobPublicAccess: false
-  }
+@secure()
+@description('Clerk secret key (leave empty to omit)')
+param clerkSecretKey string = ''
+
+// ─── Certificate Renewal Settings ───────────────────────────────────────────
+
+@description('ACME email for certificate renewal')
+param certificateAcmeEmail string = ''
+
+@description('Certificate name in Key Vault')
+param certificateCertName string = ''
+
+@description('Domain for certificate renewal')
+param certificateDomain string = ''
+
+@description('Key Vault name for certificate storage')
+param certificateKeyVaultName string = ''
+
+@description('Root domain for DNS challenge')
+param certificateRootDomain string = ''
+
+// ─── Porkbun DNS Settings ───────────────────────────────────────────────────
+
+@secure()
+@description('Porkbun API key')
+param porkbunApiKey string = ''
+
+@secure()
+@description('Porkbun secret API key')
+param porkbunSecretApiKey string = ''
+
+// ─── Resend Email Settings ──────────────────────────────────────────────────
+
+@secure()
+@description('Resend API token')
+param resendApiToken string = ''
+
+@description('Enable Resend email notifications')
+param resendEnabled string = 'false'
+
+@description('Resend from address')
+param resendFromAddress string = 'alerts@contact.preflightapi.io'
+
+@description('Health endpoint URL for outage monitoring')
+param resendHealthEndpointUrl string = ''
+
+@description('Quiet period in minutes between alerts')
+param resendQuietPeriodMinutes string = '1440'
+
+@description('Resend reply-to address')
+param resendReplyToAddress string = 'bberisford@preflightapi.io'
+
+@description('Resend segment ID for all users')
+param resendSegmentAllId string = ''
+
+@description('Resend topic ID for alerts')
+param resendTopicAlertsId string = ''
+
+// ─── Resources ──────────────────────────────────────────────────────────────
+
+// Reference the Functions storage account (created by storage module or pre-existing)
+resource functionsStorage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
+  name: functionsStorageAccountName
 }
 
 // Flex Consumption Plan
@@ -85,11 +138,11 @@ resource functionsPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     name: 'FC1'
   }
   properties: {
-    reserved: true // Required for Linux
+    reserved: true
   }
 }
 
-// Build app settings — conditionally include Clerk settings
+// Build app settings — conditionally include Clerk and certificate settings
 var baseAppSettings = [
   {
     name: 'AzureWebJobsStorage'
@@ -140,6 +193,10 @@ var baseAppSettings = [
     value: chartSupplementsContainerName
   }
   {
+    name: 'CloudStorage__PreflightApiResourcesContainerName'
+    value: preflightApiResourcesContainerName
+  }
+  {
     name: 'NmsSettings__BaseUrl'
     value: nmsBaseUrl
   }
@@ -165,19 +222,96 @@ var baseAppSettings = [
   }
 ]
 
-var clerkSettings = empty(clerkAuthority) ? [] : [
+var clerkSettings = empty(clerkAuthority) && empty(clerkSecretKey) ? [] : concat(
+  empty(clerkAuthority) ? [] : [
+    {
+      name: 'ClerkSettings__Authority'
+      value: clerkAuthority
+    }
+    {
+      name: 'ClerkSettings__RequireAuthenticationInDevelopment'
+      value: 'true'
+    }
+  ],
+  empty(clerkSecretKey) ? [] : [
+    {
+      name: 'ClerkSettings__SecretKey'
+      value: clerkSecretKey
+    }
+  ]
+)
+
+var certificateSettings = empty(certificateAcmeEmail) ? [] : [
   {
-    name: 'ClerkSettings__Authority'
-    value: clerkAuthority
+    name: 'CertificateRenewal__AcmeEmail'
+    value: certificateAcmeEmail
   }
   {
-    name: 'ClerkSettings__RequireAuthenticationInDevelopment'
-    value: 'true'
+    name: 'CertificateRenewal__CertificateName'
+    value: certificateCertName
+  }
+  {
+    name: 'CertificateRenewal__Domain'
+    value: certificateDomain
+  }
+  {
+    name: 'CertificateRenewal__KeyVaultName'
+    value: certificateKeyVaultName
+  }
+  {
+    name: 'CertificateRenewal__RootDomain'
+    value: certificateRootDomain
+  }
+]
+
+var porkbunSettings = empty(porkbunApiKey) ? [] : [
+  {
+    name: 'Porkbun__ApiKey'
+    value: porkbunApiKey
+  }
+  {
+    name: 'Porkbun__SecretApiKey'
+    value: porkbunSecretApiKey
+  }
+]
+
+var resendSettings = empty(resendApiToken) ? [] : [
+  {
+    name: 'Resend__ApiToken'
+    value: resendApiToken
+  }
+  {
+    name: 'Resend__Enabled'
+    value: resendEnabled
+  }
+  {
+    name: 'Resend__FromAddress'
+    value: resendFromAddress
+  }
+  {
+    name: 'Resend__HealthEndpointUrl'
+    value: resendHealthEndpointUrl
+  }
+  {
+    name: 'Resend__QuietPeriodMinutes'
+    value: resendQuietPeriodMinutes
+  }
+  {
+    name: 'Resend__ReplyToAddress'
+    value: resendReplyToAddress
+  }
+  {
+    name: 'Resend__SegmentAllId'
+    value: resendSegmentAllId
+  }
+  {
+    name: 'Resend__TopicAlertsId'
+    value: resendTopicAlertsId
   }
 ]
 
 // Function App
-resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
+resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp,linux'
@@ -187,12 +321,34 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: functionsPlan.id
     httpsOnly: true
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: 'https://${functionsStorageAccountName}.blob.${az.environment().suffixes.storage}/app-package-${functionAppName}'
+          authentication: {
+            type: 'StorageAccountConnectionString'
+            storageAccountConnectionStringName: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
+          }
+        }
+      }
+      runtime: {
+        name: 'dotnet-isolated'
+        version: '8.0'
+      }
+      scaleAndConcurrency: {
+        instanceMemoryMB: 4096
+        maximumInstanceCount: 100
+      }
+    }
     siteConfig: {
       minTlsVersion: '1.2'
-      appSettings: concat(baseAppSettings, clerkSettings)
+      appSettings: concat(baseAppSettings, clerkSettings, certificateSettings, porkbunSettings, resendSettings)
     }
   }
 }
+
+// ─── Outputs ────────────────────────────────────────────────────────────────
 
 @description('Function App name')
 output functionAppName string = functionApp.name
@@ -205,6 +361,3 @@ output functionAppPrincipalId string = functionApp.identity.principalId
 
 @description('Function App resource ID')
 output functionAppId string = functionApp.id
-
-@description('Functions storage account name')
-output functionsStorageAccountName string = functionsStorage.name

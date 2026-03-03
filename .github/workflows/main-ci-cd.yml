@@ -273,9 +273,21 @@ jobs:
 
           echo "Deploying API-level policy"
           policy_content=$(python3 -c "import json; print(json.dumps(open('repo/apim-policies/api-policy.xml').read()))")
-          az rest --method put \
-            --url "${BASE_URL}/apis/preflightapi/policies/policy?api-version=${API_VERSION}" \
-            --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+          for attempt in 1 2 3 4 5; do
+            echo "Attempt $attempt/5..."
+            if az rest --method put \
+              --url "${BASE_URL}/apis/preflightapi/policies/policy?api-version=${API_VERSION}" \
+              --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"; then
+              echo "API-level policy deployed successfully"
+              break
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::Failed to deploy API-level policy after 5 attempts"
+              exit 1
+            fi
+            echo "Retrying in $((attempt * 15))s..."
+            sleep $((attempt * 15))
+          done
 
       - name: Deploy APIM product policies
         run: |
@@ -288,9 +300,21 @@ jobs:
             product_id=$(basename "$policy_file" | sed 's/-policy\.xml//')
             echo "Deploying policy for product: ${product_id}"
             policy_content=$(python3 -c "import json; print(json.dumps(open('${policy_file}').read()))")
-            az rest --method put \
-              --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
-              --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"
+            for attempt in 1 2 3 4 5; do
+              echo "  Attempt $attempt/5..."
+              if az rest --method put \
+                --url "${BASE_URL}/${product_id}/policies/policy?api-version=${API_VERSION}" \
+                --body "{\"properties\":{\"format\":\"rawxml\",\"value\":${policy_content}}}"; then
+                echo "  Policy for ${product_id} deployed successfully"
+                break
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::Failed to deploy policy for ${product_id} after 5 attempts"
+                exit 1
+              fi
+              echo "  Retrying in $((attempt * 15))s..."
+              sleep $((attempt * 15))
+            done
           done
 
       - name: Wait for API and download swagger spec
