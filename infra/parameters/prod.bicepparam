@@ -48,6 +48,8 @@ param apiSkuTier = 'Basic'
 param apimPublisherEmail = readEnvironmentVariable('APIM_PUBLISHER_EMAIL')
 param apimSkuName = 'BasicV2'
 param apimSkuCapacity = 1
+param apimCustomDomainHostName = 'api.preflightapi.io'
+param apimKeyVaultCertificateName = 'api-preflightapi-io'
 
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 

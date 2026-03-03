@@ -117,6 +117,12 @@ param apimSkuName string = 'BasicV2'
 @description('APIM SKU capacity')
 param apimSkuCapacity int = 1
 
+@description('Custom domain hostname for APIM gateway (e.g., api.preflightapi.io). Leave empty to skip.')
+param apimCustomDomainHostName string = ''
+
+@description('Certificate name in Key Vault for APIM custom domain SSL. Leave empty to skip.')
+param apimKeyVaultCertificateName string = ''
+
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 @secure()
@@ -352,6 +358,8 @@ module apim 'modules/apim.bicep' = {
     skuCapacity: apimSkuCapacity
     backendWebAppHostName: appService.outputs.webAppHostName
     gatewaySecret: gatewaySecret
+    apimCustomDomainHostName: apimCustomDomainHostName
+    keyVaultCertificateUri: !empty(apimKeyVaultCertificateName) ? '${keyVault.outputs.keyVaultUri}secrets/${apimKeyVaultCertificateName}' : ''
   }
 }
 
@@ -368,6 +376,7 @@ module roleAssignments 'modules/role-assignments.bicep' = {
     apimName: apim.outputs.apimName
     logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
     apimServicePrincipalId: apimServicePrincipalId
+    apimPrincipalId: apim.outputs.apimPrincipalId
   }
 }
 

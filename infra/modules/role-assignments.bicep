@@ -25,6 +25,9 @@ param logAnalyticsWorkspaceName string
 @description('APIM service principal ID for frontend management (optional)')
 param apimServicePrincipalId string = ''
 
+@description('APIM system-assigned managed identity principal ID (for Key Vault certificate access). Leave empty to skip.')
+param apimPrincipalId string = ''
+
 // ─── Built-in Role Definition IDs ───────────────────────────────────────────
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
 
@@ -89,6 +92,17 @@ resource functionAppKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-0
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
     principalId: functionAppPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// APIM Managed Identity → Key Vault Secrets User (for custom domain certificate)
+resource apimKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apimPrincipalId)) {
+  name: guid(keyVault.id, apimPrincipalId, keyVaultSecretsUserRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: apimPrincipalId
     principalType: 'ServicePrincipal'
   }
 }

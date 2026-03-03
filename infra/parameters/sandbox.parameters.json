@@ -6,61 +6,61 @@
       "value": "eastus"
     },
     "environment": {
-      "value": "prod"
+      "value": "test"
     },
     "resourceGroupName": {
-      "value": "rg-eastus-preflightapi-prd"
+      "value": "rg-preflightapi-eastus-sandbox"
     },
     "logAnalyticsName": {
-      "value": "preflightapi-log-analytics-workspace-apim-eastus-prd"
+      "value": "log-preflightapi-sandbox"
     },
     "apiAppInsightsName": {
-      "value": "was-eastus-preflightapi-prd"
+      "value": "appi-preflightapi-api-sandbox"
     },
     "functionAppInsightsName": {
-      "value": "function-app-eastus-preflightapi-prd"
+      "value": "appi-preflightapi-func-sandbox"
     },
     "postgresServerName": {
-      "value": "pgsql-eastus2-preflightapi-prd"
+      "value": "pgsql-preflightapi-sandbox"
     },
     "postgresLocation": {
       "value": "eastus2"
     },
     "storageAccountName": {
-      "value": "saeastuspreflightapiprd"
+      "value": "stpreflightapisandbox"
     },
     "terminalProceduresContainerName": {
-      "value": "sa-eastus-container-preflightapi-terminalprocedures-prd"
+      "value": "terminal-procedures"
     },
     "chartSupplementsContainerName": {
-      "value": "sa-eastus-container-preflightapi-chartsupplements-prd"
+      "value": "chart-supplements"
     },
     "preflightApiResourcesContainerName": {
-      "value": "sa-eastus-container-preflightapi-resources-prd"
+      "value": "preflightapi-resources"
     },
     "appServicePlanName": {
-      "value": "ASP-rgeastuspreflightapiprd-95a4"
+      "value": "asp-preflightapi-api-sandbox"
     },
     "webAppName": {
-      "value": "was-eastus-preflightapi-prd"
+      "value": "preflightapi-web-sandbox"
     },
     "webAppPlatform": {
-      "value": "linux"
+      "value": "windows"
     },
     "functionsPlanName": {
-      "value": "ASP-rgeastuspreflightapiprd-82d5"
+      "value": "asp-preflightapi-func-sandbox"
     },
     "functionAppName": {
-      "value": "function-app-eastus-preflightapi-prd"
+      "value": "preflightapi-func-sandbox"
     },
     "functionsStorageName": {
-      "value": "rgeastuspreflightapb08e"
+      "value": ""
     },
     "keyVaultName": {
-      "value": "KeyVaultPreflightApiPrd"
+      "value": "kv-preflightapi-sandbox"
     },
     "apimServiceName": {
-      "value": "apim-eastus-preflightapi-prd"
+      "value": "apim-preflightapi-sandbox"
     },
     "dbAdminLogin": {
       "value": "preflightapi_admin"
@@ -69,7 +69,7 @@
       "value": ""
     },
     "databaseName": {
-      "value": "preflightapi"
+      "value": "preflightapi-sandbox-database"
     },
     "dbSkuName": {
       "value": "Standard_B1ms"
@@ -81,31 +81,31 @@
       "value": 32
     },
     "dbVersion": {
-      "value": "16"
+      "value": "15"
     },
     "storageSkuName": {
       "value": "Standard_RAGRS"
     },
     "apiSkuName": {
-      "value": "B2"
+      "value": "F1"
     },
     "apiSkuTier": {
-      "value": "Basic"
+      "value": "Free"
     },
     "apimPublisherEmail": {
       "value": ""
     },
     "apimSkuName": {
-      "value": "BasicV2"
+      "value": "Developer"
     },
     "apimSkuCapacity": {
       "value": 1
     },
     "apimCustomDomainHostName": {
-      "value": "api.preflightapi.io"
+      "value": ""
     },
     "apimKeyVaultCertificateName": {
-      "value": "api-preflightapi-io"
+      "value": ""
     },
     "noaaApiKey": {
       "value": ""
@@ -114,10 +114,10 @@
       "value": ""
     },
     "nmsBaseUrl": {
-      "value": "https://api-nms.aim.faa.gov/nmsapi"
+      "value": "https://api-staging.cgifederal-aim.com/nmsapi"
     },
     "nmsAuthBaseUrl": {
-      "value": "https://api-nms.aim.faa.gov"
+      "value": "https://api-staging.cgifederal-aim.com"
     },
     "nmsClientId": {
       "value": ""
@@ -153,7 +153,7 @@
       "value": ""
     },
     "resendEnabled": {
-      "value": "true"
+      "value": "false"
     },
     "resendFromAddress": {
       "value": "alerts@contact.preflightapi.io"

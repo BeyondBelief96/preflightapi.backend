@@ -101,6 +101,12 @@
     "apimSkuCapacity": {
       "value": 1
     },
+    "apimCustomDomainHostName": {
+      "value": ""
+    },
+    "apimKeyVaultCertificateName": {
+      "value": ""
+    },
     "noaaApiKey": {
       "value": ""
     },
