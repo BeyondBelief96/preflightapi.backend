@@ -1,7 +1,7 @@
 {
   "$schema": "aixm-notam-schema-manifest-v1",
   "description": "Expected AIXM XML structure for FAA NMS NOTAM initial load responses (SOAP-wrapped or standalone)",
-  "lastVerified": "2026-02-17",
+  "lastVerified": "2026-03-04",
   "contexts": {
     "AIXMBasicMessage": {
       "description": "Root message element for a single NOTAM, identified by gml:id attribute",
@@ -121,6 +121,14 @@
         "event:coordinates": {
           "required": false,
           "description": "ICAO coordinates string"
+        },
+        "event:lowerLimit": {
+          "required": false,
+          "description": "Lower altitude limit (e.g., SFC, 050)"
+        },
+        "event:upperLimit": {
+          "required": false,
+          "description": "Upper altitude limit (e.g., 280M, 999)"
         },
         "event:radius": {
           "required": false,
