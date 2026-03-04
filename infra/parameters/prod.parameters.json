@@ -170,6 +170,12 @@
     "resendTopicAlertsId": {
       "value": ""
     },
+    "alertsEnabled": {
+      "value": true
+    },
+    "alertEmail": {
+      "value": ""
+    },
     "githubDeploymentPrincipalId": {
       "value": ""
     },

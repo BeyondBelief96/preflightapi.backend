@@ -87,6 +87,11 @@ param resendEnabled = 'true'
 param resendSegmentAllId = readEnvironmentVariable('RESEND_SEGMENT_ALL_ID', '')
 param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', '')
 
+// ─── Alerts ──────────────────────────────────────────────────────────────────
+
+param alertsEnabled = true
+param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')
+
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 // Object ID of the existing App Registration service principal used for
 // GitHub Actions OIDC. Provides Contributor RBAC on the resource group.

@@ -206,6 +206,14 @@ param resendSegmentAllId string = ''
 @description('Resend topic ID for alerts')
 param resendTopicAlertsId string = ''
 
+// ─── Alerts ─────────────────────────────────────────────────────────────────
+
+@description('Enable Azure Monitor alerts (production only)')
+param alertsEnabled bool = false
+
+@description('Email address for alert notifications')
+param alertEmail string = ''
+
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 // Provide the Object ID of your GitHub deployment service principal (App
 // Registration or Managed Identity). Used for Contributor RBAC on the resource
@@ -377,6 +385,17 @@ module roleAssignments 'modules/role-assignments.bicep' = {
     logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
     apimServicePrincipalId: apimServicePrincipalId
     apimPrincipalId: apim.outputs.apimPrincipalId
+  }
+}
+
+module alerts 'modules/alerts.bicep' = if (alertsEnabled) {
+  name: 'alerts-${environment}'
+  scope: rg
+  params: {
+    location: location
+    alertEmail: alertEmail
+    webAppId: appService.outputs.webAppId
+    functionAppInsightsId: monitoring.outputs.functionAppInsightsId
   }
 }
 
