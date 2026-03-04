@@ -34,6 +34,7 @@ param apimPrincipalId string = ''
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+var keyVaultCertificatesOfficerRoleId = 'a4417e6f-fecd-4de8-b567-7b0420556985'
 var apiManagementServiceContributorRoleId = '312a565d-c81f-4fd8-895a-4e21e48d571c'
 var logAnalyticsReaderRoleId = '73c42c96-874c-492b-b04d-ab87d138a893'
 
@@ -91,6 +92,19 @@ resource functionAppKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-0
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: functionAppPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ─── Key Vault Certificates Officer ──────────────────────────────────────────
+
+// Function App → Key Vault Certificates Officer (for certificate renewal: get + import)
+resource functionAppKeyVaultCertRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, functionAppPrincipalId, keyVaultCertificatesOfficerRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificatesOfficerRoleId)
     principalId: functionAppPrincipalId
     principalType: 'ServicePrincipal'
   }
