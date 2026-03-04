@@ -170,6 +170,12 @@
     "resendTopicAlertsId": {
       "value": ""
     },
+    "alertsEnabled": {
+      "value": true
+    },
+    "alertEmail": {
+      "value": "brandonberisford@gmail.com"
+    },
     "githubDeploymentPrincipalId": {
       "value": ""
     },

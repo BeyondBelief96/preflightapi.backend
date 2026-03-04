@@ -67,7 +67,8 @@
       "Bash(gh api:*)",
       "Bash(PGPASSWORD=postgres psql:*)",
       "WebFetch(domain:services6.arcgis.com)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(__NEW_LINE_885fadb529a403a9__ az:*)"
     ],
     "deny": [],
     "ask": []
