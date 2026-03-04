@@ -90,7 +90,7 @@ param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', ''
 // ─── Alerts ──────────────────────────────────────────────────────────────────
 
 param alertsEnabled = true
-param alertEmail = 'brandonberisford@gmail.com'
+param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')
 
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 // Object ID of the existing App Registration service principal used for
