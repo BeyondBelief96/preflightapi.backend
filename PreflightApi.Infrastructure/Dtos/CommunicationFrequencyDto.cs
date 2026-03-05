@@ -12,7 +12,7 @@ public record CommunicationFrequencyDto()
     /// <summary>FAA NASR field: FACILITY. Contains FACILITY ID except for FACILITY TYPE AFIS, CTAF, GCO, UNICOM and RCAG. The FACILITY NAME is used for RCAG sites. AFIS, CTAF, GCO and UNICOM are NULL.</summary>
     public string? FacilityCode { get; init; }
 
-    /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date (YYYY/MM/DD).</summary>
+    /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date. ISO 8601 UTC format.</summary>
     public DateTime EffectiveDate { get; init; }
 
     /// <summary>FAA NASR field: FAC_NAME. Official Facility Name. NULL for AFIS, CTAF, GCO, UNICOM (no FACILITY ID or NAME in NASR) and ASOS/AWOS (no FACILITY NAME in NASR).</summary>
@@ -39,10 +39,10 @@ public record CommunicationFrequencyDto()
     /// <summary>FAA NASR field: SERVICED_SITE_TYPE. Facility Type of SERVICED FACILITY.</summary>
     public string? ServicedSiteType { get; init; }
 
-    /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in Decimal Format.</summary>
+    /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in decimal degrees (WGS 84).</summary>
     public decimal? Latitude { get; init; }
 
-    /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in Decimal Format.</summary>
+    /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in decimal degrees (WGS 84).</summary>
     public decimal? Longitude { get; init; }
 
     /// <summary>FAA NASR field: SERVICED_CITY. Serviced Facility Associated City Name.</summary>
@@ -60,7 +60,7 @@ public record CommunicationFrequencyDto()
     /// <summary>FAA NASR field: PRIMARY_APPROACH_RADIO_CALL. Radio call of facility that furnishes primary approach control.</summary>
     public string? PrimaryApproachRadioCall { get; init; }
 
-    /// <summary>FAA NASR field: FREQ. Frequency for SERVICED FACILITY use. In the case of a NAVAID with DME/TACAN Channel, the Frequency is displayed with the Channel (FREQ/CHAN).</summary>
+    /// <summary>FAA NASR field: FREQ. Frequency for SERVICED FACILITY use, in MHz (e.g., "118.300"). For NAVAIDs with DME/TACAN Channel, the value includes the channel (e.g., "110.60/CH43X").</summary>
     public string? Frequency { get; init; }
 
     /// <summary>FAA NASR field: SECTORIZATION. Sectorization based on SERVICED FACILITY or airway boundaries, or limitations based on runway usage. For ARTCC and RCAG, identifies the Frequency Altitude as Low, High, Low/High or Ultra-High.</summary>

@@ -38,6 +38,6 @@ public record NavlogRequestDto
     public NavlogPerformanceDataDto PerformanceData { get; init; } = new();
     /// <summary>Planned cruising altitude in feet MSL.</summary>
     public int PlannedCruisingAltitude { get; init; }
-    /// <summary>Planned departure time in UTC.</summary>
+    /// <summary>Planned departure time. ISO 8601 UTC format.</summary>
     public DateTime TimeOfDeparture { get; init; }
 }

@@ -20,13 +20,13 @@ namespace PreflightApi.Domain.Entities
         public int Id { get; set; }
 
         /// <summary>
-        /// The time the observation was received (ISO 8601 date format)
+        /// The time the observation was received. ISO 8601 UTC format.
         /// </summary>
         [Column("receipt_time")]
         public string? ReceiptTime { get; set; }
 
         /// <summary>
-        /// The observation time (ISO 8601 date format)
+        /// The observation time. ISO 8601 UTC format.
         /// </summary>
         [Column("observation_time")]
         public string? ObservationTime { get; set; }
@@ -44,13 +44,13 @@ namespace PreflightApi.Domain.Entities
         public string? AircraftRef { get; set; }
 
         /// <summary>
-        /// Latitude of site in degrees ex: 41.9602
+        /// Latitude of report in decimal degrees (WGS 84). ex: 41.9602
         /// </summary>
         [Column("latitude")]
         public double? Latitude { get; set; }
 
         /// <summary>
-        /// Longitude of site in degrees ex: -87.9316
+        /// Longitude of report in decimal degrees (WGS 84). ex: -87.9316
         /// </summary>
         [Column("longitude")]
         public double? Longitude { get; set; }
@@ -98,7 +98,7 @@ namespace PreflightApi.Domain.Entities
         public double? TempC { get; set; }
 
         /// <summary>
-        /// Wind direction in degrees ex: 180
+        /// Wind direction in degrees true. ex: 180
         /// </summary>
         [Column("wind_dir_degrees")]
         public int? WindDirDegrees { get; set; }

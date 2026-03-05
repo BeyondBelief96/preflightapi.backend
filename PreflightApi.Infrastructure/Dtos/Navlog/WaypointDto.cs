@@ -12,9 +12,9 @@ public record WaypointDto
     public string Id { get; init; } = string.Empty;
     /// <summary>Display name of the waypoint.</summary>
     public string Name { get; init; } = string.Empty;
-    /// <summary>Latitude in decimal degrees.</summary>
+    /// <summary>Latitude in decimal degrees (WGS 84).</summary>
     public double Latitude { get; init; }
-    /// <summary>Longitude in decimal degrees.</summary>
+    /// <summary>Longitude in decimal degrees (WGS 84).</summary>
     public double Longitude { get; init; }
     /// <summary>Altitude in feet MSL.</summary>
     public double Altitude { get; init; }

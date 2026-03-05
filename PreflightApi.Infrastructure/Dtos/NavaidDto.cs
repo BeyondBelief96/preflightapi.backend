@@ -159,7 +159,7 @@ public record NavaidDto
     /// <summary>FAA NASR field: NOTAM_ID. NOTAM identifier for the facility.</summary>
     public string? NotamId { get; init; }
 
-    /// <summary>FAA NASR field: EFFECTIVE_DATE. Date the current NASR data cycle became effective.</summary>
+    /// <summary>FAA NASR field: EFFECTIVE_DATE. Date the current NASR data cycle became effective. ISO 8601 UTC format.</summary>
     public DateTime EffectiveDate { get; init; }
 
     // ── Related Data ────────────────────────────────────────────────────

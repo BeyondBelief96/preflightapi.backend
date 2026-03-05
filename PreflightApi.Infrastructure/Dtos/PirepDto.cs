@@ -12,17 +12,17 @@ namespace PreflightApi.Infrastructure.Dtos
         public int Id { get; init; }
         /// <summary>Raw PIREP text string.</summary>
         public string? RawText { get; init; }
-        /// <summary>Time the PIREP was received.</summary>
+        /// <summary>Time the PIREP was received. ISO 8601 UTC format.</summary>
         public string? ReceiptTime { get; init; }
-        /// <summary>Time of the pilot observation.</summary>
+        /// <summary>Time of the pilot observation. ISO 8601 UTC format.</summary>
         public string? ObservationTime { get; init; }
         /// <summary>Quality control flags for the report.</summary>
         public PirepQualityControlFlags? QualityControlFlags { get; init; }
         /// <summary>Aircraft type designation. ex: B738, C172</summary>
         public string? AircraftRef { get; init; }
-        /// <summary>Latitude of the report in decimal degrees.</summary>
+        /// <summary>Latitude of the report in decimal degrees (WGS 84).</summary>
         public double? Latitude { get; init; }
-        /// <summary>Longitude of the report in decimal degrees.</summary>
+        /// <summary>Longitude of the report in decimal degrees (WGS 84).</summary>
         public double? Longitude { get; init; }
         /// <summary>Altitude of the report in feet MSL.</summary>
         public int? AltitudeFtMsl { get; init; }

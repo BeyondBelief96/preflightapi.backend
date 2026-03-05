@@ -15,9 +15,9 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? StationId { get; init; }
         /// <summary>Observation time in ISO 8601 format.</summary>
         public string? ObservationTime { get; init; }
-        /// <summary>Station latitude in decimal degrees.</summary>
+        /// <summary>Station latitude in decimal degrees (WGS 84).</summary>
         public double? Latitude { get; init; }
-        /// <summary>Station longitude in decimal degrees.</summary>
+        /// <summary>Station longitude in decimal degrees (WGS 84).</summary>
         public double? Longitude { get; init; }
         /// <summary>Temperature in degrees Celsius.</summary>
         public double? TempC { get; init; }

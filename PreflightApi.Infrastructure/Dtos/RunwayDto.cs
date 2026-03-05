@@ -104,7 +104,7 @@ public record RunwayDto
     /// <summary>FAA NASR field: RWY_LEN_SOURCE. Source of runway length information.</summary>
     public string? RunwayLengthSource { get; init; }
 
-    /// <summary>FAA NASR field: LENGTH_SOURCE_DATE. Date of runway length source information.</summary>
+    /// <summary>FAA NASR field: LENGTH_SOURCE_DATE. Date of runway length source information. ISO 8601 UTC format.</summary>
     public DateTime? LengthSourceDate { get; init; }
 
     /// <summary>GeoJSON polygon geometry of the physical runway boundary. Only included when includeGeometry=true.</summary>
@@ -154,10 +154,10 @@ public record RunwayEndDto
     /// </summary>
     public RunwayMarkingsCondition? MarkingsCondition { get; init; }
 
-    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees (WGS 84).</summary>
     public decimal? Latitude { get; init; }
 
-    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees (WGS 84).</summary>
     public decimal? Longitude { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_ELEV. Elevation at the physical runway end in feet MSL.</summary>
@@ -166,13 +166,13 @@ public record RunwayEndDto
     /// <summary>FAA NASR field: THR_CROSSING_HGT. Threshold Crossing Height in feet AGL. Height that the effective visual glide path crosses above the runway threshold.</summary>
     public decimal? ThresholdCrossingHeight { get; init; }
 
-    /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees.</summary>
+    /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees (e.g., 300 = 3.00°).</summary>
     public decimal? VisualGlidePathAngle { get; init; }
 
-    /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees (WGS 84).</summary>
     public decimal? DisplacedThresholdLatitude { get; init; }
 
-    /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees (WGS 84).</summary>
     public decimal? DisplacedThresholdLongitude { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_ELEV. Elevation at the displaced threshold in feet MSL.</summary>
@@ -234,7 +234,7 @@ public record RunwayEndDto
     /// <summary>FAA NASR field: DIST_FROM_THR. Controlling object distance from the physical runway end in feet.</summary>
     public int? ControllingObjectDistanceFromRunway { get; init; }
 
-    /// <summary>FAA NASR field: CNTRLN_OFFSET. Controlling object centerline offset distance in feet from the extended runway centerline.</summary>
+    /// <summary>FAA NASR field: CNTRLN_OFFSET. Controlling object centerline offset distance from the extended runway centerline, in feet.</summary>
     public string? ControllingObjectCenterlineOffset { get; init; }
 
     // ── DMS Coordinates - Runway End ─────────────────────────────────────
@@ -302,7 +302,7 @@ public record RunwayEndDto
     /// <summary>FAA NASR field: CNTRLN_DIR_CODE. Controlling Object Centerline Offset Direction. Indicates direction (left or right) to the object from the centerline as seen by an approaching pilot.</summary>
     public string? CenterlineDirectionCode { get; init; }
 
-    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient.</summary>
+    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient as a percentage (e.g., 0.3 = 0.3% grade).</summary>
     public decimal? RunwayGradient { get; init; }
 
     /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway End Gradient Direction (Up or Down).</summary>
@@ -313,31 +313,31 @@ public record RunwayEndDto
     /// <summary>FAA NASR field: RWY_END_PSN_SOURCE. Source of runway end position information.</summary>
     public string? RwyEndPositionSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_PSN_DATE. Date of runway end position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_PSN_DATE. Date of runway end position information. ISO 8601 UTC format.</summary>
     public DateTime? RwyEndPositionDate { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_ELEV_SOURCE. Source of runway end elevation information.</summary>
     public string? RwyEndElevationSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_ELEV_DATE. Date of runway end elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_ELEV_DATE. Date of runway end elevation information. ISO 8601 UTC format.</summary>
     public DateTime? RwyEndElevationDate { get; init; }
 
     /// <summary>FAA NASR field: DSPL_THR_PSN_SOURCE. Source of displaced threshold position information.</summary>
     public string? DisplacedThrPositionSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_DSPL_THR_PSN_DATE. Date of displaced threshold position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_PSN_DATE. Date of displaced threshold position information. ISO 8601 UTC format.</summary>
     public DateTime? DisplacedThrPositionDate { get; init; }
 
     /// <summary>FAA NASR field: DSPL_THR_ELEV_SOURCE. Source of displaced threshold elevation information.</summary>
     public string? DisplacedThrElevationSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_DSPL_THR_ELEV_DATE. Date of displaced threshold elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_ELEV_DATE. Date of displaced threshold elevation information. ISO 8601 UTC format.</summary>
     public DateTime? DisplacedThrElevationDate { get; init; }
 
     /// <summary>FAA NASR field: TDZ_ELEV_SOURCE. Source of touchdown zone elevation information.</summary>
     public string? TouchdownZoneElevSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_TDZ_ELEV_DATE. Date of touchdown zone elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_TDZ_ELEV_DATE. Date of touchdown zone elevation information. ISO 8601 UTC format.</summary>
     public DateTime? TouchdownZoneElevDate { get; init; }
 
     // ── Declared Distances ───────────────────────────────────────────────
@@ -368,18 +368,18 @@ public record RunwayEndDto
     /// <summary>FAA NASR field: LAHSO_LAT. LAHSO hold short point latitude (DMS format).</summary>
     public string? LahsoLatitude { get; init; }
 
-    /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees (WGS 84).</summary>
     public decimal? LahsoLatDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAHSO_LONG. LAHSO hold short point longitude (DMS format).</summary>
     public string? LahsoLongitude { get; init; }
 
-    /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees (WGS 84).</summary>
     public decimal? LahsoLongDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAHSO_PSN_SOURCE. Source of LAHSO position information.</summary>
     public string? LahsoPositionSource { get; init; }
 
-    /// <summary>FAA NASR field: RWY_END_LAHSO_PSN_DATE. Date of LAHSO position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_LAHSO_PSN_DATE. Date of LAHSO position information. ISO 8601 UTC format.</summary>
     public DateTime? LahsoPositionDate { get; init; }
 }

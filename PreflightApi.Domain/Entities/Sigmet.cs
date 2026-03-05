@@ -23,13 +23,13 @@ namespace PreflightApi.Domain.Entities
         public string? RawText { get; set; }
 
         /// <summary>
-        /// The time the advisory starts
+        /// The time the advisory starts. ISO 8601 UTC format.
         /// </summary>
         [Column("valid_time_from")]
         public string? ValidTimeFrom { get; set; }
 
         /// <summary>
-        /// The time the advisory ends
+        /// The time the advisory ends. ISO 8601 UTC format.
         /// </summary>
         [Column("valid_time_to")]
         public string? ValidTimeTo { get; set; }
@@ -41,7 +41,7 @@ namespace PreflightApi.Domain.Entities
         public SigmetAltitude? Altitude { get; set; }
 
         /// <summary>
-        /// The movement direction of the hazard area in degrees
+        /// The movement direction of the hazard area in degrees true.
         /// </summary>
         [Column("movement_dir_degrees")]
         public int? MovementDirDegrees { get; set; }

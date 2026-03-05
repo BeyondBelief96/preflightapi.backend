@@ -28,7 +28,7 @@ public record AirportDto
     /// <summary>FAA NASR field: ARPT_NAME. Official Facility Name.</summary>
     public string? ArptName { get; init; }
 
-    /// <summary>FAA NASR field: EFF_DATE. Effective date of the airport information.</summary>
+    /// <summary>FAA NASR field: EFF_DATE. Effective date of the airport information. ISO 8601 UTC format.</summary>
     public DateTime EffDate { get; init; }
 
     // ── Classification ──────────────────────────────────────────────────
@@ -74,7 +74,7 @@ public record AirportDto
     /// <summary>FAA NASR field: COUNTY_ASSOC_STATE. Two-letter state, territory, or country code associated with the county (e.g., US state codes, CN for Canada, GU for Guam, VI for Virgin Islands).</summary>
     public string? CountyAssocState { get; init; }
 
-    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport.</summary>
+    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport, in nautical miles.</summary>
     public decimal? DistCityToAirport { get; init; }
 
     /// <summary>FAA NASR field: DIRECTION_CODE. Direction of Airport from Central Business District of Associated City (Nearest 1/8 Compass Point).</summary>
@@ -85,10 +85,10 @@ public record AirportDto
 
     // ── Coordinates ─────────────────────────────────────────────────────
 
-    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of airport reference point in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of airport reference point in decimal degrees (WGS 84).</summary>
     public decimal? LatDecimal { get; init; }
 
-    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of airport reference point in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of airport reference point in decimal degrees (WGS 84).</summary>
     public decimal? LongDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAT_DEG. Latitude degrees of airport reference point.</summary>
@@ -121,7 +121,7 @@ public record AirportDto
     /// <summary>FAA NASR field: ARPT_PSN_SOURCE. Source of the airport position information.</summary>
     public string? ArptPsnSource { get; init; }
 
-    /// <summary>FAA NASR field: POSITION_SRC_DATE. Date the airport position information was determined.</summary>
+    /// <summary>FAA NASR field: POSITION_SRC_DATE. Date the airport position information was determined. ISO 8601 UTC format.</summary>
     public DateTime? PositionSrcDate { get; init; }
 
     // ── Elevation & Magnetic Variation ──────────────────────────────────
@@ -135,10 +135,10 @@ public record AirportDto
     /// <summary>FAA NASR field: ARPT_ELEV_SOURCE. Source of the airport elevation information.</summary>
     public string? ArptElevSource { get; init; }
 
-    /// <summary>FAA NASR field: ELEVATION_SRC_DATE. Date the airport elevation information was determined.</summary>
+    /// <summary>FAA NASR field: ELEVATION_SRC_DATE. Date the airport elevation information was determined. ISO 8601 UTC format.</summary>
     public DateTime? ElevationSrcDate { get; init; }
 
-    /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees.</summary>
+    /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees. Use with <see cref="MagHemis"/> (E or W) to determine sign.</summary>
     public decimal? MagVarn { get; init; }
 
     /// <summary>FAA NASR field: MAG_HEMIS. Magnetic Variation Direction (E or W).</summary>
@@ -218,10 +218,10 @@ public record AirportDto
     /// <summary>FAA NASR field: INSPECTOR_CODE. Agency/Group Performing Physical Inspection.</summary>
     public AirportInspectorAgency? InspectorAgency { get; init; }
 
-    /// <summary>FAA NASR field: LAST_INSPECTION. Date of the last physical inspection.</summary>
+    /// <summary>FAA NASR field: LAST_INSPECTION. Date of the last physical inspection. ISO 8601 UTC format.</summary>
     public DateTime? LastInspection { get; init; }
 
-    /// <summary>FAA NASR field: LAST_INFO_RESPONSE. Date of the last information request response.</summary>
+    /// <summary>FAA NASR field: LAST_INFO_RESPONSE. Date of the last information request response. ISO 8601 UTC format.</summary>
     public DateTime? LastInfoResponse { get; init; }
 
     // ── Services & Fuel ─────────────────────────────────────────────────
@@ -306,7 +306,7 @@ public record AirportDto
     /// <summary>FAA NASR field: FAR_139_CARRIER_SER_CODE. Airport ARFF Certification Carrier Service Code. S (scheduled service) or U (not receiving scheduled service).</summary>
     public string? Far139CarrierSerCode { get; init; }
 
-    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. Airport ARFF Certification Date (YYYY/MM).</summary>
+    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. Airport ARFF Certification Date. ISO 8601 UTC format.</summary>
     public DateTime? ArffCertTypeDate { get; init; }
 
     /// <summary>FAA NASR field: ASP_ANLYS_DTRM_CODE. Airport Airspace Analysis Determination (CONDL, NOT ANALYZED, NO OBJECTION, OBJECTIONABLE).</summary>

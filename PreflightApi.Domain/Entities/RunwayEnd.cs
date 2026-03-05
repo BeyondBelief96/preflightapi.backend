@@ -34,7 +34,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Required]
     public string RunwayEndId { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: TRUE_ALIGNMENT. Runway end true alignment. True heading of the runway to the nearest degree.</summary>
+    /// <summary>FAA NASR field: TRUE_ALIGNMENT. Runway end true alignment in degrees true. True heading of the runway to the nearest degree.</summary>
     [Column("true_alignment")]
     public int? TrueAlignment { get; set; }
 
@@ -67,11 +67,11 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("runway_markings_condition")]
     public string? RunwayMarkingsCondition { get; set; }
 
-    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees (WGS 84).</summary>
     [Column("lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? LatDecimal { get; set; }
 
-    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees (WGS 84).</summary>
     [Column("long_decimal", TypeName = "decimal(11,8)")]
     public decimal? LongDecimal { get; set; }
 
@@ -83,15 +83,15 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("threshold_crossing_height", TypeName = "decimal(5,1)")]
     public decimal? ThresholdCrossingHeight { get; set; }
 
-    /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees.</summary>
+    /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees (e.g., 300 = 3.00°).</summary>
     [Column("visual_glide_path_angle", TypeName = "decimal(4,2)")]
     public decimal? VisualGlidePathAngle { get; set; }
 
-    /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees (WGS 84).</summary>
     [Column("displaced_threshold_lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? DisplacedThresholdLatDecimal { get; set; }
 
-    /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees (WGS 84).</summary>
     [Column("displaced_threshold_long_decimal", TypeName = "decimal(11,8)")]
     public decimal? DisplacedThresholdLongDecimal { get; set; }
 
@@ -268,7 +268,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("centerline_direction_code")]
     public string? CenterlineDirectionCode { get; set; }
 
-    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient.</summary>
+    /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient as a percentage.</summary>
     [Column("runway_gradient", TypeName = "decimal(5,2)")]
     public decimal? RunwayGradient { get; set; }
 
@@ -281,7 +281,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("rwy_end_position_source")]
     public string? RwyEndPositionSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_PSN_DATE. Date of runway end position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_PSN_DATE. Date of runway end position information. ISO 8601 UTC format.</summary>
     [Column("rwy_end_position_date")]
     public DateTime? RwyEndPositionDate { get; set; }
 
@@ -289,7 +289,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("rwy_end_elevation_source")]
     public string? RwyEndElevationSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_ELEV_DATE. Date of runway end elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_ELEV_DATE. Date of runway end elevation information. ISO 8601 UTC format.</summary>
     [Column("rwy_end_elevation_date")]
     public DateTime? RwyEndElevationDate { get; set; }
 
@@ -297,7 +297,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("displaced_thr_position_source")]
     public string? DisplacedThrPositionSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_DSPL_THR_PSN_DATE. Date of displaced threshold position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_PSN_DATE. Date of displaced threshold position information. ISO 8601 UTC format.</summary>
     [Column("displaced_thr_position_date")]
     public DateTime? DisplacedThrPositionDate { get; set; }
 
@@ -305,7 +305,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("displaced_thr_elevation_source")]
     public string? DisplacedThrElevationSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_DSPL_THR_ELEV_DATE. Date of displaced threshold elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_DSPL_THR_ELEV_DATE. Date of displaced threshold elevation information. ISO 8601 UTC format.</summary>
     [Column("displaced_thr_elevation_date")]
     public DateTime? DisplacedThrElevationDate { get; set; }
 
@@ -313,7 +313,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("touchdown_zone_elev_source")]
     public string? TouchdownZoneElevSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_TDZ_ELEV_DATE. Date of touchdown zone elevation information.</summary>
+    /// <summary>FAA NASR field: RWY_END_TDZ_ELEV_DATE. Date of touchdown zone elevation information. ISO 8601 UTC format.</summary>
     [Column("touchdown_zone_elev_date")]
     public DateTime? TouchdownZoneElevDate { get; set; }
 
@@ -351,7 +351,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("lahso_latitude")]
     public string? LahsoLatitude { get; set; }
 
-    /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees (WGS 84).</summary>
     [Column("lahso_lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? LahsoLatDecimal { get; set; }
 
@@ -359,7 +359,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("lahso_longitude")]
     public string? LahsoLongitude { get; set; }
 
-    /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees (WGS 84).</summary>
     [Column("lahso_long_decimal", TypeName = "decimal(11,8)")]
     public decimal? LahsoLongDecimal { get; set; }
 
@@ -367,7 +367,7 @@ public class RunwayEnd : INasrEntity<RunwayEnd>
     [Column("lahso_position_source")]
     public string? LahsoPositionSource { get; set; }
 
-    /// <summary>FAA NASR field: RWY_END_LAHSO_PSN_DATE. Date of LAHSO position information.</summary>
+    /// <summary>FAA NASR field: RWY_END_LAHSO_PSN_DATE. Date of LAHSO position information. ISO 8601 UTC format.</summary>
     [Column("lahso_position_date")]
     public DateTime? LahsoPositionDate { get; set; }
 

@@ -17,25 +17,25 @@ namespace PreflightApi.Domain.Entities
         public int Id { get; set; }
 
         /// <summary>
-        /// Time the G-AIRMET was received
+        /// Time the G-AIRMET was received. UTC.
         /// </summary>
         [Column("receipt_time")]
         public DateTime ReceiptTime { get; set; }
 
         /// <summary>
-        /// Time the G-AIRMET was issued
+        /// Time the G-AIRMET was issued. UTC.
         /// </summary>
         [Column("issue_time")]
         public DateTime IssueTime { get; set; }
 
         /// <summary>
-        /// Time the G-AIRMET expires, typically 6 hours after issuance.
+        /// Time the G-AIRMET expires, typically 6 hours after issuance. UTC.
         /// </summary>
         [Column("expire_time")]
         public DateTime ExpireTime { get; set; }
 
         /// <summary>
-        /// The valid time of the G-AIRMET snapshot.
+        /// The valid time of the G-AIRMET snapshot. UTC.
         /// </summary>
         [Column("valid_time")]
         public DateTime ValidTime { get; set; }

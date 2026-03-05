@@ -18,7 +18,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? Name { get; set; }
         /// <summary>Upper altitude limit description.</summary>
         public string? UpperDesc { get; set; }
-        /// <summary>Upper altitude limit value.</summary>
+        /// <summary>Upper altitude limit value. Unit determined by <see cref="UpperUom"/> (FT = feet, FL = flight level). Reference determined by <see cref="UpperCode"/> (MSL or AGL).</summary>
         public double? UpperVal { get; set; }
         /// <summary>Upper altitude unit of measure (e.g., FT, FL).</summary>
         public string? UpperUom { get; set; }
@@ -26,7 +26,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? UpperCode { get; set; }
         /// <summary>Lower altitude limit description.</summary>
         public string? LowerDesc { get; set; }
-        /// <summary>Lower altitude limit value.</summary>
+        /// <summary>Lower altitude limit value. Unit determined by <see cref="LowerUom"/> (FT = feet, FL = flight level). Reference determined by <see cref="LowerCode"/> (MSL or AGL).</summary>
         public double? LowerVal { get; set; }
         /// <summary>Lower altitude unit of measure (e.g., FT, FL).</summary>
         public string? LowerUom { get; set; }
@@ -90,19 +90,19 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? Class { get; set; }
         /// <summary>Upper altitude limit description.</summary>
         public string? UpperDesc { get; set; }
-        /// <summary>Upper altitude limit value.</summary>
+        /// <summary>Upper altitude limit value. Unit determined by <see cref="UpperUom"/> (FT = feet, FL = flight level). Reference determined by <see cref="UpperCode"/> (MSL or AGL).</summary>
         public double? UpperVal { get; set; }
-        /// <summary>Upper altitude unit of measure.</summary>
+        /// <summary>Upper altitude unit of measure (e.g., FT, FL).</summary>
         public string? UpperUom { get; set; }
-        /// <summary>Upper altitude reference code.</summary>
+        /// <summary>Upper altitude reference code (e.g., MSL, AGL).</summary>
         public string? UpperCode { get; set; }
         /// <summary>Lower altitude limit description.</summary>
         public string? LowerDesc { get; set; }
-        /// <summary>Lower altitude limit value.</summary>
+        /// <summary>Lower altitude limit value. Unit determined by <see cref="LowerUom"/> (FT = feet, FL = flight level). Reference determined by <see cref="LowerCode"/> (MSL or AGL).</summary>
         public double? LowerVal { get; set; }
-        /// <summary>Lower altitude unit of measure.</summary>
+        /// <summary>Lower altitude unit of measure (e.g., FT, FL).</summary>
         public string? LowerUom { get; set; }
-        /// <summary>Lower altitude reference code.</summary>
+        /// <summary>Lower altitude reference code (e.g., MSL, AGL).</summary>
         public string? LowerCode { get; set; }
         /// <summary>Level code.</summary>
         public string? LevelCode { get; set; }
