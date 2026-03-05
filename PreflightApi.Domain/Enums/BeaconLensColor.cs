@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum BeaconLensColor
 {
-    /// <summary>Beacon lens color could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>WG - White-Green (lighted land airport).</summary>
     WhiteGreen,
 

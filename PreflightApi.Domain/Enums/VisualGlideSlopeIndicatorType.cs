@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum VisualGlideSlopeIndicatorType
 {
-    /// <summary>VGSI type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE/N - No approach slope light system.</summary>
     None,
 

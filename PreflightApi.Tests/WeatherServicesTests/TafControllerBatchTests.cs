@@ -30,7 +30,7 @@ public class TafControllerBatchTests
     [Fact]
     public async Task GetTafsBatch_EmptyIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetTafsBatch("");
+        var act = () => _sut.GetTafsBatch("", CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -38,7 +38,7 @@ public class TafControllerBatchTests
     [Fact]
     public async Task GetTafsBatch_NullIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetTafsBatch(null!);
+        var act = () => _sut.GetTafsBatch(null!, CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -51,24 +51,24 @@ public class TafControllerBatchTests
             new() { StationId = "KDFW", RawText = "TAF KDFW 011720Z 0118/0224 18010KT P6SM SKC" },
             new() { StationId = "KAUS", RawText = "TAF KAUS 011720Z 0118/0224 17008KT P6SM FEW250" }
         };
-        _tafService.GetTafsForAirports(Arg.Any<string[]>()).Returns(expected);
+        _tafService.GetTafsForAirports(Arg.Any<string[]>(), Arg.Any<CancellationToken>()).Returns(expected);
 
-        var result = await _sut.GetTafsBatch("KDFW,KAUS");
+        var result = await _sut.GetTafsBatch("KDFW,KAUS", CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
         await _tafService.Received(1).GetTafsForAirports(
-            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"));
+            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetTafsBatch_TrimsWhitespace_PassesCleanArray()
     {
-        _tafService.GetTafsForAirports(Arg.Any<string[]>()).Returns(new List<TafDto>());
+        _tafService.GetTafsForAirports(Arg.Any<string[]>(), Arg.Any<CancellationToken>()).Returns(new List<TafDto>());
 
-        await _sut.GetTafsBatch(" KDFW , KAUS , ");
+        await _sut.GetTafsBatch(" KDFW , KAUS , ", CancellationToken.None);
 
         await _tafService.Received(1).GetTafsForAirports(
-            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"));
+            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"), Arg.Any<CancellationToken>());
     }
 }

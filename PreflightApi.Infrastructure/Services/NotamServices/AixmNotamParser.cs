@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Extensions.Logging;
+using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Dtos.Notam;
 using PreflightApi.Infrastructure.Services.NotamServices.SchemaManifests;
 
@@ -229,6 +230,19 @@ public static partial class AixmNotamParser
         };
     }
 
+    private static readonly Dictionary<string, NotamClassification> ClassificationMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["DOMESTIC"] = NotamClassification.DOMESTIC,
+        ["DOM"] = NotamClassification.DOMESTIC,
+        ["INTERNATIONAL"] = NotamClassification.INTERNATIONAL,
+        ["INTL"] = NotamClassification.INTERNATIONAL,
+        ["MILITARY"] = NotamClassification.MILITARY,
+        ["MIL"] = NotamClassification.MILITARY,
+        ["LOCAL_MILITARY"] = NotamClassification.LOCAL_MILITARY,
+        ["LMIL"] = NotamClassification.LOCAL_MILITARY,
+        ["FDC"] = NotamClassification.FDC
+    };
+
     private static NotamDetailDto ParseNotamDetail(
         string nmsId, XmlNode? notamNode, XmlNode? extensionNode,
         XmlNode eventTimeSlice, XmlNamespaceManager nsMgr)
@@ -239,14 +253,14 @@ public static partial class AixmNotamParser
             Number = GetText(notamNode, "event:number", nsMgr),
             Series = GetText(notamNode, "event:series", nsMgr),
             Year = GetText(notamNode, "event:year", nsMgr),
-            Type = GetText(notamNode, "event:type", nsMgr),
+            Type = ParseEnum<NotamType>(GetText(notamNode, "event:type", nsMgr)),
             Issued = GetText(notamNode, "event:issued", nsMgr),
             Location = GetText(notamNode, "event:location", nsMgr),
             EffectiveStart = GetText(notamNode, "event:effectiveStart", nsMgr),
             EffectiveEnd = GetText(notamNode, "event:effectiveEnd", nsMgr),
             Text = GetText(notamNode, "event:text", nsMgr),
             Schedule = GetText(notamNode, "event:schedule", nsMgr),
-            Classification = GetText(extensionNode, "fnse:classification", nsMgr),
+            Classification = ParseClassification(GetText(extensionNode, "fnse:classification", nsMgr)),
             AccountId = GetText(extensionNode, "fnse:accountId", nsMgr),
             LastUpdated = GetText(extensionNode, "fnse:lastUpdated", nsMgr),
             IcaoLocation = GetText(extensionNode, "fnse:icaoLocation", nsMgr),
@@ -255,9 +269,9 @@ public static partial class AixmNotamParser
             // Q-code fields from event:NOTAM
             AffectedFir = GetText(notamNode, "event:affectedFIR", nsMgr),
             SelectionCode = GetText(notamNode, "event:selectionCode", nsMgr),
-            Traffic = GetText(notamNode, "event:traffic", nsMgr),
+            Traffic = ParseEnum<NotamTraffic>(GetText(notamNode, "event:traffic", nsMgr)),
             Purpose = GetText(notamNode, "event:purpose", nsMgr),
-            Scope = GetText(notamNode, "event:scope", nsMgr),
+            Scope = ParseEnum<NotamScope>(GetText(notamNode, "event:scope", nsMgr)),
             MinimumFl = GetText(notamNode, "event:minimumFL", nsMgr),
             MaximumFl = GetText(notamNode, "event:maximumFL", nsMgr),
             Coordinates = GetText(notamNode, "event:coordinates", nsMgr),
@@ -267,11 +281,23 @@ public static partial class AixmNotamParser
         };
     }
 
+    private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct, Enum
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return Enum.TryParse<TEnum>(value, ignoreCase: true, out var result) ? result : null;
+    }
+
+    private static NotamClassification? ParseClassification(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return ClassificationMap.TryGetValue(value, out var result) ? result : null;
+    }
+
     /// <summary>
     /// Checks for indeterminatePosition="unknown" on gml:endPosition within the EventTimeSlice's TimePeriod.
-    /// Returns "true" when the end time is estimated, null otherwise.
+    /// Returns true when the end time is estimated, null otherwise.
     /// </summary>
-    private static string? ParseEstimatedFlag(XmlNode eventTimeSlice, XmlNamespaceManager nsMgr)
+    private static bool? ParseEstimatedFlag(XmlNode eventTimeSlice, XmlNamespaceManager nsMgr)
     {
         var endPosition = eventTimeSlice.SelectSingleNode(
             "gml:validTime/gml:TimePeriod/gml:endPosition", nsMgr) as XmlElement;
@@ -280,7 +306,7 @@ public static partial class AixmNotamParser
             return null;
 
         var indeterminate = endPosition.GetAttribute("indeterminatePosition");
-        return indeterminate == "unknown" ? "true" : null;
+        return indeterminate == "unknown" ? true : null;
     }
 
     private static List<NotamTranslationDto> ParseTranslations(XmlNode? notamNode, XmlNamespaceManager nsMgr)

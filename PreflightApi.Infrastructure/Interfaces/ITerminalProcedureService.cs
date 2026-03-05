@@ -4,5 +4,5 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface ITerminalProcedureService
 {
-    Task<TerminalProceduresResponseDto> GetTerminalProceduresByAirportCode(string airportCode, string? chartCode = null);
+    Task<TerminalProceduresResponseDto> GetTerminalProceduresByAirportCode(string airportCode, string? chartCode = null, CancellationToken ct = default);
 }

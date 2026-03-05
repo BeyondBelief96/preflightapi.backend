@@ -122,6 +122,11 @@ namespace PreflightApi.Domain.Entities
         [Column("shape_length")]
         public double? ShapeLength { get; set; }
 
+        /// <summary>
+        /// Polygon boundary geometry (SRID 4326). Generalized from FAA ArcGIS source data
+        /// with maxAllowableOffset=0.00001° (~1.1m) and geometryPrecision=5 decimal places (~1.1m).
+        /// Suitable for map visualization but not for precision navigation.
+        /// </summary>
         [Column("geometry", TypeName = "geometry(Polygon, 4326)")]
         public Geometry? Geometry { get; set; }
     }

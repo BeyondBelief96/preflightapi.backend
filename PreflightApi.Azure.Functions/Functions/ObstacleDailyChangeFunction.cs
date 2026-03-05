@@ -24,7 +24,7 @@ public class ObstacleDailyChangeFunction
 
     [Function("ObstacleDailyChangeFunction")]
     [ExponentialBackoffRetry(5, "00:00:30", "00:15:00")]
-    public async Task Run([TimerTrigger("0 30 10 * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+    public async Task Run([TimerTrigger("0 30 10 * * *", RunOnStartup = FunctionDefaults.RunOnStartup)] TimerInfo myTimer, FunctionContext context)
     {
         _logger.LogInformation("Obstacle Daily Change Function executed at: {Time}", DateTime.UtcNow);
         var sw = Stopwatch.StartNew();

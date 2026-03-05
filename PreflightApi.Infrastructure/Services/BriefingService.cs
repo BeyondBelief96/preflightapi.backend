@@ -86,8 +86,8 @@ public class BriefingService : IBriefingService
 
         if (airportIdents.Length > 0)
         {
-            metars = (await _metarService.GetMetarsForAirports(airportIdents)).ToList();
-            tafs = (await _tafService.GetTafsForAirports(airportIdents)).ToList();
+            metars = (await _metarService.GetMetarsForAirports(airportIdents, ct)).ToList();
+            tafs = (await _tafService.GetTafsForAirports(airportIdents, ct)).ToList();
         }
 
         return new RouteBriefingResponse
@@ -149,7 +149,7 @@ public class BriefingService : IBriefingService
         {
             if (IsAirportWaypoint(wp))
             {
-                var airport = await _airportService.GetAirportByIcaoCodeOrIdent(wp.AirportIdentifier!);
+                var airport = await _airportService.GetAirportByIcaoCodeOrIdent(wp.AirportIdentifier!, ct);
                 if (airport.LatDecimal == null || airport.LongDecimal == null)
                     throw new ValidationException("waypoints",
                         $"Airport '{wp.AirportIdentifier}' does not have coordinates on record");
@@ -192,7 +192,7 @@ public class BriefingService : IBriefingService
             .AsNoTracking()
             .ToListAsync(ct);
 
-        return airports.Select(AirportMapper.ToDto).ToList();
+        return airports.Select(a => AirportMapper.ToDto(a, _logger)).ToList();
     }
 
     private async Task<List<PirepDto>> FindPirepsAlongRouteAsync(
@@ -206,7 +206,7 @@ public class BriefingService : IBriefingService
             .AsNoTracking()
             .ToListAsync(ct);
 
-        return pireps.Select(PirepMapper.ToDto).ToList();
+        return pireps.Select(p => PirepMapper.ToDto(p, _logger)).ToList();
     }
 
     private async Task<List<SigmetDto>> FindSigmetsIntersectingRouteAsync(
@@ -228,7 +228,7 @@ public class BriefingService : IBriefingService
             .Where(g => g.Boundary != null && g.Boundary.Intersects(routeLine))
             .ToListAsync(ct);
 
-        return gairmets.Select(GAirmetMapper.ToDto).ToList();
+        return gairmets.Select(g => GAirmetMapper.ToDto(g, _logger)).ToList();
     }
 
     /// <summary>

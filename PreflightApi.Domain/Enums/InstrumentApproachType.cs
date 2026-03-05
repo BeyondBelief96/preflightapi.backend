@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum InstrumentApproachType
 {
-    /// <summary>Approach type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>No instrument approach available.</summary>
     None,
 

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwayVisualRangeEquipmentType
 {
-    /// <summary>RVR equipment type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>N - No RVR available.</summary>
     None,
 

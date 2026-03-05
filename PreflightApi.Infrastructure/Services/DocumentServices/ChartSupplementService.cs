@@ -61,7 +61,7 @@ public class ChartSupplementService : IChartSupplementService
         return $"{nameParts[0].ToUpperInvariant()}.{nameParts[1].ToLower()}";
     }
 
-    public async Task<ChartSupplementsResponseDto> GetChartSupplementsByAirportCode(string airportCode)
+    public async Task<ChartSupplementsResponseDto> GetChartSupplementsByAirportCode(string airportCode, CancellationToken ct = default)
     {
         var strippedCode = StripIcaoPrefix(airportCode);
         _logger.LogInformation("Searching for chart supplements with code: {StrippedCode} (original: {OriginalCode})",
@@ -69,7 +69,7 @@ public class ChartSupplementService : IChartSupplementService
 
         var chartSupplements = await _context.ChartSupplements
             .Where(c => c.AirportCode == strippedCode)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (chartSupplements.Count == 0)
         {

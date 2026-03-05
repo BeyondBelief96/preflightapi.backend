@@ -31,7 +31,7 @@ namespace PreflightApi.Domain.ValueObjects.Taf
         /// <summary>Forecast visibility in statute miles. May contain "6+" for visibility greater than 6 miles.</summary>
         public string? VisibilityStatuteMi { get; set; }
         /// <summary>Forecast altimeter setting in inches of mercury.</summary>
-        public float? AltimInHg { get; set; }
+        public double? AltimInHg { get; set; }
         /// <summary>Vertical visibility in feet, reported when the sky is obscured.</summary>
         public short? VertVisFt { get; set; }
         /// <summary>Forecast weather phenomena string (e.g., "-RA" for light rain, "+TSRA" for heavy thunderstorms with rain).</summary>

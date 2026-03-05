@@ -62,19 +62,19 @@ namespace PreflightApi.Domain.Entities
         /// Latitude of site in degrees ex: 41.9602
         /// </summary>
         [Column("latitude")]
-        public float? Latitude { get; set; }
+        public double? Latitude { get; set; }
 
         /// <summary>
         /// Longitude of site in degrees ex: -87.9316
         /// </summary>
         [Column("longitude")]
-        public float? Longitude { get; set; }
+        public double? Longitude { get; set; }
 
         /// <summary>
         /// Elevation of site in meters ex: 202
         /// </summary>
         [Column("elevation_m")]
-        public float? ElevationM { get; set; }
+        public double? ElevationM { get; set; }
 
         /// <summary>
         /// Collection of forecast periods within the TAF

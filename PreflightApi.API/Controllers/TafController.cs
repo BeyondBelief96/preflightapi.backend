@@ -38,7 +38,8 @@ public class TafController(ITafService tafService) : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<TafDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<TafDto>>> GetTafsBatch(
-        [FromQuery] string ids)
+        [FromQuery] string ids,
+        CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(ids, "ids", "At least one ICAO code or identifier is required");
 
@@ -49,7 +50,7 @@ public class TafController(ITafService tafService) : ControllerBase
 
         ValidationHelpers.ValidateBatchSize(codesArray.Length, 100, "ids");
 
-        var tafs = await tafService.GetTafsForAirports(codesArray);
+        var tafs = await tafService.GetTafsForAirports(codesArray, ct);
         return Ok(tafs);
     }
 
@@ -70,10 +71,10 @@ public class TafController(ITafService tafService) : ControllerBase
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(TafDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TafDto>> GetTafByIcaoCodeOrIdent(string icaoCodeOrIdent)
+    public async Task<ActionResult<TafDto>> GetTafByIcaoCodeOrIdent(string icaoCodeOrIdent, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-        var taf = await tafService.GetTafByIcaoCode(icaoCodeOrIdent);
+        var taf = await tafService.GetTafByIcaoCode(icaoCodeOrIdent, ct);
         return Ok(taf);
     }
 }

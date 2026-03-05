@@ -35,10 +35,10 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(MetarDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<MetarDto>> GetMetarForAirport(string icaoCodeOrIdent)
+    public async Task<ActionResult<MetarDto>> GetMetarForAirport(string icaoCodeOrIdent, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-        var metar = await metarService.GetMetarForAirport(icaoCodeOrIdent);
+        var metar = await metarService.GetMetarForAirport(icaoCodeOrIdent, ct);
         return Ok(metar);
     }
 
@@ -62,7 +62,8 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<MetarDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<MetarDto>>> GetMetarsBatch(
-        [FromQuery] string ids)
+        [FromQuery] string ids,
+        CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(ids, "ids", "At least one ICAO code or identifier is required");
 
@@ -73,7 +74,7 @@ public class MetarController(IMetarService metarService) : ControllerBase
 
         ValidationHelpers.ValidateBatchSize(codesArray.Length, 100, "ids");
 
-        var metars = await metarService.GetMetarsForAirports(codesArray);
+        var metars = await metarService.GetMetarsForAirports(codesArray, ct);
         return Ok(metars);
     }
 
@@ -97,7 +98,8 @@ public class MetarController(IMetarService metarService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<MetarDto>>> GetMetarsByState(
         [FromQuery] string state,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(state))
             throw new ValidationException("state", "At least one state code is required");
@@ -108,6 +110,6 @@ public class MetarController(IMetarService metarService) : ControllerBase
             .Where(s => s.Length > 0)
             .ToArray();
 
-        return Ok(await metarService.GetMetarsByStates(stateCodeArray, pagination.Cursor, pagination.Limit));
+        return Ok(await metarService.GetMetarsByStates(stateCodeArray, pagination.Cursor, pagination.Limit, ct));
     }
 }

@@ -5,7 +5,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum VerticalAccuracy
 {
-    Unknown,
     Within3Feet,
     Within10Feet,
     Within20Feet,
@@ -13,5 +12,6 @@ public enum VerticalAccuracy
     Within125Feet,
     Within250Feet,
     Within500Feet,
-    Within1000Feet
+    Within1000Feet,
+    Unknown
 }

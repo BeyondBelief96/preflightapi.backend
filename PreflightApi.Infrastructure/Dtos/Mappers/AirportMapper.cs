@@ -1,12 +1,112 @@
+using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Dtos.Mappers;
 
 public static class AirportMapper
 {
-    public static AirportDto ToDto(Airport airport)
+    private static readonly Dictionary<string, AirportSiteType> SiteTypeMap = new()
     {
+        ["A"] = AirportSiteType.Airport,
+        ["H"] = AirportSiteType.Heliport,
+        ["C"] = AirportSiteType.SeaplaneBase,
+        ["B"] = AirportSiteType.Balloonport,
+        ["G"] = AirportSiteType.Gliderport,
+        ["U"] = AirportSiteType.Ultralight
+    };
+
+    private static readonly Dictionary<string, AirportOwnershipType> OwnershipTypeMap = new()
+    {
+        ["PU"] = AirportOwnershipType.PubliclyOwned,
+        ["PR"] = AirportOwnershipType.PrivatelyOwned,
+        ["MA"] = AirportOwnershipType.AirForce,
+        ["MN"] = AirportOwnershipType.Navy,
+        ["MR"] = AirportOwnershipType.Army,
+        ["CG"] = AirportOwnershipType.CoastGuard
+    };
+
+    private static readonly Dictionary<string, AirportFacilityUse> FacilityUseMap = new()
+    {
+        ["PU"] = AirportFacilityUse.PublicUse,
+        ["PR"] = AirportFacilityUse.PrivateUse
+    };
+
+    private static readonly Dictionary<string, AirportStatus> StatusMap = new()
+    {
+        ["O"] = AirportStatus.Operational,
+        ["CI"] = AirportStatus.ClosedIndefinitely,
+        ["CP"] = AirportStatus.ClosedPermanently
+    };
+
+    private static readonly Dictionary<string, AirportInspectionMethod> InspectionMethodMap = new()
+    {
+        ["F"] = AirportInspectionMethod.Federal,
+        ["S"] = AirportInspectionMethod.State,
+        ["C"] = AirportInspectionMethod.Contractor,
+        ["1"] = AirportInspectionMethod.PublicUseMailout,
+        ["2"] = AirportInspectionMethod.PrivateUseMailout
+    };
+
+    private static readonly Dictionary<string, AirportInspectorAgency> InspectorAgencyMap = new()
+    {
+        ["F"] = AirportInspectorAgency.Faa,
+        ["S"] = AirportInspectorAgency.State,
+        ["C"] = AirportInspectorAgency.Contractor,
+        ["N"] = AirportInspectorAgency.Owner
+    };
+
+    private static readonly Dictionary<string, RepairServiceAvailability> RepairServiceMap = new()
+    {
+        ["NONE"] = RepairServiceAvailability.None,
+        ["MAJOR"] = RepairServiceAvailability.Major,
+        ["MINOR"] = RepairServiceAvailability.Minor
+    };
+
+    private static readonly Dictionary<string, OxygenPressureType> OxygenTypeMap = new()
+    {
+        ["NONE"] = OxygenPressureType.None,
+        ["HIGH"] = OxygenPressureType.High,
+        ["LOW"] = OxygenPressureType.Low,
+        ["HIGH/LOW"] = OxygenPressureType.HighAndLow
+    };
+
+    private static readonly Dictionary<string, BeaconLensColor> BeaconLensColorMap = new()
+    {
+        ["WG"] = BeaconLensColor.WhiteGreen,
+        ["WY"] = BeaconLensColor.WhiteYellow,
+        ["WGY"] = BeaconLensColor.WhiteGreenYellow,
+        ["SWG"] = BeaconLensColor.SplitWhiteGreen,
+        ["W"] = BeaconLensColor.White,
+        ["Y"] = BeaconLensColor.Yellow,
+        ["G"] = BeaconLensColor.Green,
+        ["N"] = BeaconLensColor.None
+    };
+
+    private static readonly Dictionary<string, SegmentedCircleMarkerType> SegmentedCircleMap = new()
+    {
+        ["N"] = SegmentedCircleMarkerType.None,
+        ["Y"] = SegmentedCircleMarkerType.Yes,
+        ["Y-L"] = SegmentedCircleMarkerType.YesLighted
+    };
+
+    private static readonly Dictionary<string, WindIndicatorType> WindIndicatorMap = new()
+    {
+        ["N"] = WindIndicatorType.None,
+        ["Y"] = WindIndicatorType.Unlighted,
+        ["Y-L"] = WindIndicatorType.Lighted
+    };
+
+    private static readonly Dictionary<string, SurveyMethod> SurveyMethodMap = new()
+    {
+        ["E"] = SurveyMethod.Estimated,
+        ["S"] = SurveyMethod.Surveyed
+    };
+
+    public static AirportDto ToDto(Airport airport, ILogger logger)
+    {
+        var id = airport.SiteNo;
         return new AirportDto
         {
             // Identification
@@ -17,10 +117,10 @@ public static class AirportMapper
             EffDate = airport.EffDate,
 
             // Classification
-            SiteType = ParseSiteType(airport.SiteTypeCode),
-            OwnershipType = ParseOwnershipType(airport.OwnershipTypeCode),
-            FacilityUse = ParseFacilityUse(airport.FacilityUseCode),
-            ArptStatus = ParseStatus(airport.ArptStatus),
+            SiteType = EnumParseHelper.Parse(airport.SiteTypeCode, logger, nameof(airport.SiteTypeCode), nameof(Airport), id, SiteTypeMap),
+            OwnershipType = EnumParseHelper.Parse(airport.OwnershipTypeCode, logger, nameof(airport.OwnershipTypeCode), nameof(Airport), id, OwnershipTypeMap),
+            FacilityUse = EnumParseHelper.Parse(airport.FacilityUseCode, logger, nameof(airport.FacilityUseCode), nameof(Airport), id, FacilityUseMap),
+            ArptStatus = EnumParseHelper.Parse(airport.ArptStatus, logger, nameof(airport.ArptStatus), nameof(Airport), id, StatusMap),
             NaspCode = airport.NaspCode,
 
             // Location
@@ -47,13 +147,13 @@ public static class AirportMapper
             LongMin = airport.LongMin,
             LongSec = airport.LongSec,
             LongHemis = airport.LongHemis,
-            PositionSurveyMethod = ParseSurveyMethod(airport.SurveyMethodCode),
+            PositionSurveyMethod = EnumParseHelper.Parse(airport.SurveyMethodCode, logger, nameof(airport.SurveyMethodCode), nameof(Airport), id, SurveyMethodMap),
             ArptPsnSource = airport.ArptPsnSource,
             PositionSrcDate = airport.PositionSrcDate,
 
             // Elevation & Magnetic Variation
             Elev = airport.Elev,
-            ElevationSurveyMethod = ParseSurveyMethod(airport.ElevMethodCode),
+            ElevationSurveyMethod = EnumParseHelper.Parse(airport.ElevMethodCode, logger, nameof(airport.ElevMethodCode), nameof(Airport), id, SurveyMethodMap),
             ArptElevSource = airport.ArptElevSource,
             ElevationSrcDate = airport.ElevationSrcDate,
             MagVarn = airport.MagVarn,
@@ -86,18 +186,18 @@ public static class AirportMapper
             MilitaryLandingRights = ParseBool(airport.MilLndgFlag),
 
             // Inspection
-            InspectionMethod = ParseInspectionMethod(airport.InspectMethodCode),
-            InspectorAgency = ParseInspectorAgency(airport.InspectorCode),
+            InspectionMethod = EnumParseHelper.Parse(airport.InspectMethodCode, logger, nameof(airport.InspectMethodCode), nameof(Airport), id, InspectionMethodMap),
+            InspectorAgency = EnumParseHelper.Parse(airport.InspectorCode, logger, nameof(airport.InspectorCode), nameof(Airport), id, InspectorAgencyMap),
             LastInspection = airport.LastInspection,
             LastInfoResponse = airport.LastInfoResponse,
 
             // Services & Fuel
             FuelTypes = airport.FuelTypes,
             ContractFuelAvailable = ParseBool(airport.ContrFuelAvbl),
-            AirframeRepairService = ParseRepairService(airport.AirframeRepairSerCode),
-            PowerPlantRepairService = ParseRepairService(airport.PwrPlantRepairSer),
-            BottledOxygenType = ParseOxygenType(airport.BottledOxyType),
-            BulkOxygenType = ParseOxygenType(airport.BulkOxyType),
+            AirframeRepairService = EnumParseHelper.Parse(airport.AirframeRepairSerCode, logger, nameof(airport.AirframeRepairSerCode), nameof(Airport), id, RepairServiceMap),
+            PowerPlantRepairService = EnumParseHelper.Parse(airport.PwrPlantRepairSer, logger, nameof(airport.PwrPlantRepairSer), nameof(Airport), id, RepairServiceMap),
+            BottledOxygenType = EnumParseHelper.Parse(airport.BottledOxyType, logger, nameof(airport.BottledOxyType), nameof(Airport), id, OxygenTypeMap),
+            BulkOxygenType = EnumParseHelper.Parse(airport.BulkOxyType, logger, nameof(airport.BulkOxyType), nameof(Airport), id, OxygenTypeMap),
             OtherServices = airport.OtherServices,
 
             // Transient Storage
@@ -108,9 +208,9 @@ public static class AirportMapper
             // Lighting & Visual Aids
             LgtSked = airport.LgtSked,
             BcnLgtSked = airport.BcnLgtSked,
-            BeaconLensColor = ParseBeaconLensColor(airport.BcnLensColor),
-            SegmentedCircleMarker = ParseSegmentedCircleMarker(airport.SegCircleMkrFlag),
-            WindIndicator = ParseWindIndicator(airport.WindIndcrFlag),
+            BeaconLensColor = EnumParseHelper.Parse(airport.BcnLensColor, logger, nameof(airport.BcnLensColor), nameof(Airport), id, BeaconLensColorMap),
+            SegmentedCircleMarker = EnumParseHelper.Parse(airport.SegCircleMkrFlag, logger, nameof(airport.SegCircleMkrFlag), nameof(Airport), id, SegmentedCircleMap),
+            WindIndicator = EnumParseHelper.Parse(airport.WindIndcrFlag, logger, nameof(airport.WindIndcrFlag), nameof(Airport), id, WindIndicatorMap),
 
             // Fees & Misc
             LandingFee = ParseBool(airport.LndgFeeFlag),
@@ -152,185 +252,5 @@ public static class AirportMapper
             return false;
 
         return value.Trim().ToUpperInvariant() == "Y";
-    }
-
-    private static AirportSiteType ParseSiteType(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportSiteType.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "A" => AirportSiteType.Airport,
-            "H" => AirportSiteType.Heliport,
-            "S" => AirportSiteType.SeaplaneBase,
-            "G" => AirportSiteType.Gliderport,
-            "U" => AirportSiteType.Ultralight,
-            _ => AirportSiteType.Unknown
-        };
-    }
-
-    private static AirportOwnershipType ParseOwnershipType(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportOwnershipType.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "PU" => AirportOwnershipType.PubliclyOwned,
-            "PR" => AirportOwnershipType.PrivatelyOwned,
-            "MA" => AirportOwnershipType.AirForce,
-            "MN" => AirportOwnershipType.Navy,
-            "MR" => AirportOwnershipType.Army,
-            "CG" => AirportOwnershipType.CoastGuard,
-            _ => AirportOwnershipType.Unknown
-        };
-    }
-
-    private static AirportFacilityUse ParseFacilityUse(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportFacilityUse.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "PU" => AirportFacilityUse.PublicUse,
-            "PR" => AirportFacilityUse.PrivateUse,
-            _ => AirportFacilityUse.Unknown
-        };
-    }
-
-    private static AirportStatus ParseStatus(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportStatus.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "O" => AirportStatus.Operational,
-            "CI" => AirportStatus.ClosedIndefinitely,
-            "CP" => AirportStatus.ClosedPermanently,
-            _ => AirportStatus.Unknown
-        };
-    }
-
-    private static AirportInspectionMethod ParseInspectionMethod(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportInspectionMethod.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "F" => AirportInspectionMethod.Federal,
-            "S" => AirportInspectionMethod.State,
-            "C" => AirportInspectionMethod.Contractor,
-            "1" => AirportInspectionMethod.PublicUseMailout,
-            "2" => AirportInspectionMethod.PrivateUseMailout,
-            _ => AirportInspectionMethod.Unknown
-        };
-    }
-
-    private static AirportInspectorAgency ParseInspectorAgency(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return AirportInspectorAgency.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "F" => AirportInspectorAgency.Faa,
-            "S" => AirportInspectorAgency.State,
-            "C" => AirportInspectorAgency.Contractor,
-            "N" => AirportInspectorAgency.Owner,
-            _ => AirportInspectorAgency.Unknown
-        };
-    }
-
-    private static RepairServiceAvailability ParseRepairService(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return RepairServiceAvailability.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "NONE" => RepairServiceAvailability.None,
-            "MAJOR" => RepairServiceAvailability.Major,
-            "MINOR" => RepairServiceAvailability.Minor,
-            _ => RepairServiceAvailability.Unknown
-        };
-    }
-
-    private static OxygenPressureType ParseOxygenType(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return OxygenPressureType.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "NONE" => OxygenPressureType.None,
-            "HIGH" => OxygenPressureType.High,
-            "LOW" => OxygenPressureType.Low,
-            "HIGH/LOW" => OxygenPressureType.HighAndLow,
-            _ => OxygenPressureType.Unknown
-        };
-    }
-
-    private static BeaconLensColor ParseBeaconLensColor(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return BeaconLensColor.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "WG" => BeaconLensColor.WhiteGreen,
-            "WY" => BeaconLensColor.WhiteYellow,
-            "WGY" => BeaconLensColor.WhiteGreenYellow,
-            "SWG" => BeaconLensColor.SplitWhiteGreen,
-            "W" => BeaconLensColor.White,
-            "Y" => BeaconLensColor.Yellow,
-            "G" => BeaconLensColor.Green,
-            "N" => BeaconLensColor.None,
-            _ => BeaconLensColor.Unknown
-        };
-    }
-
-    private static SegmentedCircleMarkerType ParseSegmentedCircleMarker(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return SegmentedCircleMarkerType.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "N" => SegmentedCircleMarkerType.None,
-            "Y" => SegmentedCircleMarkerType.Yes,
-            "Y-L" => SegmentedCircleMarkerType.YesLighted,
-            _ => SegmentedCircleMarkerType.Unknown
-        };
-    }
-
-    private static WindIndicatorType ParseWindIndicator(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return WindIndicatorType.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "N" => WindIndicatorType.None,
-            "Y" => WindIndicatorType.Unlighted,
-            "Y-L" => WindIndicatorType.Lighted,
-            _ => WindIndicatorType.Unknown
-        };
-    }
-
-    private static SurveyMethod ParseSurveyMethod(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-            return SurveyMethod.Unknown;
-
-        return code.Trim().ToUpperInvariant() switch
-        {
-            "E" => SurveyMethod.Estimated,
-            "S" => SurveyMethod.Surveyed,
-            _ => SurveyMethod.Unknown
-        };
     }
 }

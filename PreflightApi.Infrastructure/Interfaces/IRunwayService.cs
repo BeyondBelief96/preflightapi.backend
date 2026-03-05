@@ -6,7 +6,7 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface IRunwayService
 {
-    Task<IEnumerable<RunwayDto>> GetRunwaysByAirportAsync(string icaoCodeOrIdent, bool includeGeometry = false);
+    Task<IEnumerable<RunwayDto>> GetRunwaysByAirportAsync(string icaoCodeOrIdent, bool includeGeometry = false, CancellationToken ct = default);
 
     Task<PaginatedResponse<RunwayDto>> GetRunways(
         string? search,
@@ -15,7 +15,8 @@ public interface IRunwayService
         string? state,
         bool? lighted,
         string? cursor,
-        int limit);
+        int limit,
+        CancellationToken ct = default);
 
     Task<PaginatedResponse<RunwayDto>> SearchNearby(
         decimal latitude,
@@ -25,5 +26,6 @@ public interface IRunwayService
         RunwaySurfaceType? surfaceType,
         bool includeGeometry,
         string? cursor,
-        int limit);
+        int limit,
+        CancellationToken ct = default);
 }

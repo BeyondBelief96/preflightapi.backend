@@ -26,7 +26,7 @@ public class PirepFunction
 
     [Function("PirepFunction")]
     [ExponentialBackoffRetry(3, "00:00:30", "00:05:00")]
-    public async Task Run([TimerTrigger("0 */5 * * * *", RunOnStartup = false)] TimerInfo myTimer, FunctionContext context)
+    public async Task Run([TimerTrigger("0 */5 * * * *", RunOnStartup = FunctionDefaults.RunOnStartup)] TimerInfo myTimer, FunctionContext context)
     {
         _logger.LogInformation("PIREP Function executed at: {Time}", DateTime.UtcNow);
         var sw = Stopwatch.StartNew();

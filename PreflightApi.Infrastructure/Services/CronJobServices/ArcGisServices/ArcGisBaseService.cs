@@ -36,6 +36,20 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
         /// </summary>
         protected virtual int RetryBaseDelaySeconds => 2;
 
+        /// <summary>
+        /// Maximum allowable offset for geometry generalization (in outSR units).
+        /// For SRID 4326, this is in decimal degrees. 0.0001° ≈ 11m at the equator.
+        /// Set to null to disable generalization and return full-precision geometry.
+        /// </summary>
+        protected virtual string? MaxAllowableOffset => null;
+
+        /// <summary>
+        /// Number of decimal places for geometry coordinates.
+        /// 5 decimal places ≈ 1.1m precision — sufficient for airspace visualization.
+        /// Set to null to return full precision.
+        /// </summary>
+        protected virtual int? GeometryPrecision => null;
+
         protected ArcGisBaseService(
             ILogger logger,
             IHttpClientFactory httpClientFactory,
@@ -132,6 +146,11 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
                 ["resultOffset"] = offset.ToString()
             };
 
+            if (MaxAllowableOffset != null)
+                queryParams["maxAllowableOffset"] = MaxAllowableOffset;
+            if (GeometryPrecision != null)
+                queryParams["geometryPrecision"] = GeometryPrecision.Value.ToString();
+
             var url = WebUtilities.AddQueryString(BaseUrl, queryParams);
             _logger.LogDebug("Fetching ArcGIS features from offset {Offset}", offset);
 
@@ -142,13 +161,13 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
                 var response = await retryPolicy.ExecuteAsync(async () =>
                 {
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
-                    return await httpClient.SendAsync(request, cancellationToken);
+                    return await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 });
 
                 response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                var result = JsonSerializer.Deserialize<ArcGisResponse<TAttributes>>(content, _jsonOptions);
+                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                var result = await JsonSerializer.DeserializeAsync<ArcGisResponse<TAttributes>>(stream, _jsonOptions, cancellationToken);
 
                 if (result?.Features == null)
                 {

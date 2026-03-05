@@ -47,11 +47,12 @@ public class CommunicationFrequencyController(ICommunicationFrequencyService fre
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PaginatedResponse<CommunicationFrequencyDto>>> GetFrequenciesByServicedFacility(
         string servicedFacility,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(servicedFacility, "servicedFacility", "Serviced facility identifier is required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await frequencyService.GetFrequenciesByServicedFacility(servicedFacility, pagination.Cursor, pagination.Limit));
+        return Ok(await frequencyService.GetFrequenciesByServicedFacility(servicedFacility, pagination.Cursor, pagination.Limit, ct));
     }
 }

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AirportInspectionMethod
 {
-    /// <summary>Inspection method could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>F - Federal.</summary>
     Federal,
 

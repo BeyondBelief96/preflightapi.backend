@@ -187,22 +187,22 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     RawText = element.Element("raw_text")?.Value,
                     StationId = stationId,
                     ObservationTime = element.Element("observation_time")?.Value,
-                    Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
-                    Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
-                    TempC = ParsingUtilities.ParseNullableFloat(element.Element("temp_c")?.Value),
-                    DewpointC = ParsingUtilities.ParseNullableFloat(element.Element("dewpoint_c")?.Value),
+                    Latitude = ParsingUtilities.ParseNullableDouble(element.Element("latitude")?.Value),
+                    Longitude = ParsingUtilities.ParseNullableDouble(element.Element("longitude")?.Value),
+                    TempC = ParsingUtilities.ParseNullableDouble(element.Element("temp_c")?.Value),
+                    DewpointC = ParsingUtilities.ParseNullableDouble(element.Element("dewpoint_c")?.Value),
                     WindDirDegrees = element.Element("wind_dir_degrees")?.Value,
                     WindSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_speed_kt")?.Value),
                     WindGustKt = ParsingUtilities.ParseNullableInt(element.Element("wind_gust_kt")?.Value),
                     VisibilityStatuteMi = element.Element("visibility_statute_mi")?.Value,
-                    AltimInHg = ParsingUtilities.ParseNullableFloat(element.Element("altim_in_hg")?.Value),
-                    SeaLevelPressureMb = ParsingUtilities.ParseNullableFloat(element.Element("sea_level_pressure_mb")?.Value),
+                    AltimInHg = ParsingUtilities.ParseNullableDouble(element.Element("altim_in_hg")?.Value),
+                    SeaLevelPressureMb = ParsingUtilities.ParseNullableDouble(element.Element("sea_level_pressure_mb")?.Value),
                     QualityControlFlags = ParseQualityControlFlags(element.Element("quality_control_flags")),
                     WxString = element.Element("wx_string")?.Value,
                     SkyCondition = ParseSkyConditions(element.Elements("sky_condition")),
                     FlightCategory = element.Element("flight_category")?.Value,
                     MetarType = element.Element("metar_type")?.Value,
-                    ElevationM = ParsingUtilities.ParseNullableFloat(element.Element("elevation_m")?.Value)
+                    ElevationM = ParsingUtilities.ParseNullableDouble(element.Element("elevation_m")?.Value)
                 };
 
                 metars.Add(metar);

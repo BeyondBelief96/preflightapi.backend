@@ -106,7 +106,7 @@ public class PirepController(IPirepService pirepService, IAirportService airport
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
+        var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent, ct);
 
         if (airport.LatDecimal == null || airport.LongDecimal == null)
             throw new ValidationException("icaoCodeOrIdent", $"Airport '{icaoCodeOrIdent}' does not have coordinates on record");

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ControllingObjectMarking
 {
-    /// <summary>Marking status could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - Not marked or lighted.</summary>
     None,
 

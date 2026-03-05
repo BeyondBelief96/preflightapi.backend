@@ -30,7 +30,22 @@ public static class SigmetMapper
         return new SigmetHazardDto
         {
             Type = ParseHazardType(hazard.Type),
-            Severity = hazard.Severity
+            Severity = ParseSeverity(hazard.Severity)
+        };
+    }
+
+    private static HazardSeverity? ParseSeverity(string? severity)
+    {
+        if (string.IsNullOrEmpty(severity)) return null;
+
+        return severity.Trim().ToUpperInvariant() switch
+        {
+            "LGT" => HazardSeverity.LGT,
+            "LT-MOD" or "LT_MOD" => HazardSeverity.LT_MOD,
+            "MOD" => HazardSeverity.MOD,
+            "MOD-SEV" or "MOD_SEV" => HazardSeverity.MOD_SEV,
+            "SEV" => HazardSeverity.SEV,
+            _ => null
         };
     }
 

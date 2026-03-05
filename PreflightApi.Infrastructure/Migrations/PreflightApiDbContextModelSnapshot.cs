@@ -1252,16 +1252,16 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<float?>("AltimInHg")
-                        .HasColumnType("real")
+                    b.Property<double?>("AltimInHg")
+                        .HasColumnType("double precision")
                         .HasColumnName("altim_in_hg");
 
-                    b.Property<float?>("DewpointC")
-                        .HasColumnType("real")
+                    b.Property<double?>("DewpointC")
+                        .HasColumnType("double precision")
                         .HasColumnName("dewpoint_c");
 
-                    b.Property<float?>("ElevationM")
-                        .HasColumnType("real")
+                    b.Property<double?>("ElevationM")
+                        .HasColumnType("double precision")
                         .HasColumnName("elevation_m");
 
                     b.Property<string>("FlightCategory")
@@ -1269,20 +1269,20 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("character varying(4)")
                         .HasColumnName("flight_category");
 
-                    b.Property<float?>("Latitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
-                    b.Property<float?>("Longitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
-                    b.Property<float?>("MaxT24hrC")
-                        .HasColumnType("real")
+                    b.Property<double?>("MaxT24hrC")
+                        .HasColumnType("double precision")
                         .HasColumnName("maxT24hr_c");
 
-                    b.Property<float?>("MaxTC")
-                        .HasColumnType("real")
+                    b.Property<double?>("MaxTC")
+                        .HasColumnType("double precision")
                         .HasColumnName("maxT_c");
 
                     b.Property<string>("MetarType")
@@ -1290,32 +1290,32 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("character varying(5)")
                         .HasColumnName("metar_type");
 
-                    b.Property<float?>("MinT24hrC")
-                        .HasColumnType("real")
+                    b.Property<double?>("MinT24hrC")
+                        .HasColumnType("double precision")
                         .HasColumnName("minT24hr_c");
 
-                    b.Property<float?>("MinTC")
-                        .HasColumnType("real")
+                    b.Property<double?>("MinTC")
+                        .HasColumnType("double precision")
                         .HasColumnName("minT_c");
 
                     b.Property<string>("ObservationTime")
                         .HasColumnType("text")
                         .HasColumnName("observation_time");
 
-                    b.Property<float?>("Pcp24hrIn")
-                        .HasColumnType("real")
+                    b.Property<double?>("Pcp24hrIn")
+                        .HasColumnType("double precision")
                         .HasColumnName("pcp24hr_in");
 
-                    b.Property<float?>("Pcp3hrIn")
-                        .HasColumnType("real")
+                    b.Property<double?>("Pcp3hrIn")
+                        .HasColumnType("double precision")
                         .HasColumnName("pcp3hr_in");
 
-                    b.Property<float?>("Pcp6hrIn")
-                        .HasColumnType("real")
+                    b.Property<double?>("Pcp6hrIn")
+                        .HasColumnType("double precision")
                         .HasColumnName("pcp6hr_in");
 
-                    b.Property<float?>("PrecipIn")
-                        .HasColumnType("real")
+                    b.Property<double?>("PrecipIn")
+                        .HasColumnType("double precision")
                         .HasColumnName("precip_in");
 
                     b.Property<string>("QualityControlFlags")
@@ -1326,16 +1326,16 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("raw_text");
 
-                    b.Property<float?>("SeaLevelPressureMb")
-                        .HasColumnType("real")
+                    b.Property<double?>("SeaLevelPressureMb")
+                        .HasColumnType("double precision")
                         .HasColumnName("sea_level_pressure_mb");
 
                     b.Property<string>("SkyCondition")
                         .HasColumnType("jsonb")
                         .HasColumnName("sky_condition");
 
-                    b.Property<float?>("SnowIn")
-                        .HasColumnType("real")
+                    b.Property<double?>("SnowIn")
+                        .HasColumnType("double precision")
                         .HasColumnName("snow_in");
 
                     b.Property<string>("StationId")
@@ -1343,12 +1343,12 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("character varying(4)")
                         .HasColumnName("station_id");
 
-                    b.Property<float?>("TempC")
-                        .HasColumnType("real")
+                    b.Property<double?>("TempC")
+                        .HasColumnType("double precision")
                         .HasColumnName("temp_c");
 
-                    b.Property<float?>("ThreeHrPressureTendencyMb")
-                        .HasColumnType("real")
+                    b.Property<double?>("ThreeHrPressureTendencyMb")
+                        .HasColumnType("double precision")
                         .HasColumnName("three_hr_pressure_tendency_mb");
 
                     b.Property<int?>("VertVisFt")
@@ -2050,16 +2050,16 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("icing_condition");
 
-                    b.Property<float?>("Latitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
                     b.Property<Point>("Location")
                         .HasColumnType("geography(Point, 4326)")
                         .HasColumnName("location");
 
-                    b.Property<float?>("Longitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
                     b.Property<string>("ObservationTime")
@@ -2086,8 +2086,8 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("sky_condition");
 
-                    b.Property<float?>("TempC")
-                        .HasColumnType("real")
+                    b.Property<double?>("TempC")
+                        .HasColumnType("double precision")
                         .HasColumnName("temp_c");
 
                     b.Property<string>("TurbulenceConditions")
@@ -2764,12 +2764,12 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("sector");
 
-                    b.Property<float?>("ShapeArea")
-                        .HasColumnType("real")
+                    b.Property<double?>("ShapeArea")
+                        .HasColumnType("double precision")
                         .HasColumnName("shape_area");
 
-                    b.Property<float?>("ShapeLength")
-                        .HasColumnType("real")
+                    b.Property<double?>("ShapeLength")
+                        .HasColumnType("double precision")
                         .HasColumnName("shape_length");
 
                     b.Property<string>("State")
@@ -2849,8 +2849,8 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bulletin_time");
 
-                    b.Property<float?>("ElevationM")
-                        .HasColumnType("real")
+                    b.Property<double?>("ElevationM")
+                        .HasColumnType("double precision")
                         .HasColumnName("elevation_m");
 
                     b.Property<string>("Forecast")
@@ -2861,12 +2861,12 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("issue_time");
 
-                    b.Property<float?>("Latitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
-                    b.Property<float?>("Longitude")
-                        .HasColumnType("real")
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
                     b.Property<string>("RawText")

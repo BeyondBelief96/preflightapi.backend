@@ -8,10 +8,10 @@ namespace PreflightApi.Domain.ValueObjects.Taf
         /// <summary>Valid time for this temperature forecast in ISO 8601 format (UTC).</summary>
         public string? ValidTime { get; set; }
         /// <summary>Forecast surface temperature in degrees Celsius.</summary>
-        public float? SfcTempC { get; set; }
+        public double? SfcTempC { get; set; }
         /// <summary>Forecast maximum temperature in degrees Celsius.</summary>
-        public string? MaxTempC { get; set; }
+        public double? MaxTempC { get; set; }
         /// <summary>Forecast minimum temperature in degrees Celsius.</summary>
-        public string? MinTempC { get; set; }
+        public double? MinTempC { get; set; }
     }
 }

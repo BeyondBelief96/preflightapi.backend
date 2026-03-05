@@ -39,14 +39,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<AirspaceDto>>> GetByClasses(
         [FromQuery] string classes,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(classes))
             throw new ValidationException("classes", "Airspace classes are required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var classArray = classes.Split(',').Select(c => c.Trim()).ToArray();
-        return Ok(await airspaceService.GetByClasses(classArray, pagination.Cursor, pagination.Limit));
+        return Ok(await airspaceService.GetByClasses(classArray, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -68,14 +69,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<AirspaceDto>>> GetByCity(
         [FromQuery] string cities,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(cities))
             throw new ValidationException("cities", "Cities are required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var cityArray = cities.Split(',').Select(c => c.Trim()).ToArray();
-        return Ok(await airspaceService.GetByCities(cityArray, pagination.Cursor, pagination.Limit));
+        return Ok(await airspaceService.GetByCities(cityArray, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -97,14 +99,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<AirspaceDto>>> GetByState(
         [FromQuery] string states,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(states))
             throw new ValidationException("states", "States are required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var stateArray = states.Split(',').Select(s => s.Trim()).ToArray();
-        return Ok(await airspaceService.GetByStates(stateArray, pagination.Cursor, pagination.Limit));
+        return Ok(await airspaceService.GetByStates(stateArray, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -134,14 +137,15 @@ public class AirspaceController(IAirspaceService airspaceService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<SpecialUseAirspaceDto>>> GetByTypeCode(
         [FromQuery] string typeCodes,
-        [FromQuery] PaginationParams pagination)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(typeCodes))
             throw new ValidationException("typeCodes", "Type codes are required");
 
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var typeCodeArray = typeCodes.Split(',').Select(tc => tc.Trim()).ToArray();
-        return Ok(await airspaceService.GetByTypeCodes(typeCodeArray, pagination.Cursor, pagination.Limit));
+        return Ok(await airspaceService.GetByTypeCodes(typeCodeArray, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -162,13 +166,13 @@ public class AirspaceController(IAirspaceService airspaceService)
     [HttpGet("by-icao-or-idents")]
     [ProducesResponseType(typeof(IEnumerable<AirspaceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<AirspaceDto>>> GetByIcaoOrIdent([FromQuery] string icaoOrIdents)
+    public async Task<ActionResult<IEnumerable<AirspaceDto>>> GetByIcaoOrIdent([FromQuery] string icaoOrIdents, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(icaoOrIdents))
             throw new ValidationException("icaoOrIdents", "ICAO codes or identifiers are required");
 
         var idArray = icaoOrIdents.Split(',').Select(id => id.Trim()).ToArray();
-        var airspaces = await airspaceService.GetByIcaoOrIdents(idArray);
+        var airspaces = await airspaceService.GetByIcaoOrIdents(idArray, ct);
         return Ok(airspaces);
     }
 
@@ -189,13 +193,13 @@ public class AirspaceController(IAirspaceService airspaceService)
     [HttpGet("by-global-ids")]
     [ProducesResponseType(typeof(IEnumerable<AirspaceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<AirspaceDto>>> GetByGlobalIds([FromQuery] string globalIds)
+    public async Task<ActionResult<IEnumerable<AirspaceDto>>> GetByGlobalIds([FromQuery] string globalIds, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(globalIds))
             throw new ValidationException("globalIds", "Global IDs are required");
 
         var idArray = globalIds.Split(',').Select(id => id.Trim()).ToArray();
-        var airspaces = await airspaceService.GetByGlobalIds(idArray);
+        var airspaces = await airspaceService.GetByGlobalIds(idArray, ct);
         return Ok(airspaces);
     }
 
@@ -216,13 +220,13 @@ public class AirspaceController(IAirspaceService airspaceService)
     [HttpGet("special-use/by-global-ids")]
     [ProducesResponseType(typeof(IEnumerable<SpecialUseAirspaceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<SpecialUseAirspaceDto>>> GetSpecialUseByGlobalIds([FromQuery] string globalIds)
+    public async Task<ActionResult<IEnumerable<SpecialUseAirspaceDto>>> GetSpecialUseByGlobalIds([FromQuery] string globalIds, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(globalIds))
             throw new ValidationException("globalIds", "Global IDs are required");
 
         var idArray = globalIds.Split(',').Select(id => id.Trim()).ToArray();
-        var airspaces = await airspaceService.GetSpecialUseByGlobalIds(idArray);
+        var airspaces = await airspaceService.GetSpecialUseByGlobalIds(idArray, ct);
         return Ok(airspaces);
     }
 }

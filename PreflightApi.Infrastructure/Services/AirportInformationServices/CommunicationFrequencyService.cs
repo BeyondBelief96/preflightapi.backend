@@ -47,7 +47,8 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
         public async Task<PaginatedResponse<CommunicationFrequencyDto>> GetFrequenciesByServicedFacility(
             string servicedFacility,
             string? cursor = null,
-            int limit = 100)
+            int limit = 100,
+            CancellationToken ct = default)
         {
             try
             {
@@ -61,7 +62,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
                 // Verify the airport/facility exists
                 var airportExists = await _context.Airports
-                    .AnyAsync(a => a.ArptId == strippedCode || a.IcaoId == strippedCode || a.IcaoId == servicedFacility.ToUpperInvariant());
+                    .AnyAsync(a => a.ArptId == strippedCode || a.IcaoId == strippedCode || a.IcaoId == servicedFacility.ToUpperInvariant(), ct);
 
                 if (!airportExists)
                 {
@@ -73,7 +74,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     .Where(f => f.ServicedFacility == strippedCode);
 
                 var result = await query.ToPaginatedAsync(
-                    f => f.Id, CommunicationFrequencyMapper.ToDto, cursor, limit);
+                    f => f.Id, CommunicationFrequencyMapper.ToDto, cursor, limit, ct);
 
                 _logger.LogInformation("Found {Count} frequencies for serviced facility: {ServicedFacility}, hasMore: {HasMore}",
                     result.Data.Count(), servicedFacility, result.Pagination.HasMore);

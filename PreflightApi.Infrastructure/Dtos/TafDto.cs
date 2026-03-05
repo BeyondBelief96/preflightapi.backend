@@ -22,11 +22,11 @@ public record TafDto
     /// <summary>TAF remarks.</summary>
     public string? Remarks { get; init; }
     /// <summary>Station latitude in decimal degrees.</summary>
-    public float? Latitude { get; init; }
+    public double? Latitude { get; init; }
     /// <summary>Station longitude in decimal degrees.</summary>
-    public float? Longitude { get; init; }
+    public double? Longitude { get; init; }
     /// <summary>Station elevation in meters.</summary>
-    public float? ElevationM { get; init; }
+    public double? ElevationM { get; init; }
     /// <summary>Forecast periods within the TAF.</summary>
     public List<TafForecast>? Forecast { get; init; }
 }

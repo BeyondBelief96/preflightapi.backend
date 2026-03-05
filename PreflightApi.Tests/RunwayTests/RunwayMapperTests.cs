@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using PreflightApi.Domain.Entities;
@@ -20,7 +21,7 @@ public class RunwayMapperTests
         var runway = CreateTestRunway();
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance);
 
         dto.AirportIcaoCode.Should().Be("KDFW");
         dto.AirportArptId.Should().Be("DFW");
@@ -41,7 +42,7 @@ public class RunwayMapperTests
         };
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance);
 
         dto.RunwayEnds.Should().HaveCount(2);
     }
@@ -53,7 +54,7 @@ public class RunwayMapperTests
         runway.Geometry = CreateTestPolygon();
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance);
 
         dto.Geometry.Should().BeNull();
     }
@@ -65,7 +66,7 @@ public class RunwayMapperTests
         runway.Geometry = CreateTestPolygon();
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport, includeGeometry: true);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance, includeGeometry: true);
 
         dto.Geometry.Should().NotBeNull();
         dto.Geometry!.Type.Should().Be("Polygon");
@@ -80,7 +81,7 @@ public class RunwayMapperTests
         runway.Geometry = null;
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport, includeGeometry: true);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance, includeGeometry: true);
 
         dto.Geometry.Should().BeNull();
     }
@@ -90,7 +91,7 @@ public class RunwayMapperTests
     {
         var runway = CreateTestRunway();
 
-        var dto = RunwayMapper.ToDto(runway);
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
 
         dto.AirportIcaoCode.Should().BeNull();
         dto.AirportArptId.Should().BeNull();
@@ -118,12 +119,6 @@ public class RunwayMapperTests
         RunwayMapper.ToDbCode(surfaceType).Should().Be(expectedCode);
     }
 
-    [Fact]
-    public void ToDbCode_Unknown_ReturnsNull()
-    {
-        RunwayMapper.ToDbCode(RunwaySurfaceType.Unknown).Should().BeNull();
-    }
-
     #endregion
 
     #region ConvertToGeoJson (via ToDto)
@@ -135,7 +130,7 @@ public class RunwayMapperTests
         runway.Geometry = CreateTestPolygon();
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport, includeGeometry: true);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance, includeGeometry: true);
 
         dto.Geometry.Should().NotBeNull();
         dto.Geometry!.Type.Should().Be("Polygon");
@@ -174,7 +169,7 @@ public class RunwayMapperTests
         runway.Geometry = polygon;
         var airport = CreateTestAirport();
 
-        var dto = RunwayMapper.ToDto(runway, airport, includeGeometry: true);
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance, includeGeometry: true);
 
         dto.Geometry!.Coordinates.Should().HaveCount(2); // exterior + 1 interior ring
     }

@@ -193,8 +193,8 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                 var points = areaElement.Elements("point")
                     .Select(pointElement => new SigmetPoint
                     {
-                        Longitude = ParsingUtilities.ParseFloat(pointElement.Element("longitude")?.Value ?? "0"),
-                        Latitude = ParsingUtilities.ParseFloat(pointElement.Element("latitude")?.Value ?? "0")
+                        Longitude = ParsingUtilities.ParseDouble(pointElement.Element("longitude")?.Value ?? "0"),
+                        Latitude = ParsingUtilities.ParseDouble(pointElement.Element("latitude")?.Value ?? "0")
                     })
                     .ToList();
 

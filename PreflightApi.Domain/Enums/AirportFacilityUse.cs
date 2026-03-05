@@ -8,8 +8,8 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AirportFacilityUse
 {
-    /// <summary>Facility use could not be determined from FAA data.</summary>
-    Unknown,
+    /// <summary>FAA "Unknown" facility use — a legitimate value in the NASR data.</summary>
+    Undetermined,
 
     /// <summary>PU - Open to the public.</summary>
     PublicUse,
