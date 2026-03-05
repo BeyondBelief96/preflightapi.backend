@@ -189,7 +189,8 @@ public class RunwayService : IRunwayService
             var dbCode = RunwayMapper.ToDbCode(surfaceType.Value);
             if (dbCode != null)
             {
-                query = query.Where(r => r.SurfaceTypeCode != null && r.SurfaceTypeCode.StartsWith(dbCode));
+                query = query.Where(r => r.SurfaceTypeCode != null &&
+                    (r.SurfaceTypeCode.StartsWith(dbCode) || r.SurfaceTypeCode.EndsWith(dbCode)));
             }
         }
 

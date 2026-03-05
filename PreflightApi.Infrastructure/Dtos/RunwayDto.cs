@@ -30,10 +30,18 @@ public record RunwayDto
     public int? Width { get; init; }
 
     /// <summary>
-    /// FAA NASR field: SURFACE_TYPE_CODE. Runway surface type.
+    /// FAA NASR field: SURFACE_TYPE_CODE. Primary runway surface type.
+    /// <para>When the runway is composed of distinct sections the FAA reports a combined code (e.g., "ASPH-CONC").
+    /// This property contains the first (primary) surface type; see <see cref="SecondarySurfaceType"/> for the second.</para>
     /// <para>Common values: Concrete (CONC), Asphalt (ASPH), Turf (TURF), Dirt (DIRT), Gravel (GRAVEL), Water (WATER).</para>
     /// </summary>
     public RunwaySurfaceType? SurfaceType { get; init; }
+
+    /// <summary>
+    /// Secondary runway surface type, present only when the runway is composed of two distinct surface sections.
+    /// <para>Derived from the FAA NASR SURFACE_TYPE_CODE combined format (e.g., "ASPH-CONC" → Secondary = Concrete).</para>
+    /// </summary>
+    public RunwaySurfaceType? SecondarySurfaceType { get; init; }
 
     /// <summary>
     /// FAA NASR field: TREATMENT_CODE. Runway surface treatment.
