@@ -22,7 +22,7 @@ public record NavaidDto
     public string NavId { get; init; } = string.Empty;
 
     /// <summary>FAA NASR field: NAV_TYPE. Facility type (e.g., VOR, VORTAC, NDB, DME, TACAN).</summary>
-    public NavaidType NavType { get; init; }
+    public NavaidType? NavType { get; init; }
 
     /// <summary>FAA NASR field: NAV_STATUS. Current operational status of the facility.</summary>
     public string NavStatus { get; init; } = string.Empty;

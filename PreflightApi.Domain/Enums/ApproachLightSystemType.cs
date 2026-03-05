@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ApproachLightSystemType
 {
-    /// <summary>Approach light system could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No approach lighting is available.</summary>
     None,
 

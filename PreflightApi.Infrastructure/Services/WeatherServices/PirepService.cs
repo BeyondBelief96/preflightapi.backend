@@ -33,7 +33,7 @@ public class PirepService : IPirepService
             _logger.LogInformation("Retrieving PIREPs, cursor: {Cursor}, limit: {Limit}", cursor, limit);
 
             var query = _context.Pireps.AsNoTracking();
-            return await query.ToPaginatedAsync(p => p.Id, PirepMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(p => p.Id, p => PirepMapper.ToDto(p, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -64,7 +64,7 @@ public class PirepService : IPirepService
                     $"SELECT * FROM pirep WHERE location IS NOT NULL AND ST_DWithin(location::geography, {point}::geography, {radiusMeters})")
                 .AsNoTracking();
 
-            return await query.ToPaginatedAsync(p => p.Id, PirepMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(p => p.Id, p => PirepMapper.ToDto(p, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {

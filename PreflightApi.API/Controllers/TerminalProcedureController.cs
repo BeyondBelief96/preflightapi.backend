@@ -41,10 +41,11 @@ public class TerminalProcedureController(ITerminalProcedureService terminalProce
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TerminalProceduresResponseDto>> GetTerminalProcedures(
         string icaoCodeOrIdent,
-        [FromQuery] string? chartCode = null)
+        [FromQuery] string? chartCode = null,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-        var procedures = await terminalProcedureService.GetTerminalProceduresByAirportCode(icaoCodeOrIdent, chartCode);
+        var procedures = await terminalProcedureService.GetTerminalProceduresByAirportCode(icaoCodeOrIdent, chartCode, ct);
         return Ok(procedures);
     }
 }

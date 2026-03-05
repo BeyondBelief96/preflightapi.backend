@@ -1,11 +1,20 @@
+using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Dtos.Mappers;
 
 public static class GAirmetMapper
 {
-    public static GAirmetDto ToDto(GAirmet gairmet)
+    private static readonly Dictionary<string, GAirmetProduct> ProductMap = new()
+    {
+        ["SIERRA"] = GAirmetProduct.SIERRA,
+        ["TANGO"] = GAirmetProduct.TANGO,
+        ["ZULU"] = GAirmetProduct.ZULU
+    };
+
+    public static GAirmetDto ToDto(GAirmet gairmet, ILogger logger)
     {
         return new GAirmetDto
         {
@@ -14,11 +23,11 @@ public static class GAirmetMapper
             IssueTime = gairmet.IssueTime,
             ExpireTime = gairmet.ExpireTime,
             ValidTime = gairmet.ValidTime,
-            Product = ParseProduct(gairmet.Product),
+            Product = EnumParseHelper.Parse(gairmet.Product, logger, nameof(gairmet.Product), nameof(GAirmet), gairmet.Id.ToString(), ProductMap),
             Tag = gairmet.Tag,
             ForecastHour = gairmet.ForecastHour,
             Hazard = ParseHazardType(gairmet.HazardType),
-            HazardSeverity = gairmet.HazardSeverity,
+            HazardSeverity = ParseSeverity(gairmet.HazardSeverity),
             GeometryType = gairmet.GeometryType,
             DueTo = gairmet.DueTo,
             Altitudes = gairmet.Altitudes,
@@ -26,14 +35,18 @@ public static class GAirmetMapper
         };
     }
 
-    private static GAirmetProduct ParseProduct(string product)
+    private static HazardSeverity? ParseSeverity(string? severity)
     {
-        return product.ToUpperInvariant() switch
+        if (string.IsNullOrEmpty(severity)) return null;
+
+        return severity.Trim().ToUpperInvariant() switch
         {
-            "SIERRA" => GAirmetProduct.SIERRA,
-            "TANGO" => GAirmetProduct.TANGO,
-            "ZULU" => GAirmetProduct.ZULU,
-            _ => GAirmetProduct.SIERRA // Default fallback
+            "LGT" => HazardSeverity.LGT,
+            "LT-MOD" or "LT_MOD" => HazardSeverity.LT_MOD,
+            "MOD" => HazardSeverity.MOD,
+            "MOD-SEV" or "MOD_SEV" => HazardSeverity.MOD_SEV,
+            "SEV" => HazardSeverity.SEV,
+            _ => null
         };
     }
 
@@ -52,7 +65,7 @@ public static class GAirmetMapper
             "TURB-HI" => GAirmetHazardType.TURB_HI,
             "LLWS" => GAirmetHazardType.LLWS,
             "SFC_WIND" => GAirmetHazardType.SFC_WIND,
-            "SFC-WIND" => GAirmetHazardType.SFC_WIND, // Handle both formats
+            "SFC-WIND" => GAirmetHazardType.SFC_WIND,
 
             // ZULU hazards
             "ICE" => GAirmetHazardType.ICE,
@@ -67,21 +80,15 @@ public static class GAirmetMapper
     {
         return hazardType switch
         {
-            // SIERRA hazards
             GAirmetHazardType.MT_OBSC => "MT_OBSC",
             GAirmetHazardType.IFR => "IFR",
-
-            // TANGO hazards
             GAirmetHazardType.TURB_LO => "TURB-LO",
             GAirmetHazardType.TURB_HI => "TURB-HI",
             GAirmetHazardType.LLWS => "LLWS",
             GAirmetHazardType.SFC_WIND => "SFC_WIND",
-
-            // ZULU hazards
             GAirmetHazardType.ICE => "ICE",
             GAirmetHazardType.FZLVL => "FZLVL",
             GAirmetHazardType.M_FZLVL => "M_FZLVL",
-
             _ => null
         };
     }

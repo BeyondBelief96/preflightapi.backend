@@ -28,13 +28,13 @@ public record ObstacleDto
     /// <summary>Height above mean sea level in feet.</summary>
     public int? HeightAmsl { get; init; }
     /// <summary>Lighting type on the obstacle.</summary>
-    public ObstacleLighting Lighting { get; init; }
+    public ObstacleLighting? Lighting { get; init; }
     /// <summary>Horizontal accuracy of the position data.</summary>
-    public HorizontalAccuracy HorizontalAccuracy { get; init; }
+    public HorizontalAccuracy? HorizontalAccuracy { get; init; }
     /// <summary>Vertical accuracy of the height data.</summary>
-    public VerticalAccuracy VerticalAccuracy { get; init; }
+    public VerticalAccuracy? VerticalAccuracy { get; init; }
     /// <summary>Marking type on the obstacle.</summary>
-    public ObstacleMarking Marking { get; init; }
+    public ObstacleMarking? Marking { get; init; }
     /// <summary>Verification status of the obstacle data.</summary>
-    public VerificationStatus VerificationStatus { get; init; }
+    public VerificationStatus? VerificationStatus { get; init; }
 }

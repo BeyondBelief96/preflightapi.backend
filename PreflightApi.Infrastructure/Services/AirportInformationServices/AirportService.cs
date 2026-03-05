@@ -28,7 +28,7 @@ namespace PreflightApi.Infrastructure.Services
             _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
         }
 
-        public async Task<PaginatedResponse<AirportDto>> GetAirports(string? search = null, string[]? stateCodes = null, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<AirportDto>> GetAirports(string? search = null, string[]? stateCodes = null, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace PreflightApi.Infrastructure.Services
                         (a.City != null && EF.Functions.ILike(a.City, pattern)));
                 }
 
-                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.SiteNo, a => AirportMapper.ToDto(a, _logger), cursor, limit, ct);
             }
             catch (Exception ex)
             {
@@ -64,7 +64,7 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        public async Task<AirportDto> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent)
+        public async Task<AirportDto> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent, CancellationToken ct = default)
         {
             try
             {
@@ -73,14 +73,14 @@ namespace PreflightApi.Infrastructure.Services
                 var airport = await _context.Airports
                     .FirstOrDefaultAsync(a =>
                         a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                        a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
+                        a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
                 if (airport == null)
                 {
                     throw new AirportNotFoundException(icaoCodeOrIdent);
                 }
 
-                return AirportMapper.ToDto(airport);
+                return AirportMapper.ToDto(airport, _logger);
             }
             catch (Exception ex) when (ex is not AirportNotFoundException)
             {
@@ -89,7 +89,7 @@ namespace PreflightApi.Infrastructure.Services
             }
         }
 
-        public async Task<IEnumerable<AirportDto>> GetAirportsByIcaoCodesOrIdents(string[] codesOrIdents)
+        public async Task<IEnumerable<AirportDto>> GetAirportsByIcaoCodesOrIdents(string[] codesOrIdents, CancellationToken ct = default)
         {
             try
             {
@@ -101,9 +101,9 @@ namespace PreflightApi.Infrastructure.Services
                     .Where(a =>
                         (a.IcaoId != null && upperCodes.Contains(a.IcaoId)) ||
                         (a.ArptId != null && upperCodes.Contains(a.ArptId)))
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
-                return airports.Select(AirportMapper.ToDto);
+                return airports.Select(a => AirportMapper.ToDto(a, _logger));
             }
             catch (Exception ex)
             {
@@ -118,7 +118,8 @@ namespace PreflightApi.Infrastructure.Services
             decimal longitude,
             double radiusNm,
             string? cursor = null,
-            int limit = 100)
+            int limit = 100,
+            CancellationToken ct = default)
         {
             try
             {
@@ -134,7 +135,7 @@ namespace PreflightApi.Infrastructure.Services
                         $"SELECT * FROM airports WHERE location IS NOT NULL AND ST_DWithin(location::geography, {point}::geography, {radiusMeters})")
                     .AsNoTracking();
 
-                return await query.ToPaginatedAsync(a => a.SiteNo, AirportMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.SiteNo, a => AirportMapper.ToDto(a, _logger), cursor, limit, ct);
             }
             catch (Exception ex)
             {

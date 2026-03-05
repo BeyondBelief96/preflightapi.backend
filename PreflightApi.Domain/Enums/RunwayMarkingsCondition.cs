@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwayMarkingsCondition
 {
-    /// <summary>Markings condition could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>G - Good condition.</summary>
     Good,
 

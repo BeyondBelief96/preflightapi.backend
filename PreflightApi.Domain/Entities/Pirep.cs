@@ -47,13 +47,13 @@ namespace PreflightApi.Domain.Entities
         /// Latitude of site in degrees ex: 41.9602
         /// </summary>
         [Column("latitude")]
-        public float? Latitude { get; set; }
+        public double? Latitude { get; set; }
 
         /// <summary>
         /// Longitude of site in degrees ex: -87.9316
         /// </summary>
         [Column("longitude")]
-        public float? Longitude { get; set; }
+        public double? Longitude { get; set; }
 
         /// <summary>
         /// Altitude in feet MSL ex: 10000
@@ -95,7 +95,7 @@ namespace PreflightApi.Domain.Entities
         /// Temperature in Celsius ex: 15
         /// </summary>
         [Column("temp_c")]
-        public float? TempC { get; set; }
+        public double? TempC { get; set; }
 
         /// <summary>
         /// Wind direction in degrees ex: 180

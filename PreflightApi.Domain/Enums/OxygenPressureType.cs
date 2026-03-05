@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum OxygenPressureType
 {
-    /// <summary>Oxygen type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No oxygen available.</summary>
     None,
 

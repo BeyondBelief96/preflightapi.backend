@@ -54,7 +54,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         }
 
         // Get METAR data
-        var metar = await _metarService.GetMetarForAirport(icaoCodeOrIdent);
+        var metar = await _metarService.GetMetarForAirport(icaoCodeOrIdent, ct);
 
         // Validate METAR has required wind data
         if (metar.WindSpeedKt == null)
@@ -196,7 +196,7 @@ public class E6bCalculatorService : IE6bCalculatorService
         }
 
         // Get METAR data
-        var metar = await _metarService.GetMetarForAirport(icaoCodeOrIdent);
+        var metar = await _metarService.GetMetarForAirport(icaoCodeOrIdent, ct);
 
         // Get temperature (with optional override)
         double temperatureCelsius;

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AirportOwnershipType
 {
-    /// <summary>Ownership type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>PU - Publicly Owned.</summary>
     PubliclyOwned,
 

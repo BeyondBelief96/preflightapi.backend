@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SurveyMethod
 {
-    /// <summary>Survey method could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>E - Estimated.</summary>
     Estimated,
 

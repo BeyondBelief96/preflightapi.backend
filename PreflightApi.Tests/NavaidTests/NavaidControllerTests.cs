@@ -159,9 +159,9 @@ public class NavaidControllerTests
         {
             new() { NavId = "DFW", NavType = NavaidType.Vortac }
         };
-        _navaidService.GetNavaidsByIdentifier("DFW").Returns(navaids);
+        _navaidService.GetNavaidsByIdentifier("DFW", Arg.Any<CancellationToken>()).Returns(navaids);
 
-        var result = await _sut.GetByIdentifier("DFW");
+        var result = await _sut.GetByIdentifier("DFW", CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var data = okResult.Value.Should().BeAssignableTo<List<NavaidDto>>().Subject;
@@ -171,7 +171,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task GetByIdentifier_EmptyNavId_ThrowsValidationException()
     {
-        var act = () => _sut.GetByIdentifier("");
+        var act = () => _sut.GetByIdentifier("", CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*NAVAID identifier is required*");
@@ -180,7 +180,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task GetByIdentifier_WhitespaceNavId_ThrowsValidationException()
     {
-        var act = () => _sut.GetByIdentifier("   ");
+        var act = () => _sut.GetByIdentifier("   ", CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*NAVAID identifier is required*");
@@ -189,9 +189,9 @@ public class NavaidControllerTests
     [Fact]
     public async Task GetByIdentifier_NotFound_ThrowsNavaidNotFoundException()
     {
-        _navaidService.GetNavaidsByIdentifier("ZZZ").Returns(Enumerable.Empty<NavaidDto>());
+        _navaidService.GetNavaidsByIdentifier("ZZZ", Arg.Any<CancellationToken>()).Returns(Enumerable.Empty<NavaidDto>());
 
-        var act = () => _sut.GetByIdentifier("ZZZ");
+        var act = () => _sut.GetByIdentifier("ZZZ", CancellationToken.None);
 
         await act.Should().ThrowAsync<NavaidNotFoundException>()
             .WithMessage("*No navaids were found*ZZZ*");
@@ -205,9 +205,9 @@ public class NavaidControllerTests
             new() { NavId = "TST", NavType = NavaidType.Vor },
             new() { NavId = "TST", NavType = NavaidType.Ndb }
         };
-        _navaidService.GetNavaidsByIdentifier("TST").Returns(navaids);
+        _navaidService.GetNavaidsByIdentifier("TST", Arg.Any<CancellationToken>()).Returns(navaids);
 
-        var result = await _sut.GetByIdentifier("TST");
+        var result = await _sut.GetByIdentifier("TST", CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var data = okResult.Value.Should().BeAssignableTo<List<NavaidDto>>().Subject;
@@ -226,9 +226,9 @@ public class NavaidControllerTests
             new() { NavId = "DFW" },
             new() { NavId = "AUS" }
         };
-        _navaidService.GetNavaidsByIdentifiers(Arg.Any<IEnumerable<string>>()).Returns(navaids);
+        _navaidService.GetNavaidsByIdentifiers(Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>()).Returns(navaids);
 
-        var result = await _sut.GetBatch("DFW,AUS");
+        var result = await _sut.GetBatch("DFW,AUS", CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().NotBeNull();
@@ -237,7 +237,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task GetBatch_EmptyIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetBatch("");
+        var act = () => _sut.GetBatch("", CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*NAVAID identifier is required*");
@@ -246,7 +246,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task GetBatch_NullIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetBatch(null!);
+        var act = () => _sut.GetBatch(null!, CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*NAVAID identifier is required*");
@@ -257,7 +257,7 @@ public class NavaidControllerTests
     {
         var ids = string.Join(",", Enumerable.Range(1, 101).Select(i => $"NAV{i}"));
 
-        var act = () => _sut.GetBatch(ids);
+        var act = () => _sut.GetBatch(ids, CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Maximum of 100*");

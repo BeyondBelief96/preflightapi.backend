@@ -1,16 +1,31 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
+using PreflightApi.Infrastructure.Utilities;
 using PreflightApi.Domain.Exceptions;
 
 namespace PreflightApi.Infrastructure.Services.DocumentServices;
 
 public class TerminalProcedureService : ITerminalProcedureService
 {
+    private static readonly Dictionary<string, TerminalProcedureChartCode> ChartCodeMap = new()
+    {
+        ["IAP"] = TerminalProcedureChartCode.IAP,
+        ["DP"] = TerminalProcedureChartCode.DP,
+        ["STAR"] = TerminalProcedureChartCode.STAR,
+        ["APD"] = TerminalProcedureChartCode.APD,
+        ["MIN"] = TerminalProcedureChartCode.MIN,
+        ["HOT"] = TerminalProcedureChartCode.HOT,
+        ["DAU"] = TerminalProcedureChartCode.DAU,
+        ["LAH"] = TerminalProcedureChartCode.LAH,
+        ["ODP"] = TerminalProcedureChartCode.ODP
+    };
+
     private readonly PreflightApiDbContext _context;
     private readonly ICloudStorageService _cloudStorageService;
     private readonly ILogger<TerminalProcedureService> _logger;
@@ -29,7 +44,7 @@ public class TerminalProcedureService : ITerminalProcedureService
             ?? throw new InvalidOperationException("CloudStorage:TerminalProceduresContainerName not configured");
     }
 
-    public async Task<TerminalProceduresResponseDto> GetTerminalProceduresByAirportCode(string airportCode, string? chartCode = null)
+    public async Task<TerminalProceduresResponseDto> GetTerminalProceduresByAirportCode(string airportCode, string? chartCode = null, CancellationToken ct = default)
     {
         var upperCode = airportCode.ToUpperInvariant();
         var query = _context.TerminalProcedures
@@ -41,7 +56,7 @@ public class TerminalProcedureService : ITerminalProcedureService
             query = query.Where(tp => tp.ChartCode == upperChartCode);
         }
 
-        var procedures = await query.ToListAsync();
+        var procedures = await query.ToListAsync(ct);
 
         if (procedures.Count == 0)
         {
@@ -71,7 +86,7 @@ public class TerminalProcedureService : ITerminalProcedureService
 
                 result.Add(new TerminalProcedureDto
                 {
-                    ChartCode = procedure.ChartCode,
+                    ChartCode = EnumParseHelper.Parse(procedure.ChartCode, _logger, nameof(procedure.ChartCode), "TerminalProcedure", procedure.PdfFileName, ChartCodeMap),
                     ChartName = procedure.ChartName,
                     PdfUrl = presignedUrl,
                     AmendmentNumber = procedure.AmendmentNumber,

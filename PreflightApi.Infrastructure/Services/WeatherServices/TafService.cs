@@ -19,15 +19,15 @@ public class TafService : ITafService
         _logger = logger;
     }
     
-    public async Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent)
+    public async Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent, CancellationToken ct = default)
     {
-        var taf = await _dbContext.Tafs.FirstOrDefaultAsync(t => t.StationId == icaoCodeOrIdent.ToUpperInvariant());
+        var taf = await _dbContext.Tafs.FirstOrDefaultAsync(t => t.StationId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
         if (taf == null)
         {
             var airport = await _dbContext.Airports
                 .FirstOrDefaultAsync(a => a.ArptId == icaoCodeOrIdent.ToUpperInvariant() ||
-                                          a.IcaoId == icaoCodeOrIdent.ToUpperInvariant());
+                                          a.IcaoId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
             if (airport == null)
             {
@@ -41,7 +41,7 @@ public class TafService : ITafService
             };
 
             taf = await _dbContext.Tafs
-                .FirstOrDefaultAsync(t => t.StationId == modifiedIdent);
+                .FirstOrDefaultAsync(t => t.StationId == modifiedIdent, ct);
         }
         
         if (taf == null)
@@ -52,7 +52,7 @@ public class TafService : ITafService
         return TafMapper.ToDto(taf);
     }
 
-    public async Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents)
+    public async Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents, CancellationToken ct = default)
     {
         if (icaoCodesOrIdents.Length > 100)
             throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
@@ -66,7 +66,7 @@ public class TafService : ITafService
         var directMatches = await _dbContext.Tafs
             .AsNoTracking()
             .Where(t => t.StationId != null && upperCodes.Contains(t.StationId))
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var matchedStationIds = directMatches
             .Where(t => t.StationId != null)
@@ -85,7 +85,7 @@ public class TafService : ITafService
         var airports = await _dbContext.Airports
             .AsNoTracking()
             .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var resolvedStationIds = airports
             .Select(a => a.StateCode switch
@@ -104,7 +104,7 @@ public class TafService : ITafService
         var resolvedMatches = await _dbContext.Tafs
             .AsNoTracking()
             .Where(t => t.StationId != null && resolvedStationIds.Contains(t.StationId))
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return directMatches.Concat(resolvedMatches).Select(TafMapper.ToDto);
     }

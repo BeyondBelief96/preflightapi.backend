@@ -1,7 +1,9 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.ValueObjects;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Dtos.Mappers;
 
@@ -12,13 +14,50 @@ public static class NavaidMapper
         PropertyNameCaseInsensitive = true
     };
 
-    public static NavaidDto ToDto(Navaid navaid)
+    private static readonly Dictionary<string, NavaidType> NavaidTypeMap = new()
     {
+        ["CONSOLAN"] = NavaidType.Consolan,
+        ["DME"] = NavaidType.Dme,
+        ["FAN MARKER"] = NavaidType.FanMarker,
+        ["MARINE NDB"] = NavaidType.MarineNdb,
+        ["MARINE NDB/DME"] = NavaidType.MarineNdbDme,
+        ["NDB"] = NavaidType.Ndb,
+        ["NDB/DME"] = NavaidType.NdbDme,
+        ["TACAN"] = NavaidType.Tacan,
+        ["UHF/NDB"] = NavaidType.UhfNdb,
+        ["VOR"] = NavaidType.Vor,
+        ["VORTAC"] = NavaidType.Vortac,
+        ["VOR/DME"] = NavaidType.VorDme,
+        ["VOT"] = NavaidType.Vot
+    };
+
+    private static readonly Dictionary<string, VorServiceVolume> VorServiceVolumeMap = new()
+    {
+        ["H"] = VorServiceVolume.High,
+        ["L"] = VorServiceVolume.Low,
+        ["T"] = VorServiceVolume.Terminal,
+        ["VH"] = VorServiceVolume.VorHigh,
+        ["VL"] = VorServiceVolume.VorLow
+    };
+
+    private static readonly Dictionary<string, DmeServiceVolume> DmeServiceVolumeMap = new()
+    {
+        ["H"] = DmeServiceVolume.High,
+        ["L"] = DmeServiceVolume.Low,
+        ["T"] = DmeServiceVolume.Terminal,
+        ["DH"] = DmeServiceVolume.DmeHigh,
+        ["DL"] = DmeServiceVolume.DmeLow
+    };
+
+    public static NavaidDto ToDto(Navaid navaid, ILogger logger)
+    {
+        var id = navaid.NavId ?? navaid.Id.ToString();
+
         return new NavaidDto
         {
             Id = navaid.Id,
             NavId = navaid.NavId,
-            NavType = ParseNavaidType(navaid.NavType),
+            NavType = EnumParseHelper.Parse(navaid.NavType, logger, nameof(navaid.NavType), nameof(Navaid), id, NavaidTypeMap),
             NavStatus = navaid.NavStatus,
             Name = navaid.Name,
             City = navaid.City,
@@ -41,8 +80,8 @@ public static class NavaidMapper
             VoiceCall = navaid.VoiceCall,
             OperatingHours = navaid.OperHours,
             NdbClassCode = navaid.NdbClassCode,
-            AltCode = ParseVorServiceVolume(navaid.AltCode),
-            DmeSsv = ParseDmeServiceVolume(navaid.DmeSsv),
+            AltCode = EnumParseHelper.Parse(navaid.AltCode, logger, nameof(navaid.AltCode), nameof(Navaid), id, VorServiceVolumeMap),
+            DmeSsv = EnumParseHelper.Parse(navaid.DmeSsv, logger, nameof(navaid.DmeSsv), nameof(Navaid), id, DmeServiceVolumeMap),
             SimultaneousVoice = ParseBool(navaid.SimulVoiceFlag),
             AutomaticVoiceId = ParseBool(navaid.AutoVoiceIdFlag),
             Hiwas = ParseBool(navaid.HiwasFlag),
@@ -61,62 +100,6 @@ public static class NavaidMapper
             EffectiveDate = navaid.EffectiveDate,
             Checkpoints = DeserializeJson<List<NavaidCheckpoint>>(navaid.CheckpointsJson),
             Remarks = DeserializeJson<List<NavaidRemark>>(navaid.RemarksJson)
-        };
-    }
-
-    internal static NavaidType ParseNavaidType(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return NavaidType.Unknown;
-
-        return value.Trim().ToUpperInvariant() switch
-        {
-            "CONSOLAN" => NavaidType.Consolan,
-            "DME" => NavaidType.Dme,
-            "FAN MARKER" => NavaidType.FanMarker,
-            "MARINE NDB" => NavaidType.MarineNdb,
-            "MARINE NDB/DME" => NavaidType.MarineNdbDme,
-            "NDB" => NavaidType.Ndb,
-            "NDB/DME" => NavaidType.NdbDme,
-            "TACAN" => NavaidType.Tacan,
-            "UHF/NDB" => NavaidType.UhfNdb,
-            "VOR" => NavaidType.Vor,
-            "VORTAC" => NavaidType.Vortac,
-            "VOR/DME" => NavaidType.VorDme,
-            "VOT" => NavaidType.Vot,
-            _ => NavaidType.Unknown
-        };
-    }
-
-    internal static VorServiceVolume? ParseVorServiceVolume(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return value.Trim().ToUpperInvariant() switch
-        {
-            "H" => VorServiceVolume.High,
-            "L" => VorServiceVolume.Low,
-            "T" => VorServiceVolume.Terminal,
-            "VH" => VorServiceVolume.VorHigh,
-            "VL" => VorServiceVolume.VorLow,
-            _ => VorServiceVolume.Unknown
-        };
-    }
-
-    internal static DmeServiceVolume? ParseDmeServiceVolume(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return value.Trim().ToUpperInvariant() switch
-        {
-            "H" => DmeServiceVolume.High,
-            "L" => DmeServiceVolume.Low,
-            "T" => DmeServiceVolume.Terminal,
-            "DH" => DmeServiceVolume.DmeHigh,
-            "DL" => DmeServiceVolume.DmeLow,
-            _ => DmeServiceVolume.Unknown
         };
     }
 

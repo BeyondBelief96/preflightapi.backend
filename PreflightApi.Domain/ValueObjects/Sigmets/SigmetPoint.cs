@@ -6,8 +6,8 @@ namespace PreflightApi.Domain.ValueObjects.Sigmets
     public class SigmetPoint
     {
         /// <summary>Longitude in decimal degrees.</summary>
-        public float Longitude { get; set; }
+        public double Longitude { get; set; }
         /// <summary>Latitude in decimal degrees.</summary>
-        public float Latitude { get; set; }
+        public double Latitude { get; set; }
     }
 }

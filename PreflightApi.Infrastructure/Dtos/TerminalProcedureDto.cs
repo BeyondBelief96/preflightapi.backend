@@ -1,3 +1,5 @@
+using PreflightApi.Domain.Enums;
+
 namespace PreflightApi.Infrastructure.Dtos;
 
 /// <summary>
@@ -5,8 +7,8 @@ namespace PreflightApi.Infrastructure.Dtos;
 /// </summary>
 public record TerminalProcedureDto
 {
-    /// <summary>Chart code indicating the procedure type (e.g., "IAP", "DP", "STAR", "APD", "MIN", "HOT").</summary>
-    public string ChartCode { get; init; } = string.Empty;
+    /// <summary>Chart code indicating the procedure type: IAP, DP, STAR, APD, MIN, or HOT.</summary>
+    public TerminalProcedureChartCode? ChartCode { get; init; }
     /// <summary>Name of the chart (e.g., "ILS OR LOC RWY 18L", "AIRPORT DIAGRAM").</summary>
     public string ChartName { get; init; } = string.Empty;
     /// <summary>Pre-signed URL to download the chart PDF. This URL expires after a limited time period; request a new URL if it has expired.</summary>

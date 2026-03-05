@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using PreflightApi.Domain.Entities;
+using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos.Notam;
 using PreflightApi.Infrastructure.Services.NotamServices;
@@ -1082,8 +1083,8 @@ public class NotamServiceTests : IDisposable
                         Number = notamNumber ?? "001",
                         Location = location,
                         IcaoLocation = icaoLocation,
-                        Classification = classification ?? "DOMESTIC",
-                        Type = notamType,
+                        Classification = Enum.TryParse<NotamClassification>(classification ?? "DOMESTIC", out var cls) ? cls : NotamClassification.DOMESTIC,
+                        Type = Enum.TryParse<NotamType>(notamType, out var nt) ? nt : NotamType.N,
                         Text = $"Test NOTAM for {location}",
                         EffectiveStart = (effectiveStart ?? DateTime.UtcNow.AddHours(-1)).ToString("O"),
                         EffectiveEnd = effectiveEnd?.ToString("O"),

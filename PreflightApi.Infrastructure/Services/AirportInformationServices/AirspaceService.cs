@@ -26,7 +26,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             _logger = logger;
         }
 
-        public async Task<PaginatedResponse<AirspaceDto>> GetByClasses(string[] airspaceClasses, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByClasses(string[] airspaceClasses, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var query = _context.Airspaces
                     .Where(a => a.Class != null && upperClasses.Contains(a.Class));
 
-                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit, ct);
             }
             catch (Exception ex)
             {
@@ -47,7 +47,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<PaginatedResponse<AirspaceDto>> GetByCities(string[] cities, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByCities(string[] cities, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var query = _context.Airspaces
                     .Where(a => a.City != null && upperCities.Contains(a.City.ToUpper()));
 
-                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit, ct);
             }
             catch (Exception ex)
             {
@@ -68,7 +68,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<PaginatedResponse<AirspaceDto>> GetByStates(string[] states, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<AirspaceDto>> GetByStates(string[] states, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -79,7 +79,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var query = _context.Airspaces
                     .Where(a => a.State != null && upperStates.Contains(a.State));
 
-                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit, ct);
             }
             catch (Exception ex)
             {
@@ -89,7 +89,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<PaginatedResponse<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<SpecialUseAirspaceDto>> GetByTypeCodes(string[] typeCodes, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var query = _context.SpecialUseAirspaces
                     .Where(a => a.TypeCode != null && upperTypeCodes.Contains(a.TypeCode));
 
-                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(a => a.GlobalId, AirspaceMapper.ToDto, cursor, limit, ct);
             }
             catch (Exception ex)
             {
@@ -110,7 +110,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<IEnumerable<AirspaceDto>> GetByIcaoOrIdents(string[] icaoOrIdents)
+        public async Task<IEnumerable<AirspaceDto>> GetByIcaoOrIdents(string[] icaoOrIdents, CancellationToken ct = default)
         {
             try
             {
@@ -123,7 +123,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                         a.IcaoId != null && upperCodes.Contains(a.IcaoId) ||
                         a.Ident != null && upperCodes.Contains(a.Ident))
                     .OrderBy(a => a.Name)
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
                 return airspaces.Select(AirspaceMapper.ToDto);
             }
@@ -135,7 +135,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<IEnumerable<AirspaceDto>> GetByGlobalIds(string[] globalIds)
+        public async Task<IEnumerable<AirspaceDto>> GetByGlobalIds(string[] globalIds, CancellationToken ct = default)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.Airspaces.AsNoTracking()
                     .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
                 return airspaces.Select(AirspaceMapper.ToDto);
             }
@@ -155,7 +155,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
             }
         }
 
-        public async Task<IEnumerable<SpecialUseAirspaceDto>> GetSpecialUseByGlobalIds(string[] globalIds)
+        public async Task<IEnumerable<SpecialUseAirspaceDto>> GetSpecialUseByGlobalIds(string[] globalIds, CancellationToken ct = default)
         {
             try
             {
@@ -164,7 +164,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                 var upperIds = globalIds.Select(i => i.ToUpperInvariant()).ToArray();
                 var airspaces = await _context.SpecialUseAirspaces.AsNoTracking()
                     .Where(a => a.GlobalId != null && upperIds.Contains(a.GlobalId.ToUpper()))
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
                 return airspaces.Select(AirspaceMapper.ToDto);
             }
@@ -177,7 +177,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
         public async Task<IReadOnlyCollection<string>> GetAirspaceGlobalIdsForRouteAsync(
             IEnumerable<WaypointDto> waypoints,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     query = query.Union(airportAirspaceIds);
                 }
 
-                var ids = await query.ToListAsync(cancellationToken);
+                var ids = await query.ToListAsync(ct);
                 return ids;
             }
             catch (Exception ex)
@@ -233,7 +233,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
 
         public async Task<IReadOnlyCollection<string>> GetSpecialUseAirspaceGlobalIdsForRouteAsync(
             IEnumerable<WaypointDto> waypoints,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             try
             {
@@ -249,7 +249,7 @@ namespace PreflightApi.Infrastructure.Services.AirportInformationServices
                     .Where(s => s.Geometry!.Intersects(route))
                     .Select(s => s.GlobalId!)
                     .Distinct()
-                    .ToListAsync(cancellationToken);
+                    .ToListAsync(ct);
 
                 return ids;
             }

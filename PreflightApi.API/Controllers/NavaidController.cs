@@ -44,11 +44,12 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] string? type = null,
         [FromQuery] string? state = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await navaidService.GetNavaids(search, type, state, pagination.Cursor, pagination.Limit));
+        return Ok(await navaidService.GetNavaids(search, type, state, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -69,12 +70,13 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<NavaidDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResponse<NavaidDto>>> GetByType(
         NavaidType type,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var dbType = NavaidMapper.ToDbString(type);
-        return Ok(await navaidService.GetNavaids(null, dbType, null, pagination.Cursor, pagination.Limit));
+        return Ok(await navaidService.GetNavaids(null, dbType, null, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -96,11 +98,11 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<NavaidDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IEnumerable<NavaidDto>>> GetByIdentifier(string navId)
+    public async Task<ActionResult<IEnumerable<NavaidDto>>> GetByIdentifier(string navId, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(navId, "navId", "NAVAID identifier is required");
 
-        var navaids = await navaidService.GetNavaidsByIdentifier(navId);
+        var navaids = await navaidService.GetNavaidsByIdentifier(navId, ct);
         var result = navaids.ToList();
 
         if (result.Count == 0)
@@ -124,7 +126,7 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [HttpGet("batch")]
     [ProducesResponseType(typeof(IEnumerable<NavaidDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<NavaidDto>>> GetBatch([FromQuery] string ids)
+    public async Task<ActionResult<IEnumerable<NavaidDto>>> GetBatch([FromQuery] string ids, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(ids, "ids", "At least one NAVAID identifier is required");
 
@@ -135,7 +137,7 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
 
         ValidationHelpers.ValidateBatchSize(idList.Length, 100, "ids");
 
-        return Ok(await navaidService.GetNavaidsByIdentifiers(idList));
+        return Ok(await navaidService.GetNavaidsByIdentifiers(idList, ct));
     }
 
     /// <summary>
@@ -164,13 +166,14 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
         [FromQuery] decimal lon,
         [FromQuery] double radiusNm = 30,
         [FromQuery] string? type = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await navaidService.SearchNearby(lat, lon, radiusNm, type, pagination.Cursor, pagination.Limit));
+        return Ok(await navaidService.SearchNearby(lat, lon, radiusNm, type, pagination.Cursor, pagination.Limit, ct));
     }
 }

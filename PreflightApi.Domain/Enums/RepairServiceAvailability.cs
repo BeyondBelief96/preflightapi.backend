@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RepairServiceAvailability
 {
-    /// <summary>Repair service availability could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No repair service available.</summary>
     None,
 

@@ -33,7 +33,8 @@ public class NavaidService : INavaidService
         string? navType,
         string? stateCode,
         string? cursor,
-        int limit)
+        int limit,
+        CancellationToken ct = default)
     {
         try
         {
@@ -65,7 +66,7 @@ public class NavaidService : INavaidService
                     EF.Functions.ILike(n.City, containsPattern));
             }
 
-            return await query.ToPaginatedAsync(n => n.Id, NavaidMapper.ToDto, cursor, limit);
+            return await query.ToPaginatedAsync(n => n.Id, n => NavaidMapper.ToDto(n, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -74,7 +75,7 @@ public class NavaidService : INavaidService
         }
     }
 
-    public async Task<IEnumerable<NavaidDto>> GetNavaidsByIdentifier(string navId)
+    public async Task<IEnumerable<NavaidDto>> GetNavaidsByIdentifier(string navId, CancellationToken ct = default)
     {
         try
         {
@@ -85,9 +86,9 @@ public class NavaidService : INavaidService
                 .AsNoTracking()
                 .Where(n => n.NavId == upperNavId)
                 .OrderBy(n => n.NavType)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-            return navaids.Select(NavaidMapper.ToDto);
+            return navaids.Select(n => NavaidMapper.ToDto(n, _logger));
         }
         catch (Exception ex)
         {
@@ -96,7 +97,7 @@ public class NavaidService : INavaidService
         }
     }
 
-    public async Task<IEnumerable<NavaidDto>> GetNavaidsByIdentifiers(IEnumerable<string> navIds)
+    public async Task<IEnumerable<NavaidDto>> GetNavaidsByIdentifiers(IEnumerable<string> navIds, CancellationToken ct = default)
     {
         try
         {
@@ -112,9 +113,9 @@ public class NavaidService : INavaidService
                 .Where(n => upperIds.Contains(n.NavId))
                 .OrderBy(n => n.NavId)
                 .ThenBy(n => n.NavType)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-            return navaids.Select(NavaidMapper.ToDto);
+            return navaids.Select(n => NavaidMapper.ToDto(n, _logger));
         }
         catch (Exception ex)
         {
@@ -129,7 +130,8 @@ public class NavaidService : INavaidService
         double radiusNm,
         string? navType,
         string? cursor,
-        int limit)
+        int limit,
+        CancellationToken ct = default)
     {
         try
         {
@@ -150,7 +152,7 @@ public class NavaidService : INavaidService
                 query = query.Where(n => n.NavType == upperType);
             }
 
-            return await query.ToPaginatedAsync(n => n.Id, NavaidMapper.ToDto, cursor, limit);
+            return await query.ToPaginatedAsync(n => n.Id, n => NavaidMapper.ToDto(n, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {

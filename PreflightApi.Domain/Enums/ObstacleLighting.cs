@@ -5,7 +5,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ObstacleLighting
 {
-    Unknown,
     Red,
     DualMediumWhiteStrobeRed,
     HighIntensityWhiteStrobeRed,
@@ -15,5 +14,6 @@ public enum ObstacleLighting
     DualMediumCatenary,
     SynchronizedRedLighting,
     Lighted,
-    None
+    None,
+    Unknown
 }

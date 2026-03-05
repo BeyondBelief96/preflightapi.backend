@@ -5,8 +5,8 @@ namespace PreflightApi.Infrastructure.Interfaces
 {
     public interface IMetarService
     {
-        Task<MetarDto> GetMetarForAirport(string icaoIdOrIdent);
-        Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents);
-        Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor, int limit);
+        Task<MetarDto> GetMetarForAirport(string icaoIdOrIdent, CancellationToken ct = default);
+        Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents, CancellationToken ct = default);
+        Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor, int limit, CancellationToken ct = default);
     }
 }

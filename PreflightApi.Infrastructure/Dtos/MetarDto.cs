@@ -1,3 +1,5 @@
+using PreflightApi.Domain.Enums;
+
 namespace PreflightApi.Infrastructure.Dtos
 {
     /// <summary>
@@ -14,13 +16,13 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Observation time in ISO 8601 format.</summary>
         public string? ObservationTime { get; init; }
         /// <summary>Station latitude in decimal degrees.</summary>
-        public float? Latitude { get; init; }
+        public double? Latitude { get; init; }
         /// <summary>Station longitude in decimal degrees.</summary>
-        public float? Longitude { get; init; }
+        public double? Longitude { get; init; }
         /// <summary>Temperature in degrees Celsius.</summary>
-        public float? TempC { get; init; }
+        public double? TempC { get; init; }
         /// <summary>Dewpoint temperature in degrees Celsius.</summary>
-        public float? DewpointC { get; init; }
+        public double? DewpointC { get; init; }
         /// <summary>Wind direction in degrees true, or "VRB" for variable.</summary>
         public string? WindDirDegrees { get; init; }
         /// <summary>Wind speed in knots.</summary>
@@ -30,9 +32,9 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Visibility in statute miles.</summary>
         public string? VisibilityStatuteMi { get; init; }
         /// <summary>Altimeter setting in inches of mercury.</summary>
-        public float? AltimInHg { get; init; }
+        public double? AltimInHg { get; init; }
         /// <summary>Sea level pressure in millibars. ex: 1016.2</summary>
-        public float? SeaLevelPressureMb { get; init; }
+        public double? SeaLevelPressureMb { get; init; }
         /// <summary>Quality control flags for the observation.</summary>
         public MetarQualityControlFlagsDto? QualityControlFlags { get; init; }
         /// <summary>Present weather string (e.g., "-RA" for light rain).</summary>
@@ -40,7 +42,7 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Sky condition layers (cloud cover and bases).</summary>
         public List<MetarSkyConditionDto>? SkyCondition { get; init; } = [];
         /// <summary>Flight category: VFR, MVFR, IFR, or LIFR.</summary>
-        public string? FlightCategory { get; init; }
+        public FlightCategory? FlightCategory { get; init; }
     }
 
     /// <summary>
@@ -49,21 +51,21 @@ namespace PreflightApi.Infrastructure.Dtos
     public record MetarQualityControlFlagsDto
     {
         /// <summary>Indicates a corrected observation.</summary>
-        public string? Corrected { get; init; }
+        public bool? Corrected { get; init; }
         /// <summary>Indicates an automated observation.</summary>
-        public string? Auto { get; init; }
+        public bool? Auto { get; init; }
         /// <summary>Indicates an automated station type.</summary>
-        public string? AutoStation { get; init; }
+        public bool? AutoStation { get; init; }
         /// <summary>Maintenance indicator is on.</summary>
-        public string? MaintenanceIndicatorOn { get; init; }
+        public bool? MaintenanceIndicatorOn { get; init; }
         /// <summary>No signal received.</summary>
-        public string? NoSignal { get; init; }
+        public bool? NoSignal { get; init; }
         /// <summary>Lightning sensor is off.</summary>
-        public string? LightningSensorOff { get; init; }
+        public bool? LightningSensorOff { get; init; }
         /// <summary>Freezing rain sensor is off.</summary>
-        public string? FreezingRainSensorOff { get; init; }
+        public bool? FreezingRainSensorOff { get; init; }
         /// <summary>Present weather sensor is off.</summary>
-        public string? PresentWeatherSensorOff { get; init; }
+        public bool? PresentWeatherSensorOff { get; init; }
     }
 
     /// <summary>
@@ -72,7 +74,7 @@ namespace PreflightApi.Infrastructure.Dtos
     public record MetarSkyConditionDto
     {
         /// <summary>Sky cover type: SKC (sky clear), CLR (clear below 12,000), FEW (few), SCT (scattered), BKN (broken), OVC (overcast), or OVX (obscured).</summary>
-        public string SkyCover { get; init; } = string.Empty;
+        public SkyCover? SkyCover { get; init; }
         /// <summary>Cloud base height in feet AGL. Null for SKC or CLR.</summary>
         public int? CloudBaseFtAgl { get; init; }
     }

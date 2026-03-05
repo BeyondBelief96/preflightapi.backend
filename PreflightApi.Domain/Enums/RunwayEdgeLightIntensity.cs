@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwayEdgeLightIntensity
 {
-    /// <summary>Edge light intensity could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No edge lighting system.</summary>
     None,
 

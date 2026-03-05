@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwayMarkingsType
 {
-    /// <summary>Markings type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No runway markings.</summary>
     None,
 

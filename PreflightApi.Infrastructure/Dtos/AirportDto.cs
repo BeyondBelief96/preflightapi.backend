@@ -34,16 +34,16 @@ public record AirportDto
     // ── Classification ──────────────────────────────────────────────────
 
     /// <summary>FAA NASR field: SITE_TYPE_CODE. Landing facility type.</summary>
-    public AirportSiteType SiteType { get; init; }
+    public AirportSiteType? SiteType { get; init; }
 
     /// <summary>FAA NASR field: OWNERSHIP_TYPE_CODE. Airport ownership type.</summary>
-    public AirportOwnershipType OwnershipType { get; init; }
+    public AirportOwnershipType? OwnershipType { get; init; }
 
     /// <summary>FAA NASR field: FACILITY_USE_CODE. Facility use designation.</summary>
-    public AirportFacilityUse FacilityUse { get; init; }
+    public AirportFacilityUse? FacilityUse { get; init; }
 
     /// <summary>FAA NASR field: ARPT_STATUS. Airport operational status.</summary>
-    public AirportStatus ArptStatus { get; init; }
+    public AirportStatus? ArptStatus { get; init; }
 
     /// <summary>FAA NASR field: NASP_CODE. NPIAS/Federal Agreements Code. A combination of 1 to 7 codes indicating the type of Federal agreements existing at the Airport.</summary>
     public string? NaspCode { get; init; }
@@ -116,7 +116,7 @@ public record AirportDto
     public string? LongHemis { get; init; }
 
     /// <summary>FAA NASR field: SURVEY_METHOD_CODE. Method used to determine the airport reference point position.</summary>
-    public SurveyMethod PositionSurveyMethod { get; init; }
+    public SurveyMethod? PositionSurveyMethod { get; init; }
 
     /// <summary>FAA NASR field: ARPT_PSN_SOURCE. Source of the airport position information.</summary>
     public string? ArptPsnSource { get; init; }
@@ -130,7 +130,7 @@ public record AirportDto
     public decimal? Elev { get; init; }
 
     /// <summary>FAA NASR field: ELEV_METHOD_CODE. Method used to determine the airport elevation.</summary>
-    public SurveyMethod ElevationSurveyMethod { get; init; }
+    public SurveyMethod? ElevationSurveyMethod { get; init; }
 
     /// <summary>FAA NASR field: ARPT_ELEV_SOURCE. Source of the airport elevation information.</summary>
     public string? ArptElevSource { get; init; }
@@ -213,10 +213,10 @@ public record AirportDto
     // ── Inspection ──────────────────────────────────────────────────────
 
     /// <summary>FAA NASR field: INSPECT_METHOD_CODE. Airport inspection method.</summary>
-    public AirportInspectionMethod InspectionMethod { get; init; }
+    public AirportInspectionMethod? InspectionMethod { get; init; }
 
     /// <summary>FAA NASR field: INSPECTOR_CODE. Agency/Group Performing Physical Inspection.</summary>
-    public AirportInspectorAgency InspectorAgency { get; init; }
+    public AirportInspectorAgency? InspectorAgency { get; init; }
 
     /// <summary>FAA NASR field: LAST_INSPECTION. Date of the last physical inspection.</summary>
     public DateTime? LastInspection { get; init; }
@@ -233,16 +233,16 @@ public record AirportDto
     public bool ContractFuelAvailable { get; init; }
 
     /// <summary>FAA NASR field: AIRFRAME_REPAIR_SER_CODE. Airframe repair service availability.</summary>
-    public RepairServiceAvailability AirframeRepairService { get; init; }
+    public RepairServiceAvailability? AirframeRepairService { get; init; }
 
     /// <summary>FAA NASR field: PWR_PLANT_REPAIR_SER. Power plant (engine) repair service availability.</summary>
-    public RepairServiceAvailability PowerPlantRepairService { get; init; }
+    public RepairServiceAvailability? PowerPlantRepairService { get; init; }
 
     /// <summary>FAA NASR field: BOTTLED_OXY_TYPE. Type of bottled oxygen available.</summary>
-    public OxygenPressureType BottledOxygenType { get; init; }
+    public OxygenPressureType? BottledOxygenType { get; init; }
 
     /// <summary>FAA NASR field: BULK_OXY_TYPE. Type of bulk oxygen available.</summary>
-    public OxygenPressureType BulkOxygenType { get; init; }
+    public OxygenPressureType? BulkOxygenType { get; init; }
 
     /// <summary>FAA NASR field: OTHER_SERVICES. Other airport services available (comma-separated codes).</summary>
     public string? OtherServices { get; init; }
@@ -267,13 +267,13 @@ public record AirportDto
     public string? BcnLgtSked { get; init; }
 
     /// <summary>FAA NASR field: BCN_LENS_COLOR. Airport beacon lens color.</summary>
-    public BeaconLensColor BeaconLensColor { get; init; }
+    public BeaconLensColor? BeaconLensColor { get; init; }
 
     /// <summary>FAA NASR field: SEG_CIRCLE_MKR_FLAG. Segmented circle airport marker system.</summary>
-    public SegmentedCircleMarkerType SegmentedCircleMarker { get; init; }
+    public SegmentedCircleMarkerType? SegmentedCircleMarker { get; init; }
 
     /// <summary>FAA NASR field: WIND_INDCR_FLAG. Wind indicator type.</summary>
-    public WindIndicatorType WindIndicator { get; init; }
+    public WindIndicatorType? WindIndicator { get; init; }
 
     // ── Fees & Misc ─────────────────────────────────────────────────────
 

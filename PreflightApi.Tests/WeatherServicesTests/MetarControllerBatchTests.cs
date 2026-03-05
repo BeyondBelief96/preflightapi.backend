@@ -30,7 +30,7 @@ public class MetarControllerBatchTests
     [Fact]
     public async Task GetMetarsBatch_EmptyIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetMetarsBatch("");
+        var act = () => _sut.GetMetarsBatch("", CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -38,7 +38,7 @@ public class MetarControllerBatchTests
     [Fact]
     public async Task GetMetarsBatch_NullIds_ThrowsValidationException()
     {
-        var act = () => _sut.GetMetarsBatch(null!);
+        var act = () => _sut.GetMetarsBatch(null!, CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -51,24 +51,24 @@ public class MetarControllerBatchTests
             new() { StationId = "KDFW", RawText = "KDFW 011953Z 18010KT 10SM CLR 30/15 A2990" },
             new() { StationId = "KAUS", RawText = "KAUS 011953Z 17008KT 10SM FEW250 31/16 A2988" }
         };
-        _metarService.GetMetarsForAirports(Arg.Any<string[]>()).Returns(expected);
+        _metarService.GetMetarsForAirports(Arg.Any<string[]>(), Arg.Any<CancellationToken>()).Returns(expected);
 
-        var result = await _sut.GetMetarsBatch("KDFW,KAUS");
+        var result = await _sut.GetMetarsBatch("KDFW,KAUS", CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
         await _metarService.Received(1).GetMetarsForAirports(
-            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"));
+            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetMetarsBatch_TrimsWhitespace_PassesCleanArray()
     {
-        _metarService.GetMetarsForAirports(Arg.Any<string[]>()).Returns(new List<MetarDto>());
+        _metarService.GetMetarsForAirports(Arg.Any<string[]>(), Arg.Any<CancellationToken>()).Returns(new List<MetarDto>());
 
-        await _sut.GetMetarsBatch(" KDFW , KAUS , ");
+        await _sut.GetMetarsBatch(" KDFW , KAUS , ", CancellationToken.None);
 
         await _metarService.Received(1).GetMetarsForAirports(
-            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"));
+            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "KDFW" && a[1] == "KAUS"), Arg.Any<CancellationToken>());
     }
 }

@@ -131,17 +131,22 @@ builder.Services.Configure<NOAASettings>(builder.Configuration.GetSection("NOAAS
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
 
+// Build NpgsqlDataSource once as a singleton (connection-pooling object)
+builder.Services.AddSingleton(sp =>
+{
+    var dbSettings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+    var dsBuilder = new NpgsqlDataSourceBuilder(dbSettings.GetConnectionString());
+    dsBuilder.UseNetTopologySuite();
+    dsBuilder.EnableDynamicJson();
+    return dsBuilder.Build();
+});
+
 // Setup DB Context
 builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) =>
 {
-    var dbSettings = serviceProvider.GetRequiredService<IOptions<DatabaseSettings>>().Value;
-    var connectionString = dbSettings.GetConnectionString();
+    var dataSource = serviceProvider.GetRequiredService<NpgsqlDataSource>();
 
-    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-    dataSourceBuilder.UseNetTopologySuite();
-    dataSourceBuilder.EnableDynamicJson();
-
-    options.UseNpgsql(dataSourceBuilder.Build(),
+    options.UseNpgsql(dataSource,
         npgsqlOptions =>
         {
             npgsqlOptions.EnableRetryOnFailure(3);
@@ -154,7 +159,7 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
         options.EnableDetailedErrors();
         options.EnableSensitiveDataLogging();
     }
-}, ServiceLifetime.Scoped);
+});
 
 // Health checks
 builder.Services.AddHealthChecks()
@@ -186,7 +191,7 @@ builder.Services.AddScoped<ICommunicationFrequencyService, CommunicationFrequenc
 builder.Services.AddScoped<IAirspaceService, AirspaceService>();
 builder.Services.AddScoped<IObstacleService, ObstacleService>();
 builder.Services.AddScoped<INavaidService, NavaidService>();
-builder.Services.AddScoped<IMagneticVariationService, MagneticVariationService>();
+builder.Services.AddSingleton<IMagneticVariationService, MagneticVariationService>();
 builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
 builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();

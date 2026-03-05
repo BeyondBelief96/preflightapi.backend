@@ -37,7 +37,7 @@ public class ObstacleService : IObstacleService
         _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
     }
 
-    public async Task<ObstacleDto?> GetByOasNumber(string oasNumber)
+    public async Task<ObstacleDto?> GetByOasNumber(string oasNumber, CancellationToken ct = default)
     {
         try
         {
@@ -45,9 +45,9 @@ public class ObstacleService : IObstacleService
 
             var obstacle = await _context.Obstacles
                 .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.OasNumber == oasNumber.ToUpperInvariant());
+                .FirstOrDefaultAsync(o => o.OasNumber == oasNumber.ToUpperInvariant(), ct);
 
-            return obstacle != null ? ObstacleMapper.ToDto(obstacle) : null;
+            return obstacle != null ? ObstacleMapper.ToDto(obstacle, _logger) : null;
         }
         catch (Exception ex)
         {
@@ -56,7 +56,7 @@ public class ObstacleService : IObstacleService
         }
     }
 
-    public async Task<IEnumerable<ObstacleDto>> GetByOasNumbers(IEnumerable<string> oasNumbers)
+    public async Task<IEnumerable<ObstacleDto>> GetByOasNumbers(IEnumerable<string> oasNumbers, CancellationToken ct = default)
     {
         try
         {
@@ -73,9 +73,9 @@ public class ObstacleService : IObstacleService
                 .AsNoTracking()
                 .Where(o => oasNumberList.Contains(o.OasNumber))
                 .OrderByDescending(o => o.HeightAmsl)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-            return obstacles.Select(ObstacleMapper.ToDto);
+            return obstacles.Select(o => ObstacleMapper.ToDto(o, _logger));
         }
         catch (Exception ex)
         {
@@ -90,7 +90,8 @@ public class ObstacleService : IObstacleService
         double radiusNm,
         int? minHeightAgl = null,
         string? cursor = null,
-        int limit = 100)
+        int limit = 100,
+        CancellationToken ct = default)
     {
         try
         {
@@ -111,7 +112,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
+            return await query.ToPaginatedAsync(o => o.OasNumber, o => ObstacleMapper.ToDto(o, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -124,7 +125,8 @@ public class ObstacleService : IObstacleService
         string stateCode,
         int? minHeightAgl = null,
         string? cursor = null,
-        int limit = 1000)
+        int limit = 1000,
+        CancellationToken ct = default)
     {
         try
         {
@@ -140,7 +142,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
+            return await query.ToPaginatedAsync(o => o.OasNumber, o => ObstacleMapper.ToDto(o, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -156,7 +158,8 @@ public class ObstacleService : IObstacleService
         decimal maxLon,
         int? minHeightAgl = null,
         string? cursor = null,
-        int limit = 1000)
+        int limit = 1000,
+        CancellationToken ct = default)
     {
         try
         {
@@ -184,7 +187,7 @@ public class ObstacleService : IObstacleService
                 query = query.Where(o => o.HeightAgl >= minHeightAgl.Value);
             }
 
-            return await query.ToPaginatedAsync(o => o.OasNumber, ObstacleMapper.ToDto, cursor, limit);
+            return await query.ToPaginatedAsync(o => o.OasNumber, o => ObstacleMapper.ToDto(o, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -196,7 +199,7 @@ public class ObstacleService : IObstacleService
     public async Task<IReadOnlyCollection<string>> GetObstacleOasNumbersForRouteAsync(
         IEnumerable<WaypointDto> waypoints,
         int? cruisingAltitude = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
         try
         {
@@ -210,14 +213,14 @@ public class ObstacleService : IObstacleService
             var allOasNumbers = new HashSet<string>();
 
             // 1. Get obstacles along the route corridor (with altitude filtering)
-            var corridorObstacles = await GetCorridorObstaclesAsync(waypointList, cruisingAltitude, cancellationToken);
+            var corridorObstacles = await GetCorridorObstaclesAsync(waypointList, cruisingAltitude, ct);
             foreach (var oas in corridorObstacles)
             {
                 allOasNumbers.Add(oas);
             }
 
             // 2. Get ALL obstacles near airports on the route (no altitude filtering)
-            var airportObstacles = await GetAirportVicinityObstaclesAsync(waypointList, cancellationToken);
+            var airportObstacles = await GetAirportVicinityObstaclesAsync(waypointList, ct);
             foreach (var oas in airportObstacles)
             {
                 allOasNumbers.Add(oas);

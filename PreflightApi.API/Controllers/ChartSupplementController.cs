@@ -38,10 +38,10 @@ public class ChartSupplementController(IChartSupplementService chartSupplementSe
     [HttpGet("{icaoCodeOrIdent}")]
     [ProducesResponseType(typeof(ChartSupplementsResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ChartSupplementsResponseDto>> GetChartSupplements(string icaoCodeOrIdent)
+    public async Task<ActionResult<ChartSupplementsResponseDto>> GetChartSupplements(string icaoCodeOrIdent, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-        var supplements = await chartSupplementService.GetChartSupplementsByAirportCode(icaoCodeOrIdent);
+        var supplements = await chartSupplementService.GetChartSupplementsByAirportCode(icaoCodeOrIdent, ct);
         return Ok(supplements);
     }
 }

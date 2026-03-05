@@ -10,9 +10,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwaySurfaceType
 {
-    /// <summary>Surface type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>CONC - Portland Cement Concrete.</summary>
     Concrete,
 
@@ -89,5 +86,8 @@ public enum RunwaySurfaceType
     Steel,
 
     /// <summary>WOOD - Wood surface (less common).</summary>
-    Wood
+    Wood,
+
+    /// <summary>PFC - Porous Friction Course overlay.</summary>
+    PorousFrictionCourse
 }

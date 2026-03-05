@@ -92,9 +92,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices.Mo
         public short? Pacific { get; set; }
 
         [JsonPropertyName("Shape__Area")]
-        public float? ShapeArea { get; set; }
+        public double? ShapeArea { get; set; }
 
         [JsonPropertyName("Shape__Length")]
-        public float? ShapeLength { get; set; }
+        public double? ShapeLength { get; set; }
     }
 }

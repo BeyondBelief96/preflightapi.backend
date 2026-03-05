@@ -8,17 +8,17 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AirportSiteType
 {
-    /// <summary>Site type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>A - Airport.</summary>
     Airport,
 
     /// <summary>H - Heliport.</summary>
     Heliport,
 
-    /// <summary>S - Seaplane Base.</summary>
+    /// <summary>C - Seaplane Base.</summary>
     SeaplaneBase,
+
+    /// <summary>B - Balloonport.</summary>
+    Balloonport,
 
     /// <summary>G - Gliderport.</summary>
     Gliderport,

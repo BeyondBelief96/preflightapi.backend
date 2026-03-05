@@ -33,14 +33,14 @@ public record RunwayDto
     /// FAA NASR field: SURFACE_TYPE_CODE. Runway surface type.
     /// <para>Common values: Concrete (CONC), Asphalt (ASPH), Turf (TURF), Dirt (DIRT), Gravel (GRAVEL), Water (WATER).</para>
     /// </summary>
-    public RunwaySurfaceType SurfaceType { get; init; }
+    public RunwaySurfaceType? SurfaceType { get; init; }
 
     /// <summary>
     /// FAA NASR field: TREATMENT_CODE. Runway surface treatment.
     /// <para>Possible values: Grooved (GRVD), PorousFrictionCourse (PFC), AggregateFrictionSealCoat (AFSC),
     /// RubberizedFrictionSealCoat (RFSC), WireComb (WC), None (NONE).</para>
     /// </summary>
-    public RunwaySurfaceTreatment SurfaceTreatment { get; init; }
+    public RunwaySurfaceTreatment? SurfaceTreatment { get; init; }
 
     /// <summary>FAA NASR field: PCN. Pavement Classification Number. See FAA Advisory Circular 150/5335-5 for code definitions and PCN determination formula.</summary>
     public string? PavementClassification { get; init; }
@@ -49,7 +49,7 @@ public record RunwayDto
     /// FAA NASR field: RWY_LGT_CODE. Runway lights edge intensity.
     /// <para>Possible values: High (HIGH), Medium (MED), Low (LOW), Flood (FLD), NonStandard (NSTD), Perimeter (PERI), Strobe (STRB), None (NONE).</para>
     /// </summary>
-    public RunwayEdgeLightIntensity EdgeLightIntensity { get; init; }
+    public RunwayEdgeLightIntensity? EdgeLightIntensity { get; init; }
 
     /// <summary>FAA NASR field: GROSS_WT_SW. Runway weight-bearing capacity for single wheel type landing gear, in pounds.</summary>
     public int? WeightBearingSingleWheel { get; init; }
@@ -65,27 +65,33 @@ public record RunwayDto
 
     /// <summary>
     /// FAA NASR field: COND. Runway Surface Condition.
-    /// <para>Possible values: EXCELLENT, GOOD, FAIR, POOR, FAILED.</para>
+    /// <para>Possible values: Excellent, Good, Fair, Poor, Failed.</para>
     /// </summary>
-    public string? SurfaceCondition { get; init; }
+    public RunwaySurfaceCondition? SurfaceCondition { get; init; }
 
     /// <summary>
     /// FAA NASR field: PAVEMENT_TYPE_CODE. Pavement Type.
-    /// <para>Possible values: R (Rigid), F (Flexible).</para>
+    /// <para>Possible values: Rigid (R), Flexible (F).</para>
     /// </summary>
-    public string? PavementTypeCode { get; init; }
-
-    /// <summary>FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade Strength (Letters A-F).</summary>
-    public string? SubgradeStrengthCode { get; init; }
-
-    /// <summary>FAA NASR field: TIRE_PRES_CODE. Tire Pressure Code (Letters W-Z).</summary>
-    public string? TirePressureCode { get; init; }
+    public PavementType? PavementType { get; init; }
 
     /// <summary>
-    /// FAA NASR field: DTRM_METHOD_CODE. Determination Method for pavement strength.
-    /// <para>Possible values: T (Technical), U (Using Aircraft).</para>
+    /// FAA NASR field: SUBGRADE_STRENGTH_CODE. Subgrade Strength category (part of PCN system).
+    /// <para>Possible values: High (A), Medium (B), Low (C), UltraLow (D).</para>
     /// </summary>
-    public string? DeterminationMethodCode { get; init; }
+    public SubgradeStrength? SubgradeStrength { get; init; }
+
+    /// <summary>
+    /// FAA NASR field: TIRE_PRES_CODE. Maximum allowable tire pressure category (part of PCN system).
+    /// <para>Possible values: High/no limit (W), Medium/217 psi (X), Low/145 psi (Y), VeryLow/73 psi (Z).</para>
+    /// </summary>
+    public TirePressure? TirePressure { get; init; }
+
+    /// <summary>
+    /// FAA NASR field: DTRM_METHOD_CODE. Pavement strength determination method.
+    /// <para>Possible values: Technical (T), UsingAircraft (U).</para>
+    /// </summary>
+    public PavementDeterminationMethod? DeterminationMethod { get; init; }
 
     /// <summary>FAA NASR field: RWY_LEN_SOURCE. Source of runway length information.</summary>
     public string? RunwayLengthSource { get; init; }
@@ -120,7 +126,7 @@ public record RunwayEndDto
     /// <para>Possible values: Ils (ILS), Mls (MLS), Sdf (SDF), Localizer (LOCALIZER), Lda (LDA), Ismls (ISMLS),
     /// IlsDme (ILS/DME), SdfDme (SDF/DME), LocDme (LOC/DME), LocGs (LOC/GS), LdaDme (LDA/DME).</para>
     /// </summary>
-    public InstrumentApproachType ApproachType { get; init; }
+    public InstrumentApproachType? ApproachType { get; init; }
 
     /// <summary>
     /// FAA NASR field: RIGHT_HAND_TRAFFIC_PAT_FLAG. Whether right-hand traffic pattern is in effect for landing aircraft.
@@ -132,13 +138,13 @@ public record RunwayEndDto
     /// <para>Possible values: PrecisionInstrument (PIR), NonPrecisionInstrument (NPI), Basic (BSC),
     /// NumbersOnly (NRS), NonStandard (NSTD), Buoys (BUOY), Stol (STOL), None (NONE).</para>
     /// </summary>
-    public RunwayMarkingsType MarkingsType { get; init; }
+    public RunwayMarkingsType? MarkingsType { get; init; }
 
     /// <summary>
     /// FAA NASR field: RWY_MARKING_COND. Runway markings condition.
     /// <para>Possible values: Good (G), Fair (F), Poor (P).</para>
     /// </summary>
-    public RunwayMarkingsCondition MarkingsCondition { get; init; }
+    public RunwayMarkingsCondition? MarkingsCondition { get; init; }
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees.</summary>
     public decimal? Latitude { get; init; }
@@ -174,13 +180,13 @@ public record RunwayEndDto
     /// FAA NASR field: VGSI_CODE. Visual Glide Slope Indicator type.
     /// <para>Common types: VASI (V2L/V4L/etc.), PAPI (P2L/P4L/etc.), SAVASI (S2L/S2R), Tri-Color, Pulsating, Panel systems.</para>
     /// </summary>
-    public VisualGlideSlopeIndicatorType VisualGlideSlopeIndicator { get; init; }
+    public VisualGlideSlopeIndicatorType? VisualGlideSlopeIndicator { get; init; }
 
     /// <summary>
     /// FAA NASR field: RWY_VISUAL_RANGE_EQUIP_CODE. Runway Visual Range (RVR) equipment location.
     /// <para>Possible values: Touchdown (T), Midfield (M), Rollout (R), None (N), TouchdownMidfield (TM), TouchdownRollout (TR), MidfieldRollout (MR), TouchdownMidfieldRollout (TMR).</para>
     /// </summary>
-    public RunwayVisualRangeEquipmentType RunwayVisualRangeEquipment { get; init; }
+    public RunwayVisualRangeEquipmentType? RunwayVisualRangeEquipment { get; init; }
 
     /// <summary>
     /// FAA NASR field: RWY_VSBY_VALUE_EQUIP_FLAG. Whether Runway Visibility Value (RVV) equipment is installed.
@@ -191,7 +197,7 @@ public record RunwayEndDto
     /// FAA NASR field: APCH_LGT_SYSTEM_CODE. Approach light system type.
     /// <para>See <see cref="ApproachLightSystemType"/> enum for all possible values and their FAA descriptions.</para>
     /// </summary>
-    public ApproachLightSystemType ApproachLightSystem { get; init; }
+    public ApproachLightSystemType? ApproachLightSystem { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_LGTS_FLAG. Whether Runway End Identifier Lights (REIL) are installed.</summary>
     public bool HasRunwayEndLights { get; init; }
@@ -209,7 +215,7 @@ public record RunwayEndDto
     /// FAA NASR field: OBSTN_MRKD_CODE. Controlling object marked/lighted status.
     /// <para>Possible values: Marked (M), Lighted (L), MarkedAndLighted (ML), None (NONE).</para>
     /// </summary>
-    public ControllingObjectMarking ControllingObjectMarking { get; init; }
+    public ControllingObjectMarking? ControllingObjectMarking { get; init; }
 
     /// <summary>FAA NASR field: OBSTN_CLNC_SLOPE. Controlling object clearance slope value, expressed as a ratio of N:1. If greater than 50:1, then 50 is entered.</summary>
     public int? ControllingObjectClearanceSlope { get; init; }

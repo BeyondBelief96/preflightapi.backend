@@ -44,7 +44,8 @@ namespace PreflightApi.API.Controllers
         public async Task<ActionResult<PaginatedResponse<AirportDto>>> GetAirports(
             [FromQuery] string? search,
             [FromQuery] string? state,
-            [FromQuery] PaginationParams pagination)
+            [FromQuery] PaginationParams pagination,
+            CancellationToken ct)
         {
             pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
 
@@ -57,7 +58,7 @@ namespace PreflightApi.API.Controllers
                     .ToArray();
             }
 
-            return Ok(await airportService.GetAirports(search, stateCodes, pagination.Cursor, pagination.Limit));
+            return Ok(await airportService.GetAirports(search, stateCodes, pagination.Cursor, pagination.Limit, ct));
         }
 
         /// <summary>
@@ -83,14 +84,15 @@ namespace PreflightApi.API.Controllers
             [FromQuery] decimal lat,
             [FromQuery] decimal lon,
             [FromQuery] double radiusNm = 30,
-            [FromQuery] PaginationParams? pagination = null)
+            [FromQuery] PaginationParams? pagination = null,
+            CancellationToken ct = default)
         {
             ValidationHelpers.ValidateCoordinates(lat, lon);
             ValidationHelpers.ValidateRadius(radiusNm, 500);
 
             pagination ??= new PaginationParams();
             pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-            return Ok(await airportService.SearchNearby(lat, lon, radiusNm, pagination.Cursor, pagination.Limit));
+            return Ok(await airportService.SearchNearby(lat, lon, radiusNm, pagination.Cursor, pagination.Limit, ct));
         }
 
         /// <summary>
@@ -103,10 +105,10 @@ namespace PreflightApi.API.Controllers
         [HttpGet("{icaoCodeOrIdent}")]
         [ProducesResponseType(typeof(AirportDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<AirportDto>> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent)
+        public async Task<ActionResult<AirportDto>> GetAirportByIcaoCodeOrIdent(string icaoCodeOrIdent, CancellationToken ct)
         {
             ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-            var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
+            var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent, ct);
             return Ok(airport);
         }
 
@@ -126,7 +128,8 @@ namespace PreflightApi.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<AirportDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AirportDto>>> GetAirportsBatch(
-            [FromQuery] string ids)
+            [FromQuery] string ids,
+            CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(ids))
                 throw new ValidationException("ids", "At least one ICAO code or identifier is required");
@@ -136,7 +139,10 @@ namespace PreflightApi.API.Controllers
                 .Where(s => s.Length > 0)
                 .ToArray();
 
-            var airports = await airportService.GetAirportsByIcaoCodesOrIdents(codesArray);
+            if (codesArray.Length > 100)
+                throw new ValidationException("ids", "Maximum of 100 ICAO codes or identifiers per batch request");
+
+            var airports = await airportService.GetAirportsByIcaoCodesOrIdents(codesArray, ct);
             return Ok(airports);
         }
 

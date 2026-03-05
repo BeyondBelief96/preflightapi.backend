@@ -1,3 +1,4 @@
+using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.ValueObjects.Pireps;
 
 namespace PreflightApi.Infrastructure.Dtos
@@ -20,9 +21,9 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Aircraft type designation. ex: B738, C172</summary>
         public string? AircraftRef { get; init; }
         /// <summary>Latitude of the report in decimal degrees.</summary>
-        public float? Latitude { get; init; }
+        public double? Latitude { get; init; }
         /// <summary>Longitude of the report in decimal degrees.</summary>
-        public float? Longitude { get; init; }
+        public double? Longitude { get; init; }
         /// <summary>Altitude of the report in feet MSL.</summary>
         public int? AltitudeFtMsl { get; init; }
         /// <summary>Reported sky conditions.</summary>
@@ -36,7 +37,7 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Present weather string.</summary>
         public string? WxString { get; init; }
         /// <summary>Temperature in degrees Celsius.</summary>
-        public float? TempC { get; init; }
+        public double? TempC { get; init; }
         /// <summary>Wind direction in degrees true.</summary>
         public int? WindDirDegrees { get; init; }
         /// <summary>Wind speed in knots.</summary>
@@ -44,6 +45,6 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Vertical gust speed in knots.</summary>
         public int? VertGustKt { get; init; }
         /// <summary>Report type: UA (routine PIREP) or UUA (urgent PIREP).</summary>
-        public string? ReportType { get; init; }
+        public PirepReportType? ReportType { get; init; }
     }
 }

@@ -39,10 +39,11 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<RunwayDto>>> GetRunwaysByAirport(
         string icaoCodeOrIdent,
-        [FromQuery] bool includeGeometry = false)
+        [FromQuery] bool includeGeometry = false,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
-        var runways = await runwayService.GetRunwaysByAirportAsync(icaoCodeOrIdent, includeGeometry);
+        var runways = await runwayService.GetRunwaysByAirportAsync(icaoCodeOrIdent, includeGeometry, ct);
         return Ok(runways);
     }
 
@@ -73,11 +74,12 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
         [FromQuery] int? minLength = null,
         [FromQuery] string? state = null,
         [FromQuery] bool? lighted = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await runwayService.GetRunways(search, surfaceType, minLength, state, lighted, pagination.Cursor, pagination.Limit));
+        return Ok(await runwayService.GetRunways(search, surfaceType, minLength, state, lighted, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -111,13 +113,14 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
         [FromQuery] int? minLength = null,
         [FromQuery] RunwaySurfaceType? surfaceType = null,
         [FromQuery] bool includeGeometry = false,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await runwayService.SearchNearby(lat, lon, radiusNm, minLength, surfaceType, includeGeometry, pagination.Cursor, pagination.Limit));
+        return Ok(await runwayService.SearchNearby(lat, lon, radiusNm, minLength, surfaceType, includeGeometry, pagination.Cursor, pagination.Limit, ct));
     }
 }

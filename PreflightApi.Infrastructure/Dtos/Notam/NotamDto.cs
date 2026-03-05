@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using PreflightApi.Domain.Enums;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Dtos.Notam;
 
@@ -127,13 +129,15 @@ public record NotamDetailDto
     /// NOTAM type (N=New, R=Replace, C=Cancel)
     /// </summary>
     [JsonPropertyName("type")]
-    public string? Type { get; init; }
+    [JsonConverter(typeof(SafeEnumJsonConverter<NotamType>))]
+    public NotamType? Type { get; init; }
 
     /// <summary>
     /// Feature category: RWY, TWY, APRON, AD, OBST, NAV, COM, SVC, AIRSPACE, ODP, SID, STAR, CHART, DATA, DVA, IAP, VFP, ROUTE, SPECIAL, SECURITY
     /// </summary>
     [JsonPropertyName("feature")]
-    public string? Feature { get; init; }
+    [JsonConverter(typeof(SafeEnumJsonConverter<NotamFeature>))]
+    public NotamFeature? Feature { get; init; }
 
     /// <summary>
     /// Issuance timestamp (ISO 8601)
@@ -157,7 +161,8 @@ public record NotamDetailDto
     /// Traffic type (I=IFR, V=VFR, IV=Both)
     /// </summary>
     [JsonPropertyName("traffic")]
-    public string? Traffic { get; init; }
+    [JsonConverter(typeof(SafeEnumJsonConverter<NotamTraffic>))]
+    public NotamTraffic? Traffic { get; init; }
 
     /// <summary>
     /// Purpose code (e.g., "BO")
@@ -169,7 +174,8 @@ public record NotamDetailDto
     /// Scope (A=Aerodrome, E=En-route, W=Navigation warning)
     /// </summary>
     [JsonPropertyName("scope")]
-    public string? Scope { get; init; }
+    [JsonConverter(typeof(SafeEnumJsonConverter<NotamScope>))]
+    public NotamScope? Scope { get; init; }
 
     /// <summary>
     /// Minimum flight level (e.g., "000")
@@ -214,10 +220,11 @@ public record NotamDetailDto
     public string? EffectiveEnd { get; init; }
 
     /// <summary>
-    /// Whether end time is estimated ("true"/"false")
+    /// Whether end time is estimated.
     /// </summary>
     [JsonPropertyName("estimated")]
-    public string? Estimated { get; init; }
+    [JsonConverter(typeof(StringBoolJsonConverter))]
+    public bool? Estimated { get; init; }
 
     /// <summary>
     /// NOTAM text content
@@ -229,7 +236,8 @@ public record NotamDetailDto
     /// Classification: INTERNATIONAL, MILITARY, LOCAL_MILITARY, DOMESTIC, FDC
     /// </summary>
     [JsonPropertyName("classification")]
-    public string? Classification { get; init; }
+    [JsonConverter(typeof(SafeEnumJsonConverter<NotamClassification>))]
+    public NotamClassification? Classification { get; init; }
 
     /// <summary>
     /// Cancellation date timestamp (ISO 8601)

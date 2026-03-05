@@ -23,7 +23,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<MetarDto> GetMetarForAirport(string icaoIdOrIdent)
+        public async Task<MetarDto> GetMetarForAirport(string icaoIdOrIdent, CancellationToken ct = default)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 }
 
                 var metar = await _context.Metars
-                    .FirstOrDefaultAsync(m => m.StationId == icaoIdOrIdent.ToUpperInvariant());
+                    .FirstOrDefaultAsync(m => m.StationId == icaoIdOrIdent.ToUpperInvariant(), ct);
 
                 if (metar == null)
                 {
@@ -43,7 +43,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
                     var airport = await _context.Airports
                         .FirstOrDefaultAsync(a => a.ArptId == icaoIdOrIdent.ToUpperInvariant() ||
-                                                a.IcaoId == icaoIdOrIdent.ToUpperInvariant());
+                                                a.IcaoId == icaoIdOrIdent.ToUpperInvariant(), ct);
 
                     if (airport == null)
                     {
@@ -59,7 +59,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
 
                     _logger.LogDebug("Searching for METAR with modified identifier: {ModifiedIdent}", modifiedIdent);
                     metar = await _context.Metars
-                        .FirstOrDefaultAsync(m => m.StationId == modifiedIdent);
+                        .FirstOrDefaultAsync(m => m.StationId == modifiedIdent, ct);
                 }
 
                 if (metar == null)
@@ -69,7 +69,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 }
 
                 _logger.LogInformation("Successfully retrieved METAR for airport: {IcaoIdOrIdent}", icaoIdOrIdent);
-                return MetarMapper.ToDto(metar);
+                return MetarMapper.ToDto(metar, _logger);
             }
             catch (Exception ex) when (ex is not DomainException)
             {
@@ -78,7 +78,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             }
         }
 
-        public async Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents)
+        public async Task<IEnumerable<MetarDto>> GetMetarsForAirports(string[] icaoCodesOrIdents, CancellationToken ct = default)
         {
             if (icaoCodesOrIdents.Length > 100)
                 throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
@@ -92,7 +92,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             var directMatches = await _context.Metars
                 .AsNoTracking()
                 .Where(m => m.StationId != null && upperCodes.Contains(m.StationId))
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var matchedStationIds = directMatches
                 .Where(m => m.StationId != null)
@@ -105,13 +105,13 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 .ToList();
 
             if (unmatchedCodes.Count == 0)
-                return directMatches.Select(MetarMapper.ToDto);
+                return directMatches.Select(m => MetarMapper.ToDto(m, _logger));
 
             // Query 2: Resolve unmatched codes via Airports table
             var airports = await _context.Airports
                 .AsNoTracking()
                 .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var resolvedStationIds = airports
                 .Select(a => a.StateCode switch
@@ -124,18 +124,18 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 .ToList();
 
             if (resolvedStationIds.Count == 0)
-                return directMatches.Select(MetarMapper.ToDto);
+                return directMatches.Select(m => MetarMapper.ToDto(m, _logger));
 
             // Query 3: Fetch METARs for resolved station IDs
             var resolvedMatches = await _context.Metars
                 .AsNoTracking()
                 .Where(m => m.StationId != null && resolvedStationIds.Contains(m.StationId))
-                .ToListAsync();
+                .ToListAsync(ct);
 
-            return directMatches.Concat(resolvedMatches).Select(MetarMapper.ToDto);
+            return directMatches.Concat(resolvedMatches).Select(m => MetarMapper.ToDto(m, _logger));
         }
 
-        public async Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor = null, int limit = 100)
+        public async Task<PaginatedResponse<MetarDto>> GetMetarsByStates(string[] stateCodes, string? cursor = null, int limit = 100, CancellationToken ct = default)
         {
             try
             {
@@ -167,7 +167,7 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                           a.ArptId == m.StationId.Substring(1)) ||
                          a.ArptId == m.StationId)));
 
-                return await query.ToPaginatedAsync(m => m.Id, MetarMapper.ToDto, cursor, limit);
+                return await query.ToPaginatedAsync(m => m.Id, m => MetarMapper.ToDto(m, _logger), cursor, limit, ct);
             }
             catch (Exception ex)
             {

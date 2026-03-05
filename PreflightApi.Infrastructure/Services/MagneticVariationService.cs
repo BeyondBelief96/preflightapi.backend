@@ -14,18 +14,19 @@ public class MagneticVariationService : IMagneticVariationService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string _apiKey;
     private readonly ILogger<MagneticVariationService> _logger;
-    private readonly MemoryCache _cache;
+    private readonly IMemoryCache _cache;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
 
     public MagneticVariationService(
         IHttpClientFactory httpClientFactory,
         IOptions<NOAASettings> apiKeys,
-        ILogger<MagneticVariationService> logger)
+        ILogger<MagneticVariationService> logger,
+        IMemoryCache cache)
     {
         _httpClientFactory = httpClientFactory;
         _apiKey = apiKeys.Value.NOAAApiKey ?? throw new ArgumentNullException(nameof(apiKeys));
         _logger = logger;
-        _cache = new MemoryCache(new MemoryCacheOptions());
+        _cache = cache;
     }
 
     public async Task<double> GetMagneticVariation(double latitude, double longitude, CancellationToken ct = default)

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SegmentedCircleMarkerType
 {
-    /// <summary>Segmented circle marker status could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>N - No segmented circle marker.</summary>
     None,
 

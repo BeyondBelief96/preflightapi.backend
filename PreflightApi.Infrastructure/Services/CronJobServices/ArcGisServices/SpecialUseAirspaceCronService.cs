@@ -11,6 +11,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
     {
         protected override string BaseUrl => "https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/Special_Use_Airspace/FeatureServer/0/query";
 
+        protected override string? MaxAllowableOffset => "0.0001";
+        protected override int? GeometryPrecision => 5;
+
         public SpecialUseAirspaceCronService(
             ILogger<SpecialUseAirspaceCronService> logger,
             IHttpClientFactory httpClientFactory,

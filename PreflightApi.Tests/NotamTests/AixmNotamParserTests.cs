@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Services.NotamServices;
 using Xunit;
 
@@ -55,13 +56,13 @@ public class AixmNotamParserTests
         detail.Id.Should().Be("NMS_ID_1757609538792382");
         detail.Number.Should().Be("430");
         detail.Year.Should().Be("2025");
-        detail.Type.Should().Be("N");
+        detail.Type.Should().Be(NotamType.N);
         detail.Issued.Should().Be("2025-08-21T02:34:00.000Z");
         detail.Location.Should().Be("8WC");
         detail.EffectiveStart.Should().Be("202508210234");
         detail.EffectiveEnd.Should().Be("202510012359");
         detail.Text.Should().Be("RWY 20 RWY END ID LGT U/S");
-        detail.Classification.Should().Be("DOM");
+        detail.Classification.Should().Be(NotamClassification.DOMESTIC);
         detail.AccountId.Should().Be("STL");
         detail.LastUpdated.Should().Be("2025-08-21T02:34:00.000Z");
         detail.Schedule.Should().BeNull();
@@ -341,9 +342,9 @@ public class AixmNotamParserTests
         var detail = results[0].Properties!.CoreNotamData!.Notam!;
         detail.AffectedFir.Should().Be("ZTL");
         detail.SelectionCode.Should().Be("QMRLC");
-        detail.Traffic.Should().Be("IV");
+        detail.Traffic.Should().Be(NotamTraffic.IV);
         detail.Purpose.Should().Be("BO");
-        detail.Scope.Should().Be("A");
+        detail.Scope.Should().Be(NotamScope.A);
         detail.MinimumFl.Should().Be("000");
         detail.MaximumFl.Should().Be("999");
         detail.Coordinates.Should().Be("3356N08424W");
@@ -396,7 +397,7 @@ public class AixmNotamParserTests
 
         var results = AixmNotamParser.Parse(xml);
         results.Should().HaveCount(1);
-        results[0].Properties!.CoreNotamData!.Notam!.Estimated.Should().Be("true");
+        results[0].Properties!.CoreNotamData!.Notam!.Estimated.Should().Be(true);
     }
 
     [Fact]

@@ -11,6 +11,10 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
     {
         protected override string BaseUrl => "https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/Class_Airspace/FeatureServer/0/query";
 
+        // ~1.1m tolerance — reduces circular D-class polygons from hundreds of vertices while preserving shape
+        protected override string? MaxAllowableOffset => "0.00001";
+        protected override int? GeometryPrecision => 5;
+
         public AirspaceCronService(
             ILogger<AirspaceCronService> logger,
             IHttpClientFactory httpClientFactory,
@@ -24,6 +28,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices.ArcGisServices
             foreach (var airspaceClass in new[] { "B", "C", "D" })
             {
                 await UpdateAirspacesByClass(airspaceClass, cancellationToken);
+                _dbContext.ChangeTracker.Clear();
             }
         }
 

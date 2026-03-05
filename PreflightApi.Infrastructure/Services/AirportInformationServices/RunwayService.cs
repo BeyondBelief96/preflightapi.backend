@@ -30,7 +30,7 @@ public class RunwayService : IRunwayService
         _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
     }
 
-    public async Task<IEnumerable<RunwayDto>> GetRunwaysByAirportAsync(string icaoCodeOrIdent, bool includeGeometry = false)
+    public async Task<IEnumerable<RunwayDto>> GetRunwaysByAirportAsync(string icaoCodeOrIdent, bool includeGeometry = false, CancellationToken ct = default)
     {
         try
         {
@@ -39,7 +39,7 @@ public class RunwayService : IRunwayService
             var airport = await _context.Airports
                 .FirstOrDefaultAsync(a =>
                     a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                    a.ArptId == icaoCodeOrIdent.ToUpperInvariant());
+                    a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
 
             if (airport == null)
             {
@@ -50,9 +50,9 @@ public class RunwayService : IRunwayService
                 .Include(r => r.RunwayEnds)
                 .Where(r => r.SiteNo == airport.SiteNo)
                 .OrderBy(r => r.RunwayId)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-            return runways.Select(r => RunwayMapper.ToDto(r, airport, includeGeometry));
+            return runways.Select(r => RunwayMapper.ToDto(r, airport, _logger, includeGeometry));
         }
         catch (Exception ex) when (ex is not AirportNotFoundException)
         {
@@ -68,7 +68,8 @@ public class RunwayService : IRunwayService
         string? state,
         bool? lighted,
         string? cursor,
-        int limit)
+        int limit,
+        CancellationToken ct = default)
     {
         try
         {
@@ -97,7 +98,7 @@ public class RunwayService : IRunwayService
             }
 
             var airports = await airportQuery
-                .ToDictionaryAsync(a => a.SiteNo, cancellationToken: default);
+                .ToDictionaryAsync(a => a.SiteNo, cancellationToken: ct);
 
             if (airports.Count == 0)
                 return PaginatedResponse<RunwayDto>.Empty(limit);
@@ -113,9 +114,10 @@ public class RunwayService : IRunwayService
 
             return await runwayQuery.ToPaginatedAsync(
                 r => r.Id,
-                r => RunwayMapper.ToDto(r, airports[r.SiteNo]),
+                r => RunwayMapper.ToDto(r, airports[r.SiteNo], _logger),
                 cursor,
-                limit);
+                limit,
+                ct);
         }
         catch (Exception ex)
         {
@@ -132,7 +134,8 @@ public class RunwayService : IRunwayService
         RunwaySurfaceType? surfaceType,
         bool includeGeometry,
         string? cursor,
-        int limit)
+        int limit,
+        CancellationToken ct = default)
     {
         try
         {
@@ -147,7 +150,7 @@ public class RunwayService : IRunwayService
             var airports = await _context.Airports
                 .AsNoTracking()
                 .Where(a => a.Location != null && a.Location.IsWithinDistance(point, radiusMeters))
-                .ToDictionaryAsync(a => a.SiteNo);
+                .ToDictionaryAsync(a => a.SiteNo, ct);
 
             if (airports.Count == 0)
                 return PaginatedResponse<RunwayDto>.Empty(limit);
@@ -163,9 +166,10 @@ public class RunwayService : IRunwayService
 
             return await runwayQuery.ToPaginatedAsync(
                 r => r.Id,
-                r => RunwayMapper.ToDto(r, airports[r.SiteNo], includeGeometry),
+                r => RunwayMapper.ToDto(r, airports[r.SiteNo], _logger, includeGeometry),
                 cursor,
-                limit);
+                limit,
+                ct);
         }
         catch (Exception ex)
         {

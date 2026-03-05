@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using PreflightApi.Domain.Enums;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos.Notam;
 using PreflightApi.Infrastructure.Interfaces;
@@ -187,8 +188,8 @@ public class NotamInitialLoadCronServiceTests : IDisposable
                         Number = "01/001",
                         Location = location,
                         IcaoLocation = icaoLocation,
-                        Classification = "DOMESTIC",
-                        Type = "N",
+                        Classification = NotamClassification.DOMESTIC,
+                        Type = NotamType.N,
                         Text = text,
                         EffectiveStart = DateTime.UtcNow.AddHours(-1).ToString("O"),
                         EffectiveEnd = DateTime.UtcNow.AddDays(30).ToString("O"),

@@ -47,19 +47,20 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         string icaoCodeOrIdent,
         [FromQuery] double radiusNm = 10,
         [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent);
+        var airport = await airportService.GetAirportByIcaoCodeOrIdent(icaoCodeOrIdent, ct);
 
         if (airport.LatDecimal == null || airport.LongDecimal == null)
             throw new ValidationException("icaoCodeOrIdent", $"Airport '{icaoCodeOrIdent}' does not have coordinates on record");
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await obstacleService.SearchNearby(airport.LatDecimal.Value, airport.LongDecimal.Value, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit));
+        return Ok(await obstacleService.SearchNearby(airport.LatDecimal.Value, airport.LongDecimal.Value, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -87,14 +88,15 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         [FromQuery] decimal lon,
         [FromQuery] double radiusNm = 5,
         [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await obstacleService.SearchNearby(lat, lon, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit));
+        return Ok(await obstacleService.SearchNearby(lat, lon, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -118,14 +120,15 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> GetByState(
         string stateCode,
         [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(stateCode))
             throw new ValidationException("stateCode", "State code is required");
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await obstacleService.GetByState(stateCode, minHeightAgl, pagination.Cursor, pagination.Limit));
+        return Ok(await obstacleService.GetByState(stateCode, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
 
     /// <summary>
@@ -143,10 +146,10 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [HttpGet("{oasNumber}")]
     [ProducesResponseType(typeof(ObstacleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ObstacleDto>> GetByOasNumber(string oasNumber)
+    public async Task<ActionResult<ObstacleDto>> GetByOasNumber(string oasNumber, CancellationToken ct)
     {
         ValidationHelpers.ValidateRequiredString(oasNumber, "oasNumber", "OAS number is required");
-        var obstacle = await obstacleService.GetByOasNumber(oasNumber);
+        var obstacle = await obstacleService.GetByOasNumber(oasNumber, ct);
         if (obstacle == null)
         {
             throw new ObstacleNotFoundException(oasNumber);
@@ -172,7 +175,7 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [HttpPost("by-oas-numbers")]
     [ProducesResponseType(typeof(IEnumerable<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<ObstacleDto>>> GetByOasNumbers([FromBody] List<string> oasNumbers)
+    public async Task<ActionResult<IEnumerable<ObstacleDto>>> GetByOasNumbers([FromBody] List<string> oasNumbers, CancellationToken ct)
     {
         if (oasNumbers == null || oasNumbers.Count == 0)
         {
@@ -184,7 +187,7 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
             throw new ValidationException("oasNumbers", "Maximum of 1000 OAS numbers allowed per request");
         }
 
-        var obstacles = await obstacleService.GetByOasNumbers(oasNumbers);
+        var obstacles = await obstacleService.GetByOasNumbers(oasNumbers, ct);
         return Ok(obstacles);
     }
 
@@ -219,7 +222,8 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         [FromQuery] decimal minLon,
         [FromQuery] decimal maxLon,
         [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null)
+        [FromQuery] PaginationParams? pagination = null,
+        CancellationToken ct = default)
     {
         if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90)
             throw new ValidationException("lat", "Latitude values must be between -90 and 90 degrees");
@@ -232,6 +236,6 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
 
         pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
-        return Ok(await obstacleService.GetByBoundingBox(minLat, maxLat, minLon, maxLon, minHeightAgl, pagination.Cursor, pagination.Limit));
+        return Ok(await obstacleService.GetByBoundingBox(minLat, maxLat, minLon, maxLon, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
 }

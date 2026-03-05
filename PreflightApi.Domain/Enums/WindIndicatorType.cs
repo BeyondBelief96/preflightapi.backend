@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum WindIndicatorType
 {
-    /// <summary>Wind indicator status could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>N - No wind indicator.</summary>
     None,
 

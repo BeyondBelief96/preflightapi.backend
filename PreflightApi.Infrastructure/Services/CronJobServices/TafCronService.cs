@@ -191,9 +191,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     ValidTimeFrom = element.Element("valid_time_from")?.Value,
                     ValidTimeTo = element.Element("valid_time_to")?.Value,
                     Remarks = element.Element("remarks")?.Value,
-                    Latitude = ParsingUtilities.ParseNullableFloat(element.Element("latitude")?.Value),
-                    Longitude = ParsingUtilities.ParseNullableFloat(element.Element("longitude")?.Value),
-                    ElevationM = ParsingUtilities.ParseNullableFloat(element.Element("elevation_m")?.Value),
+                    Latitude = ParsingUtilities.ParseNullableDouble(element.Element("latitude")?.Value),
+                    Longitude = ParsingUtilities.ParseNullableDouble(element.Element("longitude")?.Value),
+                    ElevationM = ParsingUtilities.ParseNullableDouble(element.Element("elevation_m")?.Value),
                     Forecast = ParseForecasts(element.Elements("forecast"))
                 };
 
@@ -223,7 +223,7 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     WindShearDirDegrees = ParsingUtilities.ParseNullableShort(element.Element("wind_shear_dir_degrees")?.Value),
                     WindShearSpeedKt = ParsingUtilities.ParseNullableInt(element.Element("wind_shear_speed_kt")?.Value),
                     VisibilityStatuteMi = element.Element("visibility_statute_mi")?.Value,
-                    AltimInHg = ParsingUtilities.ParseNullableFloat(element.Element("altim_in_hg")?.Value),
+                    AltimInHg = ParsingUtilities.ParseNullableDouble(element.Element("altim_in_hg")?.Value),
                     VertVisFt = ParsingUtilities.ParseNullableShort(element.Element("vert_vis_ft")?.Value),
                     WxString = element.Element("wx_string")?.Value,
                     NotDecoded = element.Element("not_decoded")?.Value,
@@ -274,9 +274,9 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
             return elements.Select(element => new TafTemperature
             {
                 ValidTime = element.Element("valid_time")?.Value,
-                SfcTempC = ParsingUtilities.ParseNullableFloat(element.Element("sfc_temp_c")?.Value),
-                MaxTempC = element.Element("max_temp_c")?.Value,
-                MinTempC = element.Element("min_temp_c")?.Value
+                SfcTempC = ParsingUtilities.ParseNullableDouble(element.Element("sfc_temp_c")?.Value),
+                MaxTempC = ParsingUtilities.ParseNullableDouble(element.Element("max_temp_c")?.Value),
+                MinTempC = ParsingUtilities.ParseNullableDouble(element.Element("min_temp_c")?.Value)
             }).ToList();
         }
 

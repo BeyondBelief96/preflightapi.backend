@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
 using PreflightApi.Domain.ValueObjects;
@@ -15,7 +16,7 @@ public class NavaidMapperTests
     {
         var navaid = CreateTestNavaid();
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Id.Should().Be(navaid.Id);
         dto.NavId.Should().Be("DFW");
@@ -79,7 +80,7 @@ public class NavaidMapperTests
         navaid.HiwasFlag = "Y";
         navaid.LowNavOnHighChartFlag = "N";
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.NasUse.Should().BeTrue();
         dto.PublicUse.Should().BeTrue();
@@ -99,7 +100,7 @@ public class NavaidMapperTests
         var navaid = CreateTestNavaid();
         navaid.CheckpointsJson = JsonSerializer.Serialize(checkpoints);
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Checkpoints.Should().NotBeNull();
         dto.Checkpoints.Should().HaveCount(1);
@@ -117,7 +118,7 @@ public class NavaidMapperTests
         var navaid = CreateTestNavaid();
         navaid.RemarksJson = JsonSerializer.Serialize(remarks);
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Remarks.Should().NotBeNull();
         dto.Remarks.Should().HaveCount(1);
@@ -130,7 +131,7 @@ public class NavaidMapperTests
         var navaid = CreateTestNavaid();
         navaid.CheckpointsJson = null;
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Checkpoints.Should().BeNull();
     }
@@ -141,7 +142,7 @@ public class NavaidMapperTests
         var navaid = CreateTestNavaid();
         navaid.CheckpointsJson = "not valid json{{{";
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Checkpoints.Should().BeNull();
     }
@@ -152,7 +153,7 @@ public class NavaidMapperTests
         var navaid = CreateTestNavaid();
         navaid.RemarksJson = "";
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.Remarks.Should().BeNull();
     }
@@ -175,7 +176,7 @@ public class NavaidMapperTests
             EffectiveDate = DateTime.UtcNow
         };
 
-        var dto = NavaidMapper.ToDto(navaid);
+        var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
 
         dto.StateCode.Should().BeNull();
         dto.StateName.Should().BeNull();
@@ -190,123 +191,6 @@ public class NavaidMapperTests
         dto.Remarks.Should().BeNull();
     }
 
-    #region ParseNavaidType Tests
-
-    [Theory]
-    [InlineData("CONSOLAN", NavaidType.Consolan)]
-    [InlineData("DME", NavaidType.Dme)]
-    [InlineData("FAN MARKER", NavaidType.FanMarker)]
-    [InlineData("MARINE NDB", NavaidType.MarineNdb)]
-    [InlineData("MARINE NDB/DME", NavaidType.MarineNdbDme)]
-    [InlineData("NDB", NavaidType.Ndb)]
-    [InlineData("NDB/DME", NavaidType.NdbDme)]
-    [InlineData("TACAN", NavaidType.Tacan)]
-    [InlineData("UHF/NDB", NavaidType.UhfNdb)]
-    [InlineData("VOR", NavaidType.Vor)]
-    [InlineData("VORTAC", NavaidType.Vortac)]
-    [InlineData("VOR/DME", NavaidType.VorDme)]
-    [InlineData("VOT", NavaidType.Vot)]
-    public void ParseNavaidType_KnownValues_ReturnsCorrectEnum(string input, NavaidType expected)
-    {
-        NavaidMapper.ParseNavaidType(input).Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData("  VOR  ")]
-    [InlineData("vor")]
-    [InlineData("Vor")]
-    public void ParseNavaidType_HandlesWhitespaceAndCase(string input)
-    {
-        NavaidMapper.ParseNavaidType(input).Should().Be(NavaidType.Vor);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    [InlineData("INVALID")]
-    public void ParseNavaidType_UnknownOrEmpty_ReturnsUnknown(string? input)
-    {
-        NavaidMapper.ParseNavaidType(input).Should().Be(NavaidType.Unknown);
-    }
-
-    #endregion
-
-    #region ParseVorServiceVolume Tests
-
-    [Theory]
-    [InlineData("H", VorServiceVolume.High)]
-    [InlineData("L", VorServiceVolume.Low)]
-    [InlineData("T", VorServiceVolume.Terminal)]
-    [InlineData("VH", VorServiceVolume.VorHigh)]
-    [InlineData("VL", VorServiceVolume.VorLow)]
-    public void ParseVorServiceVolume_KnownValues_ReturnsCorrectEnum(string input, VorServiceVolume expected)
-    {
-        NavaidMapper.ParseVorServiceVolume(input).Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData("  H  ")]
-    [InlineData("h")]
-    public void ParseVorServiceVolume_HandlesWhitespaceAndCase(string input)
-    {
-        NavaidMapper.ParseVorServiceVolume(input).Should().Be(VorServiceVolume.High);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    public void ParseVorServiceVolume_NullOrEmpty_ReturnsNull(string? input)
-    {
-        NavaidMapper.ParseVorServiceVolume(input).Should().BeNull();
-    }
-
-    [Fact]
-    public void ParseVorServiceVolume_UnrecognizedValue_ReturnsUnknown()
-    {
-        NavaidMapper.ParseVorServiceVolume("XYZ").Should().Be(VorServiceVolume.Unknown);
-    }
-
-    #endregion
-
-    #region ParseDmeServiceVolume Tests
-
-    [Theory]
-    [InlineData("H", DmeServiceVolume.High)]
-    [InlineData("L", DmeServiceVolume.Low)]
-    [InlineData("T", DmeServiceVolume.Terminal)]
-    [InlineData("DH", DmeServiceVolume.DmeHigh)]
-    [InlineData("DL", DmeServiceVolume.DmeLow)]
-    public void ParseDmeServiceVolume_KnownValues_ReturnsCorrectEnum(string input, DmeServiceVolume expected)
-    {
-        NavaidMapper.ParseDmeServiceVolume(input).Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData("  H  ")]
-    [InlineData("h")]
-    public void ParseDmeServiceVolume_HandlesWhitespaceAndCase(string input)
-    {
-        NavaidMapper.ParseDmeServiceVolume(input).Should().Be(DmeServiceVolume.High);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    public void ParseDmeServiceVolume_NullOrEmpty_ReturnsNull(string? input)
-    {
-        NavaidMapper.ParseDmeServiceVolume(input).Should().BeNull();
-    }
-
-    [Fact]
-    public void ParseDmeServiceVolume_UnrecognizedValue_ReturnsUnknown()
-    {
-        NavaidMapper.ParseDmeServiceVolume("XYZ").Should().Be(DmeServiceVolume.Unknown);
-    }
-
-    #endregion
 
     #region ToDbString Tests
 
@@ -330,15 +214,27 @@ public class NavaidMapperTests
     }
 
     [Fact]
-    public void ToDbString_RoundTrips_WithParseNavaidType()
+    public void ToDbString_RoundTrips_WithToDto()
     {
         foreach (NavaidType type in Enum.GetValues<NavaidType>())
         {
-            if (type == NavaidType.Unknown) continue;
-
             var dbString = NavaidMapper.ToDbString(type);
-            var parsed = NavaidMapper.ParseNavaidType(dbString);
-            parsed.Should().Be(type, $"round-trip failed for {type} → \"{dbString}\"");
+            var navaid = new Navaid
+            {
+                Id = Guid.NewGuid(),
+                NavId = "TST",
+                NavType = dbString,
+                NavStatus = "OPERATIONAL",
+                Name = "TEST",
+                City = "TEST",
+                CountryCode = "US",
+                CountryName = "UNITED STATES",
+                NasUseFlag = "N",
+                PublicUseFlag = "N",
+                EffectiveDate = DateTime.UtcNow
+            };
+            var dto = NavaidMapper.ToDto(navaid, NullLogger.Instance);
+            dto.NavType.Should().Be(type, $"round-trip failed for {type} → \"{dbString}\"");
         }
     }
 

@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RunwaySurfaceTreatment
 {
-    /// <summary>Surface treatment could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>NONE - No special surface treatment.</summary>
     None,
 

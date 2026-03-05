@@ -37,25 +37,25 @@ public class Metar
     /// Latitude of site in degrees ex: 41.9602
     /// </summary>
     [Column("latitude")]
-    public float? Latitude { get; set; }
+    public double? Latitude { get; set; }
 
     /// <summary>
     /// Longitude of site in degrees ex: -87.9316
     /// </summary>
     [Column("longitude")]
-    public float? Longitude { get; set; }
+    public double? Longitude { get; set; }
 
     /// <summary>
     /// Temperature in degrees Celsius ex: 14.4
     /// </summary>
     [Column("temp_c")]
-    public float? TempC { get; set; }
+    public double? TempC { get; set; }
 
     /// <summary>
     /// Dewpoint temperature in degrees Celsius ex: 2.8
     /// </summary>
     [Column("dewpoint_c")]
-    public float? DewpointC { get; set; }
+    public double? DewpointC { get; set; }
 
     /// <summary>
     /// Wind direction in degrees or VRB for variable winds ex: 230, VRB
@@ -85,13 +85,13 @@ public class Metar
     /// Altimeter setting in inches of mercury ex: 29.92
     /// </summary>
     [Column("altim_in_hg")]
-    public float? AltimInHg { get; set; }
+    public double? AltimInHg { get; set; }
 
     /// <summary>
     /// Sea level pressure in millibars. ex: 1013.25
     /// </summary>
     [Column("sea_level_pressure_mb")]
-    public float? SeaLevelPressureMb { get; set; }
+    public double? SeaLevelPressureMb { get; set; }
 
     /// <summary>
     /// Quality control flags associated with the METAR data.
@@ -121,61 +121,61 @@ public class Metar
     /// Three-hour pressure tendency in millibars.
     /// </summary>
     [Column("three_hr_pressure_tendency_mb")]
-    public float? ThreeHrPressureTendencyMb { get; set; }
+    public double? ThreeHrPressureTendencyMb { get; set; }
 
     /// <summary>
     /// Maximum temperature in degrees Celsius, if available. ex: 15.0
     /// </summary>
     [Column("maxT_c")]
-    public float? MaxTC { get; set; }
+    public double? MaxTC { get; set; }
 
     /// <summary>
     /// Minimum temperature in degrees Celsius, if available. ex: 3.0
     /// </summary>
     [Column("minT_c")]
-    public float? MinTC { get; set; }
+    public double? MinTC { get; set; }
 
     /// <summary>
     /// Maximum temperature in degrees Celsius over the past 24 hours, if available. ex: 15.0
     /// </summary>
     [Column("maxT24hr_c")]
-    public float? MaxT24hrC { get; set; }
+    public double? MaxT24hrC { get; set; }
 
     /// <summary>
     /// Minimum temperature in degrees Celsius over the past 24 hours, if available. ex: 3.0
     /// </summary>
     [Column("minT24hr_c")]
-    public float? MinT24hrC { get; set; }
+    public double? MinT24hrC { get; set; }
 
     /// <summary>
     /// Precipitation accumulation in inches since the last routine observation. ex: 0.0
     /// </summary>
     [Column("precip_in")]
-    public float? PrecipIn { get; set; }
+    public double? PrecipIn { get; set; }
 
     /// <summary>
     /// Precipitation accumulation in inches over the past 3 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp3hr_in")]
-    public float? Pcp3hrIn { get; set; }
+    public double? Pcp3hrIn { get; set; }
 
     /// <summary>
     /// Precipitation accumulation in inches over the past 6 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp6hr_in")]
-    public float? Pcp6hrIn { get; set; }
+    public double? Pcp6hrIn { get; set; }
 
     /// <summary>
     /// Precipitation accumulation in inches over the past 24 hours, if available. ex: 0.0
     /// </summary>
     [Column("pcp24hr_in")]
-    public float? Pcp24hrIn { get; set; }
+    public double? Pcp24hrIn { get; set; }
 
     /// <summary>
     /// Snow depth in inches, if available. ex: 0.0
     /// </summary>
     [Column("snow_in")]
-    public float? SnowIn { get; set; }
+    public double? SnowIn { get; set; }
 
     /// <summary>
     /// Vertical visibility in feet, if available. ex: 1000
@@ -193,5 +193,5 @@ public class Metar
     /// Elevation of site in meters ex: 202
     /// </summary>
     [Column("elevation_m")]
-    public float? ElevationM { get; set; }
+    public double? ElevationM { get; set; }
 }

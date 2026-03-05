@@ -2,6 +2,7 @@ namespace PreflightApi.Infrastructure.Dtos
 {
     /// <summary>
     /// Controlled airspace data (Class B, C, D, E) sourced from FAA ArcGIS.
+    /// Geometry boundaries are generalized (~1.1m accuracy) for efficient storage and rendering.
     /// Use the GlobalId to cross-reference with navigation log results — the navlog response's
     /// AirspaceGlobalIds field contains GlobalIds from this endpoint for airspaces along a planned route.
     /// </summary>
@@ -67,12 +68,13 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? Country { get; set; }
         /// <summary>Associated aerodrome identifier.</summary>
         public string? AdhpId { get; set; }
-        /// <summary>GeoJSON boundary geometry.</summary>
+        /// <summary>GeoJSON boundary geometry. Generalized with ~1.1m accuracy from source data.</summary>
         public GeoJsonGeometry? Geometry { get; set; }
     }
 
     /// <summary>
     /// Special use airspace data (restricted, prohibited, warning, MOA, alert) sourced from FAA ArcGIS.
+    /// Geometry boundaries are generalized (~11m accuracy) for efficient storage and rendering.
     /// Use the GlobalId to cross-reference with navigation log results — the navlog response's
     /// SpecialUseAirspaceGlobalIds field contains GlobalIds from this endpoint for special use airspaces along a planned route.
     /// </summary>
@@ -89,7 +91,7 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Upper altitude limit description.</summary>
         public string? UpperDesc { get; set; }
         /// <summary>Upper altitude limit value.</summary>
-        public string? UpperVal { get; set; }
+        public double? UpperVal { get; set; }
         /// <summary>Upper altitude unit of measure.</summary>
         public string? UpperUom { get; set; }
         /// <summary>Upper altitude reference code.</summary>
@@ -97,7 +99,7 @@ namespace PreflightApi.Infrastructure.Dtos
         /// <summary>Lower altitude limit description.</summary>
         public string? LowerDesc { get; set; }
         /// <summary>Lower altitude limit value.</summary>
-        public string? LowerVal { get; set; }
+        public double? LowerVal { get; set; }
         /// <summary>Lower altitude unit of measure.</summary>
         public string? LowerUom { get; set; }
         /// <summary>Lower altitude reference code.</summary>
@@ -128,7 +130,7 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? DstCode { get; set; }
         /// <summary>Additional remarks.</summary>
         public string? Remarks { get; set; }
-        /// <summary>GeoJSON boundary geometry.</summary>
+        /// <summary>GeoJSON boundary geometry. Generalized with ~11m accuracy from source data.</summary>
         public GeoJsonGeometry? Geometry { get; set; }
     }
 }

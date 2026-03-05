@@ -8,9 +8,6 @@ namespace PreflightApi.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum NavaidType
 {
-    /// <summary>Facility type could not be determined from FAA data.</summary>
-    Unknown,
-
     /// <summary>CONSOLAN - Consolan facility.</summary>
     Consolan,
 

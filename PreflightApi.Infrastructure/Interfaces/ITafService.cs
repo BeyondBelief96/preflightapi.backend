@@ -4,6 +4,6 @@ namespace PreflightApi.Infrastructure.Interfaces;
 
 public interface ITafService
 {
-    Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent);
-    Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents);
+    Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent, CancellationToken ct = default);
+    Task<IEnumerable<TafDto>> GetTafsForAirports(string[] icaoCodesOrIdents, CancellationToken ct = default);
 }

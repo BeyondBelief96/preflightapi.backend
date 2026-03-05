@@ -102,11 +102,16 @@ namespace PreflightApi.Domain.Entities
         public short? Pacific { get; set; }
 
         [Column("shape_area")]
-        public float? ShapeArea { get; set; }
+        public double? ShapeArea { get; set; }
 
         [Column("shape_length")]
-        public float? ShapeLength { get; set; }
+        public double? ShapeLength { get; set; }
 
+        /// <summary>
+        /// Polygon boundary geometry (SRID 4326). Generalized from FAA ArcGIS source data
+        /// with maxAllowableOffset=0.0001° (~11m) and geometryPrecision=5 decimal places (~1.1m).
+        /// Suitable for map visualization but not for precision navigation.
+        /// </summary>
         [Column("geometry", TypeName = "geometry(Polygon, 4326)")]
         public Geometry? Geometry { get; set; }
     }

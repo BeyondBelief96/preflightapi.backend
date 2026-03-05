@@ -34,7 +34,7 @@ public class GAirmetService : IGAirmetService
             _logger.LogInformation("Retrieving G-AIRMETs, cursor: {Cursor}, limit: {Limit}", cursor, limit);
 
             var query = _context.GAirmets.AsNoTracking();
-            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(g => g.Id, g => GAirmetMapper.ToDto(g, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -54,7 +54,7 @@ public class GAirmetService : IGAirmetService
             var query = _context.GAirmets.AsNoTracking()
                 .Where(g => g.Product == productString);
 
-            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(g => g.Id, g => GAirmetMapper.ToDto(g, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -74,7 +74,7 @@ public class GAirmetService : IGAirmetService
             var query = _context.GAirmets.AsNoTracking()
                 .Where(g => g.HazardType != null && hazardTypeStrings.Contains(g.HazardType));
 
-            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(g => g.Id, g => GAirmetMapper.ToDto(g, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
@@ -102,7 +102,7 @@ public class GAirmetService : IGAirmetService
                 .AsNoTracking()
                 .Where(g => g.Boundary != null && g.Boundary.Intersects(point));
 
-            return await query.ToPaginatedAsync(g => g.Id, GAirmetMapper.ToDto, cursor, limit, ct);
+            return await query.ToPaginatedAsync(g => g.Id, g => GAirmetMapper.ToDto(g, _logger), cursor, limit, ct);
         }
         catch (Exception ex)
         {
