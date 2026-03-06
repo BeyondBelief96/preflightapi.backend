@@ -64,7 +64,20 @@ public static class MetarMapper
                 SkyCover = EnumParseHelper.Parse(sc.SkyCover, logger, nameof(sc.SkyCover), nameof(Metar), metar.StationId ?? metar.Id.ToString(), SkyCoverMap),
                 CloudBaseFtAgl = sc.CloudBaseFtAgl
             }).ToList(),
-            FlightCategory = EnumParseHelper.Parse(metar.FlightCategory, logger, nameof(metar.FlightCategory), nameof(Metar), metar.StationId ?? metar.Id.ToString(), FlightCategoryMap)
+            FlightCategory = EnumParseHelper.Parse(metar.FlightCategory, logger, nameof(metar.FlightCategory), nameof(Metar), metar.StationId ?? metar.Id.ToString(), FlightCategoryMap),
+            ThreeHrPressureTendencyMb = metar.ThreeHrPressureTendencyMb,
+            MaxTC = metar.MaxTC,
+            MinTC = metar.MinTC,
+            MaxT24hrC = metar.MaxT24hrC,
+            MinT24hrC = metar.MinT24hrC,
+            PrecipIn = metar.PrecipIn,
+            Pcp3hrIn = metar.Pcp3hrIn,
+            Pcp6hrIn = metar.Pcp6hrIn,
+            Pcp24hrIn = metar.Pcp24hrIn,
+            SnowIn = metar.SnowIn,
+            VertVisFt = metar.VertVisFt,
+            MetarType = metar.MetarType,
+            ElevationM = metar.ElevationM
         };
     }
 
