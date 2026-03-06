@@ -42,7 +42,7 @@ public class NavaidControllerTests
         };
         _navaidService.GetNavaids(null, null, null, null, 100).Returns(expected);
 
-        var result = await _sut.GetNavaids();
+        var result = await _sut.GetNavaids(new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -59,7 +59,7 @@ public class NavaidControllerTests
         _navaidService.GetNavaids("DFW", "VOR", "TX", null, 50).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 50 };
-        await _sut.GetNavaids(search: "DFW", type: "VOR", state: "TX", pagination: pagination);
+        await _sut.GetNavaids(pagination, CancellationToken.None, search: "DFW", type: "VOR", state: "TX");
 
         await _navaidService.Received(1).GetNavaids("DFW", "VOR", "TX", null, 50);
     }
@@ -75,7 +75,7 @@ public class NavaidControllerTests
         _navaidService.GetNavaids(null, null, null, null, 500).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 999 };
-        await _sut.GetNavaids(pagination: pagination);
+        await _sut.GetNavaids(pagination, CancellationToken.None);
 
         await _navaidService.Received(1).GetNavaids(null, null, null, null, 500);
     }
@@ -94,7 +94,7 @@ public class NavaidControllerTests
         };
         _navaidService.GetNavaids(null, "VOR", null, null, 100).Returns(expected);
 
-        var result = await _sut.GetByType(NavaidType.Vor);
+        var result = await _sut.GetByType(NavaidType.Vor, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -111,7 +111,7 @@ public class NavaidControllerTests
         _navaidService.GetNavaids(null, "VORTAC", null, "cursor123", 25).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 25, Cursor = "cursor123" };
-        var result = await _sut.GetByType(NavaidType.Vortac, pagination);
+        var result = await _sut.GetByType(NavaidType.Vortac, pagination, CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -127,7 +127,7 @@ public class NavaidControllerTests
         };
         _navaidService.GetNavaids(null, "VOR/DME", null, null, 100).Returns(expected);
 
-        await _sut.GetByType(NavaidType.VorDme);
+        await _sut.GetByType(NavaidType.VorDme, new PaginationParams(), CancellationToken.None);
 
         await _navaidService.Received(1).GetNavaids(null, "VOR/DME", null, null, 100);
     }
@@ -143,7 +143,7 @@ public class NavaidControllerTests
         _navaidService.GetNavaids(null, "NDB", null, null, 500).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 999 };
-        await _sut.GetByType(NavaidType.Ndb, pagination);
+        await _sut.GetByType(NavaidType.Ndb, pagination, CancellationToken.None);
 
         await _navaidService.Received(1).GetNavaids(null, "NDB", null, null, 500);
     }
@@ -277,7 +277,7 @@ public class NavaidControllerTests
         };
         _navaidService.SearchNearby(32.897m, -97.038m, 30, null, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.897m, -97.038m);
+        var result = await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -293,7 +293,7 @@ public class NavaidControllerTests
         };
         _navaidService.SearchNearby(32.897m, -97.038m, 50, "VOR", null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m, 50, "VOR");
+        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, 50, "VOR");
 
         await _navaidService.Received(1).SearchNearby(32.897m, -97.038m, 50, "VOR", null, 100);
     }
@@ -301,7 +301,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task SearchNearby_InvalidLatitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(91m, -97.038m);
+        var act = () => _sut.SearchNearby(91m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude*");
@@ -310,7 +310,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task SearchNearby_InvalidLongitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -181m);
+        var act = () => _sut.SearchNearby(32.897m, -181m, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude*");
@@ -319,7 +319,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task SearchNearby_ZeroRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: 0);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 0);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -328,7 +328,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task SearchNearby_NegativeRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: -5);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: -5);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -337,7 +337,7 @@ public class NavaidControllerTests
     [Fact]
     public async Task SearchNearby_ExcessiveRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: 501);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 501);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*cannot exceed 500*");
@@ -353,7 +353,7 @@ public class NavaidControllerTests
         };
         _navaidService.SearchNearby(32.897m, -97.038m, 30, null, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m);
+        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         await _navaidService.Received(1).SearchNearby(32.897m, -97.038m, 30, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int>());
     }

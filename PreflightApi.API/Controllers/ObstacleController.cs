@@ -45,10 +45,10 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> SearchNearAirport(
         string icaoCodeOrIdent,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] double radiusNm = 10,
-        [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] int? minHeightAgl = null)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         ValidationHelpers.ValidateRadius(radiusNm, 500);
@@ -58,7 +58,6 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         if (airport.LatDecimal == null || airport.LongDecimal == null)
             throw new ValidationException("icaoCodeOrIdent", $"Airport '{icaoCodeOrIdent}' does not have coordinates on record");
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await obstacleService.SearchNearby(airport.LatDecimal.Value, airport.LongDecimal.Value, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
@@ -86,15 +85,14 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] double radiusNm = 5,
-        [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] int? minHeightAgl = null)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await obstacleService.SearchNearby(lat, lon, radiusNm, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
@@ -119,14 +117,13 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> GetByState(
         string stateCode,
-        [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
+        [FromQuery] int? minHeightAgl = null)
     {
         if (string.IsNullOrWhiteSpace(stateCode))
             throw new ValidationException("stateCode", "State code is required");
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await obstacleService.GetByState(stateCode, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }
@@ -221,9 +218,9 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         [FromQuery] decimal maxLat,
         [FromQuery] decimal minLon,
         [FromQuery] decimal maxLon,
-        [FromQuery] int? minHeightAgl = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
+        [FromQuery] int? minHeightAgl = null)
     {
         if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90)
             throw new ValidationException("lat", "Latitude values must be between -90 and 90 degrees");
@@ -234,7 +231,6 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
         if (minLon >= maxLon)
             throw new ValidationException("lon", "minLon must be less than maxLon");
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await obstacleService.GetByBoundingBox(minLat, maxLat, minLon, maxLon, minHeightAgl, pagination.Cursor, pagination.Limit, ct));
     }

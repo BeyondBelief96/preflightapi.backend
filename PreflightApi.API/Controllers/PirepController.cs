@@ -63,14 +63,13 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     public async Task<ActionResult<PaginatedResponse<PirepDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
-        [FromQuery] double radiusNm = 50,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
+        [FromQuery] double radiusNm = 50)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await pirepService.SearchNearby(lat, lon, radiusNm, pagination.Cursor, pagination.Limit, ct));
     }
@@ -99,9 +98,9 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PaginatedResponse<PirepDto>>> SearchNearAirport(
         string icaoCodeOrIdent,
-        [FromQuery] double radiusNm = 50,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
+        [FromQuery] double radiusNm = 50)
     {
         ValidationHelpers.ValidateRequiredString(icaoCodeOrIdent, "icaoCodeOrIdent", "ICAO code or identifier is required");
         ValidationHelpers.ValidateRadius(radiusNm, 500);
@@ -111,7 +110,6 @@ public class PirepController(IPirepService pirepService, IAirportService airport
         if (airport.LatDecimal == null || airport.LongDecimal == null)
             throw new ValidationException("icaoCodeOrIdent", $"Airport '{icaoCodeOrIdent}' does not have coordinates on record");
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await pirepService.SearchNearby(airport.LatDecimal.Value, airport.LongDecimal.Value, radiusNm, pagination.Cursor, pagination.Limit, ct));
     }

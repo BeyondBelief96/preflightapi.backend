@@ -83,14 +83,13 @@ public class AirportController(
     public async Task<ActionResult<PaginatedResponse<AirportDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
-        [FromQuery] double radiusNm = 30,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
+        [FromQuery] double radiusNm = 30)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await airportService.SearchNearby(lat, lon, radiusNm, pagination.Cursor, pagination.Limit, ct));
     }

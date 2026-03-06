@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using PreflightApi.API.Controllers;
+using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -38,7 +39,7 @@ public class AirportControllerNearbyTests
         };
         _airportService.SearchNearby(32.89m, -97.03m, 30, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.89m, -97.03m);
+        var result = await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -54,7 +55,7 @@ public class AirportControllerNearbyTests
         };
         _airportService.SearchNearby(32.89m, -97.03m, 50, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.89m, -97.03m, radiusNm: 50);
+        await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None, radiusNm: 50);
 
         await _airportService.Received(1).SearchNearby(32.89m, -97.03m, 50, Arg.Any<string?>(), Arg.Any<int>());
     }
@@ -64,7 +65,7 @@ public class AirportControllerNearbyTests
     [InlineData(91)]
     public async Task SearchNearby_InvalidLatitude_ThrowsValidationException(decimal lat)
     {
-        var act = () => _sut.SearchNearby(lat, -97.03m);
+        var act = () => _sut.SearchNearby(lat, -97.03m, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -75,7 +76,7 @@ public class AirportControllerNearbyTests
     [InlineData(181)]
     public async Task SearchNearby_InvalidLongitude_ThrowsValidationException(decimal lon)
     {
-        var act = () => _sut.SearchNearby(32.89m, lon);
+        var act = () => _sut.SearchNearby(32.89m, lon, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");
@@ -86,7 +87,7 @@ public class AirportControllerNearbyTests
     [InlineData(-5)]
     public async Task SearchNearby_InvalidRadius_ThrowsValidationException(double radius)
     {
-        var act = () => _sut.SearchNearby(32.89m, -97.03m, radiusNm: radius);
+        var act = () => _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None, radiusNm: radius);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -102,7 +103,7 @@ public class AirportControllerNearbyTests
         };
         _airportService.SearchNearby(32.89m, -97.03m, 30, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.89m, -97.03m);
+        await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None);
 
         await _airportService.Received(1).SearchNearby(32.89m, -97.03m, 30, Arg.Any<string?>(), Arg.Any<int>());
     }

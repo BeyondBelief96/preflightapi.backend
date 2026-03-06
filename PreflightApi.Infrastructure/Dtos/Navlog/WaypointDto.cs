@@ -1,5 +1,4 @@
 using PreflightApi.Domain.Enums;
-using PreflightApi.Infrastructure.Enums;
 
 namespace PreflightApi.Infrastructure.Dtos.Navlog;
 

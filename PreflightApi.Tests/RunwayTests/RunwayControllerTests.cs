@@ -90,7 +90,7 @@ public class RunwayControllerTests
         };
         _runwayService.GetRunways(null, null, null, null, null, null, 100).Returns(expected);
 
-        var result = await _sut.GetRunways();
+        var result = await _sut.GetRunways(new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -103,7 +103,7 @@ public class RunwayControllerTests
         _runwayService.GetRunways("DFW", RunwaySurfaceType.Asphalt, 5000, "TX", true, null, 50).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 50 };
-        await _sut.GetRunways(search: "DFW", surfaceType: RunwaySurfaceType.Asphalt, minLength: 5000, state: "TX", lighted: true, pagination: pagination);
+        await _sut.GetRunways(pagination, CancellationToken.None, search: "DFW", surfaceType: RunwaySurfaceType.Asphalt, minLength: 5000, state: "TX", lighted: true);
 
         await _runwayService.Received(1).GetRunways("DFW", RunwaySurfaceType.Asphalt, 5000, "TX", true, null, 50);
     }
@@ -115,7 +115,7 @@ public class RunwayControllerTests
         _runwayService.GetRunways(null, null, null, null, null, null, 500).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 999 };
-        await _sut.GetRunways(pagination: pagination);
+        await _sut.GetRunways(pagination, CancellationToken.None);
 
         await _runwayService.Received(1).GetRunways(null, null, null, null, null, null, 500);
     }
@@ -127,7 +127,7 @@ public class RunwayControllerTests
         _runwayService.GetRunways(null, null, null, null, null, null, 1).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 0 };
-        await _sut.GetRunways(pagination: pagination);
+        await _sut.GetRunways(pagination, CancellationToken.None);
 
         await _runwayService.Received(1).GetRunways(null, null, null, null, null, null, 1);
     }
@@ -146,7 +146,7 @@ public class RunwayControllerTests
         };
         _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.897m, -97.038m);
+        var result = await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -159,7 +159,7 @@ public class RunwayControllerTests
         _runwayService.SearchNearby(32.897m, -97.038m, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100)
             .Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m, 50, minLength: 4000, surfaceType: RunwaySurfaceType.Concrete, includeGeometry: true);
+        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, 50, minLength: 4000, surfaceType: RunwaySurfaceType.Concrete, includeGeometry: true);
 
         await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100);
     }
@@ -167,7 +167,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_InvalidLatitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(91m, -97.038m);
+        var act = () => _sut.SearchNearby(91m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude*");
@@ -176,7 +176,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_InvalidLongitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -181m);
+        var act = () => _sut.SearchNearby(32.897m, -181m, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude*");
@@ -185,7 +185,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_ZeroRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: 0);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 0);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -194,7 +194,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_NegativeRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: -5);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: -5);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -203,7 +203,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_ExcessiveRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, radiusNm: 501);
+        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 501);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*cannot exceed 500*");
@@ -215,7 +215,7 @@ public class RunwayControllerTests
         var expected = PaginatedResponse<RunwayDto>.Empty(100);
         _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m);
+        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
 
         await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 30, Arg.Any<int?>(), Arg.Any<RunwaySurfaceType?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<int>());
     }
@@ -227,7 +227,7 @@ public class RunwayControllerTests
         _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 500).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 999 };
-        await _sut.SearchNearby(32.897m, -97.038m, pagination: pagination);
+        await _sut.SearchNearby(32.897m, -97.038m, pagination, CancellationToken.None);
 
         await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 500);
     }

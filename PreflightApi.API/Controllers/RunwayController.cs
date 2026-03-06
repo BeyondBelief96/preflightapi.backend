@@ -69,15 +69,14 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResponse<RunwayDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResponse<RunwayDto>>> GetRunways(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] string? search = null,
         [FromQuery] RunwaySurfaceType? surfaceType = null,
         [FromQuery] int? minLength = null,
         [FromQuery] string? state = null,
-        [FromQuery] bool? lighted = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] bool? lighted = null)
     {
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await runwayService.GetRunways(search, surfaceType, minLength, state, lighted, pagination.Cursor, pagination.Limit, ct));
     }
@@ -109,17 +108,16 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     public async Task<ActionResult<PaginatedResponse<RunwayDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] double radiusNm = 30,
         [FromQuery] int? minLength = null,
         [FromQuery] RunwaySurfaceType? surfaceType = null,
-        [FromQuery] bool includeGeometry = false,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] bool includeGeometry = false)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await runwayService.SearchNearby(lat, lon, radiusNm, minLength, surfaceType, includeGeometry, pagination.Cursor, pagination.Limit, ct));
     }
