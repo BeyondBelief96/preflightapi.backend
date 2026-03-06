@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using PreflightApi.API.Controllers;
+using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -43,7 +44,7 @@ public class ObstacleControllerTests
         };
         _obstacleService.SearchNearby(32.8968m, -97.0380m, 10, null, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearAirport("KDFW");
+        var result = await _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -55,7 +56,7 @@ public class ObstacleControllerTests
         _airportService.GetAirportByIcaoCodeOrIdent("XXXX")
             .Returns<AirportDto>(x => throw new AirportNotFoundException("XXXX"));
 
-        var act = () => _sut.SearchNearAirport("XXXX");
+        var act = () => _sut.SearchNearAirport("XXXX", new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<AirportNotFoundException>();
     }
@@ -66,7 +67,7 @@ public class ObstacleControllerTests
         var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = null, LongDecimal = null };
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW").Returns(airport);
 
-        var act = () => _sut.SearchNearAirport("KDFW");
+        var act = () => _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*does not have coordinates*");
@@ -85,7 +86,7 @@ public class ObstacleControllerTests
         };
         _obstacleService.SearchNearby(32.8968m, -97.0380m, 10, null, null, 100).Returns(expected);
 
-        await _sut.SearchNearAirport("KDFW");
+        await _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
         await _obstacleService.Received(1).SearchNearby(32.8968m, -97.0380m, 10, Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<int>());
     }
@@ -93,7 +94,7 @@ public class ObstacleControllerTests
     [Fact]
     public async Task SearchNearAirport_ZeroRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearAirport("KDFW", radiusNm: 0);
+        var act = () => _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None, radiusNm: 0);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -102,7 +103,7 @@ public class ObstacleControllerTests
     [Fact]
     public async Task SearchNearAirport_NegativeRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearAirport("KDFW", radiusNm: -5);
+        var act = () => _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None, radiusNm: -5);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");

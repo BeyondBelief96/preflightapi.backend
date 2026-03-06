@@ -223,6 +223,7 @@ public static class RunwayMapper
     public static RunwayDto ToDto(Runway runway, Airport airport, ILogger logger, bool includeGeometry = false)
     {
         var runwayId = runway.RunwayId ?? runway.Id.ToString();
+        var (primarySurface, secondarySurface) = ParseSurfaceType(runway.SurfaceTypeCode, logger, runwayId);
 
         return new RunwayDto
         {
@@ -233,7 +234,8 @@ public static class RunwayMapper
             RunwayId = runway.RunwayId,
             Length = runway.Length,
             Width = runway.Width,
-            SurfaceType = ParseSurfaceType(runway.SurfaceTypeCode, logger, runwayId),
+            SurfaceType = primarySurface,
+            SecondarySurfaceType = secondarySurface,
             SurfaceTreatment = EnumParseHelper.Parse(runway.SurfaceTreatmentCode, logger, "SurfaceTreatment", "Runway", runwayId, SurfaceTreatmentMapping),
             PavementClassification = runway.PavementClassification,
             EdgeLightIntensity = EnumParseHelper.Parse(runway.EdgeLightIntensity, logger, "EdgeLightIntensity", "Runway", runwayId, EdgeLightIntensityMapping),
@@ -256,6 +258,7 @@ public static class RunwayMapper
     public static RunwayDto ToDto(Runway runway, ILogger logger)
     {
         var runwayId = runway.RunwayId ?? runway.Id.ToString();
+        var (primarySurface, secondarySurface) = ParseSurfaceType(runway.SurfaceTypeCode, logger, runwayId);
 
         return new RunwayDto
         {
@@ -263,7 +266,8 @@ public static class RunwayMapper
             RunwayId = runway.RunwayId,
             Length = runway.Length,
             Width = runway.Width,
-            SurfaceType = ParseSurfaceType(runway.SurfaceTypeCode, logger, runwayId),
+            SurfaceType = primarySurface,
+            SecondarySurfaceType = secondarySurface,
             SurfaceTreatment = EnumParseHelper.Parse(runway.SurfaceTreatmentCode, logger, "SurfaceTreatment", "Runway", runwayId, SurfaceTreatmentMapping),
             PavementClassification = runway.PavementClassification,
             EdgeLightIntensity = EnumParseHelper.Parse(runway.EdgeLightIntensity, logger, "EdgeLightIntensity", "Runway", runwayId, EdgeLightIntensityMapping),
@@ -377,17 +381,28 @@ public static class RunwayMapper
     }
 
     /// <summary>
-    /// Parses surface type codes, handling composite codes (e.g., "ASPH-CONC") by taking the first type.
+    /// Parses surface type codes, handling composite codes (e.g., "ASPH-CONC") by returning both primary and secondary types.
     /// </summary>
-    private static RunwaySurfaceType? ParseSurfaceType(string? code, ILogger logger, string runwayId)
+    private static (RunwaySurfaceType? Primary, RunwaySurfaceType? Secondary) ParseSurfaceType(string? code, ILogger logger, string runwayId)
     {
         if (string.IsNullOrWhiteSpace(code))
-            return null;
+            return (null, null);
 
-        // Handle composite surface types (e.g., "ASPH-CONC") by taking the first type
-        var primaryCode = code.Split('-', '/')[0].Trim().ToUpperInvariant();
+        var parts = code.Split('-', '/');
+        var primary = EnumParseHelper.Parse(parts[0].Trim().ToUpperInvariant(), logger, "SurfaceType", "Runway", runwayId, SurfaceTypeMapping);
 
-        return EnumParseHelper.Parse(primaryCode, logger, "SurfaceType", "Runway", runwayId, SurfaceTypeMapping);
+        if (parts.Length > 2)
+            logger.LogWarning("SurfaceTypeCode '{Code}' for Runway {RunwayId} contains more than two components; only the first two will be mapped.", code, runwayId);
+
+        RunwaySurfaceType? secondary = null;
+        if (parts.Length > 1)
+        {
+            var secondaryCode = parts[1].Trim().ToUpperInvariant();
+            if (!string.IsNullOrEmpty(secondaryCode))
+                secondary = EnumParseHelper.Parse(secondaryCode, logger, "SurfaceType", "Runway", runwayId, SurfaceTypeMapping);
+        }
+
+        return (primary, secondary);
     }
 
     /// <summary>

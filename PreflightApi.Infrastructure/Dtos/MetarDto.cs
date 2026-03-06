@@ -15,9 +15,9 @@ namespace PreflightApi.Infrastructure.Dtos
         public string? StationId { get; init; }
         /// <summary>Observation time in ISO 8601 format.</summary>
         public string? ObservationTime { get; init; }
-        /// <summary>Station latitude in decimal degrees.</summary>
+        /// <summary>Station latitude in decimal degrees (WGS 84).</summary>
         public double? Latitude { get; init; }
-        /// <summary>Station longitude in decimal degrees.</summary>
+        /// <summary>Station longitude in decimal degrees (WGS 84).</summary>
         public double? Longitude { get; init; }
         /// <summary>Temperature in degrees Celsius.</summary>
         public double? TempC { get; init; }
@@ -43,6 +43,32 @@ namespace PreflightApi.Infrastructure.Dtos
         public List<MetarSkyConditionDto>? SkyCondition { get; init; } = [];
         /// <summary>Flight category: VFR, MVFR, IFR, or LIFR.</summary>
         public FlightCategory? FlightCategory { get; init; }
+        /// <summary>Three-hour pressure tendency in millibars.</summary>
+        public double? ThreeHrPressureTendencyMb { get; init; }
+        /// <summary>Maximum temperature in degrees Celsius.</summary>
+        public double? MaxTC { get; init; }
+        /// <summary>Minimum temperature in degrees Celsius.</summary>
+        public double? MinTC { get; init; }
+        /// <summary>Maximum temperature over the past 24 hours in degrees Celsius.</summary>
+        public double? MaxT24hrC { get; init; }
+        /// <summary>Minimum temperature over the past 24 hours in degrees Celsius.</summary>
+        public double? MinT24hrC { get; init; }
+        /// <summary>Precipitation accumulation in inches since the last routine observation.</summary>
+        public double? PrecipIn { get; init; }
+        /// <summary>Precipitation accumulation in inches over the past 3 hours.</summary>
+        public double? Pcp3hrIn { get; init; }
+        /// <summary>Precipitation accumulation in inches over the past 6 hours.</summary>
+        public double? Pcp6hrIn { get; init; }
+        /// <summary>Precipitation accumulation in inches over the past 24 hours.</summary>
+        public double? Pcp24hrIn { get; init; }
+        /// <summary>Snow depth in inches.</summary>
+        public double? SnowIn { get; init; }
+        /// <summary>Vertical visibility in feet AGL.</summary>
+        public int? VertVisFt { get; init; }
+        /// <summary>Type of encoding: METAR or SPECI.</summary>
+        public string? MetarType { get; init; }
+        /// <summary>Station elevation in meters MSL.</summary>
+        public double? ElevationM { get; init; }
     }
 
     /// <summary>

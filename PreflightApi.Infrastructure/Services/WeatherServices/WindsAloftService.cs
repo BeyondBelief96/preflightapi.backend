@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Infrastructure.Dtos.Navlog;
 using PreflightApi.Infrastructure.Interfaces;
@@ -9,28 +10,41 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
     public class WindsAloftService : IWindsAloftService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
         private readonly ILogger<WindsAloftService> _logger;
+
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
         // Standard altitude levels in feet
         private static readonly int[] AltitudeLevels = { 3000, 6000, 9000, 12000, 18000, 24000, 30000, 34000, 39000 };
 
         public WindsAloftService(
             IHttpClientFactory httpClientFactory,
+            IMemoryCache cache,
             ILogger<WindsAloftService> logger)
         {
             _httpClientFactory = httpClientFactory;
+            _cache = cache;
             _logger = logger;
         }
 
         public async Task<WindsAloftDto> FetchWindsAloftData(int fcstHours, CancellationToken ct = default)
         {
+            if (fcstHours != 6 && fcstHours != 12 && fcstHours != 24)
+            {
+                throw new ArgumentException("Forecast hours must be 6, 12, or 24", nameof(fcstHours));
+            }
+
+            var cacheKey = $"WindsAloft_{fcstHours}";
+
+            if (_cache.TryGetValue<WindsAloftDto>(cacheKey, out var cached) && cached != null)
+            {
+                _logger.LogDebug("Returning cached winds aloft data for {FcstHours}hr forecast", fcstHours);
+                return cached;
+            }
+
             try
             {
-                if (fcstHours != 6 && fcstHours != 12 && fcstHours != 24)
-                {
-                    throw new ArgumentException("Forecast hours must be 6, 12, or 24", nameof(fcstHours));
-                }
-
                 var httpClient = _httpClientFactory.CreateClient(nameof(WindsAloftService));
                 const string baseUrl = "https://aviationweather.gov/api/data/windtemp";
                 var formattedFcst = fcstHours.ToString("D2");
@@ -57,13 +71,18 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 var (forUseStartTime, forUseEndTime) = ExtractForUseTimes(textResponse);
                 var sites = ParseWindsAloftText(textResponse);
 
-                return new WindsAloftDto
+                var result = new WindsAloftDto
                 {
                     ValidTime = validTime,
                     ForUseStartTime = forUseStartTime,
                     ForUseEndTime = forUseEndTime,
                     WindTemp = sites
                 };
+
+                _cache.Set(cacheKey, result, CacheDuration);
+                _logger.LogDebug("Cached winds aloft data for {FcstHours}hr forecast (TTL {CacheDuration})", fcstHours, CacheDuration);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -391,199 +410,192 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             return (forUseStartTime, forUseEndTime);
         }
 
+        private static readonly Dictionary<string, (float Lat, float Lon)> StationCoordinates = new()
+        {
+            // Major airports and VORs
+            { "ABI", (32.41f, -99.68f) },   // Abilene, TX
+            { "ABQ", (35.04f, -106.61f) },  // Albuquerque, NM
+            { "ABR", (45.45f, -98.42f) },   // Aberdeen, SD
+            { "ACK", (41.25f, -70.06f) },   // Nantucket, MA
+            { "ACY", (39.46f, -74.58f) },   // Atlantic City, NJ
+            { "AGC", (40.35f, -79.93f) },   // Pittsburgh Allegheny, PA
+            { "ALB", (42.75f, -73.80f) },   // Albany, NY
+            { "ALS", (37.43f, -105.87f) },  // Alamosa, CO
+            { "AMA", (35.22f, -101.71f) },  // Amarillo, TX
+            { "AST", (46.16f, -123.88f) },  // Astoria, OR
+            { "ATL", (33.64f, -84.43f) },   // Atlanta, GA
+            { "AVP", (41.34f, -75.73f) },   // Wilkes-Barre, PA
+            { "AXN", (45.87f, -95.39f) },   // Alexandria, MN
+            { "BAM", (40.57f, -116.92f) },  // Battle Mountain, NV
+            { "BCE", (37.69f, -112.30f) },  // Bryce Canyon, UT
+            { "BDL", (41.94f, -72.68f) },   // Hartford, CT
+            { "BFF", (41.87f, -103.60f) },  // Scottsbluff, NE
+            { "BGR", (44.81f, -68.83f) },   // Bangor, ME
+            { "BHM", (33.56f, -86.75f) },   // Birmingham, AL
+            { "BIH", (37.37f, -118.36f) },  // Bishop, CA
+            { "BIL", (45.81f, -108.54f) },  // Billings, MT
+            { "BLH", (33.62f, -114.72f) },  // Blythe, CA
+            { "BML", (44.58f, -71.18f) },   // Berlin, NH
+            { "BNA", (36.12f, -86.68f) },   // Nashville, TN
+            { "BOI", (43.56f, -116.22f) },  // Boise, ID
+            { "BOS", (42.36f, -71.01f) },   // Boston, MA
+            { "BRL", (40.78f, -91.13f) },   // Burlington, IA
+            { "BRO", (25.91f, -97.43f) },   // Brownsville, TX
+            { "BUF", (42.94f, -78.74f) },   // Buffalo, NY
+            { "CAE", (33.94f, -81.12f) },   // Columbia, SC
+            { "CAR", (46.87f, -68.02f) },   // Caribou, ME
+            { "CGI", (37.23f, -89.57f) },   // Cape Girardeau, MO
+            { "CHS", (32.90f, -80.04f) },   // Charleston, SC
+            { "CLE", (41.41f, -81.85f) },   // Cleveland, OH
+            { "CLL", (30.59f, -96.36f) },   // College Station, TX
+            { "CMH", (40.00f, -82.89f) },   // Columbus, OH
+            { "COU", (38.82f, -92.22f) },   // Columbia, MO
+            { "CRP", (27.77f, -97.50f) },   // Corpus Christi, TX
+            { "CRW", (38.37f, -81.59f) },   // Charleston, WV
+            { "CSG", (32.52f, -84.94f) },   // Columbus, GA
+            { "CVG", (39.05f, -84.66f) },   // Cincinnati, OH
+            { "CZI", (35.02f, -110.79f) },  // Crazy Woman, WY
+            { "DAL", (32.85f, -96.85f) },   // Dallas, TX
+            { "DBQ", (42.40f, -90.71f) },   // Dubuque, IA
+            { "DEN", (39.86f, -104.67f) },  // Denver, CO
+            { "DIK", (46.80f, -102.80f) },  // Dickinson, ND
+            { "DLH", (46.84f, -92.19f) },   // Duluth, MN
+            { "DLN", (45.25f, -112.55f) },  // Dillon, MT
+            { "DRT", (29.37f, -100.93f) },  // Del Rio, TX
+            { "DSM", (41.53f, -93.66f) },   // Des Moines, IA
+            { "ECK", (43.26f, -82.72f) },   // Peck, MI
+            { "EKN", (38.89f, -79.86f) },   // Elkins, WV
+            { "ELP", (31.81f, -106.38f) },  // El Paso, TX
+            { "ELY", (39.30f, -114.84f) },  // Ely, NV
+            { "EMI", (39.49f, -76.98f) },   // Westminster, MD
+            { "EVV", (38.04f, -87.53f) },   // Evansville, IN
+            { "EYW", (24.56f, -81.76f) },   // Key West, FL
+            { "FAT", (36.78f, -119.72f) },  // Fresno, CA
+            { "FLO", (34.19f, -79.72f) },   // Florence, SC
+            { "FMN", (36.74f, -108.23f) },  // Farmington, NM
+            { "FOT", (40.55f, -124.13f) },  // Fortuna, CA
+            { "FSD", (43.58f, -96.74f) },   // Sioux Falls, SD
+            { "FSM", (35.34f, -94.37f) },   // Fort Smith, AR
+            { "FWA", (41.01f, -85.19f) },   // Fort Wayne, IN
+            { "GAG", (36.30f, -99.77f) },   // Gage, OK
+            { "GCK", (37.93f, -100.72f) },  // Garden City, KS
+            { "GEG", (47.62f, -117.53f) },  // Spokane, WA
+            { "GFK", (47.95f, -97.18f) },   // Grand Forks, ND
+            { "GGW", (48.21f, -106.62f) },  // Glasgow, MT
+            { "GJT", (39.12f, -108.53f) },  // Grand Junction, CO
+            { "GLD", (39.37f, -101.70f) },  // Goodland, KS
+            { "GPI", (48.31f, -114.26f) },  // Kalispell, MT (Glacier Park)
+            { "GRB", (44.49f, -88.13f) },   // Green Bay, WI
+            { "GRI", (40.97f, -98.31f) },   // Grand Island, NE
+            { "GSP", (34.88f, -82.22f) },   // Greenville-Spartanburg, SC
+            { "GTF", (47.48f, -111.37f) },  // Great Falls, MT
+            { "HAT", (35.26f, -75.55f) },   // Cape Hatteras, NC
+            { "HOU", (29.65f, -95.28f) },   // Houston, TX
+            { "HSV", (34.64f, -86.77f) },   // Huntsville, AL
+            { "ICT", (37.65f, -97.43f) },   // Wichita, KS
+            { "ILM", (34.27f, -77.90f) },   // Wilmington, NC
+            { "IMB", (33.15f, -114.80f) },  // Imperial, CA
+            { "IND", (39.72f, -86.27f) },   // Indianapolis, IN
+            { "INK", (31.78f, -103.20f) },  // Wink, TX
+            { "INL", (48.57f, -93.40f) },   // International Falls, MN
+            { "JAN", (32.31f, -90.08f) },   // Jackson, MS
+            { "JAX", (30.49f, -81.69f) },   // Jacksonville, FL
+            { "JFK", (40.64f, -73.78f) },   // New York JFK, NY
+            { "JOT", (41.52f, -88.18f) },   // Joliet, IL
+            { "LAS", (36.08f, -115.15f) },  // Las Vegas, NV
+            { "LBB", (33.66f, -101.82f) },  // Lubbock, TX
+            { "LCH", (30.13f, -93.22f) },   // Lake Charles, LA
+            { "LIT", (34.73f, -92.22f) },   // Little Rock, AR
+            { "LKV", (42.16f, -120.40f) },  // Lakeview, OR
+            { "LND", (42.82f, -108.73f) },  // Lander, WY
+            { "LOU", (38.23f, -85.66f) },   // Louisville, KY
+            { "LRD", (27.54f, -99.46f) },   // Laredo, TX
+            { "LSE", (43.88f, -91.26f) },   // La Crosse, WI
+            { "LWS", (46.37f, -117.01f) },  // Lewiston, ID
+            { "MBW", (41.13f, -100.68f) },  // North Platte, NE
+            { "MCW", (43.16f, -93.33f) },   // Mason City, IA
+            { "MEM", (35.06f, -89.98f) },   // Memphis, TN
+            { "MGM", (32.30f, -86.39f) },   // Montgomery, AL
+            { "MIA", (25.79f, -80.29f) },   // Miami, FL
+            { "MKC", (39.12f, -94.59f) },   // Kansas City, MO
+            { "MKG", (43.17f, -86.24f) },   // Muskegon, MI
+            { "MLB", (28.10f, -80.64f) },   // Melbourne, FL
+            { "MLS", (46.43f, -105.96f) },  // Miles City, MT
+            { "MOB", (30.69f, -88.24f) },   // Mobile, AL
+            { "MOT", (48.26f, -101.28f) },  // Minot, ND
+            { "MQT", (46.53f, -87.56f) },   // Marquette, MI
+            { "MRF", (30.37f, -104.02f) },  // Marfa, TX
+            { "MSP", (44.88f, -93.22f) },   // Minneapolis, MN
+            { "MSY", (29.99f, -90.26f) },   // New Orleans, LA
+            { "OKC", (35.39f, -97.60f) },   // Oklahoma City, OK
+            { "OMA", (41.30f, -95.89f) },   // Omaha, NE
+            { "ONL", (42.47f, -98.69f) },   // O'Neill, NE
+            { "ONT", (34.06f, -117.60f) },  // Ontario, CA
+            { "ORF", (36.90f, -76.19f) },   // Norfolk, VA
+            { "OTH", (43.42f, -124.25f) },  // North Bend, OR
+            { "PDX", (45.59f, -122.60f) },  // Portland, OR
+            { "PFN", (30.21f, -85.68f) },   // Panama City, FL
+            { "PHX", (33.43f, -112.01f) },  // Phoenix, AZ
+            { "PIE", (27.91f, -82.69f) },   // St. Petersburg, FL
+            { "PIH", (42.91f, -112.60f) },  // Pocatello, ID
+            { "PIR", (44.38f, -100.29f) },  // Pierre, SD
+            { "PLB", (44.69f, -73.52f) },   // Plattsburgh, NY
+            { "PRC", (34.65f, -112.42f) },  // Prescott, AZ
+            { "PSB", (40.92f, -77.98f) },   // Philipsburg, PA
+            { "PSX", (28.73f, -96.25f) },   // Palacios, TX
+            { "PUB", (38.29f, -104.50f) },  // Pueblo, CO
+            { "PWM", (43.65f, -70.31f) },   // Portland, ME
+            { "RAP", (44.05f, -103.05f) },  // Rapid City, SD
+            { "RBL", (40.10f, -122.24f) },  // Red Bluff, CA
+            { "RDM", (44.25f, -121.15f) },  // Redmond, OR
+            { "RDU", (35.88f, -78.79f) },   // Raleigh-Durham, NC
+            { "RIC", (37.51f, -77.32f) },   // Richmond, VA
+            { "RKS", (41.60f, -109.07f) },  // Rock Springs, WY
+            { "RNO", (39.50f, -119.77f) },  // Reno, NV
+            { "ROA", (37.32f, -79.98f) },   // Roanoke, VA
+            { "ROW", (33.30f, -104.53f) },  // Roswell, NM
+            { "SAC", (38.51f, -121.49f) },  // Sacramento, CA
+            { "SAN", (32.73f, -117.19f) },  // San Diego, CA
+            { "SAT", (29.53f, -98.47f) },   // San Antonio, TX
+            { "SAV", (32.13f, -81.20f) },   // Savannah, GA
+            { "SBA", (34.43f, -119.84f) },  // Santa Barbara, CA
+            { "SEA", (47.45f, -122.31f) },  // Seattle, WA
+            { "SFO", (37.62f, -122.37f) },  // San Francisco, CA
+            { "SGF", (37.24f, -93.39f) },   // Springfield, MO
+            { "SHV", (32.45f, -93.83f) },   // Shreveport, LA
+            { "SIY", (41.78f, -122.47f) },  // Montague, CA
+            { "SLC", (40.79f, -111.98f) },  // Salt Lake City, UT
+            { "SLN", (38.79f, -97.65f) },   // Salina, KS
+            { "SPI", (39.84f, -89.68f) },   // Springfield, IL
+            { "SPS", (33.99f, -98.49f) },   // Wichita Falls, TX
+            { "SSM", (46.41f, -84.31f) },   // Sault Ste. Marie, MI
+            { "STL", (38.75f, -90.36f) },   // St. Louis, MO
+            { "SYR", (43.11f, -76.11f) },   // Syracuse, NY
+            { "TCC", (35.18f, -103.60f) },  // Tucumcari, NM
+            { "TLH", (30.40f, -84.35f) },   // Tallahassee, FL
+            { "TRI", (36.48f, -82.40f) },   // Tri-Cities, TN
+            { "TUL", (36.20f, -95.89f) },   // Tulsa, OK
+            { "TUS", (32.12f, -110.94f) },  // Tucson, AZ
+            { "TVC", (44.74f, -85.58f) },   // Traverse City, MI
+            { "TYS", (35.81f, -83.99f) },   // Knoxville, TN
+            { "YKM", (46.57f, -120.44f) },  // Yakima, WA
+            { "YUM", (32.66f, -114.61f) },  // Yuma, AZ
+            // Additional stations for Hawaii/Pacific
+            { "H51", (21.32f, -157.92f) },  // Honolulu, HI
+            { "H52", (19.72f, -155.05f) },  // Hilo, HI
+            { "H61", (20.79f, -156.43f) },  // Kahului, HI
+            { "T01", (18.43f, -66.00f) },   // San Juan, PR
+            { "T06", (18.46f, -67.14f) },   // Mayaguez, PR
+            { "T07", (18.26f, -65.64f) },   // Roosevelt Roads, PR
+        };
+
         /// <summary>
         /// Returns approximate lat/lon coordinates for winds aloft reporting stations.
         /// These are FAA winds aloft forecast locations across the US.
         /// </summary>
         private static (float Lat, float Lon) GetStationCoordinates(string stationId)
         {
-            // Comprehensive dictionary of US winds aloft station coordinates
-            var stationCoordinates = new Dictionary<string, (float Lat, float Lon)>
-            {
-                // Major airports and VORs
-                { "ABI", (32.41f, -99.68f) },   // Abilene, TX
-                { "ABQ", (35.04f, -106.61f) },  // Albuquerque, NM
-                { "ABR", (45.45f, -98.42f) },   // Aberdeen, SD
-                { "ACK", (41.25f, -70.06f) },   // Nantucket, MA
-                { "ACY", (39.46f, -74.58f) },   // Atlantic City, NJ
-                { "AGC", (40.35f, -79.93f) },   // Pittsburgh Allegheny, PA
-                { "ALB", (42.75f, -73.80f) },   // Albany, NY
-                { "ALS", (37.43f, -105.87f) },  // Alamosa, CO
-                { "AMA", (35.22f, -101.71f) },  // Amarillo, TX
-                { "AST", (46.16f, -123.88f) },  // Astoria, OR
-                { "ATL", (33.64f, -84.43f) },   // Atlanta, GA
-                { "AVP", (41.34f, -75.73f) },   // Wilkes-Barre, PA
-                { "AXN", (45.87f, -95.39f) },   // Alexandria, MN
-                { "BAM", (40.57f, -116.92f) },  // Battle Mountain, NV
-                { "BCE", (37.69f, -112.30f) },  // Bryce Canyon, UT
-                { "BDL", (41.94f, -72.68f) },   // Hartford, CT
-                { "BFF", (41.87f, -103.60f) },  // Scottsbluff, NE
-                { "BGR", (44.81f, -68.83f) },   // Bangor, ME
-                { "BHM", (33.56f, -86.75f) },   // Birmingham, AL
-                { "BIH", (37.37f, -118.36f) },  // Bishop, CA
-                { "BIL", (45.81f, -108.54f) },  // Billings, MT
-                { "BLH", (33.62f, -114.72f) },  // Blythe, CA
-                { "BML", (44.58f, -71.18f) },   // Berlin, NH
-                { "BNA", (36.12f, -86.68f) },   // Nashville, TN
-                { "BOI", (43.56f, -116.22f) },  // Boise, ID
-                { "BOS", (42.36f, -71.01f) },   // Boston, MA
-                { "BRL", (40.78f, -91.13f) },   // Burlington, IA
-                { "BRO", (25.91f, -97.43f) },   // Brownsville, TX
-                { "BUF", (42.94f, -78.74f) },   // Buffalo, NY
-                { "CAE", (33.94f, -81.12f) },   // Columbia, SC
-                { "CAR", (46.87f, -68.02f) },   // Caribou, ME
-                { "CGI", (37.23f, -89.57f) },   // Cape Girardeau, MO
-                { "CHS", (32.90f, -80.04f) },   // Charleston, SC
-                { "CLE", (41.41f, -81.85f) },   // Cleveland, OH
-                { "CLL", (30.59f, -96.36f) },   // College Station, TX
-                { "CMH", (40.00f, -82.89f) },   // Columbus, OH
-                { "COU", (38.82f, -92.22f) },   // Columbia, MO
-                { "CRP", (27.77f, -97.50f) },   // Corpus Christi, TX
-                { "CRW", (38.37f, -81.59f) },   // Charleston, WV
-                { "CSG", (32.52f, -84.94f) },   // Columbus, GA
-                { "CVG", (39.05f, -84.66f) },   // Cincinnati, OH
-                { "CZI", (35.02f, -110.79f) },  // Crazy Woman, WY
-                { "DAL", (32.85f, -96.85f) },   // Dallas, TX
-                { "DBQ", (42.40f, -90.71f) },   // Dubuque, IA
-                { "DEN", (39.86f, -104.67f) },  // Denver, CO
-                { "DIK", (46.80f, -102.80f) },  // Dickinson, ND
-                { "DLH", (46.84f, -92.19f) },   // Duluth, MN
-                { "DLN", (45.25f, -112.55f) },  // Dillon, MT
-                { "DRT", (29.37f, -100.93f) },  // Del Rio, TX
-                { "DSM", (41.53f, -93.66f) },   // Des Moines, IA
-                { "ECK", (43.26f, -82.72f) },   // Peck, MI
-                { "EKN", (38.89f, -79.86f) },   // Elkins, WV
-                { "ELP", (31.81f, -106.38f) },  // El Paso, TX
-                { "ELY", (39.30f, -114.84f) },  // Ely, NV
-                { "EMI", (39.49f, -76.98f) },   // Westminster, MD
-                { "EVV", (38.04f, -87.53f) },   // Evansville, IN
-                { "EYW", (24.56f, -81.76f) },   // Key West, FL
-                { "FAT", (36.78f, -119.72f) },  // Fresno, CA
-                { "FLO", (34.19f, -79.72f) },   // Florence, SC
-                { "FMN", (36.74f, -108.23f) },  // Farmington, NM
-                { "FOT", (40.55f, -124.13f) },  // Fortuna, CA
-                { "FSD", (43.58f, -96.74f) },   // Sioux Falls, SD
-                { "FSM", (35.34f, -94.37f) },   // Fort Smith, AR
-                { "FWA", (41.01f, -85.19f) },   // Fort Wayne, IN
-                { "GAG", (36.30f, -99.77f) },   // Gage, OK
-                { "GCK", (37.93f, -100.72f) },  // Garden City, KS
-                { "GEG", (47.62f, -117.53f) },  // Spokane, WA
-                { "GFK", (47.95f, -97.18f) },   // Grand Forks, ND
-                { "GGW", (48.21f, -106.62f) },  // Glasgow, MT
-                { "GJT", (39.12f, -108.53f) },  // Grand Junction, CO
-                { "GLD", (39.37f, -101.70f) },  // Goodland, KS
-                { "GPI", (48.31f, -114.26f) },  // Kalispell, MT (Glacier Park)
-                { "GRB", (44.49f, -88.13f) },   // Green Bay, WI
-                { "GRI", (40.97f, -98.31f) },   // Grand Island, NE
-                { "GSP", (34.88f, -82.22f) },   // Greenville-Spartanburg, SC
-                { "GTF", (47.48f, -111.37f) },  // Great Falls, MT
-                { "HAT", (35.26f, -75.55f) },   // Cape Hatteras, NC
-                { "HOU", (29.65f, -95.28f) },   // Houston, TX
-                { "HSV", (34.64f, -86.77f) },   // Huntsville, AL
-                { "ICT", (37.65f, -97.43f) },   // Wichita, KS
-                { "ILM", (34.27f, -77.90f) },   // Wilmington, NC
-                { "IMB", (33.15f, -114.80f) },  // Imperial, CA
-                { "IND", (39.72f, -86.27f) },   // Indianapolis, IN
-                { "INK", (31.78f, -103.20f) },  // Wink, TX
-                { "INL", (48.57f, -93.40f) },   // International Falls, MN
-                { "JAN", (32.31f, -90.08f) },   // Jackson, MS
-                { "JAX", (30.49f, -81.69f) },   // Jacksonville, FL
-                { "JFK", (40.64f, -73.78f) },   // New York JFK, NY
-                { "JOT", (41.52f, -88.18f) },   // Joliet, IL
-                { "LAS", (36.08f, -115.15f) },  // Las Vegas, NV
-                { "LBB", (33.66f, -101.82f) },  // Lubbock, TX
-                { "LCH", (30.13f, -93.22f) },   // Lake Charles, LA
-                { "LIT", (34.73f, -92.22f) },   // Little Rock, AR
-                { "LKV", (42.16f, -120.40f) },  // Lakeview, OR
-                { "LND", (42.82f, -108.73f) },  // Lander, WY
-                { "LOU", (38.23f, -85.66f) },   // Louisville, KY
-                { "LRD", (27.54f, -99.46f) },   // Laredo, TX
-                { "LSE", (43.88f, -91.26f) },   // La Crosse, WI
-                { "LWS", (46.37f, -117.01f) },  // Lewiston, ID
-                { "MBW", (41.13f, -100.68f) },  // North Platte, NE
-                { "MCW", (43.16f, -93.33f) },   // Mason City, IA
-                { "MEM", (35.06f, -89.98f) },   // Memphis, TN
-                { "MGM", (32.30f, -86.39f) },   // Montgomery, AL
-                { "MIA", (25.79f, -80.29f) },   // Miami, FL
-                { "MKC", (39.12f, -94.59f) },   // Kansas City, MO
-                { "MKG", (43.17f, -86.24f) },   // Muskegon, MI
-                { "MLB", (28.10f, -80.64f) },   // Melbourne, FL
-                { "MLS", (46.43f, -105.96f) },  // Miles City, MT
-                { "MOB", (30.69f, -88.24f) },   // Mobile, AL
-                { "MOT", (48.26f, -101.28f) },  // Minot, ND
-                { "MQT", (46.53f, -87.56f) },   // Marquette, MI
-                { "MRF", (30.37f, -104.02f) },  // Marfa, TX
-                { "MSP", (44.88f, -93.22f) },   // Minneapolis, MN
-                { "MSY", (29.99f, -90.26f) },   // New Orleans, LA
-                { "OKC", (35.39f, -97.60f) },   // Oklahoma City, OK
-                { "OMA", (41.30f, -95.89f) },   // Omaha, NE
-                { "ONL", (42.47f, -98.69f) },   // O'Neill, NE
-                { "ONT", (34.06f, -117.60f) },  // Ontario, CA
-                { "ORF", (36.90f, -76.19f) },   // Norfolk, VA
-                { "OTH", (43.42f, -124.25f) },  // North Bend, OR
-                { "PDX", (45.59f, -122.60f) },  // Portland, OR
-                { "PFN", (30.21f, -85.68f) },   // Panama City, FL
-                { "PHX", (33.43f, -112.01f) },  // Phoenix, AZ
-                { "PIE", (27.91f, -82.69f) },   // St. Petersburg, FL
-                { "PIH", (42.91f, -112.60f) },  // Pocatello, ID
-                { "PIR", (44.38f, -100.29f) },  // Pierre, SD
-                { "PLB", (44.69f, -73.52f) },   // Plattsburgh, NY
-                { "PRC", (34.65f, -112.42f) },  // Prescott, AZ
-                { "PSB", (40.92f, -77.98f) },   // Philipsburg, PA
-                { "PSX", (28.73f, -96.25f) },   // Palacios, TX
-                { "PUB", (38.29f, -104.50f) },  // Pueblo, CO
-                { "PWM", (43.65f, -70.31f) },   // Portland, ME
-                { "RAP", (44.05f, -103.05f) },  // Rapid City, SD
-                { "RBL", (40.10f, -122.24f) },  // Red Bluff, CA
-                { "RDM", (44.25f, -121.15f) },  // Redmond, OR
-                { "RDU", (35.88f, -78.79f) },   // Raleigh-Durham, NC
-                { "RIC", (37.51f, -77.32f) },   // Richmond, VA
-                { "RKS", (41.60f, -109.07f) },  // Rock Springs, WY
-                { "RNO", (39.50f, -119.77f) },  // Reno, NV
-                { "ROA", (37.32f, -79.98f) },   // Roanoke, VA
-                { "ROW", (33.30f, -104.53f) },  // Roswell, NM
-                { "SAC", (38.51f, -121.49f) },  // Sacramento, CA
-                { "SAN", (32.73f, -117.19f) },  // San Diego, CA
-                { "SAT", (29.53f, -98.47f) },   // San Antonio, TX
-                { "SAV", (32.13f, -81.20f) },   // Savannah, GA
-                { "SBA", (34.43f, -119.84f) },  // Santa Barbara, CA
-                { "SEA", (47.45f, -122.31f) },  // Seattle, WA
-                { "SFO", (37.62f, -122.37f) },  // San Francisco, CA
-                { "SGF", (37.24f, -93.39f) },   // Springfield, MO
-                { "SHV", (32.45f, -93.83f) },   // Shreveport, LA
-                { "SIY", (41.78f, -122.47f) },  // Montague, CA
-                { "SLC", (40.79f, -111.98f) },  // Salt Lake City, UT
-                { "SLN", (38.79f, -97.65f) },   // Salina, KS
-                { "SPI", (39.84f, -89.68f) },   // Springfield, IL
-                { "SPS", (33.99f, -98.49f) },   // Wichita Falls, TX
-                { "SSM", (46.41f, -84.31f) },   // Sault Ste. Marie, MI
-                { "STL", (38.75f, -90.36f) },   // St. Louis, MO
-                { "SYR", (43.11f, -76.11f) },   // Syracuse, NY
-                { "TCC", (35.18f, -103.60f) },  // Tucumcari, NM
-                { "TLH", (30.40f, -84.35f) },   // Tallahassee, FL
-                { "TRI", (36.48f, -82.40f) },   // Tri-Cities, TN
-                { "TUL", (36.20f, -95.89f) },   // Tulsa, OK
-                { "TUS", (32.12f, -110.94f) },  // Tucson, AZ
-                { "TVC", (44.74f, -85.58f) },   // Traverse City, MI
-                { "TYS", (35.81f, -83.99f) },   // Knoxville, TN
-                { "YKM", (46.57f, -120.44f) },  // Yakima, WA
-                { "YUM", (32.66f, -114.61f) },  // Yuma, AZ
-                // Additional stations for Hawaii/Pacific
-                { "H51", (21.32f, -157.92f) },  // Honolulu, HI
-                { "H52", (19.72f, -155.05f) },  // Hilo, HI
-                { "H61", (20.79f, -156.43f) },  // Kahului, HI
-                { "T01", (18.43f, -66.00f) },   // San Juan, PR
-                { "T06", (18.46f, -67.14f) },   // Mayaguez, PR
-                { "T07", (18.26f, -65.64f) },   // Roosevelt Roads, PR
-            };
-
-            if (stationCoordinates.TryGetValue(stationId, out var coords))
-            {
-                return coords;
-            }
-
-            // Return 0,0 for unknown stations - the NavlogService will fall back to ID matching
-            return (0f, 0f);
+            return StationCoordinates.TryGetValue(stationId, out var coords) ? coords : (0f, 0f);
         }
     }
 }

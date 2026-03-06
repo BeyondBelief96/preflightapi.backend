@@ -21,9 +21,9 @@ public record NavigationLegDto
     public double LegDistance { get; set; }
     /// <summary>Remaining distance to destination in nautical miles.</summary>
     public double DistanceRemaining { get; set; }
-    /// <summary>Estimated time at the start of this leg (UTC).</summary>
+    /// <summary>Estimated time at the start of this leg. ISO 8601 UTC format.</summary>
     public DateTime StartLegTime { get; set; }
-    /// <summary>Estimated time at the end of this leg (UTC).</summary>
+    /// <summary>Estimated time at the end of this leg. ISO 8601 UTC format.</summary>
     public DateTime EndLegTime { get; set; }
     /// <summary>Fuel burned during this leg in gallons.</summary>
     public double LegFuelBurnGals { get; set; }

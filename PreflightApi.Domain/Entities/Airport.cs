@@ -17,7 +17,7 @@ public class Airport : INasrEntity<Airport>
     [Column("site_no")]
     public string SiteNo { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: EFF_DATE. Effective date of the airport information.</summary>
+    /// <summary>FAA NASR field: EFF_DATE. Effective date of the airport information. ISO 8601 UTC format.</summary>
     [Column("eff_date")]
     public DateTime EffDate { get; set; }
 
@@ -82,11 +82,11 @@ public class Airport : INasrEntity<Airport>
     [Column("facility_use_code")]
     public string? FacilityUseCode { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of airport reference point in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of airport reference point in decimal degrees (WGS 84).</summary>
     [Column("lat_decimal", TypeName = "decimal(10,8)")]
     public decimal? LatDecimal { get; set; }
 
-    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of airport reference point in decimal degrees.</summary>
+    /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of airport reference point in decimal degrees (WGS 84).</summary>
     [Column("long_decimal", TypeName = "decimal(11,8)")]
     public decimal? LongDecimal { get; set; }
 
@@ -146,7 +146,7 @@ public class Airport : INasrEntity<Airport>
     [Column("elev_method_code")]
     public string? ElevMethodCode { get; set; }
 
-    /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees.</summary>
+    /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees. Use with <see cref="MagHemis"/> (E or W) to determine sign.</summary>
     [Column("mag_varn", TypeName = "decimal(2,0)")]
     public decimal? MagVarn { get; set; }
 
@@ -169,7 +169,7 @@ public class Airport : INasrEntity<Airport>
     [Column("chart_name")]
     public string? ChartName { get; set; }
 
-    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport.</summary>
+    /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport, in nautical miles.</summary>
     [Column("dist_city_to_airport", TypeName = "decimal(2,0)")]
     public decimal? DistCityToAirport { get; set; }
 
@@ -304,11 +304,11 @@ public class Airport : INasrEntity<Airport>
     [Column("inspector_code")]
     public string? InspectorCode { get; set; } = string.Empty;
 
-    /// <summary>FAA NASR field: LAST_INSPECTION. Date of the last physical inspection (YYYY/MM/DD).</summary>
+    /// <summary>FAA NASR field: LAST_INSPECTION. Date of the last physical inspection. ISO 8601 UTC format.</summary>
     [Column("last_inspection")]
     public DateTime? LastInspection { get; set; }
 
-    /// <summary>FAA NASR field: LAST_INFO_RESPONSE. Date of the last information request response (YYYY/MM/DD).</summary>
+    /// <summary>FAA NASR field: LAST_INFO_RESPONSE. Date of the last information request response. ISO 8601 UTC format.</summary>
     [Column("last_info_response")]
     public DateTime? LastInfoResponse { get; set; }
 
@@ -396,7 +396,7 @@ public class Airport : INasrEntity<Airport>
     [Column("arpt_psn_source")]
     public string? ArptPsnSource { get; set; }
 
-    /// <summary>FAA NASR field: POSITION_SRC_DATE. Date the airport position information was determined (YYYY/MM/DD).</summary>
+    /// <summary>FAA NASR field: POSITION_SRC_DATE. Date the airport position information was determined. ISO 8601 UTC format.</summary>
     [Column("position_src_date")]
     public DateTime? PositionSrcDate { get; set; }
 
@@ -404,7 +404,7 @@ public class Airport : INasrEntity<Airport>
     [Column("arpt_elev_source")]
     public string? ArptElevSource { get; set; }
 
-    /// <summary>FAA NASR field: ELEVATION_SRC_DATE. Date the airport elevation information was determined (YYYY/MM/DD).</summary>
+    /// <summary>FAA NASR field: ELEVATION_SRC_DATE. Date the airport elevation information was determined. ISO 8601 UTC format.</summary>
     [Column("elevation_src_date")]
     public DateTime? ElevationSrcDate { get; set; }
 
@@ -480,7 +480,7 @@ public class Airport : INasrEntity<Airport>
     [Column("far_139_carrier_ser_code")]
     public string? Far139CarrierSerCode { get; set; }
 
-    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. Airport ARFF Certification Date (YYYY/MM).</summary>
+    /// <summary>FAA NASR field: ARFF_CERT_TYPE_DATE. Airport ARFF Certification Date. ISO 8601 UTC format.</summary>
     [Column("arff_cert_type_date")]
     public DateTime? ArffCertTypeDate { get; set; }
 

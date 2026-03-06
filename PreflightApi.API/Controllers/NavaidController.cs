@@ -41,13 +41,12 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResponse<NavaidDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResponse<NavaidDto>>> GetNavaids(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] string? search = null,
         [FromQuery] string? type = null,
-        [FromQuery] string? state = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] string? state = null)
     {
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await navaidService.GetNavaids(search, type, state, pagination.Cursor, pagination.Limit, ct));
     }
@@ -70,10 +69,9 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<NavaidDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResponse<NavaidDto>>> GetByType(
         NavaidType type,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         var dbType = NavaidMapper.ToDbString(type);
         return Ok(await navaidService.GetNavaids(null, dbType, null, pagination.Cursor, pagination.Limit, ct));
@@ -164,15 +162,14 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     public async Task<ActionResult<PaginatedResponse<NavaidDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] double radiusNm = 30,
-        [FromQuery] string? type = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] string? type = null)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await navaidService.SearchNearby(lat, lon, radiusNm, type, pagination.Cursor, pagination.Limit, ct));
     }

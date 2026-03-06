@@ -148,12 +148,11 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> SearchAffecting(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await gairmetService.SearchAffecting(lat, lon, pagination.Cursor, pagination.Limit, ct));
     }

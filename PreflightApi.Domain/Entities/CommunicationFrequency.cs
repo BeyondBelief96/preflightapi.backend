@@ -19,7 +19,7 @@ namespace PreflightApi.Domain.Entities
         [Column("facility_code", TypeName = "varchar(30)")]
         public string? FacilityCode { get; set; }
 
-        /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date (YYYY/MM/DD).</summary>
+        /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date. ISO 8601 UTC format.</summary>
         [Column("effective_date")]
         public DateTime EffectiveDate { get; set; }
 
@@ -57,11 +57,11 @@ namespace PreflightApi.Domain.Entities
         [Column("serviced_site_type", TypeName = "varchar(25)")]
         public string? ServicedSiteType { get; set; }
 
-        /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in Decimal Format.</summary>
+        /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in decimal degrees (WGS 84).</summary>
         [Column("latitude", TypeName = "decimal(10,8)")]
         public decimal? Latitude { get; set; }
 
-        /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in Decimal Format.</summary>
+        /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in decimal degrees (WGS 84).</summary>
         [Column("longitude", TypeName = "decimal(11,8)")]
         public decimal? Longitude { get; set; }
 
@@ -85,7 +85,7 @@ namespace PreflightApi.Domain.Entities
         [Column("primary_approach_radio_call", TypeName = "varchar(26)")]
         public string? PrimaryApproachRadioCall { get; set; }
 
-        /// <summary>FAA NASR field: FREQ. Frequency for SERVICED FACILITY use. In the case of a NAVAID with DME/TACAN Channel, the Frequency is displayed with the Channel (FREQ/CHAN).</summary>
+        /// <summary>FAA NASR field: FREQ. Frequency for SERVICED FACILITY use in MHz. In the case of a NAVAID with DME/TACAN Channel, the Frequency is displayed with the Channel (FREQ/CHAN).</summary>
         [Column("frequency", TypeName = "varchar(40)")]
         public string? Frequency { get; set; }
 

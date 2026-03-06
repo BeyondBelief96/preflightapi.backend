@@ -51,7 +51,7 @@ rejected requests (gateway secret mismatch) so practical impact is minimal.
 
 ### Missing `AsNoTracking()` — additional methods
 
-Beyond the medium-priority list, audit remaining services for any read-only queries missing
+Beyond the medium-priority list, audit remaining services fnor any read-only queries missig
 `AsNoTracking()`. Consider setting `QueryTrackingBehavior.NoTracking` as the DbContext default
 in `OnConfiguring` since the API never writes via its DbContext.
 

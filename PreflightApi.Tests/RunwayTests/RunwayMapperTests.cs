@@ -101,6 +101,95 @@ public class RunwayMapperTests
 
     #endregion
 
+    #region Surface Type Parsing Tests
+
+    [Fact]
+    public void ToDto_SingleSurfaceType_ParsesPrimaryOnly()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "ASPH";
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().Be(RunwaySurfaceType.Asphalt);
+        dto.SecondarySurfaceType.Should().BeNull();
+    }
+
+    [Fact]
+    public void ToDto_CompositeSurfaceType_WithHyphen_ParsesBothTypes()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "ASPH-CONC";
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().Be(RunwaySurfaceType.Asphalt);
+        dto.SecondarySurfaceType.Should().Be(RunwaySurfaceType.Concrete);
+    }
+
+    [Fact]
+    public void ToDto_CompositeSurfaceType_WithSlash_ParsesBothTypes()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "CONC/ASPH";
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().Be(RunwaySurfaceType.Concrete);
+        dto.SecondarySurfaceType.Should().Be(RunwaySurfaceType.Asphalt);
+    }
+
+    [Fact]
+    public void ToDto_CompositeSurfaceType_GravelTurf_ParsesBothTypes()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "GRAVEL-TURF";
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().Be(RunwaySurfaceType.Gravel);
+        dto.SecondarySurfaceType.Should().Be(RunwaySurfaceType.Turf);
+    }
+
+    [Fact]
+    public void ToDto_NullSurfaceType_ReturnsBothNull()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = null;
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().BeNull();
+        dto.SecondarySurfaceType.Should().BeNull();
+    }
+
+    [Fact]
+    public void ToDto_EmptySurfaceType_ReturnsBothNull()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "  ";
+
+        var dto = RunwayMapper.ToDto(runway, NullLogger.Instance);
+
+        dto.SurfaceType.Should().BeNull();
+        dto.SecondarySurfaceType.Should().BeNull();
+    }
+
+    [Fact]
+    public void ToDto_CompositeSurfaceType_WithAirport_ParsesBothTypes()
+    {
+        var runway = CreateTestRunway();
+        runway.SurfaceTypeCode = "ASPH-CONC";
+        var airport = CreateTestAirport();
+
+        var dto = RunwayMapper.ToDto(runway, airport, NullLogger.Instance);
+
+        dto.SurfaceType.Should().Be(RunwaySurfaceType.Asphalt);
+        dto.SecondarySurfaceType.Should().Be(RunwaySurfaceType.Concrete);
+    }
+
+    #endregion
+
     #region ToDbCode Tests
 
     [Theory]

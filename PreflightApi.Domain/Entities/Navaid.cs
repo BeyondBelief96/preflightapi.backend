@@ -18,7 +18,7 @@ namespace PreflightApi.Domain.Entities
 
         // === Common columns (present in all NAV files) ===
 
-        /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date (YYYY/MM/DD).</summary>
+        /// <summary>FAA NASR field: EFF_DATE. The 28 Day NASR Subscription Effective Date. ISO 8601 UTC format.</summary>
         [Column("effective_date")]
         public DateTime EffectiveDate { get; set; }
 
@@ -135,7 +135,7 @@ namespace PreflightApi.Domain.Entities
         [Column("lat_hemis", TypeName = "varchar(1)")]
         public string? LatHemis { get; set; }
 
-        /// <summary>FAA NASR field: LAT_DECIMAL. NAVAID Latitude in Decimal Format.</summary>
+        /// <summary>FAA NASR field: LAT_DECIMAL. NAVAID Latitude in decimal degrees (WGS 84).</summary>
         [Column("lat_decimal", TypeName = "decimal(10,8)")]
         public decimal? LatDecimal { get; set; }
 
@@ -155,7 +155,7 @@ namespace PreflightApi.Domain.Entities
         [Column("long_hemis", TypeName = "varchar(1)")]
         public string? LongHemis { get; set; }
 
-        /// <summary>FAA NASR field: LONG_DECIMAL. NAVAID Longitude in Decimal Format.</summary>
+        /// <summary>FAA NASR field: LONG_DECIMAL. NAVAID Longitude in decimal degrees (WGS 84).</summary>
         [Column("long_decimal", TypeName = "decimal(11,8)")]
         public decimal? LongDecimal { get; set; }
 
@@ -185,7 +185,7 @@ namespace PreflightApi.Domain.Entities
         [Column("tacan_dme_lat_hemis", TypeName = "varchar(1)")]
         public string? TacanDmeLatHemis { get; set; }
 
-        /// <summary>FAA NASR field: TACAN_DME_LAT_DECIMAL. Latitude in Decimal Format of TACAN Portion of VORTAC when TACAN is not sited with VOR.</summary>
+        /// <summary>FAA NASR field: TACAN_DME_LAT_DECIMAL. Latitude in decimal degrees (WGS 84) of TACAN Portion of VORTAC when TACAN is not sited with VOR.</summary>
         [Column("tacan_dme_lat_decimal", TypeName = "decimal(10,8)")]
         public decimal? TacanDmeLatDecimal { get; set; }
 
@@ -205,17 +205,17 @@ namespace PreflightApi.Domain.Entities
         [Column("tacan_dme_long_hemis", TypeName = "varchar(1)")]
         public string? TacanDmeLongHemis { get; set; }
 
-        /// <summary>FAA NASR field: TACAN_DME_LONG_DECIMAL. Longitude in Decimal Format of TACAN Portion of VORTAC when TACAN is not sited with VOR.</summary>
+        /// <summary>FAA NASR field: TACAN_DME_LONG_DECIMAL. Longitude in decimal degrees (WGS 84) of TACAN Portion of VORTAC when TACAN is not sited with VOR.</summary>
         [Column("tacan_dme_long_decimal", TypeName = "decimal(11,8)")]
         public decimal? TacanDmeLongDecimal { get; set; }
 
         // === Other data ===
 
-        /// <summary>FAA NASR field: ELEV. Elevation in Tenth of a Foot (MSL).</summary>
+        /// <summary>FAA NASR field: ELEV. Elevation in tenths of a foot MSL.</summary>
         [Column("elev", TypeName = "decimal(6,1)")]
         public decimal? Elev { get; set; }
 
-        /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation Degrees.</summary>
+        /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees. Direction (E/W) is in MagVarnHemis.</summary>
         [Column("mag_varn")]
         public int? MagVarn { get; set; }
 
@@ -251,7 +251,7 @@ namespace PreflightApi.Domain.Entities
         [Column("chan", TypeName = "varchar(4)")]
         public string? Chan { get; set; }
 
-        /// <summary>FAA NASR field: FREQ. Frequency the NAVAID Transmits On (Except TACAN).</summary>
+        /// <summary>FAA NASR field: FREQ. Frequency the NAVAID Transmits On (Except TACAN). MHz for VOR/ILS, kHz for NDB.</summary>
         [Column("freq", TypeName = "decimal(5,2)")]
         public decimal? Freq { get; set; }
 
@@ -263,7 +263,7 @@ namespace PreflightApi.Domain.Entities
         [Column("mkr_shape", TypeName = "varchar(1)")]
         public string? MkrShape { get; set; }
 
-        /// <summary>FAA NASR field: MKR_BRG. Marker Bearing.</summary>
+        /// <summary>FAA NASR field: MKR_BRG. Marker Bearing in degrees true.</summary>
         [Column("mkr_brg")]
         public int? MkrBrg { get; set; }
 

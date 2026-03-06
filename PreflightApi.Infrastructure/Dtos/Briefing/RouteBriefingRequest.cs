@@ -31,9 +31,9 @@ public record BriefingWaypoint
     /// </summary>
     public string? AirportIdentifier { get; init; }
 
-    /// <summary>Latitude in decimal degrees (-90 to 90). Required when AirportIdentifier is null.</summary>
+    /// <summary>Latitude in decimal degrees (WGS 84), range -90 to 90. Required when AirportIdentifier is null.</summary>
     public decimal? Latitude { get; init; }
 
-    /// <summary>Longitude in decimal degrees (-180 to 180). Required when AirportIdentifier is null.</summary>
+    /// <summary>Longitude in decimal degrees (WGS 84), range -180 to 180. Required when AirportIdentifier is null.</summary>
     public decimal? Longitude { get; init; }
 }

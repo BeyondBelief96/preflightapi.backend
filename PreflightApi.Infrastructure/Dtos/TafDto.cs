@@ -21,11 +21,11 @@ public record TafDto
     public string? ValidTimeTo { get; init; }
     /// <summary>TAF remarks.</summary>
     public string? Remarks { get; init; }
-    /// <summary>Station latitude in decimal degrees.</summary>
+    /// <summary>Station latitude in decimal degrees (WGS 84).</summary>
     public double? Latitude { get; init; }
-    /// <summary>Station longitude in decimal degrees.</summary>
+    /// <summary>Station longitude in decimal degrees (WGS 84).</summary>
     public double? Longitude { get; init; }
-    /// <summary>Station elevation in meters.</summary>
+    /// <summary>Station elevation in meters MSL. This field is in meters (not feet) because it originates from the NOAA Aviation Weather API which uses ICAO standard units.</summary>
     public double? ElevationM { get; init; }
     /// <summary>Forecast periods within the TAF.</summary>
     public List<TafForecast>? Forecast { get; init; }

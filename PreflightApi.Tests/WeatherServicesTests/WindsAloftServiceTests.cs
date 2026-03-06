@@ -1,5 +1,6 @@
 using System.Net;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using RichardSzalay.MockHttp;
@@ -11,6 +12,7 @@ namespace PreflightApi.Tests.WeatherServicesTests
     public class WindsAloftServiceTests
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
         private readonly ILogger<WindsAloftService> _logger;
         private readonly WindsAloftService _windsAloftService;
         private readonly MockHttpMessageHandler _mockHttp;
@@ -31,11 +33,12 @@ ABR 0508 3510-05 3017-08 2925-14 2841-26 2768-33 268850 278952 278346";
         public WindsAloftServiceTests()
         {
             _httpClientFactory = Substitute.For<IHttpClientFactory>();
+            _cache = new MemoryCache(new MemoryCacheOptions());
             _logger = Substitute.For<ILogger<WindsAloftService>>();
             _mockHttp = new MockHttpMessageHandler();
             var client = _mockHttp.ToHttpClient();
             _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(client);
-            _windsAloftService = new WindsAloftService(_httpClientFactory, _logger);
+            _windsAloftService = new WindsAloftService(_httpClientFactory, _cache, _logger);
         }
 
         #region Forecast Hours Validation Tests

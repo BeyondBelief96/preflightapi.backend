@@ -53,15 +53,6 @@ public class NavlogService : INavlogService
                 waypointsWithClimbAndDescent,
                 request.PlannedCruisingAltitude);
 
-            var response = new NavlogResponseDto
-            {
-                TotalRouteDistance = 0,
-                TotalRouteTimeHours = 0,
-                TotalFuelUsed = 0,
-                AverageWindComponent = 0,
-                Legs = []
-            };
-
             // Determine the forecast type and get winds aloft data
             var (forecastType, windsAloftData) = await DetermineForecastType(request.TimeOfDeparture, ct);
             if (!forecastType.HasValue || windsAloftData == null)
@@ -69,6 +60,7 @@ public class NavlogService : INavlogService
                 _logger.LogWarning("No suitable winds aloft forecast found for departure time");
             }
 
+            var legs = new List<NavigationLegDto>();
             var previousLegEndTime = request.TimeOfDeparture;
 
             for (var i = 0; i < waypointsAdjustedForCruisingAltitude.Count - 1; i++)
@@ -90,46 +82,51 @@ public class NavlogService : INavlogService
                     windsAloftData,
                     ct);
 
-                response.Legs.Add(leg);
+                legs.Add(leg);
                 previousLegEndTime = leg.EndLegTime;
             }
 
-            response.TotalRouteDistance = CalculateTotalRouteDistance(response.Legs);
+            var totalRouteDistance = CalculateTotalRouteDistance(legs);
             var additionalDepartures = waypointsAdjustedForCruisingAltitude.Count(w => (w.IsRefuelingStop ?? false));
-            response.TotalFuelUsed = CalculateTotalFuelUsed(response.Legs, performanceData.SttFuelGals * (1 + additionalDepartures));
-            response.TotalRouteTimeHours = CalculateTotalRouteTime(response.Legs);
-            response.AverageWindComponent = CalculateAverageHeadwind(response.Legs);
 
-            CalculateDistanceRemaining(response.Legs, response.TotalRouteDistance);
-            CalculateRemainingFuel(response.Legs, performanceData.FuelOnBoardGals, performanceData);
+            CalculateDistanceRemaining(legs, totalRouteDistance);
+            CalculateRemainingFuel(legs, performanceData.FuelOnBoardGals, performanceData);
 
+            IReadOnlyCollection<string> airspaceGlobalIds = Array.Empty<string>();
+            IReadOnlyCollection<string> suaGlobalIds = Array.Empty<string>();
             try
             {
-                var airspaceIds = await _airspaceService.GetAirspaceGlobalIdsForRouteAsync(waypointsAdjustedForCruisingAltitude);
-                var suaIds = await _airspaceService.GetSpecialUseAirspaceGlobalIdsForRouteAsync(waypointsAdjustedForCruisingAltitude);
-
-                response.AirspaceGlobalIds = airspaceIds;
-                response.SpecialUseAirspaceGlobalIds = suaIds;
+                airspaceGlobalIds = await _airspaceService.GetAirspaceGlobalIdsForRouteAsync(waypointsAdjustedForCruisingAltitude);
+                suaGlobalIds = await _airspaceService.GetSpecialUseAirspaceGlobalIdsForRouteAsync(waypointsAdjustedForCruisingAltitude);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to determine intersecting airspaces for route");
             }
 
+            IReadOnlyCollection<string> obstacleOasNumbers = Array.Empty<string>();
             try
             {
-                var obstacleOasNumbers = await _obstacleService.GetObstacleOasNumbersForRouteAsync(
+                obstacleOasNumbers = await _obstacleService.GetObstacleOasNumbersForRouteAsync(
                     waypointsAdjustedForCruisingAltitude,
                     request.PlannedCruisingAltitude);
-
-                response.ObstacleOasNumbers = obstacleOasNumbers;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to determine obstacles along route");
             }
 
-            return response;
+            return new NavlogResponseDto
+            {
+                TotalRouteDistance = totalRouteDistance,
+                TotalFuelUsed = CalculateTotalFuelUsed(legs, performanceData.SttFuelGals * (1 + additionalDepartures)),
+                TotalRouteTimeHours = CalculateTotalRouteTime(legs),
+                AverageWindComponent = CalculateAverageHeadwind(legs),
+                Legs = legs,
+                AirspaceGlobalIds = airspaceGlobalIds,
+                SpecialUseAirspaceGlobalIds = suaGlobalIds,
+                ObstacleOasNumbers = obstacleOasNumbers
+            };
         }
         catch (Exception ex)
         {

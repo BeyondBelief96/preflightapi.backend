@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using PreflightApi.API.Models;
+using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos.Notam;
 using PreflightApi.Infrastructure.Dtos.Pagination;
@@ -92,10 +93,10 @@ public class NotamController(INotamService notamService)
     /// <response code="400">If the input cannot be parsed or is invalid</response>
     /// <response code="404">If no NOTAMs match the given number</response>
     [HttpGet("number/{notamNumber}")]
-    [ProducesResponseType(typeof(List<NotamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<NotamDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<List<NotamDto>>> GetNotamsByNumber(
+    public async Task<ActionResult<IEnumerable<NotamDto>>> GetNotamsByNumber(
         string notamNumber,
         CancellationToken ct)
     {
@@ -231,12 +232,13 @@ public class NotamController(INotamService notamService)
     /// <response code="200">Returns the NOTAMs within the search radius</response>
     /// <response code="400">If coordinates, radius, or filter values are invalid</response>
     [HttpGet("radius")]
+
     [ProducesResponseType(typeof(NotamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsByRadius(
-        [FromQuery] double latitude,
-        [FromQuery] double longitude,
+        [FromQuery] decimal latitude,
+        [FromQuery] decimal longitude,
         [FromQuery] double radiusNm,
         [FromQuery] string? classification,
         [FromQuery] string? feature,
@@ -245,25 +247,13 @@ public class NotamController(INotamService notamService)
         [FromQuery] string? effectiveEndDate,
         CancellationToken ct)
     {
-        if (latitude < -90 || latitude > 90)
-        {
-            throw new ValidationException("latitude", "Latitude must be between -90 and 90 degrees");
-        }
-
-        if (longitude < -180 || longitude > 180)
-        {
-            throw new ValidationException("longitude", "Longitude must be between -180 and 180 degrees");
-        }
-
-        if (radiusNm <= 0 || radiusNm > 100)
-        {
-            throw new ValidationException("radiusNm", "Radius must be between 0 and 100 nautical miles");
-        }
+        ValidationHelpers.ValidateCoordinates(latitude, longitude);
+        ValidationHelpers.ValidateRadius(radiusNm, 100);
 
         var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate);
         ValidateFilters(filters);
 
-        var result = await notamService.GetNotamsByRadiusAsync(latitude, longitude, radiusNm, filters, ct);
+        var result = await notamService.GetNotamsByRadiusAsync((double)latitude, (double)longitude, radiusNm, filters, ct);
         return Ok(result);
     }
 
@@ -423,15 +413,15 @@ public class NotamController(INotamService notamService)
         [FromQuery] string? accountability,
         [FromQuery] string? location,
         [FromQuery] string? notamNumber,
-        [FromQuery] double? latitude,
-        [FromQuery] double? longitude,
+        [FromQuery] decimal? latitude,
+        [FromQuery] decimal? longitude,
         [FromQuery] double? radius,
         [FromQuery] string? lastUpdatedDate,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {
         var filters = BuildFilters(classification, feature, freeText, effectiveStartDate, effectiveEndDate,
-            accountability, location, notamNumber, latitude, longitude, radius, lastUpdatedDate);
+            accountability, location, notamNumber, (double?)latitude, (double?)longitude, radius, lastUpdatedDate);
 
         if (filters == null || !filters.HasFilters)
         {

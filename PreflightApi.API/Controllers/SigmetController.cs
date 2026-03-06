@@ -105,12 +105,11 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     public async Task<ActionResult<PaginatedResponse<SigmetDto>>> SearchAffecting(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await sigmetService.SearchAffecting(lat, lon, pagination.Cursor, pagination.Limit, ct));
     }
@@ -146,8 +145,8 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
         [FromQuery] decimal maxLat,
         [FromQuery] decimal minLon,
         [FromQuery] decimal maxLon,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct)
     {
         if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90)
             throw new ValidationException("lat", "Latitude values must be between -90 and 90 degrees");
@@ -158,7 +157,6 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
         if (minLon >= maxLon)
             throw new ValidationException("lon", "minLon must be less than maxLon");
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await sigmetService.SearchByArea(minLat, maxLat, minLon, maxLon, pagination.Cursor, pagination.Limit, ct));
     }

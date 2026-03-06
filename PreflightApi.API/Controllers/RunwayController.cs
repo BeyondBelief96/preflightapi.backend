@@ -59,7 +59,7 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     /// </code>
     /// </remarks>
     /// <param name="search">Search across airport identifier, ICAO code, name, and city</param>
-    /// <param name="surfaceType">Filter by runway surface type enum (e.g., Asphalt, Concrete, Turf)</param>
+    /// <param name="surfaceType">Filter by runway surface type enum (e.g., Asphalt, Concrete, Turf). Matches runways where the type appears as either the primary or secondary surface.</param>
     /// <param name="minLength">Minimum runway length in feet</param>
     /// <param name="state">Filter by two-letter state code (e.g., TX, CA)</param>
     /// <param name="lighted">Filter by whether the runway has edge lighting</param>
@@ -69,15 +69,14 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResponse<RunwayDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResponse<RunwayDto>>> GetRunways(
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] string? search = null,
         [FromQuery] RunwaySurfaceType? surfaceType = null,
         [FromQuery] int? minLength = null,
         [FromQuery] string? state = null,
-        [FromQuery] bool? lighted = null,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] bool? lighted = null)
     {
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await runwayService.GetRunways(search, surfaceType, minLength, state, lighted, pagination.Cursor, pagination.Limit, ct));
     }
@@ -97,7 +96,7 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     /// <param name="lon">Longitude in decimal degrees (-180 to 180)</param>
     /// <param name="radiusNm">Search radius in nautical miles (default 30, max 500)</param>
     /// <param name="minLength">Minimum runway length in feet</param>
-    /// <param name="surfaceType">Filter by runway surface type enum (e.g., Asphalt, Concrete)</param>
+    /// <param name="surfaceType">Filter by runway surface type enum (e.g., Asphalt, Concrete). Matches runways where the type appears as either the primary or secondary surface.</param>
     /// <param name="includeGeometry">Include ArcGIS runway polygon geometry in the response (default false)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of runways within the search radius</returns>
@@ -109,17 +108,16 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     public async Task<ActionResult<PaginatedResponse<RunwayDto>>> SearchNearby(
         [FromQuery] decimal lat,
         [FromQuery] decimal lon,
+        [FromQuery] PaginationParams pagination,
+        CancellationToken ct,
         [FromQuery] double radiusNm = 30,
         [FromQuery] int? minLength = null,
         [FromQuery] RunwaySurfaceType? surfaceType = null,
-        [FromQuery] bool includeGeometry = false,
-        [FromQuery] PaginationParams? pagination = null,
-        CancellationToken ct = default)
+        [FromQuery] bool includeGeometry = false)
     {
         ValidationHelpers.ValidateCoordinates(lat, lon);
         ValidationHelpers.ValidateRadius(radiusNm, 500);
 
-        pagination ??= new PaginationParams();
         pagination.Limit = Math.Clamp(pagination.Limit, 1, 500);
         return Ok(await runwayService.SearchNearby(lat, lon, radiusNm, minLength, surfaceType, includeGeometry, pagination.Cursor, pagination.Limit, ct));
     }

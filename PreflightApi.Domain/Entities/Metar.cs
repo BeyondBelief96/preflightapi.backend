@@ -28,19 +28,19 @@ public class Metar
     public string? StationId { get; set; }
 
     /// <summary>
-    /// The observation time (ISO 8601 date format) ex: 2023-11-06T20:51:00Z
+    /// The observation time. ISO 8601 UTC format. ex: 2023-11-06T20:51:00Z
     /// </summary>
     [Column("observation_time")]
     public string? ObservationTime { get; set; }
 
     /// <summary>
-    /// Latitude of site in degrees ex: 41.9602
+    /// Latitude of site in decimal degrees (WGS 84). ex: 41.9602
     /// </summary>
     [Column("latitude")]
     public double? Latitude { get; set; }
 
     /// <summary>
-    /// Longitude of site in degrees ex: -87.9316
+    /// Longitude of site in decimal degrees (WGS 84). ex: -87.9316
     /// </summary>
     [Column("longitude")]
     public double? Longitude { get; set; }
@@ -58,7 +58,7 @@ public class Metar
     public double? DewpointC { get; set; }
 
     /// <summary>
-    /// Wind direction in degrees or VRB for variable winds ex: 230, VRB
+    /// Wind direction in degrees true, or VRB for variable winds. ex: 230, VRB
     /// </summary>
     [Column("wind_dir_degrees")]
     public string? WindDirDegrees { get; set; }
@@ -178,7 +178,7 @@ public class Metar
     public double? SnowIn { get; set; }
 
     /// <summary>
-    /// Vertical visibility in feet, if available. ex: 1000
+    /// Vertical visibility in feet AGL, if available. ex: 1000
     /// </summary>
     [Column("vert_vis_ft")]
     public int? VertVisFt { get; set; }
@@ -190,7 +190,7 @@ public class Metar
     public string? MetarType { get; set; }
 
     /// <summary>
-    /// Elevation of site in meters ex: 202
+    /// Elevation of site in meters MSL. This field is in meters (not feet) because it originates from the NOAA Aviation Weather API which uses ICAO standard units. ex: 202
     /// </summary>
     [Column("elevation_m")]
     public double? ElevationM { get; set; }

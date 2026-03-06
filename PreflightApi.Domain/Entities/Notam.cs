@@ -75,19 +75,19 @@ public class Notam
     public string? AirportName { get; set; }
 
     /// <summary>
-    /// Effective start date
+    /// Effective start date. UTC.
     /// </summary>
     [Column("effective_start")]
     public DateTime? EffectiveStart { get; set; }
 
     /// <summary>
-    /// Effective end date (null for permanent NOTAMs where effectiveEnd is "PERM")
+    /// Effective end date. UTC. Null for permanent NOTAMs where effectiveEnd is "PERM".
     /// </summary>
     [Column("effective_end")]
     public DateTime? EffectiveEnd { get; set; }
 
     /// <summary>
-    /// Cancellation date — non-null means this NOTAM has been cancelled
+    /// Cancellation date. UTC. Non-null means this NOTAM has been cancelled.
     /// </summary>
     [Column("cancelation_date")]
     public DateTime? CancelationDate { get; set; }
@@ -99,13 +99,13 @@ public class Notam
     public string? Text { get; set; }
 
     /// <summary>
-    /// When NMS last updated this NOTAM
+    /// When NMS last updated this NOTAM. UTC.
     /// </summary>
     [Column("last_updated")]
     public DateTime? LastUpdated { get; set; }
 
     /// <summary>
-    /// When our system last synced this record
+    /// When our system last synced this record. UTC.
     /// </summary>
     [Column("synced_at")]
     public DateTime SyncedAt { get; set; }

@@ -177,7 +177,7 @@
         "sky_cover": {
           "entityProperty": "SkyCondition.SkyCover",
           "dataType": "string",
-          "required": true,
+          "required": false,
           "openApiProperty": "cover",
           "captured": true,
           "description": "Sky cover type: SKC, CLR, FEW, SCT, BKN, OVC, OVX"

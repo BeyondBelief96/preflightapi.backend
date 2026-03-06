@@ -10,13 +10,13 @@ public record GAirmetDto
 {
     /// <summary>Database identifier.</summary>
     public int Id { get; init; }
-    /// <summary>Time the advisory was received.</summary>
+    /// <summary>Time the advisory was received. ISO 8601 UTC format.</summary>
     public DateTime ReceiptTime { get; init; }
-    /// <summary>Time the advisory was issued.</summary>
+    /// <summary>Time the advisory was issued. ISO 8601 UTC format.</summary>
     public DateTime IssueTime { get; init; }
-    /// <summary>Time the advisory expires, typically 6 hours after issuance.</summary>
+    /// <summary>Time the advisory expires, typically 6 hours after issuance. ISO 8601 UTC format.</summary>
     public DateTime ExpireTime { get; init; }
-    /// <summary>The valid time of the G-AIRMET snapshot.</summary>
+    /// <summary>The valid time of the G-AIRMET snapshot. ISO 8601 UTC format.</summary>
     public DateTime ValidTime { get; init; }
     /// <summary>Product type: SIERRA, TANGO, or ZULU.</summary>
     public GAirmetProduct? Product { get; init; }
