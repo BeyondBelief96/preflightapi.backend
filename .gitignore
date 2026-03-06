@@ -374,3 +374,6 @@ FodyWeavers.xsd
 **/EmailVerificationOutput/
 /PreflightApi.API/.postman/config.json
 /PreflightApi.API/postman/collections/PreflightAPI/api/v1
+
+# Claude Code machine-specific settings
+.claude/settings.local.json
