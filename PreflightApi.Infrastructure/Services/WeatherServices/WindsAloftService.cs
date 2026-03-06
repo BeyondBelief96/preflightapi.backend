@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using PreflightApi.Infrastructure.Dtos.Navlog;
 using PreflightApi.Infrastructure.Interfaces;
@@ -9,28 +10,41 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
     public class WindsAloftService : IWindsAloftService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
         private readonly ILogger<WindsAloftService> _logger;
+
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
         // Standard altitude levels in feet
         private static readonly int[] AltitudeLevels = { 3000, 6000, 9000, 12000, 18000, 24000, 30000, 34000, 39000 };
 
         public WindsAloftService(
             IHttpClientFactory httpClientFactory,
+            IMemoryCache cache,
             ILogger<WindsAloftService> logger)
         {
             _httpClientFactory = httpClientFactory;
+            _cache = cache;
             _logger = logger;
         }
 
         public async Task<WindsAloftDto> FetchWindsAloftData(int fcstHours, CancellationToken ct = default)
         {
+            if (fcstHours != 6 && fcstHours != 12 && fcstHours != 24)
+            {
+                throw new ArgumentException("Forecast hours must be 6, 12, or 24", nameof(fcstHours));
+            }
+
+            var cacheKey = $"WindsAloft_{fcstHours}";
+
+            if (_cache.TryGetValue<WindsAloftDto>(cacheKey, out var cached) && cached != null)
+            {
+                _logger.LogDebug("Returning cached winds aloft data for {FcstHours}hr forecast", fcstHours);
+                return cached;
+            }
+
             try
             {
-                if (fcstHours != 6 && fcstHours != 12 && fcstHours != 24)
-                {
-                    throw new ArgumentException("Forecast hours must be 6, 12, or 24", nameof(fcstHours));
-                }
-
                 var httpClient = _httpClientFactory.CreateClient(nameof(WindsAloftService));
                 const string baseUrl = "https://aviationweather.gov/api/data/windtemp";
                 var formattedFcst = fcstHours.ToString("D2");
@@ -57,13 +71,18 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 var (forUseStartTime, forUseEndTime) = ExtractForUseTimes(textResponse);
                 var sites = ParseWindsAloftText(textResponse);
 
-                return new WindsAloftDto
+                var result = new WindsAloftDto
                 {
                     ValidTime = validTime,
                     ForUseStartTime = forUseStartTime,
                     ForUseEndTime = forUseEndTime,
                     WindTemp = sites
                 };
+
+                _cache.Set(cacheKey, result, CacheDuration);
+                _logger.LogDebug("Cached winds aloft data for {FcstHours}hr forecast (TTL {CacheDuration})", fcstHours, CacheDuration);
+
+                return result;
             }
             catch (Exception ex)
             {

@@ -68,7 +68,8 @@
       "Bash(PGPASSWORD=postgres psql:*)",
       "WebFetch(domain:services6.arcgis.com)",
       "Bash(sed:*)",
-      "Bash(__NEW_LINE_885fadb529a403a9__ az:*)"
+      "Bash(__NEW_LINE_885fadb529a403a9__ az:*)",
+      "Read(//c/Users/brand/AppData/Local/Temp/claude/C--Users-brand-source-repos-preflight-api/tasks/**)"
     ],
     "deny": [],
     "ask": []

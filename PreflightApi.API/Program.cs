@@ -17,6 +17,7 @@ using PreflightApi.Infrastructure.Services.WeatherServices;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.Infrastructure.Dtos;
+using Microsoft.AspNetCore.ResponseCompression;
 using PreflightApi.Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +64,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new GeometryJsonConverter());
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+
+// Response compression
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
 });
 
 // Transform model binding / validation errors into ApiErrorResponse format
@@ -154,6 +163,8 @@ builder.Services.AddDbContext<PreflightApiDbContext>((serviceProvider, options) 
             npgsqlOptions.UseNetTopologySuite();
         });
 
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
     if (builder.Environment.IsDevelopment())
     {
         options.EnableDetailedErrors();
@@ -192,7 +203,7 @@ builder.Services.AddScoped<IAirspaceService, AirspaceService>();
 builder.Services.AddScoped<IObstacleService, ObstacleService>();
 builder.Services.AddScoped<INavaidService, NavaidService>();
 builder.Services.AddSingleton<IMagneticVariationService, MagneticVariationService>();
-builder.Services.AddScoped<IWindsAloftService, WindsAloftService>();
+builder.Services.AddSingleton<IWindsAloftService, WindsAloftService>();
 builder.Services.AddScoped<INavlogService, NavlogService>();
 builder.Services.AddScoped<IE6bCalculatorService, E6bCalculatorService>();
 
@@ -227,6 +238,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseResponseCompression();
 app.UseGlobalExceptionHandling();
 app.UseGatewaySecretValidation();
 app.UseApiVersionHeader();

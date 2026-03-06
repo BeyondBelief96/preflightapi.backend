@@ -6,9 +6,9 @@ namespace PreflightApi.Infrastructure.Dtos.Navlog;
 public record BearingAndDistanceResponseDto
 {
     /// <summary>True course in degrees.</summary>
-    public double TrueCourse { get; set; }
+    public double TrueCourse { get; init; }
     /// <summary>Magnetic course in degrees (adjusted for magnetic variation).</summary>
-    public double MagneticCourse { get; set; }
+    public double MagneticCourse { get; init; }
     /// <summary>Great-circle distance in nautical miles.</summary>
-    public double Distance { get; set; }
+    public double Distance { get; init; }
 }
