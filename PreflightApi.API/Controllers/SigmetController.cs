@@ -103,8 +103,8 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<SigmetDto>>> SearchAffecting(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {
@@ -141,10 +141,10 @@ public class SigmetController(ISigmetService sigmetService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<SigmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<SigmetDto>>> SearchByArea(
-        [FromQuery] decimal minLat,
-        [FromQuery] decimal maxLat,
-        [FromQuery] decimal minLon,
-        [FromQuery] decimal maxLon,
+        [FromQuery] double minLat,
+        [FromQuery] double maxLat,
+        [FromQuery] double minLon,
+        [FromQuery] double maxLon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {

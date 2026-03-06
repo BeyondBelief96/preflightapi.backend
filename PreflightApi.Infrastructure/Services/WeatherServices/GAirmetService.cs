@@ -84,8 +84,8 @@ public class GAirmetService : IGAirmetService
     }
 
     public async Task<PaginatedResponse<GAirmetDto>> SearchAffecting(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         string? cursor,
         int limit,
         CancellationToken ct)
@@ -96,7 +96,7 @@ public class GAirmetService : IGAirmetService
                 "Searching G-AIRMETs affecting ({Lat}, {Lon}), cursor: {Cursor}, limit: {Limit}",
                 latitude, longitude, cursor, limit);
 
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             var query = _context.GAirmets
                 .AsNoTracking()

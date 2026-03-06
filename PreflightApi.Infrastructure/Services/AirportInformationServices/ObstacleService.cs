@@ -85,8 +85,8 @@ public class ObstacleService : IObstacleService
     }
 
     public async Task<PaginatedResponse<ObstacleDto>> SearchNearby(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         double radiusNm,
         int? minHeightAgl = null,
         string? cursor = null,
@@ -101,7 +101,7 @@ public class ObstacleService : IObstacleService
 
             // Convert nautical miles to meters (1 NM = 1852 meters)
             var radiusMeters = radiusNm * 1852;
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             var query = _context.Obstacles
                 .AsNoTracking()
@@ -152,10 +152,10 @@ public class ObstacleService : IObstacleService
     }
 
     public async Task<PaginatedResponse<ObstacleDto>> GetByBoundingBox(
-        decimal minLat,
-        decimal maxLat,
-        decimal minLon,
-        decimal maxLon,
+        double minLat,
+        double maxLat,
+        double minLon,
+        double maxLon,
         int? minHeightAgl = null,
         string? cursor = null,
         int limit = 1000,
@@ -170,11 +170,11 @@ public class ObstacleService : IObstacleService
             // Create a bounding box polygon for spatial query
             var coordinates = new[]
             {
-                new Coordinate((double)minLon, (double)minLat),
-                new Coordinate((double)maxLon, (double)minLat),
-                new Coordinate((double)maxLon, (double)maxLat),
-                new Coordinate((double)minLon, (double)maxLat),
-                new Coordinate((double)minLon, (double)minLat) // Close the ring
+                new Coordinate(minLon, minLat),
+                new Coordinate(maxLon, minLat),
+                new Coordinate(maxLon, maxLat),
+                new Coordinate(minLon, maxLat),
+                new Coordinate(minLon, minLat) // Close the ring
             };
             var boundingBox = _geometryFactory.CreatePolygon(coordinates);
 

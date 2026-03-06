@@ -125,8 +125,8 @@ public class NavaidService : INavaidService
     }
 
     public async Task<PaginatedResponse<NavaidDto>> SearchNearby(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         double radiusNm,
         string? navType,
         string? cursor,
@@ -140,7 +140,7 @@ public class NavaidService : INavaidService
                 latitude, longitude, radiusNm, navType, cursor, limit);
 
             var radiusMeters = radiusNm * NauticalMileToMeters;
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             var query = _context.Navaids
                 .AsNoTracking()

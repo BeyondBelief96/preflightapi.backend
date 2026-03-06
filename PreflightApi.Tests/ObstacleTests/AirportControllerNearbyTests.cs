@@ -37,9 +37,9 @@ public class AirportControllerNearbyTests
             Data = new List<AirportDto> { new() { ArptId = "DFW" } },
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _airportService.SearchNearby(32.89m, -97.03m, 30, null, 100).Returns(expected);
+        _airportService.SearchNearby(32.89, -97.03, 30, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None);
+        var result = await _sut.SearchNearby(32.89, -97.03, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -53,19 +53,19 @@ public class AirportControllerNearbyTests
             Data = new List<AirportDto>(),
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _airportService.SearchNearby(32.89m, -97.03m, 50, null, 100).Returns(expected);
+        _airportService.SearchNearby(32.89, -97.03, 50, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None, radiusNm: 50);
+        await _sut.SearchNearby(32.89, -97.03, new PaginationParams(), CancellationToken.None, radiusNm: 50);
 
-        await _airportService.Received(1).SearchNearby(32.89m, -97.03m, 50, Arg.Any<string?>(), Arg.Any<int>());
+        await _airportService.Received(1).SearchNearby(32.89, -97.03, 50, Arg.Any<string?>(), Arg.Any<int>());
     }
 
     [Theory]
     [InlineData(-91)]
     [InlineData(91)]
-    public async Task SearchNearby_InvalidLatitude_ThrowsValidationException(decimal lat)
+    public async Task SearchNearby_InvalidLatitude_ThrowsValidationException(double lat)
     {
-        var act = () => _sut.SearchNearby(lat, -97.03m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(lat, -97.03, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -74,9 +74,9 @@ public class AirportControllerNearbyTests
     [Theory]
     [InlineData(-181)]
     [InlineData(181)]
-    public async Task SearchNearby_InvalidLongitude_ThrowsValidationException(decimal lon)
+    public async Task SearchNearby_InvalidLongitude_ThrowsValidationException(double lon)
     {
-        var act = () => _sut.SearchNearby(32.89m, lon, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(32.89, lon, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");
@@ -87,7 +87,7 @@ public class AirportControllerNearbyTests
     [InlineData(-5)]
     public async Task SearchNearby_InvalidRadius_ThrowsValidationException(double radius)
     {
-        var act = () => _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None, radiusNm: radius);
+        var act = () => _sut.SearchNearby(32.89, -97.03, new PaginationParams(), CancellationToken.None, radiusNm: radius);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -101,10 +101,10 @@ public class AirportControllerNearbyTests
             Data = new List<AirportDto>(),
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _airportService.SearchNearby(32.89m, -97.03m, 30, null, 100).Returns(expected);
+        _airportService.SearchNearby(32.89, -97.03, 30, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.89m, -97.03m, new PaginationParams(), CancellationToken.None);
+        await _sut.SearchNearby(32.89, -97.03, new PaginationParams(), CancellationToken.None);
 
-        await _airportService.Received(1).SearchNearby(32.89m, -97.03m, 30, Arg.Any<string?>(), Arg.Any<int>());
+        await _airportService.Received(1).SearchNearby(32.89, -97.03, 30, Arg.Any<string?>(), Arg.Any<int>());
     }
 }

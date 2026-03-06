@@ -83,8 +83,8 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> SearchNearby(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct,
         [FromQuery] double radiusNm = 5,
@@ -214,10 +214,10 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     [ProducesResponseType(typeof(PaginatedResponse<ObstacleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<ObstacleDto>>> GetByBoundingBox(
-        [FromQuery] decimal minLat,
-        [FromQuery] decimal maxLat,
-        [FromQuery] decimal minLon,
-        [FromQuery] decimal maxLon,
+        [FromQuery] double minLat,
+        [FromQuery] double maxLat,
+        [FromQuery] double minLon,
+        [FromQuery] double maxLon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct,
         [FromQuery] int? minHeightAgl = null)

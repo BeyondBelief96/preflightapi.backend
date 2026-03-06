@@ -237,8 +237,8 @@ public class NotamController(INotamService notamService)
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<NotamResponseDto>> GetNotamsByRadius(
-        [FromQuery] decimal latitude,
-        [FromQuery] decimal longitude,
+        [FromQuery] double latitude,
+        [FromQuery] double longitude,
         [FromQuery] double radiusNm,
         [FromQuery] string? classification,
         [FromQuery] string? feature,
@@ -413,8 +413,8 @@ public class NotamController(INotamService notamService)
         [FromQuery] string? accountability,
         [FromQuery] string? location,
         [FromQuery] string? notamNumber,
-        [FromQuery] decimal? latitude,
-        [FromQuery] decimal? longitude,
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
         [FromQuery] double? radius,
         [FromQuery] string? lastUpdatedDate,
         [FromQuery] PaginationParams pagination,

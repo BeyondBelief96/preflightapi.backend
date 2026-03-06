@@ -75,7 +75,7 @@ public record AirportDto
     public string? CountyAssocState { get; init; }
 
     /// <summary>FAA NASR field: DIST_CITY_TO_AIRPORT. Distance from Central Business District of the Associated City to the Airport, in nautical miles.</summary>
-    public decimal? DistCityToAirport { get; init; }
+    public double? DistCityToAirport { get; init; }
 
     /// <summary>FAA NASR field: DIRECTION_CODE. Direction of Airport from Central Business District of Associated City (Nearest 1/8 Compass Point).</summary>
     public string? DirectionCode { get; init; }
@@ -86,10 +86,10 @@ public record AirportDto
     // ── Coordinates ─────────────────────────────────────────────────────
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of airport reference point in decimal degrees (WGS 84).</summary>
-    public decimal? LatDecimal { get; init; }
+    public double? LatDecimal { get; init; }
 
     /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of airport reference point in decimal degrees (WGS 84).</summary>
-    public decimal? LongDecimal { get; init; }
+    public double? LongDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAT_DEG. Latitude degrees of airport reference point.</summary>
     public int? LatDeg { get; init; }
@@ -98,7 +98,7 @@ public record AirportDto
     public int? LatMin { get; init; }
 
     /// <summary>FAA NASR field: LAT_SEC. Latitude seconds of airport reference point.</summary>
-    public decimal? LatSec { get; init; }
+    public double? LatSec { get; init; }
 
     /// <summary>FAA NASR field: LAT_HEMIS. Latitude hemisphere of airport reference point (N or S).</summary>
     public string? LatHemis { get; init; }
@@ -110,7 +110,7 @@ public record AirportDto
     public int? LongMin { get; init; }
 
     /// <summary>FAA NASR field: LONG_SEC. Longitude seconds of airport reference point.</summary>
-    public decimal? LongSec { get; init; }
+    public double? LongSec { get; init; }
 
     /// <summary>FAA NASR field: LONG_HEMIS. Longitude hemisphere of airport reference point (E or W).</summary>
     public string? LongHemis { get; init; }
@@ -127,7 +127,7 @@ public record AirportDto
     // ── Elevation & Magnetic Variation ──────────────────────────────────
 
     /// <summary>FAA NASR field: ELEV. Airport elevation in feet MSL, to the nearest tenth of a foot. Measured at the highest point on the centerline of the usable landing surface.</summary>
-    public decimal? Elev { get; init; }
+    public double? Elev { get; init; }
 
     /// <summary>FAA NASR field: ELEV_METHOD_CODE. Method used to determine the airport elevation.</summary>
     public SurveyMethod? ElevationSurveyMethod { get; init; }
@@ -139,7 +139,7 @@ public record AirportDto
     public DateTime? ElevationSrcDate { get; init; }
 
     /// <summary>FAA NASR field: MAG_VARN. Magnetic Variation in degrees. Use with <see cref="MagHemis"/> (E or W) to determine sign.</summary>
-    public decimal? MagVarn { get; init; }
+    public double? MagVarn { get; init; }
 
     /// <summary>FAA NASR field: MAG_HEMIS. Magnetic Variation Direction (E or W).</summary>
     public string? MagHemis { get; init; }

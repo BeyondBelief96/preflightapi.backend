@@ -146,8 +146,8 @@ public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<GAirmetDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<GAirmetDto>>> SearchAffecting(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {

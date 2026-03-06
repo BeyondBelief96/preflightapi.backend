@@ -81,8 +81,8 @@ public class AirportController(
     [ProducesResponseType(typeof(PaginatedResponse<AirportDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<AirportDto>>> SearchNearby(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct,
         [FromQuery] double radiusNm = 30)

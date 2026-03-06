@@ -128,8 +128,8 @@ public class SigmetService : ISigmetService
     }
 
     public async Task<PaginatedResponse<SigmetDto>> SearchAffecting(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         string? cursor,
         int limit,
         CancellationToken ct)
@@ -140,7 +140,7 @@ public class SigmetService : ISigmetService
                 "Searching SIGMETs affecting ({Lat}, {Lon}), cursor: {Cursor}, limit: {Limit}",
                 latitude, longitude, cursor, limit);
 
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             var query = _context.Sigmets
                 .AsNoTracking()
@@ -156,10 +156,10 @@ public class SigmetService : ISigmetService
     }
 
     public async Task<PaginatedResponse<SigmetDto>> SearchByArea(
-        decimal minLat,
-        decimal maxLat,
-        decimal minLon,
-        decimal maxLon,
+        double minLat,
+        double maxLat,
+        double minLon,
+        double maxLon,
         string? cursor,
         int limit,
         CancellationToken ct)
@@ -172,11 +172,11 @@ public class SigmetService : ISigmetService
 
             var coordinates = new[]
             {
-                new Coordinate((double)minLon, (double)minLat),
-                new Coordinate((double)maxLon, (double)minLat),
-                new Coordinate((double)maxLon, (double)maxLat),
-                new Coordinate((double)minLon, (double)maxLat),
-                new Coordinate((double)minLon, (double)minLat)
+                new Coordinate(minLon, minLat),
+                new Coordinate(maxLon, minLat),
+                new Coordinate(maxLon, maxLat),
+                new Coordinate(minLon, maxLat),
+                new Coordinate(minLon, minLat)
             };
             var boundingBox = _geometryFactory.CreatePolygon(coordinates);
 

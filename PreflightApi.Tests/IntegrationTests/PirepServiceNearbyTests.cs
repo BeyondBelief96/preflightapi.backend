@@ -16,8 +16,8 @@ public class PirepServiceNearbyTests : PostgreSqlTestBase
         NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
 
     // DFW coordinates
-    private const decimal DfwLat = 32.8968m;
-    private const decimal DfwLon = -97.0380m;
+    private const double DfwLat = 32.8968;
+    private const double DfwLon = -97.0380;
 
     protected override async Task SeedDatabaseAsync()
     {
@@ -116,7 +116,7 @@ public class PirepServiceNearbyTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Search in the middle of the ocean
-        var result = await service.SearchNearby(0m, 0m, 5, null, 100, CancellationToken.None);
+        var result = await service.SearchNearby(0, 0, 5, null, 100, CancellationToken.None);
 
         result.Data.Should().BeEmpty();
         result.Pagination.HasMore.Should().BeFalse();

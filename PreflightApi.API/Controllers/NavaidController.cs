@@ -160,8 +160,8 @@ public class NavaidController(INavaidService navaidService) : ControllerBase
     [ProducesResponseType(typeof(PaginatedResponse<NavaidDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<NavaidDto>>> SearchNearby(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct,
         [FromQuery] double radiusNm = 30,

@@ -127,8 +127,8 @@ public class RunwayService : IRunwayService
     }
 
     public async Task<PaginatedResponse<RunwayDto>> SearchNearby(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         double radiusNm,
         int? minLength,
         RunwaySurfaceType? surfaceType,
@@ -144,7 +144,7 @@ public class RunwayService : IRunwayService
                 latitude, longitude, radiusNm);
 
             var radiusMeters = radiusNm * NauticalMileToMeters;
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             // Step 1: Find airports within radius
             var airports = await _context.Airports

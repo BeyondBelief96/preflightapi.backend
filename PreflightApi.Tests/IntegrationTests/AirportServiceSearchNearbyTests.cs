@@ -16,8 +16,8 @@ public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
         NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
 
     // DFW coordinates
-    private const decimal DfwLat = 32.8968m;
-    private const decimal DfwLon = -97.0380m;
+    private const double DfwLat = 32.8968;
+    private const double DfwLon = -97.0380;
 
     protected override async Task SeedDatabaseAsync()
     {
@@ -25,13 +25,13 @@ public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
         DbContext.Airports.Add(CreateAirport("50000", "KDFW", "DFW", "DFW Intl", DfwLat, DfwLon));
 
         // DAL — ~10 NM from DFW
-        DbContext.Airports.Add(CreateAirport("50001", "KDAL", "DAL", "Dallas Love Field", 32.8471m, -96.8518m));
+        DbContext.Airports.Add(CreateAirport("50001", "KDAL", "DAL", "Dallas Love Field", 32.8471, -96.8518));
 
         // AFW — ~15 NM from DFW
-        DbContext.Airports.Add(CreateAirport("50002", "KAFW", "AFW", "Fort Worth Alliance", 32.9876m, -97.3188m));
+        DbContext.Airports.Add(CreateAirport("50002", "KAFW", "AFW", "Fort Worth Alliance", 32.9876, -97.3188));
 
         // AUS — ~160 NM from DFW (outside any reasonable search radius)
-        DbContext.Airports.Add(CreateAirport("50003", "KAUS", "AUS", "Austin-Bergstrom", 30.1945m, -97.6699m));
+        DbContext.Airports.Add(CreateAirport("50003", "KAUS", "AUS", "Austin-Bergstrom", 30.1945, -97.6699));
 
         // Airport with no coordinates
         DbContext.Airports.Add(new Airport { SiteNo = "50004", ArptId = "NOCOORD", ArptName = "No Coordinates" });
@@ -128,7 +128,7 @@ public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Search in the middle of the ocean
-        var result = await service.SearchNearby(0m, 0m, 5, null, 100);
+        var result = await service.SearchNearby(0, 0, 5, null, 100);
 
         result.Data.Should().BeEmpty();
         result.Pagination.HasMore.Should().BeFalse();
@@ -139,7 +139,7 @@ public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
         return new AirportService(DbContext, Substitute.For<ILogger<AirportService>>());
     }
 
-    private Airport CreateAirport(string siteNo, string icaoId, string arptId, string name, decimal lat, decimal lon)
+    private Airport CreateAirport(string siteNo, string icaoId, string arptId, string name, double lat, double lon)
     {
         return new Airport
         {
@@ -147,9 +147,9 @@ public class AirportServiceSearchNearbyTests : PostgreSqlTestBase
             IcaoId = icaoId,
             ArptId = arptId,
             ArptName = name,
-            LatDecimal = lat,
-            LongDecimal = lon,
-            Location = _geometryFactory.CreatePoint(new Coordinate((double)lon, (double)lat))
+            LatDecimal = (decimal)lat,
+            LongDecimal = (decimal)lon,
+            Location = _geometryFactory.CreatePoint(new Coordinate(lon, lat))
         };
     }
 }
