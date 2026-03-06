@@ -190,7 +190,11 @@ public class RunwayService : IRunwayService
             if (dbCode != null)
             {
                 query = query.Where(r => r.SurfaceTypeCode != null &&
-                    (r.SurfaceTypeCode.StartsWith(dbCode) || r.SurfaceTypeCode.EndsWith(dbCode)));
+                    (r.SurfaceTypeCode == dbCode ||
+                     r.SurfaceTypeCode.StartsWith(dbCode + "-") ||
+                     r.SurfaceTypeCode.StartsWith(dbCode + "/") ||
+                     r.SurfaceTypeCode.EndsWith("-" + dbCode) ||
+                     r.SurfaceTypeCode.EndsWith("/" + dbCode)));
             }
         }
 

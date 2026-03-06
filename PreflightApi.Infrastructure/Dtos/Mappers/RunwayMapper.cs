@@ -391,6 +391,9 @@ public static class RunwayMapper
         var parts = code.Split('-', '/');
         var primary = EnumParseHelper.Parse(parts[0].Trim().ToUpperInvariant(), logger, "SurfaceType", "Runway", runwayId, SurfaceTypeMapping);
 
+        if (parts.Length > 2)
+            logger.LogWarning("SurfaceTypeCode '{Code}' for Runway {RunwayId} contains more than two components; only the first two will be mapped.", code, runwayId);
+
         RunwaySurfaceType? secondary = null;
         if (parts.Length > 1)
         {
