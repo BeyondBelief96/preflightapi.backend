@@ -201,6 +201,17 @@ namespace PreflightApi.Infrastructure.Services.CronJobServices
                     WxString = element.Element("wx_string")?.Value,
                     SkyCondition = ParseSkyConditions(element.Elements("sky_condition")),
                     FlightCategory = element.Element("flight_category")?.Value,
+                    ThreeHrPressureTendencyMb = ParsingUtilities.ParseNullableDouble(element.Element("three_hr_pressure_tendency_mb")?.Value),
+                    MaxTC = ParsingUtilities.ParseNullableDouble(element.Element("maxT_c")?.Value),
+                    MinTC = ParsingUtilities.ParseNullableDouble(element.Element("minT_c")?.Value),
+                    MaxT24hrC = ParsingUtilities.ParseNullableDouble(element.Element("max24T_c")?.Value),
+                    MinT24hrC = ParsingUtilities.ParseNullableDouble(element.Element("min24T_c")?.Value),
+                    PrecipIn = ParsingUtilities.ParseNullableDouble(element.Element("precip_in")?.Value),
+                    Pcp3hrIn = ParsingUtilities.ParseNullableDouble(element.Element("pcp3hr_in")?.Value),
+                    Pcp6hrIn = ParsingUtilities.ParseNullableDouble(element.Element("pcp6hr_in")?.Value),
+                    Pcp24hrIn = ParsingUtilities.ParseNullableDouble(element.Element("pcp24hr_in")?.Value),
+                    SnowIn = ParsingUtilities.ParseNullableDouble(element.Element("snow_in")?.Value),
+                    VertVisFt = ParsingUtilities.ParseNullableInt(element.Element("vert_vis_ft")?.Value),
                     MetarType = element.Element("metar_type")?.Value,
                     ElevationM = ParsingUtilities.ParseNullableDouble(element.Element("elevation_m")?.Value)
                 };
