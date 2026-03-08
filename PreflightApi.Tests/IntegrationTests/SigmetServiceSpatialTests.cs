@@ -17,8 +17,8 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
         NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
 
     // DFW area center
-    private const decimal DfwLat = 32.8968m;
-    private const decimal DfwLon = -97.0380m;
+    private const double DfwLat = 32.8968;
+    private const double DfwLon = -97.0380;
 
     protected override async Task SeedDatabaseAsync()
     {
@@ -79,7 +79,7 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
     {
         var service = CreateService();
 
-        var result = await service.SearchAffecting(29.7604m, -95.3698m, null, 100, CancellationToken.None);
+        var result = await service.SearchAffecting(29.7604, -95.3698, null, 100, CancellationToken.None);
 
         result.Data.Should().HaveCount(1);
         result.Data.First().RawText.Should().Be("SIGMET ICE over Houston");
@@ -91,7 +91,7 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Middle of the Pacific
-        var result = await service.SearchAffecting(0m, -150m, null, 100, CancellationToken.None);
+        var result = await service.SearchAffecting(0, -150, null, 100, CancellationToken.None);
 
         result.Data.Should().BeEmpty();
     }
@@ -102,7 +102,7 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Bounding box covering DFW area
-        var result = await service.SearchByArea(32m, 34m, -98m, -96m, null, 100, CancellationToken.None);
+        var result = await service.SearchByArea(32, 34, -98, -96, null, 100, CancellationToken.None);
 
         result.Data.Should().HaveCount(2);
         result.Data.Select(s => s.RawText).Should()
@@ -116,7 +116,7 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Large bounding box covering both DFW and Houston
-        var result = await service.SearchByArea(29m, 35m, -99m, -94m, null, 100, CancellationToken.None);
+        var result = await service.SearchByArea(29, 35, -99, -94, null, 100, CancellationToken.None);
 
         result.Data.Should().HaveCount(3);
     }
@@ -127,7 +127,7 @@ public class SigmetServiceSpatialTests : PostgreSqlTestBase
         var service = CreateService();
 
         // Bounding box in the middle of the ocean
-        var result = await service.SearchByArea(-10m, -5m, -150m, -145m, null, 100, CancellationToken.None);
+        var result = await service.SearchByArea(-10, -5, -150, -145, null, 100, CancellationToken.None);
 
         result.Data.Should().BeEmpty();
     }

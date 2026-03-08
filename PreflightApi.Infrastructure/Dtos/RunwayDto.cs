@@ -155,34 +155,34 @@ public record RunwayEndDto
     public RunwayMarkingsCondition? MarkingsCondition { get; init; }
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Latitude of physical runway end in decimal degrees (WGS 84).</summary>
-    public decimal? Latitude { get; init; }
+    public double? Latitude { get; init; }
 
     /// <summary>FAA NASR field: LONG_DECIMAL. Longitude of physical runway end in decimal degrees (WGS 84).</summary>
-    public decimal? Longitude { get; init; }
+    public double? Longitude { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_ELEV. Elevation at the physical runway end in feet MSL.</summary>
-    public decimal? Elevation { get; init; }
+    public double? Elevation { get; init; }
 
     /// <summary>FAA NASR field: THR_CROSSING_HGT. Threshold Crossing Height in feet AGL. Height that the effective visual glide path crosses above the runway threshold.</summary>
-    public decimal? ThresholdCrossingHeight { get; init; }
+    public double? ThresholdCrossingHeight { get; init; }
 
     /// <summary>FAA NASR field: VISUAL_GLIDE_PATH_ANGLE. Visual glide path angle in hundredths of degrees (e.g., 300 = 3.00°).</summary>
-    public decimal? VisualGlidePathAngle { get; init; }
+    public double? VisualGlidePathAngle { get; init; }
 
     /// <summary>FAA NASR field: LAT_DISPLACED_THR_DECIMAL. Latitude of displaced threshold in decimal degrees (WGS 84).</summary>
-    public decimal? DisplacedThresholdLatitude { get; init; }
+    public double? DisplacedThresholdLatitude { get; init; }
 
     /// <summary>FAA NASR field: LONG_DISPLACED_THR_DECIMAL. Longitude of displaced threshold in decimal degrees (WGS 84).</summary>
-    public decimal? DisplacedThresholdLongitude { get; init; }
+    public double? DisplacedThresholdLongitude { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_ELEV. Elevation at the displaced threshold in feet MSL.</summary>
-    public decimal? DisplacedThresholdElevation { get; init; }
+    public double? DisplacedThresholdElevation { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_LEN. Displaced threshold length in feet from the runway end.</summary>
     public int? DisplacedThresholdLength { get; init; }
 
     /// <summary>FAA NASR field: TDZ_ELEV. Elevation at the touchdown zone in feet MSL.</summary>
-    public decimal? TouchdownZoneElevation { get; init; }
+    public double? TouchdownZoneElevation { get; init; }
 
     /// <summary>
     /// FAA NASR field: VGSI_CODE. Visual Glide Slope Indicator type.
@@ -246,7 +246,7 @@ public record RunwayEndDto
     public int? RwyEndLatMin { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_LAT_SEC. Runway end latitude seconds.</summary>
-    public decimal? RwyEndLatSec { get; init; }
+    public double? RwyEndLatSec { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_LAT_HEMIS. Runway end latitude hemisphere (N or S).</summary>
     public string? RwyEndLatHemis { get; init; }
@@ -258,7 +258,7 @@ public record RunwayEndDto
     public int? RwyEndLongMin { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_LONG_SEC. Runway end longitude seconds.</summary>
-    public decimal? RwyEndLongSec { get; init; }
+    public double? RwyEndLongSec { get; init; }
 
     /// <summary>FAA NASR field: RWY_END_LONG_HEMIS. Runway end longitude hemisphere (E or W).</summary>
     public string? RwyEndLongHemis { get; init; }
@@ -272,7 +272,7 @@ public record RunwayEndDto
     public int? DisplacedThrLatMin { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_LAT_SEC. Displaced threshold latitude seconds.</summary>
-    public decimal? DisplacedThrLatSec { get; init; }
+    public double? DisplacedThrLatSec { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_LAT_HEMIS. Displaced threshold latitude hemisphere (N or S).</summary>
     public string? DisplacedThrLatHemis { get; init; }
@@ -284,7 +284,7 @@ public record RunwayEndDto
     public int? DisplacedThrLongMin { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_LONG_SEC. Displaced threshold longitude seconds.</summary>
-    public decimal? DisplacedThrLongSec { get; init; }
+    public double? DisplacedThrLongSec { get; init; }
 
     /// <summary>FAA NASR field: DISPLACED_THR_LONG_HEMIS. Displaced threshold longitude hemisphere (E or W).</summary>
     public string? DisplacedThrLongHemis { get; init; }
@@ -303,7 +303,7 @@ public record RunwayEndDto
     public string? CenterlineDirectionCode { get; init; }
 
     /// <summary>FAA NASR field: RWY_GRAD. Runway End Gradient as a percentage (e.g., 0.3 = 0.3% grade).</summary>
-    public decimal? RunwayGradient { get; init; }
+    public double? RunwayGradient { get; init; }
 
     /// <summary>FAA NASR field: RWY_GRAD_DIRECTION. Runway End Gradient Direction (Up or Down).</summary>
     public string? RunwayGradientDirection { get; init; }
@@ -369,13 +369,13 @@ public record RunwayEndDto
     public string? LahsoLatitude { get; init; }
 
     /// <summary>FAA NASR field: LAT_LAHSO_DECIMAL. LAHSO hold short point latitude in decimal degrees (WGS 84).</summary>
-    public decimal? LahsoLatDecimal { get; init; }
+    public double? LahsoLatDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAHSO_LONG. LAHSO hold short point longitude (DMS format).</summary>
     public string? LahsoLongitude { get; init; }
 
     /// <summary>FAA NASR field: LONG_LAHSO_DECIMAL. LAHSO hold short point longitude in decimal degrees (WGS 84).</summary>
-    public decimal? LahsoLongDecimal { get; init; }
+    public double? LahsoLongDecimal { get; init; }
 
     /// <summary>FAA NASR field: LAHSO_PSN_SOURCE. Source of LAHSO position information.</summary>
     public string? LahsoPositionSource { get; init; }

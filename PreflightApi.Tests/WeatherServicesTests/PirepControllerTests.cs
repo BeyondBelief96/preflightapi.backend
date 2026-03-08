@@ -39,9 +39,9 @@ public class PirepControllerTests
             Data = new List<PirepDto> { new() { Id = 1, RawText = "UA /OV DFW" } },
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _pirepService.SearchNearby(32.8968m, -97.0380m, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
+        _pirepService.SearchNearby(32.8968, -97.0380, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.8968m, -97.0380m, new PaginationParams { Limit = 100 }, CancellationToken.None, 50);
+        var result = await _sut.SearchNearby(32.8968, -97.0380, new PaginationParams { Limit = 100 }, CancellationToken.None, 50);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -50,7 +50,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_ZeroRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.8968m, -97.0380m, new PaginationParams(), CancellationToken.None, radiusNm: 0);
+        var act = () => _sut.SearchNearby(32.8968, -97.0380, new PaginationParams(), CancellationToken.None, radiusNm: 0);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -59,7 +59,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_NegativeRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.8968m, -97.0380m, new PaginationParams(), CancellationToken.None, radiusNm: -5);
+        var act = () => _sut.SearchNearby(32.8968, -97.0380, new PaginationParams(), CancellationToken.None, radiusNm: -5);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -68,7 +68,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_LatitudeTooHigh_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(91m, -97.0380m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(91, -97.0380, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -77,7 +77,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_LatitudeTooLow_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(-91m, -97.0380m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(-91, -97.0380, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -86,7 +86,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_LongitudeTooHigh_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.8968m, 181m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(32.8968, 181, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");
@@ -95,7 +95,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearby_LongitudeTooLow_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.8968m, -181m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(32.8968, -181, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");
@@ -104,7 +104,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearAirport_HappyPath_ReturnsPireps()
     {
-        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968m, LongDecimal = -97.0380m };
+        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968, LongDecimal = -97.0380 };
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW").Returns(airport);
 
         var expected = new PaginatedResponse<PirepDto>
@@ -112,7 +112,7 @@ public class PirepControllerTests
             Data = new List<PirepDto> { new() { Id = 1, RawText = "UA /OV DFW" } },
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _pirepService.SearchNearby(32.8968m, -97.0380m, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
+        _pirepService.SearchNearby(32.8968, -97.0380, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
 
         var result = await _sut.SearchNearAirport("KDFW", new PaginationParams { Limit = 100 }, CancellationToken.None, 50);
 
@@ -146,7 +146,7 @@ public class PirepControllerTests
     [Fact]
     public async Task SearchNearAirport_DefaultRadius_Uses50Nm()
     {
-        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968m, LongDecimal = -97.0380m };
+        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968, LongDecimal = -97.0380 };
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW").Returns(airport);
 
         var expected = new PaginatedResponse<PirepDto>
@@ -154,11 +154,11 @@ public class PirepControllerTests
             Data = new List<PirepDto>(),
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _pirepService.SearchNearby(32.8968m, -97.0380m, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
+        _pirepService.SearchNearby(32.8968, -97.0380, 50, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
 
         await _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
-        await _pirepService.Received(1).SearchNearby(32.8968m, -97.0380m, 50, Arg.Any<string?>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await _pirepService.Received(1).SearchNearby(32.8968, -97.0380, 50, Arg.Any<string?>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

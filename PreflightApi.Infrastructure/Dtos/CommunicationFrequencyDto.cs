@@ -40,10 +40,10 @@ public record CommunicationFrequencyDto()
     public string? ServicedSiteType { get; init; }
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Facility Reference Point Latitude in decimal degrees (WGS 84).</summary>
-    public decimal? Latitude { get; init; }
+    public double? Latitude { get; init; }
 
     /// <summary>FAA NASR field: LONG_DECIMAL. Facility Reference Point Longitude in decimal degrees (WGS 84).</summary>
-    public decimal? Longitude { get; init; }
+    public double? Longitude { get; init; }
 
     /// <summary>FAA NASR field: SERVICED_CITY. Serviced Facility Associated City Name.</summary>
     public string? ServicedCity { get; init; }

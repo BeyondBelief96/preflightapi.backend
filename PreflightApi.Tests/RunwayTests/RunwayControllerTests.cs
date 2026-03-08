@@ -144,9 +144,9 @@ public class RunwayControllerTests
             Data = [new RunwayDto { RunwayId = "17L/35R", AirportArptId = "DFW" }],
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 100).Returns(expected);
+        _runwayService.SearchNearby(32.897, -97.038, 30, null, null, false, null, 100).Returns(expected);
 
-        var result = await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
+        var result = await _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -156,18 +156,18 @@ public class RunwayControllerTests
     public async Task SearchNearby_WithFilters_PassesToService()
     {
         var expected = PaginatedResponse<RunwayDto>.Empty(100);
-        _runwayService.SearchNearby(32.897m, -97.038m, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100)
+        _runwayService.SearchNearby(32.897, -97.038, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100)
             .Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, 50, minLength: 4000, surfaceType: RunwaySurfaceType.Concrete, includeGeometry: true);
+        await _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None, 50, minLength: 4000, surfaceType: RunwaySurfaceType.Concrete, includeGeometry: true);
 
-        await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100);
+        await _runwayService.Received(1).SearchNearby(32.897, -97.038, 50, 4000, RunwaySurfaceType.Concrete, true, null, 100);
     }
 
     [Fact]
     public async Task SearchNearby_InvalidLatitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(91m, -97.038m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(91, -97.038, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude*");
@@ -176,7 +176,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_InvalidLongitude_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -181m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchNearby(32.897, -181, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude*");
@@ -185,7 +185,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_ZeroRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 0);
+        var act = () => _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None, radiusNm: 0);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -194,7 +194,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_NegativeRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: -5);
+        var act = () => _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None, radiusNm: -5);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Radius must be greater than 0*");
@@ -203,7 +203,7 @@ public class RunwayControllerTests
     [Fact]
     public async Task SearchNearby_ExcessiveRadius_ThrowsValidationException()
     {
-        var act = () => _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None, radiusNm: 501);
+        var act = () => _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None, radiusNm: 501);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*cannot exceed 500*");
@@ -213,23 +213,23 @@ public class RunwayControllerTests
     public async Task SearchNearby_DefaultRadius_Uses30Nm()
     {
         var expected = PaginatedResponse<RunwayDto>.Empty(100);
-        _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 100).Returns(expected);
+        _runwayService.SearchNearby(32.897, -97.038, 30, null, null, false, null, 100).Returns(expected);
 
-        await _sut.SearchNearby(32.897m, -97.038m, new PaginationParams(), CancellationToken.None);
+        await _sut.SearchNearby(32.897, -97.038, new PaginationParams(), CancellationToken.None);
 
-        await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 30, Arg.Any<int?>(), Arg.Any<RunwaySurfaceType?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<int>());
+        await _runwayService.Received(1).SearchNearby(32.897, -97.038, 30, Arg.Any<int?>(), Arg.Any<RunwaySurfaceType?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<int>());
     }
 
     [Fact]
     public async Task SearchNearby_ClampsLimitToMax500()
     {
         var expected = PaginatedResponse<RunwayDto>.Empty(500);
-        _runwayService.SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 500).Returns(expected);
+        _runwayService.SearchNearby(32.897, -97.038, 30, null, null, false, null, 500).Returns(expected);
 
         var pagination = new PaginationParams { Limit = 999 };
-        await _sut.SearchNearby(32.897m, -97.038m, pagination, CancellationToken.None);
+        await _sut.SearchNearby(32.897, -97.038, pagination, CancellationToken.None);
 
-        await _runwayService.Received(1).SearchNearby(32.897m, -97.038m, 30, null, null, false, null, 500);
+        await _runwayService.Received(1).SearchNearby(32.897, -97.038, 30, null, null, false, null, 500);
     }
 
     #endregion

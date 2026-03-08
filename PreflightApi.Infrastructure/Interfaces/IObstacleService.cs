@@ -8,9 +8,9 @@ public interface IObstacleService
 {
     Task<ObstacleDto?> GetByOasNumber(string oasNumber, CancellationToken ct = default);
     Task<IEnumerable<ObstacleDto>> GetByOasNumbers(IEnumerable<string> oasNumbers, CancellationToken ct = default);
-    Task<PaginatedResponse<ObstacleDto>> SearchNearby(decimal latitude, decimal longitude, double radiusNm, int? minHeightAgl, string? cursor, int limit, CancellationToken ct = default);
+    Task<PaginatedResponse<ObstacleDto>> SearchNearby(double latitude, double longitude, double radiusNm, int? minHeightAgl, string? cursor, int limit, CancellationToken ct = default);
     Task<PaginatedResponse<ObstacleDto>> GetByState(string stateCode, int? minHeightAgl, string? cursor, int limit, CancellationToken ct = default);
-    Task<PaginatedResponse<ObstacleDto>> GetByBoundingBox(decimal minLat, decimal maxLat, decimal minLon, decimal maxLon, int? minHeightAgl, string? cursor, int limit, CancellationToken ct = default);
+    Task<PaginatedResponse<ObstacleDto>> GetByBoundingBox(double minLat, double maxLat, double minLon, double maxLon, int? minHeightAgl, string? cursor, int limit, CancellationToken ct = default);
 
     /// <summary>
     /// Gets obstacles along a flight route using two methods:

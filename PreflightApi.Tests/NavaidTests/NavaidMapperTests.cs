@@ -30,13 +30,13 @@ public class NavaidMapperTests
         dto.CountryName.Should().Be("UNITED STATES");
         dto.Owner.Should().Be("FAA");
         dto.Operator.Should().Be("FAA");
-        dto.Latitude.Should().Be(32.89680000m);
-        dto.Longitude.Should().Be(-97.03800000m);
-        dto.Elevation.Should().Be(607.0m);
+        dto.Latitude.Should().Be(32.89680000);
+        dto.Longitude.Should().Be(-97.03800000);
+        dto.Elevation.Should().Be(607.0);
         dto.MagneticVariation.Should().Be(4);
         dto.MagneticVariationDirection.Should().Be("E");
         dto.MagneticVariationYear.Should().Be(2020);
-        dto.Frequency.Should().Be(113.10m);
+        dto.Frequency.Should().Be(113.10);
         dto.Channel.Should().Be("78X");
         dto.VoiceCall.Should().Be("COWBOY");
         dto.OperatingHours.Should().Be("CONTINUOUS");
@@ -51,8 +51,8 @@ public class NavaidMapperTests
         dto.FssName.Should().Be("FORT WORTH");
         dto.NotamId.Should().Be("DFW");
         dto.TacanDmeStatus.Should().Be("OPERATIONAL");
-        dto.TacanDmeLatitude.Should().Be(32.89700000m);
-        dto.TacanDmeLongitude.Should().Be(-97.03900000m);
+        dto.TacanDmeLatitude.Should().Be(32.89700000);
+        dto.TacanDmeLongitude.Should().Be(-97.03900000);
         dto.EffectiveDate.Should().Be(new DateTime(2024, 1, 25));
     }
 

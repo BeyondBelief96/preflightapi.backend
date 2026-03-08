@@ -18,8 +18,8 @@ public class GAirmetServiceSpatialTests : PostgreSqlTestBase
         NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
 
     // DFW area center
-    private const decimal DfwLat = 32.8968m;
-    private const decimal DfwLon = -97.0380m;
+    private const double DfwLat = 32.8968;
+    private const double DfwLon = -97.0380;
 
     protected override async Task SeedDatabaseAsync()
     {
@@ -91,7 +91,7 @@ public class GAirmetServiceSpatialTests : PostgreSqlTestBase
     {
         var service = CreateService();
 
-        var result = await service.SearchAffecting(29.7604m, -95.3698m, null, 100, CancellationToken.None);
+        var result = await service.SearchAffecting(29.7604, -95.3698, null, 100, CancellationToken.None);
 
         result.Data.Should().HaveCount(1);
         result.Data.First().Hazard.Should().Be(GAirmetHazardType.ICE);
@@ -102,7 +102,7 @@ public class GAirmetServiceSpatialTests : PostgreSqlTestBase
     {
         var service = CreateService();
 
-        var result = await service.SearchAffecting(0m, -150m, null, 100, CancellationToken.None);
+        var result = await service.SearchAffecting(0, -150, null, 100, CancellationToken.None);
 
         result.Data.Should().BeEmpty();
     }

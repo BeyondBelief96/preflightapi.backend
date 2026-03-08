@@ -16,9 +16,9 @@ public record ObstacleDto
     /// <summary>City nearest to the obstacle.</summary>
     public string? CityName { get; init; }
     /// <summary>Latitude in decimal degrees (WGS 84).</summary>
-    public decimal? Latitude { get; init; }
+    public double? Latitude { get; init; }
     /// <summary>Longitude in decimal degrees (WGS 84).</summary>
-    public decimal? Longitude { get; init; }
+    public double? Longitude { get; init; }
     /// <summary>Type of obstacle (e.g., TOWER, BLDG, STACK).</summary>
     public string? ObstacleType { get; init; }
     /// <summary>Number of obstacles at this location.</summary>

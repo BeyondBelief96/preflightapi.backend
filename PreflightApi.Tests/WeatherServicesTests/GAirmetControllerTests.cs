@@ -38,9 +38,9 @@ public class GAirmetControllerTests
             Data = new List<GAirmetDto> { new() { Id = 1, Hazard = GAirmetHazardType.ICE } },
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _gairmetService.SearchAffecting(32.8968m, -97.0380m, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
+        _gairmetService.SearchAffecting(32.8968, -97.0380, null, 100, Arg.Any<CancellationToken>()).Returns(expected);
 
-        var result = await _sut.SearchAffecting(32.8968m, -97.0380m, new PaginationParams { Limit = 100 }, CancellationToken.None);
+        var result = await _sut.SearchAffecting(32.8968, -97.0380, new PaginationParams { Limit = 100 }, CancellationToken.None);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(expected);
@@ -49,7 +49,7 @@ public class GAirmetControllerTests
     [Fact]
     public async Task SearchAffecting_LatitudeTooHigh_ThrowsValidationException()
     {
-        var act = () => _sut.SearchAffecting(91m, -97.0380m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchAffecting(91, -97.0380, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -58,7 +58,7 @@ public class GAirmetControllerTests
     [Fact]
     public async Task SearchAffecting_LatitudeTooLow_ThrowsValidationException()
     {
-        var act = () => _sut.SearchAffecting(-91m, -97.0380m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchAffecting(-91, -97.0380, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Latitude must be between -90 and 90*");
@@ -67,7 +67,7 @@ public class GAirmetControllerTests
     [Fact]
     public async Task SearchAffecting_LongitudeTooHigh_ThrowsValidationException()
     {
-        var act = () => _sut.SearchAffecting(32.8968m, 181m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchAffecting(32.8968, 181, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");
@@ -76,7 +76,7 @@ public class GAirmetControllerTests
     [Fact]
     public async Task SearchAffecting_LongitudeTooLow_ThrowsValidationException()
     {
-        var act = () => _sut.SearchAffecting(32.8968m, -181m, new PaginationParams(), CancellationToken.None);
+        var act = () => _sut.SearchAffecting(32.8968, -181, new PaginationParams(), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*Longitude must be between -180 and 180*");

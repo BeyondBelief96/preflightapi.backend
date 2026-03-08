@@ -34,7 +34,7 @@ public class ObstacleControllerTests
     [Fact]
     public async Task SearchNearAirport_HappyPath_ReturnsObstacles()
     {
-        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968m, LongDecimal = -97.0380m };
+        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968, LongDecimal = -97.0380 };
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW").Returns(airport);
 
         var expected = new PaginatedResponse<ObstacleDto>
@@ -42,7 +42,7 @@ public class ObstacleControllerTests
             Data = new List<ObstacleDto> { new() { OasNumber = "12-345678" } },
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _obstacleService.SearchNearby(32.8968m, -97.0380m, 10, null, null, 100).Returns(expected);
+        _obstacleService.SearchNearby(32.8968, -97.0380, 10, null, null, 100).Returns(expected);
 
         var result = await _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
@@ -76,7 +76,7 @@ public class ObstacleControllerTests
     [Fact]
     public async Task SearchNearAirport_DefaultRadius_Uses10Nm()
     {
-        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968m, LongDecimal = -97.0380m };
+        var airport = new AirportDto { IcaoId = "KDFW", LatDecimal = 32.8968, LongDecimal = -97.0380 };
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW").Returns(airport);
 
         var expected = new PaginatedResponse<ObstacleDto>
@@ -84,11 +84,11 @@ public class ObstacleControllerTests
             Data = new List<ObstacleDto>(),
             Pagination = new PaginationMetadata { Limit = 100, HasMore = false }
         };
-        _obstacleService.SearchNearby(32.8968m, -97.0380m, 10, null, null, 100).Returns(expected);
+        _obstacleService.SearchNearby(32.8968, -97.0380, 10, null, null, 100).Returns(expected);
 
         await _sut.SearchNearAirport("KDFW", new PaginationParams(), CancellationToken.None);
 
-        await _obstacleService.Received(1).SearchNearby(32.8968m, -97.0380m, 10, Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<int>());
+        await _obstacleService.Received(1).SearchNearby(32.8968, -97.0380, 10, Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<int>());
     }
 
     [Fact]

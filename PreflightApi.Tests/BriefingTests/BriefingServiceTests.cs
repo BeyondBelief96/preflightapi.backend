@@ -32,11 +32,11 @@ public class BriefingServiceTests : PostgreSqlTestBase
     private void SetupAirportLookups()
     {
         _airportService.GetAirportByIcaoCodeOrIdent("KDFW")
-            .Returns(new AirportDto { IcaoId = "KDFW", ArptId = "DFW", LatDecimal = 32.8968m, LongDecimal = -97.0380m });
+            .Returns(new AirportDto { IcaoId = "KDFW", ArptId = "DFW", LatDecimal = 32.8968, LongDecimal = -97.0380 });
         _airportService.GetAirportByIcaoCodeOrIdent("KAUS")
-            .Returns(new AirportDto { IcaoId = "KAUS", ArptId = "AUS", LatDecimal = 30.1945m, LongDecimal = -97.6699m });
+            .Returns(new AirportDto { IcaoId = "KAUS", ArptId = "AUS", LatDecimal = 30.1945, LongDecimal = -97.6699 });
         _airportService.GetAirportByIcaoCodeOrIdent("KIAH")
-            .Returns(new AirportDto { IcaoId = "KIAH", ArptId = "IAH", LatDecimal = 29.9844m, LongDecimal = -95.3414m });
+            .Returns(new AirportDto { IcaoId = "KIAH", ArptId = "IAH", LatDecimal = 29.9844, LongDecimal = -95.3414 });
     }
 
     // ── Validation Tests ──

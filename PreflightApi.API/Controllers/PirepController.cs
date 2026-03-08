@@ -61,8 +61,8 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     [ProducesResponseType(typeof(PaginatedResponse<PirepDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PaginatedResponse<PirepDto>>> SearchNearby(
-        [FromQuery] decimal lat,
-        [FromQuery] decimal lon,
+        [FromQuery] double lat,
+        [FromQuery] double lon,
         [FromQuery] PaginationParams pagination,
         CancellationToken ct,
         [FromQuery] double radiusNm = 50)

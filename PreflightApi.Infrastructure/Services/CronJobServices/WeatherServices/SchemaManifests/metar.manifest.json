@@ -2,7 +2,7 @@
   "$schema": "avwx-schema-manifest-v1",
   "xmlRootElement": "METAR",
   "entity": "Metar",
-  "lastVerified": "2026-02-11",
+  "lastVerified": "2026-03-08",
   "elements": {
     "raw_text": {
       "entityProperty": "RawText",
@@ -148,7 +148,7 @@
       "captured": true,
       "description": "Minimum temperature in Celsius"
     },
-    "maxT24hr_c": {
+    "max24T_c": {
       "entityProperty": "MaxT24hrC",
       "dataType": "float",
       "required": false,
@@ -156,7 +156,7 @@
       "captured": true,
       "description": "24-hour maximum temperature in Celsius"
     },
-    "minT24hr_c": {
+    "min24T_c": {
       "entityProperty": "MinT24hrC",
       "dataType": "float",
       "required": false,

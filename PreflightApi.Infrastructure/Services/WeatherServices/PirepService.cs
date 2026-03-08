@@ -43,8 +43,8 @@ public class PirepService : IPirepService
     }
 
     public async Task<PaginatedResponse<PirepDto>> SearchNearby(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         double radiusNm,
         string? cursor,
         int limit,
@@ -57,7 +57,7 @@ public class PirepService : IPirepService
                 latitude, longitude, radiusNm, cursor, limit);
 
             var radiusMeters = radiusNm * 1852;
-            var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+            var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
             var query = _context.Pireps
                 .FromSqlInterpolated(

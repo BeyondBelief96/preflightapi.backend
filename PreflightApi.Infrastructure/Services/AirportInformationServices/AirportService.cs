@@ -114,8 +114,8 @@ namespace PreflightApi.Infrastructure.Services
         }
 
         public async Task<PaginatedResponse<AirportDto>> SearchNearby(
-            decimal latitude,
-            decimal longitude,
+            double latitude,
+            double longitude,
             double radiusNm,
             string? cursor = null,
             int limit = 100,
@@ -128,7 +128,7 @@ namespace PreflightApi.Infrastructure.Services
                     latitude, longitude, radiusNm, cursor, limit);
 
                 var radiusMeters = radiusNm * NAUTICAL_MILE_TO_METERS;
-                var point = _geometryFactory.CreatePoint(new Coordinate((double)longitude, (double)latitude));
+                var point = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
                 var query = _context.Airports
                     .FromSqlInterpolated(

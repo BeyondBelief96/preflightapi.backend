@@ -19,8 +19,8 @@ public interface IRunwayService
         CancellationToken ct = default);
 
     Task<PaginatedResponse<RunwayDto>> SearchNearby(
-        decimal latitude,
-        decimal longitude,
+        double latitude,
+        double longitude,
         double radiusNm,
         int? minLength,
         RunwaySurfaceType? surfaceType,

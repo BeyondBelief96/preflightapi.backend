@@ -48,13 +48,13 @@ public record NavaidDto
     public string CountryName { get; init; } = string.Empty;
 
     /// <summary>FAA NASR field: LAT_DECIMAL. Latitude in decimal degrees (WGS 84).</summary>
-    public decimal? Latitude { get; init; }
+    public double? Latitude { get; init; }
 
     /// <summary>FAA NASR field: LONG_DECIMAL. Longitude in decimal degrees (WGS 84).</summary>
-    public decimal? Longitude { get; init; }
+    public double? Longitude { get; init; }
 
     /// <summary>FAA NASR field: ELEV. Elevation in feet above MSL.</summary>
-    public decimal? Elevation { get; init; }
+    public double? Elevation { get; init; }
 
     // ── Ownership ───────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ public record NavaidDto
     // ── Frequency & Channel ─────────────────────────────────────────────
 
     /// <summary>FAA NASR field: FREQ. Transmitted frequency in MHz (VOR) or kHz (NDB).</summary>
-    public decimal? Frequency { get; init; }
+    public double? Frequency { get; init; }
 
     /// <summary>FAA NASR field: CHAN. TACAN/VORTAC channel designation (e.g., 78X).</summary>
     public string? Channel { get; init; }
@@ -129,10 +129,10 @@ public record NavaidDto
     public string? TacanDmeStatus { get; init; }
 
     /// <summary>FAA NASR field: TACAN_DME_LAT_DECIMAL. Latitude of the TACAN/DME antenna in decimal degrees (WGS 84). May differ from the VOR position.</summary>
-    public decimal? TacanDmeLatitude { get; init; }
+    public double? TacanDmeLatitude { get; init; }
 
     /// <summary>FAA NASR field: TACAN_DME_LONG_DECIMAL. Longitude of the TACAN/DME antenna in decimal degrees (WGS 84).</summary>
-    public decimal? TacanDmeLongitude { get; init; }
+    public double? TacanDmeLongitude { get; init; }
 
     // ── ARTCC & FSS ─────────────────────────────────────────────────────
 
