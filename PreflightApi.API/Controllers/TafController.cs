@@ -24,6 +24,7 @@ public class TafController(ITafService tafService) : ControllerBase
     /// </summary>
     /// <remarks>
     /// Both ICAO codes and FAA identifiers can be mixed in the same request.
+    /// ICAO/FAA format mismatches are automatically resolved (e.g., <c>KW05</c> resolves to <c>W05</c>).
     /// Maximum 100 identifiers per request.
     /// <code>
     /// GET /api/v1/tafs/batch?ids=KDFW,KAUS,KHOU
@@ -59,12 +60,16 @@ public class TafController(ITafService tafService) : ControllerBase
     /// weather conditions (wind, visibility, sky cover, precipitation, turbulence, and icing).
     /// </summary>
     /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>DFW</c> resolves to <c>KDFW</c>). Note that many small airports do not issue TAFs
+    /// and will return 404 regardless of identifier format.
     /// <code>
     /// GET /api/v1/tafs/KDFW    — by ICAO code
     /// GET /api/v1/tafs/DFW     — by FAA identifier
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <returns>TAF with forecast periods for the specified airport</returns>
     /// <response code="200">Returns the TAF with all forecast periods</response>
     /// <response code="404">If no TAF is found for the airport</response>

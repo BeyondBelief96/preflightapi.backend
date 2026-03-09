@@ -4,6 +4,7 @@ using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos.Performance;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services;
 
@@ -43,10 +44,11 @@ public class E6bCalculatorService : IE6bCalculatorService
         _logger.LogInformation("Calculating crosswind for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
         // Get airport data
+        var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoCodeOrIdent);
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
-                a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+                (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
         if (airport == null)
         {
@@ -180,10 +182,11 @@ public class E6bCalculatorService : IE6bCalculatorService
         _logger.LogInformation("Calculating density altitude for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
         // Get airport data
+        var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoCodeOrIdent);
         var airport = await _context.Airports
             .FirstOrDefaultAsync(a =>
-                a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+                (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
         if (airport == null)
         {

@@ -23,12 +23,17 @@ public class MetarController(IMetarService metarService) : ControllerBase
     /// Returns decoded weather data including wind, visibility, sky conditions, temperature, and flight category.
     /// </summary>
     /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>DFW</c> resolves to <c>KDFW</c>). Note that many small airports do not have weather
+    /// reporting stations and will return 404 regardless of identifier format.
     /// <code>
     /// GET /api/v1/metars/KDFW    — by ICAO code
     /// GET /api/v1/metars/DFW     — by FAA identifier
+    /// GET /api/v1/metars/KW05    — resolves to W05 (may still 404 if airport has no weather station)
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <returns>The latest METAR observation for the airport</returns>
     /// <response code="200">Returns the METAR observation</response>
     /// <response code="404">If no METAR is found for the airport</response>
@@ -48,10 +53,11 @@ public class MetarController(IMetarService metarService) : ControllerBase
     /// </summary>
     /// <remarks>
     /// Both ICAO codes and FAA identifiers can be mixed in the same request.
+    /// ICAO/FAA format mismatches are automatically resolved (e.g., <c>KW05</c> resolves to <c>W05</c>).
     /// Maximum 100 identifiers per request.
     /// <code>
     /// GET /api/v1/metars/batch?ids=KDFW,KAUS,KHOU
-    /// GET /api/v1/metars/batch?ids=DFW,AUS
+    /// GET /api/v1/metars/batch?ids=DFW,AUS,KW05
     /// </code>
     /// </remarks>
     /// <param name="ids">Comma-separated ICAO codes or FAA identifiers (e.g., <c>KDFW,KAUS,KHOU</c>). Maximum 100.</param>

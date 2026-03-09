@@ -79,12 +79,16 @@ public class PirepController(IPirepService pirepService, IAirportService airport
     /// FAA identifier, then returns pilot reports within the specified radius.
     /// </summary>
     /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>DFW</c> resolves to <c>KDFW</c>).
     /// <code>
     /// GET /api/v1/pireps/airport/KDFW                  — default 50 NM radius
     /// GET /api/v1/pireps/airport/DFW?radiusNm=100      — custom radius with FAA identifier
+    /// GET /api/v1/pireps/airport/KW05                  — resolves to FAA identifier W05
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <param name="radiusNm">Search radius in nautical miles (default 50, max 500)</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <param name="ct">Cancellation token</param>

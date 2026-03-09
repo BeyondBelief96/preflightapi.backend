@@ -36,10 +36,11 @@ public class RunwayService : IRunwayService
         {
             _logger.LogInformation("Getting runways for airport: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
+            var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoCodeOrIdent);
             var airport = await _context.Airports
                 .FirstOrDefaultAsync(a =>
-                    a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                    a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+                    (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                    (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
             if (airport == null)
             {

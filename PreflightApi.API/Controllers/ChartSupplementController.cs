@@ -24,14 +24,18 @@ public class ChartSupplementController(IChartSupplementService chartSupplementSe
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Returns the airport's ICAO code, name, and a list of page URLs.
+    /// Returns the airport's name, city, code, and a list of page URLs.
+    /// Accepts both ICAO codes and FAA identifiers — ICAO prefixes (<c>K</c>, <c>P</c>)
+    /// are automatically stripped to resolve the FAA identifier
+    /// (e.g., <c>KDFW</c> resolves to <c>DFW</c>, <c>PA88</c> resolves to <c>A88</c>).
     /// </para>
     /// <code>
     /// GET /api/v1/chart-supplements/KDFW
     /// GET /api/v1/chart-supplements/DFW
+    /// GET /api/v1/chart-supplements/KW05     — resolves to FAA identifier W05
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <returns>Airport metadata and pre-signed URLs for each chart supplement PDF page</returns>
     /// <response code="200">Returns the chart supplements for the airport</response>
     /// <response code="404">If no chart supplements are found for the given identifier</response>

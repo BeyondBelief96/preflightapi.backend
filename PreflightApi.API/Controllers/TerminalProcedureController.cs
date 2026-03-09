@@ -26,12 +26,18 @@ public class TerminalProcedureController(ITerminalProcedureService terminalProce
     /// Returns the airport's ICAO code, name, and a list of procedure chart URLs.
     /// Optionally filter by chart code (IAP, DP, STAR, APD, MIN, HOT, etc.).
     /// </para>
+    /// <para>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>DFW</c> resolves to <c>KDFW</c>).
+    /// </para>
     /// <code>
     /// GET /api/v1/terminal-procedures/KDFW
     /// GET /api/v1/terminal-procedures/DFW?chartCode=IAP
+    /// GET /api/v1/terminal-procedures/KW05                — resolves to FAA identifier W05
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive.</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <param name="chartCode">Optional chart code filter (e.g., IAP, DP, STAR, APD, MIN, HOT). Case-insensitive.</param>
     /// <returns>Airport information with pre-signed URLs for available terminal procedure chart PDFs</returns>
     /// <response code="200">Returns the terminal procedures</response>

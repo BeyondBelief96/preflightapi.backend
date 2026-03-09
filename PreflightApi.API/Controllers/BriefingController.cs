@@ -26,6 +26,8 @@ public class BriefingController(IBriefingService briefingService) : ControllerBa
     /// Each waypoint is either an airport identifier (ICAO or FAA) or a lat/lon coordinate.
     /// At least two waypoints are required. The corridor width controls how far from the route
     /// centerline to search for PIREPs, airports, and NOTAMs (default 25 NM each side).
+    /// Airport identifiers automatically resolve ICAO/FAA format mismatches — for example,
+    /// <c>KW05</c> resolves to <c>W05</c>, and <c>PA88</c> resolves to <c>A88</c>.
     /// </para>
     ///
     /// <para><strong>Airport-only route</strong></para>

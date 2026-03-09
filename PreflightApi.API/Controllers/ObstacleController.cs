@@ -26,12 +26,14 @@ public class ObstacleController(IObstacleService obstacleService, IAirportServic
     /// obstacles within the specified radius. Use <c>minHeightAgl</c> to filter out low obstacles.
     /// </summary>
     /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. ICAO/FAA format mismatches are automatically
+    /// resolved (e.g., <c>KW05</c> resolves to <c>W05</c>).
     /// <code>
     /// GET /api/v1/obstacles/airport/KDFW                              — default 10 NM radius
     /// GET /api/v1/obstacles/airport/DFW?radiusNm=5&amp;minHeightAgl=200  — towers 200+ ft AGL within 5 NM
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <param name="radiusNm">Search radius in nautical miles (default 10, must be greater than 0)</param>
     /// <param name="minHeightAgl">Optional minimum height AGL in feet — only return obstacles at or above this height</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
