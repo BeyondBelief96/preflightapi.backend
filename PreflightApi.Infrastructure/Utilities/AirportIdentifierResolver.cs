@@ -29,13 +29,7 @@ public static class AirportIdentifierResolver
         {
             // K-prefix: contiguous US ICAO code → also try stripped FAA identifier
             // Examples: KW05 → W05, KDFW → DFW, K9D4 → 9D4
-            if (upper[0] == 'K')
-            {
-                candidates.Add(upper[1..]);
-            }
-            // P-prefix: North Pacific ICAO code → also try stripped FAA identifier
-            // Examples: PA88 → A88 (Alaska), PHNL → HNL (Hawaii), PGUM → GUM (Guam)
-            else if (upper[0] == 'P')
+            if (upper[0] == 'K' || upper[0] == 'P')
             {
                 candidates.Add(upper[1..]);
             }
