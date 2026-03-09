@@ -8,7 +8,6 @@ using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 using PreflightApi.Domain.Exceptions;
-using PreflightApi.Domain.Exceptions;
 
 namespace PreflightApi.Infrastructure.Services.DocumentServices;
 
