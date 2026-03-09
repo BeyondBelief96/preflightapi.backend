@@ -5,6 +5,7 @@ using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Mappers;
 using PreflightApi.Infrastructure.Interfaces;
+using PreflightApi.Infrastructure.Utilities;
 
 namespace PreflightApi.Infrastructure.Services.WeatherServices;
 
@@ -21,13 +22,17 @@ public class TafService : ITafService
     
     public async Task<TafDto> GetTafByIcaoCode(string icaoCodeOrIdent, CancellationToken ct = default)
     {
-        var taf = await _dbContext.Tafs.FirstOrDefaultAsync(t => t.StationId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+        var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoCodeOrIdent);
+
+        var taf = await _dbContext.Tafs
+            .FirstOrDefaultAsync(t => t.StationId != null && candidates.Contains(t.StationId), ct);
 
         if (taf == null)
         {
             var airport = await _dbContext.Airports
-                .FirstOrDefaultAsync(a => a.ArptId == icaoCodeOrIdent.ToUpperInvariant() ||
-                                          a.IcaoId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+                .FirstOrDefaultAsync(a =>
+                    (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                    (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
             if (airport == null)
             {
@@ -57,15 +62,12 @@ public class TafService : ITafService
         if (icaoCodesOrIdents.Length > 100)
             throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
 
-        var upperCodes = icaoCodesOrIdents
-            .Select(c => c.ToUpperInvariant())
-            .Distinct()
-            .ToList();
+        var expandedCodes = AirportIdentifierResolver.ExpandCandidates(icaoCodesOrIdents);
 
-        // Query 1: Direct StationId matches
+        // Query 1: Direct StationId matches (using expanded candidates)
         var directMatches = await _dbContext.Tafs
             .AsNoTracking()
-            .Where(t => t.StationId != null && upperCodes.Contains(t.StationId))
+            .Where(t => t.StationId != null && expandedCodes.Contains(t.StationId))
             .ToListAsync(ct);
 
         var matchedStationIds = directMatches
@@ -73,18 +75,19 @@ public class TafService : ITafService
             .Select(t => t.StationId!)
             .ToHashSet();
 
-        // Identify input codes that didn't match any StationId directly
-        var unmatchedCodes = upperCodes
+        // Identify expanded candidates that didn't match any StationId directly
+        var unmatchedCandidates = expandedCodes
             .Where(c => !matchedStationIds.Contains(c))
             .ToList();
 
-        if (unmatchedCodes.Count == 0)
+        if (unmatchedCandidates.Count == 0)
             return directMatches.Select(TafMapper.ToDto);
 
         // Query 2: Resolve unmatched codes via Airports table
         var airports = await _dbContext.Airports
             .AsNoTracking()
-            .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
+            .Where(a => (a.IcaoId != null && unmatchedCandidates.Contains(a.IcaoId)) ||
+                        (a.ArptId != null && unmatchedCandidates.Contains(a.ArptId)))
             .ToListAsync(ct);
 
         var resolvedStationIds = airports

@@ -13,6 +13,16 @@ namespace PreflightApi.API.Controllers;
 /// Airports can be queried by ICAO code, FAA identifier, state, or text search. Use an airport's
 /// ICAO code or identifier to query related data from other endpoints such as METARs, TAFs, runways,
 /// communication frequencies, airport diagrams, and chart supplements.
+///
+/// <para><strong>Identifier Resolution</strong></para>
+/// <para>
+/// All identifier-based lookups accept both ICAO codes (e.g., KDFW) and FAA identifiers (e.g., DFW).
+/// If an exact match is not found, the API automatically tries the alternate format. This handles the
+/// common case where a user provides an ICAO-formatted code for a small airport that only has an FAA
+/// identifier — for example, <c>KW05</c> automatically resolves to <c>W05</c>, and <c>K9D4</c>
+/// resolves to <c>9D4</c>. Regional ICAO prefixes are also resolved: <c>K</c> for the contiguous US,
+/// <c>PA</c> for Alaska, and <c>PH</c> for Hawaii (e.g., <c>PA88</c> resolves to <c>A88</c>).
+/// </para>
 /// </summary>
 [ApiController]
 [Route("api/v{version:apiVersion}/airports")]
@@ -97,7 +107,18 @@ public class AirportController(
     /// <summary>
     /// Gets a specific airport by ICAO code or FAA identifier
     /// </summary>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>PA88</c> resolves to <c>A88</c>, <c>DFW</c> resolves to <c>KDFW</c>).
+    /// <code>
+    /// GET /api/v1/airports/KDFW     — by ICAO code
+    /// GET /api/v1/airports/DFW      — by FAA identifier
+    /// GET /api/v1/airports/KW05     — resolves to FAA identifier W05
+    /// GET /api/v1/airports/PA88     — resolves to FAA identifier A88 (Alaska)
+    /// </code>
+    /// </remarks>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW, KW05). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <returns>The airport details</returns>
     /// <response code="200">Returns the airport</response>
     /// <response code="404">If the airport is not found</response>
@@ -115,9 +136,13 @@ public class AirportController(
     /// Gets multiple airports by their ICAO codes or FAA identifiers
     /// </summary>
     /// <remarks>
-    /// Pass ICAO codes or FAA identifiers as a single comma-separated query parameter:
-    /// <code>GET /api/v1/airports/batch?ids=KDFW,KAUS,KHOU</code>
+    /// Pass ICAO codes or FAA identifiers as a single comma-separated query parameter.
     /// Both ICAO codes (KDFW) and FAA identifiers (DFW) can be mixed in the same request.
+    /// ICAO/FAA format mismatches are automatically resolved (e.g., <c>KW05</c> resolves to <c>W05</c>).
+    /// <code>
+    /// GET /api/v1/airports/batch?ids=KDFW,KAUS,KHOU
+    /// GET /api/v1/airports/batch?ids=KDFW,W05,PA88
+    /// </code>
     /// </remarks>
     /// <param name="ids">Comma-separated ICAO codes or FAA identifiers (e.g., KDFW,KAUS,KHOU)</param>
     /// <returns>Airports matching the specified codes</returns>

@@ -34,16 +34,19 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                     throw new ArgumentException("Airport identifier cannot be null or empty", nameof(icaoIdOrIdent));
                 }
 
+                var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoIdOrIdent);
+
                 var metar = await _context.Metars
-                    .FirstOrDefaultAsync(m => m.StationId == icaoIdOrIdent.ToUpperInvariant(), ct);
+                    .FirstOrDefaultAsync(m => m.StationId != null && candidates.Contains(m.StationId), ct);
 
                 if (metar == null)
                 {
                     _logger.LogDebug("METAR not found directly, searching for airport: {IcaoIdOrIdent}", icaoIdOrIdent);
 
                     var airport = await _context.Airports
-                        .FirstOrDefaultAsync(a => a.ArptId == icaoIdOrIdent.ToUpperInvariant() ||
-                                                a.IcaoId == icaoIdOrIdent.ToUpperInvariant(), ct);
+                        .FirstOrDefaultAsync(a =>
+                            (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                            (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
                     if (airport == null)
                     {
@@ -83,15 +86,12 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
             if (icaoCodesOrIdents.Length > 100)
                 throw new ValidationException("ids", "Maximum of 100 identifiers allowed per batch request");
 
-            var upperCodes = icaoCodesOrIdents
-                .Select(c => c.ToUpperInvariant())
-                .Distinct()
-                .ToList();
+            var expandedCodes = AirportIdentifierResolver.ExpandCandidates(icaoCodesOrIdents);
 
-            // Query 1: Direct StationId matches
+            // Query 1: Direct StationId matches (using expanded candidates)
             var directMatches = await _context.Metars
                 .AsNoTracking()
-                .Where(m => m.StationId != null && upperCodes.Contains(m.StationId))
+                .Where(m => m.StationId != null && expandedCodes.Contains(m.StationId))
                 .ToListAsync(ct);
 
             var matchedStationIds = directMatches
@@ -99,18 +99,19 @@ namespace PreflightApi.Infrastructure.Services.WeatherServices
                 .Select(m => m.StationId!)
                 .ToHashSet();
 
-            // Identify input codes that didn't match any StationId directly
-            var unmatchedCodes = upperCodes
+            // Identify expanded candidates that didn't match any StationId directly
+            var unmatchedCandidates = expandedCodes
                 .Where(c => !matchedStationIds.Contains(c))
                 .ToList();
 
-            if (unmatchedCodes.Count == 0)
+            if (unmatchedCandidates.Count == 0)
                 return directMatches.Select(m => MetarMapper.ToDto(m, _logger));
 
             // Query 2: Resolve unmatched codes via Airports table
             var airports = await _context.Airports
                 .AsNoTracking()
-                .Where(a => unmatchedCodes.Contains(a.IcaoId!) || unmatchedCodes.Contains(a.ArptId!))
+                .Where(a => (a.IcaoId != null && unmatchedCandidates.Contains(a.IcaoId)) ||
+                            (a.ArptId != null && unmatchedCandidates.Contains(a.ArptId)))
                 .ToListAsync(ct);
 
             var resolvedStationIds = airports

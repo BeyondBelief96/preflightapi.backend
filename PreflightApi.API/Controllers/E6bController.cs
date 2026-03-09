@@ -101,7 +101,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// worst-case gust components.
     /// </para>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches (e.g., <c>KW05</c> resolves to <c>W05</c>).</param>
     /// <returns>
     /// Crosswind data for every runway end at the airport, the METAR wind conditions used,
     /// and the recommended runway identifier.
@@ -193,7 +193,7 @@ public class E6bController(IE6bCalculatorService e6bCalculatorService)
     /// local pressure patterns, or non-standard lapse rates.
     /// </para>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code (e.g., KDFW) or FAA identifier (e.g., DFW)</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches (e.g., <c>KW05</c> resolves to <c>W05</c>).</param>
     /// <param name="request">
     /// Optional query parameters: <c>temperatureCelsiusOverride</c> and/or <c>altimeterInHgOverride</c>.
     /// If omitted, values are taken from the latest METAR.

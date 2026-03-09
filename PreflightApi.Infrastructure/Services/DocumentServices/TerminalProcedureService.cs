@@ -8,6 +8,7 @@ using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.Utilities;
 using PreflightApi.Domain.Exceptions;
+using PreflightApi.Domain.Exceptions;
 
 namespace PreflightApi.Infrastructure.Services.DocumentServices;
 
@@ -46,9 +47,10 @@ public class TerminalProcedureService : ITerminalProcedureService
 
     public async Task<TerminalProceduresResponseDto> GetTerminalProceduresByAirportCode(string airportCode, string? chartCode = null, CancellationToken ct = default)
     {
-        var upperCode = airportCode.ToUpperInvariant();
+        var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(airportCode);
         var query = _context.TerminalProcedures
-            .Where(tp => tp.IcaoIdent == upperCode || tp.AirportIdent == upperCode);
+            .Where(tp => (tp.IcaoIdent != null && candidates.Contains(tp.IcaoIdent)) ||
+                         candidates.Contains(tp.AirportIdent));
 
         if (!string.IsNullOrWhiteSpace(chartCode))
         {

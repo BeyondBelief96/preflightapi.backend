@@ -26,16 +26,17 @@ public class CommunicationFrequencyController(ICommunicationFrequencyService fre
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The facility identifier is the FAA airport code — typically the ICAO code without the leading
-    /// "K" prefix (e.g., <c>DFW</c> not <c>KDFW</c>). This corresponds to the <c>ArptId</c> field
-    /// returned by the Airports endpoint.
+    /// Frequencies are stored under the FAA airport code (e.g., <c>DFW</c>), but you can pass either
+    /// format — ICAO prefixes (<c>K</c>, <c>P</c>, <c>H</c>) are automatically stripped
+    /// (e.g., <c>KDFW</c> resolves to <c>DFW</c>, <c>PA88</c> resolves to <c>A88</c>).
     /// </para>
     /// <code>
-    /// GET /api/v1/communication-frequencies/DFW
-    /// GET /api/v1/communication-frequencies/AUS
+    /// GET /api/v1/communication-frequencies/DFW      — by FAA identifier
+    /// GET /api/v1/communication-frequencies/KDFW     — ICAO prefix stripped automatically
+    /// GET /api/v1/communication-frequencies/KW05     — resolves to FAA identifier W05
     /// </code>
     /// </remarks>
-    /// <param name="servicedFacility">FAA facility identifier — the FAA airport code without the "K" prefix (e.g., <c>DFW</c>, <c>AUS</c>). Use the <c>ArptId</c> field from the Airports endpoint.</param>
+    /// <param name="servicedFacility">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. ICAO prefixes are automatically stripped to resolve the FAA facility code.</param>
     /// <param name="pagination">Cursor-based pagination parameters</param>
     /// <returns>Paginated list of communication frequencies for the facility</returns>
     /// <response code="200">Returns the communication frequencies</response>

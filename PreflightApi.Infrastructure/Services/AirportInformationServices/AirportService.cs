@@ -70,10 +70,11 @@ namespace PreflightApi.Infrastructure.Services
             {
                 _logger.LogInformation("Getting airport by ICAO code or ident: {IcaoCodeOrIdent}", icaoCodeOrIdent);
 
+                var candidates = AirportIdentifierResolver.GetCandidateIdentifiers(icaoCodeOrIdent);
                 var airport = await _context.Airports
                     .FirstOrDefaultAsync(a =>
-                        a.IcaoId == icaoCodeOrIdent.ToUpperInvariant() ||
-                        a.ArptId == icaoCodeOrIdent.ToUpperInvariant(), ct);
+                        (a.IcaoId != null && candidates.Contains(a.IcaoId)) ||
+                        (a.ArptId != null && candidates.Contains(a.ArptId)), ct);
 
                 if (airport == null)
                 {
@@ -96,11 +97,11 @@ namespace PreflightApi.Infrastructure.Services
                 _logger.LogInformation("Getting airports by ICAO codes or idents: {CodesOrIdents}",
                     string.Join(", ", codesOrIdents));
 
-                var upperCodes = codesOrIdents.Select(c => c.ToUpperInvariant()).ToArray();
+                var expandedCodes = AirportIdentifierResolver.ExpandCandidates(codesOrIdents);
                 var airports = await _context.Airports
                     .Where(a =>
-                        (a.IcaoId != null && upperCodes.Contains(a.IcaoId)) ||
-                        (a.ArptId != null && upperCodes.Contains(a.ArptId)))
+                        (a.IcaoId != null && expandedCodes.Contains(a.IcaoId)) ||
+                        (a.ArptId != null && expandedCodes.Contains(a.ArptId)))
                     .ToListAsync(ct);
 
                 return airports.Select(a => AirportMapper.ToDto(a, _logger));

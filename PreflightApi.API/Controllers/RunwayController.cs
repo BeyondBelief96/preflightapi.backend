@@ -22,12 +22,16 @@ public class RunwayController(IRunwayService runwayService) : ControllerBase
     /// Gets runways for a specific airport by ICAO code or FAA identifier.
     /// </summary>
     /// <remarks>
+    /// Accepts both ICAO codes and FAA identifiers. If the exact identifier is not found, the API
+    /// automatically tries the alternate format (e.g., <c>KW05</c> resolves to <c>W05</c>,
+    /// <c>PA88</c> resolves to <c>A88</c>, <c>DFW</c> resolves to <c>KDFW</c>).
     /// <code>
     /// GET /api/v1/runways/airport/KDFW                          — runways at DFW
     /// GET /api/v1/runways/airport/DFW?includeGeometry=true      — with ArcGIS polygon geometry
+    /// GET /api/v1/runways/airport/KW05                          — resolves to FAA identifier W05
     /// </code>
     /// </remarks>
-    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW)</param>
+    /// <param name="icaoCodeOrIdent">ICAO code or FAA identifier (e.g., KDFW, DFW). Case-insensitive. Automatically resolves ICAO/FAA format mismatches.</param>
     /// <param name="includeGeometry">Include ArcGIS runway polygon geometry in the response (default false)</param>
     /// <returns>Runways and runway end details for the airport</returns>
     /// <response code="200">Returns the airport's runways</response>
