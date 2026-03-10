@@ -28,10 +28,10 @@ public class NoaaMagVarHealthCheckTests
     }
 
     [Fact]
-    public async Task CheckHealthAsync_GetReturns200_ReturnsHealthy()
+    public async Task CheckHealthAsync_HeadReturns200_ReturnsHealthy()
     {
         // Arrange
-        _mockHttp.When(HttpMethod.Get, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
+        _mockHttp.When(HttpMethod.Head, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
             .Respond(HttpStatusCode.OK);
         var context = new HealthCheckContext
         {
@@ -47,10 +47,10 @@ public class NoaaMagVarHealthCheckTests
     }
 
     [Fact]
-    public async Task CheckHealthAsync_GetReturns500_ReturnsDegraded()
+    public async Task CheckHealthAsync_HeadReturns500_ReturnsDegraded()
     {
         // Arrange
-        _mockHttp.When(HttpMethod.Get, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
+        _mockHttp.When(HttpMethod.Head, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
             .Respond(HttpStatusCode.InternalServerError);
         var context = new HealthCheckContext
         {
@@ -69,7 +69,7 @@ public class NoaaMagVarHealthCheckTests
     public async Task CheckHealthAsync_RequestThrows_ReturnsDegraded()
     {
         // Arrange
-        _mockHttp.When(HttpMethod.Get, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
+        _mockHttp.When(HttpMethod.Head, "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination*")
             .Throw(new HttpRequestException("Connection refused"));
         var context = new HealthCheckContext
         {
