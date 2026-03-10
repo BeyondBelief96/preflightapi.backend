@@ -58,7 +58,7 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient(HealthCheckHttpClient, client =>
         {
-            client.Timeout = TimeSpan.FromSeconds(3);
+            client.Timeout = TimeSpan.FromSeconds(10);
         })
         .AddPolicyHandler(CreateHealthCheckRetryPolicy());
 
