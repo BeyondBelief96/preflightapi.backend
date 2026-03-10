@@ -134,15 +134,17 @@ public class ServiceHealthAlertStateServiceTests : IDisposable
     #region ClearAlertStateAsync
 
     [Fact]
-    public async Task ClearAlertState_ExistingService_NullsOutAlertFields()
+    public async Task ClearAlertState_ExistingService_ClearsSeverityAndPreservesTimestamp()
     {
         // Arrange
+        var alertSentTime = DateTime.UtcNow.AddHours(-1);
         _dbContext.ServiceHealthAlertStates.Add(new ServiceHealthAlertState
         {
             ServiceName = "database",
             LastKnownStatus = "Healthy",
-            LastAlertSentUtc = DateTime.UtcNow.AddHours(-1),
+            LastAlertSentUtc = alertSentTime,
             LastAlertSeverity = "unhealthy",
+            ConsecutiveFailureCount = 5,
             UpdatedAt = DateTime.UtcNow
         });
         await _dbContext.SaveChangesAsync();
@@ -152,8 +154,9 @@ public class ServiceHealthAlertStateServiceTests : IDisposable
 
         // Assert
         var state = await _dbContext.ServiceHealthAlertStates.FindAsync("database");
-        state!.LastAlertSentUtc.Should().BeNull();
+        state!.LastAlertSentUtc.Should().Be(alertSentTime); // preserved for quiet period enforcement
         state.LastAlertSeverity.Should().BeNull();
+        state.ConsecutiveFailureCount.Should().Be(0);
     }
 
     [Fact]

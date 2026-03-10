@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Notes — Automatic ICAO/FAA Identifier Resolution | Preflight API</title>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-surface: #f8fafc;
+      --color-border: #e2e8f0;
+      --color-text: #1e293b;
+      --color-text-secondary: #64748b;
+      --color-accent: #2563eb;
+      --color-accent-light: #eff6ff;
+      --color-success: #16a34a;
+      --color-success-light: #f0fdf4;
+      --color-warning: #d97706;
+      --color-warning-light: #fffbeb;
+      --color-code-bg: #f1f5f9;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 48px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .badge-feature {
+      background: var(--color-accent-light);
+      color: var(--color-accent);
+    }
+
+    .date {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 650;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    /* Code */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--color-code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .code-block {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      background: none;
+      padding: 0;
+      font-size: 13.5px;
+      line-height: 1.8;
+    }
+
+    .code-comment { color: var(--color-text-secondary); }
+    .code-arrow { color: var(--color-accent); font-weight: 600; }
+
+    /* Callout boxes */
+    .callout {
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-left: 3px solid;
+    }
+
+    .callout-success {
+      background: var(--color-success-light);
+      border-color: var(--color-success);
+    }
+
+    .callout-warning {
+      background: var(--color-warning-light);
+      border-color: var(--color-warning);
+    }
+
+    .callout-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .callout-success .callout-title { color: var(--color-success); }
+    .callout-warning .callout-title { color: var(--color-warning); }
+
+    .callout p {
+      margin-bottom: 0;
+      font-size: 14.5px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14.5px;
+    }
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      padding: 10px 16px;
+      background: var(--color-surface);
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Lists */
+    ul {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Endpoint list */
+    .endpoint-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+    }
+
+    .endpoint-list li {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .endpoint-list li:last-child {
+      border-bottom: none;
+    }
+
+    .endpoint-method {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--color-success);
+      background: var(--color-success-light);
+      padding: 2px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .endpoint-method-post {
+      color: var(--color-accent);
+      background: var(--color-accent-light);
+    }
+
+    .endpoint-path {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      color: var(--color-text);
+    }
+
+    .endpoint-note {
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* Before/After comparison */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .comparison-card {
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    .comparison-header {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .comparison-before .comparison-header {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .comparison-after .comparison-header {
+      background: var(--color-success-light);
+      color: var(--color-success);
+    }
+
+    .comparison-body {
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .comparison-body .status-404 { color: #dc2626; }
+    .comparison-body .status-200 { color: var(--color-success); }
+
+    /* Footer */
+    .footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 32px 16px 64px; }
+      h1 { font-size: 26px; }
+      .comparison { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="header">
+      <div class="header-meta">
+        <span class="badge badge-feature">Feature</span>
+        <span class="date">March 9, 2026</span>
+      </div>
+      <h1>Automatic ICAO / FAA Identifier Resolution</h1>
+      <p class="subtitle">
+        All identifier-based endpoints now automatically resolve between ICAO and FAA airport
+        identifier formats, so you get data back regardless of which format you use.
+      </p>
+    </header>
+
+    <!-- Background -->
+    <section>
+      <h2>Background</h2>
+      <p>
+        US airports have two identifier systems. <strong>FAA identifiers</strong> are the domestic
+        format — typically 3 characters (e.g., <code>DFW</code>, <code>BNA</code>) but sometimes
+        alphanumeric (e.g., <code>W05</code>, <code>9D4</code>, <code>A88</code>).
+        <strong>ICAO codes</strong> are the international standard — always 4 characters with a
+        regional prefix:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>ICAO Prefix</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Contiguous US (lower 48)</td>
+            <td><code>K</code></td>
+            <td><code>KDFW</code> = FAA <code>DFW</code></td>
+          </tr>
+          <tr>
+            <td>Alaska</td>
+            <td><code>PA</code></td>
+            <td><code>PAFA</code> = FAA <code>AFA</code></td>
+          </tr>
+          <tr>
+            <td>Hawaii</td>
+            <td><code>PH</code></td>
+            <td><code>PHNL</code> = FAA <code>HNL</code></td>
+          </tr>
+          <tr>
+            <td>Guam</td>
+            <td><code>PG</code></td>
+            <td><code>PGUM</code> = FAA <code>GUM</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Many smaller US airports only have an FAA identifier — they have no officially assigned
+        ICAO code. Previously, if you requested data using the ICAO format for one of these airports
+        (e.g., <code>/airports/KW05</code>), the API returned a <code>404</code> even though the
+        airport exists under its FAA identifier <code>W05</code>.
+      </p>
+    </section>
+
+    <!-- What Changed -->
+    <section>
+      <h2>What Changed</h2>
+      <p>
+        When you request data by airport identifier, the API now tries the alternate format
+        automatically if the exact identifier isn't found:
+      </p>
+      <div class="code-block">
+        <code>
+          <span class="code-comment">/* Strip ICAO prefix → try FAA identifier */</span><br>
+          KW05 <span class="code-arrow">&rarr;</span> also tries W05<br>
+          K9D4 <span class="code-arrow">&rarr;</span> also tries 9D4<br>
+          PA88 <span class="code-arrow">&rarr;</span> also tries A88<br>
+          PHNL <span class="code-arrow">&rarr;</span> also tries HNL<br>
+          <br>
+          <span class="code-comment">/* Add ICAO prefix → try ICAO code */</span><br>
+          DFW &nbsp;<span class="code-arrow">&rarr;</span> also tries KDFW<br>
+          W05 &nbsp;<span class="code-arrow">&rarr;</span> also tries KW05<br>
+          9D4 &nbsp;<span class="code-arrow">&rarr;</span> also tries K9D4
+        </code>
+      </div>
+
+      <div class="comparison">
+        <div class="comparison-card comparison-before">
+          <div class="comparison-header">Before</div>
+          <div class="comparison-body">
+            GET /airports/KW05 &nbsp;<span class="status-404">404</span><br>
+            GET /runways/airport/K9D4 &nbsp;<span class="status-404">404</span><br>
+            GET /airports/K9G8 &nbsp;<span class="status-404">404</span>
+          </div>
+        </div>
+        <div class="comparison-card comparison-after">
+          <div class="comparison-header">After</div>
+          <div class="comparison-body">
+            GET /airports/KW05 &nbsp;<span class="status-200">200</span><br>
+            GET /runways/airport/K9D4 &nbsp;<span class="status-200">200</span><br>
+            GET /airports/K9G8 &nbsp;<span class="status-200">200</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Affected Endpoints -->
+    <section>
+      <h2>Affected Endpoints</h2>
+      <p>
+        Identifier resolution applies to every endpoint that accepts an airport code or identifier:
+      </p>
+      <ul class="endpoint-list">
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/airports/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/airports/batch?ids=...</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/metars/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/metars/batch?ids=...</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/tafs/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/tafs/batch?ids=...</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/runways/airport/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/terminal-procedures/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/chart-supplements/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/communication-frequencies/{servicedFacility}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/e6b/crosswind/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/e6b/density-altitude/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/pireps/airport/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method">GET</span>
+          <span class="endpoint-path">/api/v1/obstacles/airport/{icaoCodeOrIdent}</span>
+        </li>
+        <li>
+          <span class="endpoint-method endpoint-method-post">POST</span>
+          <span class="endpoint-path">/api/v1/briefing/route</span>
+          <span class="endpoint-note">airport waypoints</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- What This Means For You -->
+    <section>
+      <h2>What This Means For You</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-title">No breaking changes</div>
+        <p>
+          Existing requests continue to work exactly as before. This is purely additive — the API
+          now finds airports it previously missed.
+        </p>
+      </div>
+
+      <ul>
+        <li>
+          <strong>No client-side normalization needed.</strong> If you've been manually stripping or
+          adding prefixes before calling the API, you no longer need to. Send whichever format you
+          have and the API will resolve it.
+        </li>
+        <li>
+          <strong>Batch requests work too.</strong> You can mix ICAO codes and FAA identifiers
+          freely in batch endpoints (e.g., <code>?ids=KDFW,W05,PA88</code>).
+        </li>
+        <li>
+          <strong>Case-insensitive.</strong> All identifier lookups are case-insensitive — <code>kdfw</code>,
+          <code>KDFW</code>, and <code>Kdfw</code> all resolve the same.
+        </li>
+      </ul>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">Weather endpoints for small airports</div>
+        <p>
+          Identifier resolution means the airport will be found correctly, but many small airports
+          don't have weather reporting stations. METAR and TAF endpoints will still return
+          <code>404</code> for these airports — the identifier resolves, but there's simply no
+          weather data to return.
+        </p>
+      </div>
+    </section>
+
+    <!-- Example -->
+    <section>
+      <h2>Example</h2>
+      <p>
+        Requesting airport data for Potomac Airfield (FAA identifier: <code>VKX</code>,
+        no assigned ICAO code):
+      </p>
+      <div class="code-block">
+        <code>
+          <span class="code-comment"># All three resolve to the same airport:</span><br>
+          GET /api/v1/airports/VKX &nbsp;&nbsp;&nbsp;<span class="code-comment"># FAA identifier</span><br>
+          GET /api/v1/airports/KVKX &nbsp;&nbsp;<span class="code-comment"># ICAO format (auto-resolved)</span><br>
+          GET /api/v1/airports/kvkx &nbsp;&nbsp;<span class="code-comment"># case-insensitive</span><br>
+          <br>
+          <span class="code-comment"># Related data also resolves:</span><br>
+          GET /api/v1/runways/airport/KVKX<br>
+          GET /api/v1/chart-supplements/KVKX<br>
+          GET /api/v1/terminal-procedures/KVKX<br>
+          GET /api/v1/communication-frequencies/KVKX
+        </code>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Preflight API &mdash; Release Notes &mdash; March 9, 2026</p>
+    </footer>
+
+  </div>
+</body>
+</html>

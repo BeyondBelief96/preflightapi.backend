@@ -203,7 +203,9 @@ public class ServiceOutageAlertFunction
 
     private static bool SeverityEscalated(string? previousSeverity, string currentSeverity)
     {
-        if (previousSeverity == null) return true;
+        // Null previous severity means the service recovered and alert state was cleared.
+        // This is not an escalation — the quiet period should still apply.
+        if (previousSeverity == null) return false;
 
         SeverityRanks.TryGetValue(previousSeverity, out var prevRank);
         SeverityRanks.TryGetValue(currentSeverity, out var currRank);

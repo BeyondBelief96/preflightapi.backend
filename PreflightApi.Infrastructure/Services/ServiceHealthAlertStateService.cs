@@ -65,8 +65,10 @@ namespace PreflightApi.Infrastructure.Services
 
             if (existing != null)
             {
-                existing.LastAlertSentUtc = null;
+                // Preserve LastAlertSentUtc so the quiet period still applies on the next alert cycle.
+                // Only clear severity to indicate the service has recovered.
                 existing.LastAlertSeverity = null;
+                existing.ConsecutiveFailureCount = 0;
                 await _dbContext.SaveChangesAsync(ct);
             }
         }
