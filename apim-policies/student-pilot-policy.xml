@@ -32,7 +32,7 @@
 					<set-body>@{
     return new JObject(
         new JProperty("code", "TIER_RESTRICTED"),
-        new JProperty("message", "This endpoint is not available on the Free tier. Please upgrade to Starter or higher."),
+        new JProperty("message", "This endpoint is not available on the Free tier. Please upgrade to Private Pilot or higher."),
         new JProperty("timestamp", DateTime.UtcNow.ToString("o")),
         new JProperty("traceId", context.RequestId),
         new JProperty("path", context.Request.Url.Path)
