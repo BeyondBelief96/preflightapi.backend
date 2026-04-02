@@ -235,8 +235,8 @@ public class NavlogService : INavlogService
                 result.Add(segStart);
             }
 
-            if (segStartIndex < segEndIndex)
-            {
+            if (segStartIndex < segEndIndex && segStart.Altitude < plannedCruisingAltitude)
+            {   
                 var toward = waypoints[Math.Min(segStartIndex + 1, segEndIndex)];
                 var altitudeDifference = plannedCruisingAltitude - segStart.Altitude;
                 var climbTime = altitudeDifference / (performance.ClimbFpm * 60.0);
@@ -272,49 +272,53 @@ public class NavlogService : INavlogService
                 // Calculate traffic pattern altitude (1000 ft above airport elevation, rounded to nearest 100)
                 var trafficPatternAltitude = Math.Round((segEnd.Altitude + 1000) / 100.0) * 100;
 
-                // Calculate descent to reach TPA (not airport elevation)
-                var descentAltitudeDifference = plannedCruisingAltitude - trafficPatternAltitude;
-                var descentTime = descentAltitudeDifference / (performance.DescentFpm * 60.0);
-                var descentDistance = performance.DescentTrueAirspeed * descentTime;
-
-                // Add 3nm to account for reaching TPA 3nm before the airport
-                const double trafficPatternEntryDistanceNm = 3.0;
-                var totalDistanceFromAirport = descentDistance + trafficPatternEntryDistanceNm;
-
-                var topOfDescentPoint = FindPointAtDistance(
-                    segEnd,
-                    -totalDistanceFromAirport,
-                    CalculateTrueCourse(from.Latitude, from.Longitude, segEnd.Latitude, segEnd.Longitude));
-
-                var topOfDescentWaypoint = new WaypointDto
+                // Only add TOD/BOD when cruising altitude is above TPA (descent is needed)
+                if (plannedCruisingAltitude > trafficPatternAltitude)
                 {
-                    Id = $"TOD-{todCounter++}",
-                    Name = "TOD",
-                    Latitude = topOfDescentPoint.Latitude,
-                    Longitude = topOfDescentPoint.Longitude,
-                    Altitude = plannedCruisingAltitude,
-                    WaypointType = WaypointType.CalculatedPoint
-                };
+                    // Calculate descent to reach TPA (not airport elevation)
+                    var descentAltitudeDifference = plannedCruisingAltitude - trafficPatternAltitude;
+                    var descentTime = descentAltitudeDifference / (performance.DescentFpm * 60.0);
+                    var descentDistance = performance.DescentTrueAirspeed * descentTime;
 
-                result.Add(topOfDescentWaypoint);
+                    // Add 3nm to account for reaching TPA 3nm before the airport
+                    const double trafficPatternEntryDistanceNm = 3.0;
+                    var totalDistanceFromAirport = descentDistance + trafficPatternEntryDistanceNm;
 
-                // Add bottom of descent point at TPA, 3nm from the airport
-                var bottomOfDescentPoint = FindPointAtDistance(
-                    segEnd,
-                    -trafficPatternEntryDistanceNm,
-                    CalculateTrueCourse(from.Latitude, from.Longitude, segEnd.Latitude, segEnd.Longitude));
+                    var topOfDescentPoint = FindPointAtDistance(
+                        segEnd,
+                        -totalDistanceFromAirport,
+                        CalculateTrueCourse(from.Latitude, from.Longitude, segEnd.Latitude, segEnd.Longitude));
 
-                var bottomOfDescentWaypoint = new WaypointDto
-                {
-                    Id = $"BOD-{bodCounter++}",
-                    Name = "BOD",
-                    Latitude = bottomOfDescentPoint.Latitude,
-                    Longitude = bottomOfDescentPoint.Longitude,
-                    Altitude = trafficPatternAltitude,
-                    WaypointType = WaypointType.CalculatedPoint
-                };
+                    var topOfDescentWaypoint = new WaypointDto
+                    {
+                        Id = $"TOD-{todCounter++}",
+                        Name = "TOD",
+                        Latitude = topOfDescentPoint.Latitude,
+                        Longitude = topOfDescentPoint.Longitude,
+                        Altitude = plannedCruisingAltitude,
+                        WaypointType = WaypointType.CalculatedPoint
+                    };
 
-                result.Add(bottomOfDescentWaypoint);
+                    result.Add(topOfDescentWaypoint);
+
+                    // Add bottom of descent point at TPA, 3nm from the airport
+                    var bottomOfDescentPoint = FindPointAtDistance(
+                        segEnd,
+                        -trafficPatternEntryDistanceNm,
+                        CalculateTrueCourse(from.Latitude, from.Longitude, segEnd.Latitude, segEnd.Longitude));
+
+                    var bottomOfDescentWaypoint = new WaypointDto
+                    {
+                        Id = $"BOD-{bodCounter++}",
+                        Name = "BOD",
+                        Latitude = bottomOfDescentPoint.Latitude,
+                        Longitude = bottomOfDescentPoint.Longitude,
+                        Altitude = trafficPatternAltitude,
+                        WaypointType = WaypointType.CalculatedPoint
+                    };
+
+                    result.Add(bottomOfDescentWaypoint);
+                }
             }
 
             result.Add(segEnd);
