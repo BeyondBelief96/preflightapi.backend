@@ -277,9 +277,10 @@ public class BriefingService : IBriefingService
     private async Task<List<GAirmetDto>> FindGAirmetsIntersectingRouteAsync(
         PreflightApiDbContext context, LineString routeLine, CancellationToken ct)
     {
+        var now = DateTime.UtcNow;
         var gairmets = await context.GAirmets
             .AsNoTracking()
-            .Where(g => g.Boundary != null && g.Boundary.Intersects(routeLine))
+            .Where(g => g.Boundary != null && g.ExpireTime > now && g.Boundary.Intersects(routeLine))
             .ToListAsync(ct);
 
         return gairmets.Select(g => GAirmetMapper.ToDto(g, _logger)).ToList();
@@ -320,12 +321,21 @@ public class BriefingService : IBriefingService
             }
         }
 
-        // 2. En-route NOTAMs: all NOTAMs with geometry within the corridor
+        // 2. En-route NOTAMs: spatial corridor query with two-stage optimization:
+        //    Stage A: Bounding box pre-filter (geometry && ST_Expand) uses the geometry GiST index
+        //    Stage B: Exact geography distance check (ST_DWithin with ::geography cast)
+        //    Temporal filters run first to reduce candidates before expensive spatial work.
+        //    corridorDegrees uses a conservative divisor (50,000 m/deg) to ensure the bounding
+        //    box is always >= the actual corridor width at US latitudes (up to ~63°N).
+        var corridorDegrees = corridorMeters / 50000.0;
         var enrouteNotams = await context.Notams
-            .FromSqlInterpolated($"SELECT * FROM notams WHERE geometry IS NOT NULL AND ST_DWithin(geometry::geography, {routeLine}::geography, {corridorMeters})")
+            .FromSqlInterpolated($@"SELECT * FROM notams
+WHERE geometry IS NOT NULL
+  AND (cancelation_date IS NULL OR cancelation_date > {now})
+  AND (effective_end IS NULL OR effective_end > {now})
+  AND geometry && ST_Expand({routeLine}::geometry, {corridorDegrees})
+  AND ST_DWithin(geometry::geography, {routeLine}::geography, {corridorMeters})")
             .AsNoTracking()
-            .Where(n => n.CancelationDate == null || n.CancelationDate > now)
-            .Where(n => n.EffectiveEnd == null || n.EffectiveEnd > now)
             .ToListAsync(ct);
 
         foreach (var entity in enrouteNotams)
