@@ -1,8 +1,12 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PreflightApi.Domain.Exceptions;
+using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Dtos;
 using PreflightApi.Infrastructure.Dtos.Briefing;
 using PreflightApi.Infrastructure.Interfaces;
@@ -21,22 +25,44 @@ public class BriefingServiceTests : PostgreSqlTestBase
 
     private BriefingService CreateService()
     {
+        // Build a real IServiceScopeFactory so parallel queries each get their own DbContext
+        var services = new ServiceCollection();
+        var dsBuilder = new NpgsqlDataSourceBuilder(ConnectionString);
+        dsBuilder.EnableDynamicJson();
+        dsBuilder.UseNetTopologySuite();
+        services.AddSingleton(dsBuilder.Build());
+        services.AddDbContext<PreflightApiDbContext>((sp, options) =>
+        {
+            var ds = sp.GetRequiredService<NpgsqlDataSource>();
+            options.UseNpgsql(ds, o => o.UseNetTopologySuite());
+        });
+        services.AddSingleton(_metarService);
+        services.AddSingleton(_tafService);
+        var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
+
         return new BriefingService(
             DbContext,
             _airportService,
-            _metarService,
-            _tafService,
+            scopeFactory,
             Substitute.For<ILogger<BriefingService>>());
     }
 
+    private static readonly AirportDto KdfwAirport = new() { IcaoId = "KDFW", ArptId = "DFW", LatDecimal = 32.8968, LongDecimal = -97.0380 };
+    private static readonly AirportDto KausAirport = new() { IcaoId = "KAUS", ArptId = "AUS", LatDecimal = 30.1945, LongDecimal = -97.6699 };
+    private static readonly AirportDto KiahAirport = new() { IcaoId = "KIAH", ArptId = "IAH", LatDecimal = 29.9844, LongDecimal = -95.3414 };
+
     private void SetupAirportLookups()
     {
-        _airportService.GetAirportByIcaoCodeOrIdent("KDFW")
-            .Returns(new AirportDto { IcaoId = "KDFW", ArptId = "DFW", LatDecimal = 32.8968, LongDecimal = -97.0380 });
-        _airportService.GetAirportByIcaoCodeOrIdent("KAUS")
-            .Returns(new AirportDto { IcaoId = "KAUS", ArptId = "AUS", LatDecimal = 30.1945, LongDecimal = -97.6699 });
-        _airportService.GetAirportByIcaoCodeOrIdent("KIAH")
-            .Returns(new AirportDto { IcaoId = "KIAH", ArptId = "IAH", LatDecimal = 29.9844, LongDecimal = -95.3414 });
+        _airportService.GetAirportsByIcaoCodesOrIdents(Arg.Any<string[]>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var codes = callInfo.ArgAt<string[]>(0);
+                var all = new[] { KdfwAirport, KausAirport, KiahAirport };
+                return all.Where(a =>
+                    codes.Any(c => c.Equals(a.IcaoId, StringComparison.OrdinalIgnoreCase)
+                               || c.Equals(a.ArptId, StringComparison.OrdinalIgnoreCase)
+                               || c.Equals("K" + a.ArptId, StringComparison.OrdinalIgnoreCase)));
+            });
     }
 
     // ── Validation Tests ──
@@ -156,8 +182,9 @@ public class BriefingServiceTests : PostgreSqlTestBase
     [Fact]
     public async Task GetRouteBriefing_AirportNotFound_PropagatesException()
     {
-        _airportService.GetAirportByIcaoCodeOrIdent("XXXX")
-            .Returns<AirportDto>(x => throw new AirportNotFoundException("XXXX"));
+        // Batch returns empty for unknown airport
+        _airportService.GetAirportsByIcaoCodesOrIdents(Arg.Any<string[]>(), Arg.Any<CancellationToken>())
+            .Returns(Enumerable.Empty<AirportDto>());
 
         var service = CreateService();
         var request = new RouteBriefingRequest
@@ -177,8 +204,8 @@ public class BriefingServiceTests : PostgreSqlTestBase
     [Fact]
     public async Task GetRouteBriefing_AirportMissingCoords_ThrowsValidationException()
     {
-        _airportService.GetAirportByIcaoCodeOrIdent("KDFW")
-            .Returns(new AirportDto { IcaoId = "KDFW", LatDecimal = null, LongDecimal = null });
+        _airportService.GetAirportsByIcaoCodesOrIdents(Arg.Any<string[]>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { new AirportDto { IcaoId = "KDFW", ArptId = "DFW", LatDecimal = null, LongDecimal = null } });
 
         var service = CreateService();
         var request = new RouteBriefingRequest

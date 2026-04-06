@@ -717,6 +717,81 @@ namespace PreflightApi.Tests.NavlogTests
             result.TotalFuelUsed.Should().BeApproximately(expectedTotalFuelUsed, 0.25);
         }
 
+        [Fact]
+        public async Task CalculateNavlog_ShouldSkipTocWhenDepartureElevationAboveCruisingAltitude()
+        {
+            // Arrange - KCOS (6187 ft) to KLAA (3705 ft) with cruising altitude 4500 ft
+            // Departure is above cruising altitude, so no climb phase should exist
+            var departureTime = DateTime.UtcNow;
+            var request = new NavlogRequestDto
+            {
+                TimeOfDeparture = departureTime,
+                Waypoints = new List<WaypointDto>
+                {
+                    CreateSpecificWaypoint("KCOS", 38.8058, -104.7008, 6187),
+                    CreateSpecificWaypoint("KLAA", 38.0697, -102.6885, 3705)
+                },
+                PlannedCruisingAltitude = 4500,
+                PerformanceData = TestPerformanceData
+            };
+
+            _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(8.0);
+            var windsAloftData = GenerateWindsAloftData(departureTime);
+            _windsAloftService.FetchWindsAloftData(Arg.Any<int>()).Returns(windsAloftData);
+
+            // Act
+            var result = await _navlogService.CalculateNavlog(request);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            // No TOC should be generated since departure elevation (6187) > cruising altitude (4500)
+            result.Legs.Should().NotContain(l => l.LegEndPoint.Name == "TOC");
+
+            // First leg should start at KCOS
+            result.Legs[0].LegStartPoint.Name.Should().Be("KCOS");
+            result.Legs[0].LegStartPoint.Altitude.Should().Be(6187);
+        }
+
+        [Fact]
+        public async Task CalculateNavlog_ShouldSkipTodBodWhenTpaAboveCruisingAltitude()
+        {
+            // Arrange - KCOS (6187 ft) to KLAA (3705 ft) with cruising altitude 4500 ft
+            // TPA for KLAA = round((3705 + 1000) / 100) * 100 = 4700 ft, which is above 4500 ft cruise
+            // So no TOD/BOD should be generated
+            var departureTime = DateTime.UtcNow;
+            var request = new NavlogRequestDto
+            {
+                TimeOfDeparture = departureTime,
+                Waypoints = new List<WaypointDto>
+                {
+                    CreateSpecificWaypoint("KCOS", 38.8058, -104.7008, 6187),
+                    CreateSpecificWaypoint("KLAA", 38.0697, -102.6885, 3705)
+                },
+                PlannedCruisingAltitude = 4500,
+                PerformanceData = TestPerformanceData
+            };
+
+            _magneticVariationService.GetMagneticVariation(Arg.Any<double>(), Arg.Any<double>()).Returns(8.0);
+            var windsAloftData = GenerateWindsAloftData(departureTime);
+            _windsAloftService.FetchWindsAloftData(Arg.Any<int>()).Returns(windsAloftData);
+
+            // Act
+            var result = await _navlogService.CalculateNavlog(request);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            // No TOD or BOD should be generated since TPA (4700) > cruising altitude (4500)
+            result.Legs.Should().NotContain(l => l.LegStartPoint.Name == "TOD");
+            result.Legs.Should().NotContain(l => l.LegEndPoint.Name == "BOD");
+
+            // Should only have 1 leg: KCOS -> KLAA (direct, no calculated points)
+            result.Legs.Should().HaveCount(1);
+            result.Legs[0].LegStartPoint.Name.Should().Be("KCOS");
+            result.Legs[0].LegEndPoint.Name.Should().Be("KLAA");
+        }
+
         // Helper method to create a waypoint with specific values when needed
         private WaypointDto CreateSpecificWaypoint(string name, double lat, double lon, double altitude,
                 WaypointType waypointType = WaypointType.Airport)
