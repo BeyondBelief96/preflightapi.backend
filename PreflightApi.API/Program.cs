@@ -17,8 +17,11 @@ using PreflightApi.Infrastructure.Services.WeatherServices;
 using PreflightApi.Infrastructure.Settings;
 using PreflightApi.Infrastructure.HealthChecks;
 using PreflightApi.Infrastructure.Dtos;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using PreflightApi.Infrastructure.Utilities;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -139,6 +142,9 @@ builder.Services.AddOpenApiDocument(options =>
 builder.Services.Configure<NOAASettings>(builder.Configuration.GetSection("NOAASettings"));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<NmsSettings>(builder.Configuration.GetSection("NmsSettings"));
+builder.Services.Configure<SubscriptionTierSettings>(builder.Configuration.GetSection("SubscriptionTiers"));
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
+builder.Services.Configure<ClerkSettings>(builder.Configuration.GetSection("ClerkSettings"));
 
 // Build NpgsqlDataSource once as a singleton (connection-pooling object)
 builder.Services.AddSingleton(sp =>
@@ -216,6 +222,111 @@ builder.Services.AddScoped<IBriefingService, BriefingService>();
 // Data Sync Status
 builder.Services.AddScoped<IDataSyncStatusService, DataSyncStatusService>();
 
+// API Key & Subscription Services
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddSingleton<IQuotaTrackingService, QuotaTrackingService>();
+builder.Services.AddHostedService<QuotaFlushService>();
+builder.Services.AddScoped<IStripeWebhookService, StripeWebhookService>();
+
+// Authentication — Clerk JWT for API key management endpoints
+var clerkSettings = builder.Configuration.GetSection("ClerkSettings").Get<ClerkSettings>();
+builder.Services.AddAuthentication()
+    .AddJwtBearer("ClerkJwt", options =>
+    {
+        options.Authority = clerkSettings?.Authority;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateAudience = false,
+            NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
+        };
+
+        // In development, skip JWT validation if configured
+        if (builder.Environment.IsDevelopment() && clerkSettings?.RequireAuthenticationInDevelopment == false)
+        {
+            options.RequireHttpsMetadata = false;
+        }
+    });
+builder.Services.AddAuthorization();
+
+// Rate Limiting — per API key, tier-based limits
+var tierSettings = builder.Configuration.GetSection("SubscriptionTiers").Get<SubscriptionTierSettings>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("PerApiKey", context =>
+    {
+        var apiKey = context.Items["ApiKey"] as PreflightApi.Domain.Entities.ApiKey;
+        if (apiKey == null)
+            return RateLimitPartition.GetNoLimiter("anonymous");
+
+        var tierName = apiKey.Tier.ToString();
+        var limit = tierSettings?.Tiers.TryGetValue(tierName, out var def) == true
+            ? def.RateLimitPerMinute
+            : 10; // Default to most restrictive
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            apiKey.Id.ToString(),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            });
+    });
+
+    options.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.ContentType = "application/json";
+
+        var retryAfter = ctx.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue.TotalSeconds
+            : 60;
+
+        ctx.HttpContext.Response.Headers["Retry-After"] = ((int)retryAfter).ToString();
+
+        var apiKey = ctx.HttpContext.Items["ApiKey"] as PreflightApi.Domain.Entities.ApiKey;
+        var tierName = apiKey?.Tier.ToString() ?? "unknown";
+        var tierLimit = tierSettings?.Tiers.TryGetValue(tierName, out var def) == true
+            ? def.RateLimitPerMinute : 10;
+
+        ctx.HttpContext.Response.Headers["X-RateLimit-Limit"] = tierLimit.ToString();
+        ctx.HttpContext.Response.Headers["X-RateLimit-Remaining"] = "0";
+
+        var errorResponse = new
+        {
+            code = PreflightApi.Domain.Exceptions.ErrorCodes.RateLimitExceeded,
+            message = "Rate limit exceeded. Please slow down your requests.",
+            retryAfterSeconds = (int)retryAfter,
+            timestamp = DateTime.UtcNow.ToString("o"),
+            traceId = ctx.HttpContext.TraceIdentifier,
+            path = ctx.HttpContext.Request.Path.Value
+        };
+        await ctx.HttpContext.Response.WriteAsJsonAsync(errorResponse, ct);
+    };
+});
+
+// Output Caching — endpoint-specific TTLs
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(b => b.NoCache());
+
+    options.AddPolicy("RealTimeWeather", b =>
+        b.Expire(TimeSpan.FromMinutes(2)).SetVaryByQuery("*"));
+
+    options.AddPolicy("E6b", b =>
+        b.Expire(TimeSpan.FromMinutes(2)).SetVaryByQuery("*"));
+
+    options.AddPolicy("ForecastWeather", b =>
+        b.Expire(TimeSpan.FromMinutes(5)).SetVaryByQuery("*"));
+
+    options.AddPolicy("PresignedUrls", b =>
+        b.Expire(TimeSpan.FromMinutes(10)).SetVaryByQuery("*"));
+
+    options.AddPolicy("StaticData", b =>
+        b.Expire(TimeSpan.FromMinutes(15)).SetVaryByQuery("*"));
+});
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -240,7 +351,11 @@ using (var scope = app.Services.CreateScope())
 
 app.UseResponseCompression();
 app.UseGlobalExceptionHandling();
-app.UseGatewaySecretValidation();
+app.UseApiKeyAuthentication();
+app.UseTierGating();
+app.UseQuotaEnforcement();
+app.UseRateLimiter();
+app.UseOutputCache();
 app.UseApiVersionHeader();
 app.UseDataCurrency();
 
@@ -252,6 +367,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 // Cached health status — served from background monitor snapshot.

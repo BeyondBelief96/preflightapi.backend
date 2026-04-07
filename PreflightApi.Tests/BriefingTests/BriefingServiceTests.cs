@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -35,6 +36,7 @@ public class BriefingServiceTests : PostgreSqlTestBase
         {
             var ds = sp.GetRequiredService<NpgsqlDataSource>();
             options.UseNpgsql(ds, o => o.UseNetTopologySuite());
+            options.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
         });
         services.AddSingleton(_metarService);
         services.AddSingleton(_tafService);

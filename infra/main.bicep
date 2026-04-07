@@ -130,8 +130,24 @@ param apimKeyVaultCertificateName string = ''
 param noaaApiKey string
 
 @secure()
-@description('APIM-to-API shared secret for gateway validation')
+@description('APIM-to-API shared secret for gateway validation (legacy — used by Functions only during transition)')
 param gatewaySecret string
+
+// ─── Stripe Settings ────────────────────────────────────────────────────────
+
+@secure()
+@description('Stripe secret API key')
+param stripeSecretKey string = ''
+
+@secure()
+@description('Stripe webhook signing secret')
+param stripeWebhookSecret string = ''
+
+@description('Stripe Price ID for Private Pilot tier')
+param stripePriceIdPrivatePilot string = ''
+
+@description('Stripe Price ID for Commercial Pilot tier')
+param stripePriceIdCommercialPilot string = ''
 
 // ─── NMS Settings (Azure Functions) ──────────────────────────────────────────
 
@@ -307,8 +323,12 @@ module appService 'modules/app-service.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     terminalProceduresContainerName: storage.outputs.terminalProceduresContainerName
     chartSupplementsContainerName: storage.outputs.chartSupplementsContainerName
-    gatewaySecret: gatewaySecret
     noaaApiKey: noaaApiKey
+    stripeSecretKey: stripeSecretKey
+    stripeWebhookSecret: stripeWebhookSecret
+    stripePriceIdPrivatePilot: stripePriceIdPrivatePilot
+    stripePriceIdCommercialPilot: stripePriceIdCommercialPilot
+    clerkAuthority: clerkAuthority
   }
 }
 

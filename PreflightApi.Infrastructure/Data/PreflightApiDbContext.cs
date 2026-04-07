@@ -48,6 +48,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<ServiceHealthAlertState> ServiceHealthAlertStates => Set<ServiceHealthAlertState>();
 
+        public virtual DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -46,12 +46,29 @@ param terminalProceduresContainerName string
 param chartSupplementsContainerName string
 
 @secure()
-@description('APIM-to-API shared secret for gateway validation')
-param gatewaySecret string
-
-@secure()
 @description('NOAA API key for weather data')
 param noaaApiKey string
+
+// ─── Stripe Settings ────────────────────────────────────────────────────────
+
+@secure()
+@description('Stripe secret API key')
+param stripeSecretKey string = ''
+
+@secure()
+@description('Stripe webhook signing secret')
+param stripeWebhookSecret string = ''
+
+@description('Stripe Price ID for Private Pilot tier')
+param stripePriceIdPrivatePilot string = ''
+
+@description('Stripe Price ID for Commercial Pilot tier')
+param stripePriceIdCommercialPilot string = ''
+
+// ─── Clerk Settings ─────────────────────────────────────────────────────────
+
+@description('Clerk JWT authority URL')
+param clerkAuthority string = ''
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
@@ -132,12 +149,32 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: chartSupplementsContainerName
         }
         {
-          name: 'GatewaySecret'
-          value: gatewaySecret
-        }
-        {
           name: 'NOAASettings__NOAAApiKey'
           value: noaaApiKey
+        }
+        {
+          name: 'ApiKeyAuth__BypassInDevelopment'
+          value: environment == 'prod' ? 'false' : 'false'
+        }
+        {
+          name: 'StripeSettings__SecretKey'
+          value: stripeSecretKey
+        }
+        {
+          name: 'StripeSettings__WebhookSecret'
+          value: stripeWebhookSecret
+        }
+        {
+          name: 'StripeSettings__PriceIdToTier__${stripePriceIdPrivatePilot}'
+          value: !empty(stripePriceIdPrivatePilot) ? 'PrivatePilot' : ''
+        }
+        {
+          name: 'StripeSettings__PriceIdToTier__${stripePriceIdCommercialPilot}'
+          value: !empty(stripePriceIdCommercialPilot) ? 'CommercialPilot' : ''
+        }
+        {
+          name: 'ClerkSettings__Authority'
+          value: clerkAuthority
         }
         {
           name: 'ApplicationInsightsAgent_EXTENSION_VERSION'

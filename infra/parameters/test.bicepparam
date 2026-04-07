@@ -54,7 +54,14 @@ param apimKeyVaultCertificateName = ''
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 param noaaApiKey = readEnvironmentVariable('NOAA_API_KEY')
-param gatewaySecret = readEnvironmentVariable('GATEWAY_SECRET')
+param gatewaySecret = readEnvironmentVariable('GATEWAY_SECRET', '')
+
+// ─── Stripe Settings ────────────────────────────────────────────────────────
+
+param stripeSecretKey = readEnvironmentVariable('STRIPE_SECRET_KEY', '')
+param stripeWebhookSecret = readEnvironmentVariable('STRIPE_WEBHOOK_SECRET', '')
+param stripePriceIdPrivatePilot = readEnvironmentVariable('STRIPE_PRICE_ID_PRIVATE_PILOT', '')
+param stripePriceIdCommercialPilot = readEnvironmentVariable('STRIPE_PRICE_ID_COMMERCIAL_PILOT', '')
 
 // ─── NMS Settings (staging endpoints) ────────────────────────────────────────
 

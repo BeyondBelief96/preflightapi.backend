@@ -48,6 +48,16 @@ services:
       - NmsSettings__CacheDurationMinutes=5
       - NmsSettings__DefaultRouteCorridorRadiusNm=25
       - NmsSettings__RequestTimeoutSeconds=30
+      # API Key Auth (set BypassInDevelopment=false to test middleware locally)
+      - ApiKeyAuth__BypassInDevelopment=true
+      # Stripe (optional — needed for webhook testing with `stripe listen`)
+      - StripeSettings__SecretKey=${STRIPE_SECRET_KEY:-}
+      - StripeSettings__WebhookSecret=${STRIPE_WEBHOOK_SECRET:-}
+      - StripeSettings__PriceIdToTier__price_1T2BvHEVPK4CY7iyOFV4TLke=PrivatePilot
+      - StripeSettings__PriceIdToTier__price_1T2BwkEVPK4CY7iyYfEDuW2r=CommercialPilot
+      # Clerk JWT (optional — needed for API key management endpoints)
+      - ClerkSettings__Authority=https://optimal-gelding-22.clerk.accounts.dev
+      - ClerkSettings__RequireAuthenticationInDevelopment=false
     ports:
       - "7014:80"
     volumes:
