@@ -362,8 +362,12 @@ public class NotamService : INotamService
 
         if (!string.IsNullOrEmpty(filters.Feature))
         {
-            var feature = filters.Feature;
-            query = query.Where(n => EF.Functions.ILike(n.FeatureJson, $"%\"feature\":\"{feature}\"%"));
+            var feature = filters.Feature.ToUpperInvariant();
+            var containment = JsonSerializer.Serialize(new
+            {
+                properties = new { coreNOTAMData = new { notam = new { feature } } }
+            });
+            query = query.Where(n => EF.Functions.JsonContains(n.FeatureJson, containment));
         }
 
         if (!string.IsNullOrEmpty(filters.FreeText))
