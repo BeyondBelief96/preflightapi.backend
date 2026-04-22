@@ -50,10 +50,19 @@ public class NotamConfiguration : IEntityTypeConfiguration<Notam>
         builder.Property(e => e.Geometry)
             .HasColumnType("geometry(Geometry, 4326)");
 
+        // Stored generated column extracting notam.feature from feature_json for indexed filtering.
+        builder.Property(e => e.Feature)
+            .HasColumnType("text")
+            .HasComputedColumnSql(
+                "(feature_json->'properties'->'coreNOTAMData'->'notam'->>'feature')",
+                stored: true);
+
         // Indexes for common query patterns
         builder.HasIndex(e => e.Location);
         builder.HasIndex(e => e.IcaoLocation);
         builder.HasIndex(e => e.Classification);
+        builder.HasIndex(e => new { e.Classification, e.EffectiveEnd });
+        builder.HasIndex(e => e.Feature);
         builder.HasIndex(e => e.EffectiveStart);
         builder.HasIndex(e => e.EffectiveEnd);
         builder.HasIndex(e => e.CancelationDate);

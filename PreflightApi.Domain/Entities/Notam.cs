@@ -121,4 +121,10 @@ public class Notam
     /// </summary>
     [Column("geometry", TypeName = "geometry(Geometry, 4326)")]
     public Geometry? Geometry { get; set; }
+
+    /// <summary>
+    /// Feature type extracted from feature_json (stored generated column). Enables indexed equality filtering.
+    /// </summary>
+    [Column("feature")]
+    public string? Feature { get; set; }
 }
