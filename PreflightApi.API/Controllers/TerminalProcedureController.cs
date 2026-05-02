@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos;
@@ -15,6 +16,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/terminal-procedures")]
 [Tags("Terminal Procedures")]
+[OutputCache(PolicyName = "PresignedUrls")]
 public class TerminalProcedureController(ITerminalProcedureService terminalProcedureService) : ControllerBase
 {
     /// <summary>

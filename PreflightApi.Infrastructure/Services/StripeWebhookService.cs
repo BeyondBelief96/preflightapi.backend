@@ -1,6 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
+using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Settings;
 using Stripe;
@@ -10,21 +13,35 @@ namespace PreflightApi.Infrastructure.Services;
 public class StripeWebhookService : IStripeWebhookService
 {
     private readonly IApiKeyService _apiKeyService;
+    private readonly PreflightApiDbContext _context;
     private readonly ILogger<StripeWebhookService> _logger;
     private readonly StripeSettings _stripeSettings;
 
     public StripeWebhookService(
         IApiKeyService apiKeyService,
+        PreflightApiDbContext context,
         ILogger<StripeWebhookService> logger,
         IOptions<StripeSettings> stripeSettings)
     {
         _apiKeyService = apiKeyService;
+        _context = context;
         _logger = logger;
         _stripeSettings = stripeSettings.Value;
     }
 
     public async Task ProcessEventAsync(Event stripeEvent, CancellationToken ct = default)
     {
+        var alreadyProcessed = await _context.ProcessedStripeEvents
+            .AsNoTracking()
+            .AnyAsync(e => e.EventId == stripeEvent.Id, ct);
+
+        if (alreadyProcessed)
+        {
+            _logger.LogInformation("Skipping duplicate Stripe event {EventType} ({EventId})",
+                stripeEvent.Type, stripeEvent.Id);
+            return;
+        }
+
         _logger.LogInformation("Processing Stripe event {EventType} ({EventId})",
             stripeEvent.Type, stripeEvent.Id);
 
@@ -64,6 +81,28 @@ public class StripeWebhookService : IStripeWebhookService
             default:
                 _logger.LogDebug("Ignoring unhandled Stripe event type {EventType}", stripeEvent.Type);
                 break;
+        }
+
+        await MarkEventProcessedAsync(stripeEvent, ct);
+    }
+
+    private async Task MarkEventProcessedAsync(Event stripeEvent, CancellationToken ct)
+    {
+        try
+        {
+            _context.ProcessedStripeEvents.Add(new ProcessedStripeEvent
+            {
+                EventId = stripeEvent.Id,
+                EventType = stripeEvent.Type,
+                ProcessedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent webhook delivery already inserted the marker — safe to ignore since
+            // every handler is idempotent.
+            _logger.LogDebug("Stripe event {EventId} marker insert raced with another worker", stripeEvent.Id);
         }
     }
 

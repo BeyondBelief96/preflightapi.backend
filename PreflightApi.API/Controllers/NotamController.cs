@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
@@ -31,6 +32,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/notams")]
 [Tags("NOTAMs")]
+[OutputCache(PolicyName = "RealTimeWeather")]
 public class NotamController(INotamService notamService)
     : ControllerBase
 {

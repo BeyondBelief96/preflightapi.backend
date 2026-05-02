@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
@@ -16,6 +17,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/communication-frequencies")]
 [Tags("Communication Frequencies")]
+[OutputCache(PolicyName = "StaticData")]
 public class CommunicationFrequencyController(ICommunicationFrequencyService frequencyService)
     : ControllerBase
 {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos.Performance;
@@ -71,6 +72,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/e6b")]
 [Tags("E6B Flight Computer")]
+[OutputCache(PolicyName = "E6b")]
 public class E6bController(IE6bCalculatorService e6bCalculatorService)
     : ControllerBase
 {

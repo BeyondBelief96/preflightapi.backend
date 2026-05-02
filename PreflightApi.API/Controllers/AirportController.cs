@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Exceptions;
@@ -27,6 +28,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/airports")]
 [Tags("Airports")]
+[OutputCache(PolicyName = "StaticData")]
 public class AirportController(
     IAirportService airportService)
     : ControllerBase

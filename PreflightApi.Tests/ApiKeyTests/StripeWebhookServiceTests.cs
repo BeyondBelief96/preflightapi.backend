@@ -1,9 +1,12 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using PreflightApi.Domain.Entities;
 using PreflightApi.Domain.Enums;
+using PreflightApi.Infrastructure.Data;
 using PreflightApi.Infrastructure.Interfaces;
 using PreflightApi.Infrastructure.Services;
 using PreflightApi.Infrastructure.Settings;
@@ -14,6 +17,7 @@ namespace PreflightApi.Tests.ApiKeyTests;
 public class StripeWebhookServiceTests
 {
     private readonly IApiKeyService _apiKeyService;
+    private readonly PreflightApiDbContext _context;
     private readonly StripeWebhookService _sut;
 
     private static readonly StripeSettings TestSettings = new()
@@ -28,8 +32,13 @@ public class StripeWebhookServiceTests
     public StripeWebhookServiceTests()
     {
         _apiKeyService = Substitute.For<IApiKeyService>();
+        var options = new DbContextOptionsBuilder<PreflightApiDbContext>()
+            .UseInMemoryDatabase($"stripe-webhook-{Guid.NewGuid()}")
+            .Options;
+        _context = new PreflightApiDbContext(options);
         _sut = new StripeWebhookService(
             _apiKeyService,
+            _context,
             Substitute.For<ILogger<StripeWebhookService>>(),
             Options.Create(TestSettings));
     }
@@ -211,6 +220,38 @@ public class StripeWebhookServiceTests
             .DeactivateByStripeCustomerAsync(default!, default);
         await _apiKeyService.DidNotReceiveWithAnyArgs()
             .ResetQuotaByStripeCustomerAsync(default!, default);
+    }
+
+    // ─── Idempotency ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ProcessEvent_DuplicateEventId_ShouldNotProcessTwice()
+    {
+        // Arrange
+        var stripeEvent = CreateInvoiceEvent(EventTypes.InvoicePaid, "cus_123", "inv_789");
+
+        // Act — process the same event twice
+        await _sut.ProcessEventAsync(stripeEvent);
+        await _sut.ProcessEventAsync(stripeEvent);
+
+        // Assert — quota reset only happened once
+        await _apiKeyService.Received(1)
+            .ResetQuotaByStripeCustomerAsync("cus_123", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessEvent_ShouldRecordEventInProcessedTable()
+    {
+        // Arrange
+        var stripeEvent = CreateInvoiceEvent(EventTypes.InvoicePaid, "cus_123", "inv_789");
+
+        // Act
+        await _sut.ProcessEventAsync(stripeEvent);
+
+        // Assert
+        var record = await _context.ProcessedStripeEvents.FindAsync(stripeEvent.Id);
+        record.Should().NotBeNull();
+        record!.EventType.Should().Be(EventTypes.InvoicePaid);
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────

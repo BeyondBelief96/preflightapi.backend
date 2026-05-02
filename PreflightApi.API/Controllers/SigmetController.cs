@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Enums;
@@ -18,6 +19,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/sigmets")]
 [Tags("Weather - Domestic SIGMETs")]
+[OutputCache(PolicyName = "RealTimeWeather")]
 public class SigmetController(ISigmetService sigmetService) : ControllerBase
 {
     /// <summary>

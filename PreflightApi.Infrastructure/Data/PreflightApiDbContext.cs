@@ -50,6 +50,8 @@ namespace PreflightApi.Infrastructure.Data
 
         public virtual DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
+        public virtual DbSet<ProcessedStripeEvent> ProcessedStripeEvents => Set<ProcessedStripeEvent>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

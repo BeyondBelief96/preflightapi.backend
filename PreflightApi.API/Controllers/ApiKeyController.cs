@@ -47,7 +47,8 @@ public class ApiKeyController(
             });
 
         // Determine tier from Stripe subscription
-        var (tier, stripeCustomerId, stripeSubscriptionId) = await ResolveSubscriptionTierAsync(ownerId, ct);
+        var (tier, stripeCustomerId, stripeSubscriptionId) =
+            await ResolveSubscriptionTierAsync(ownerId, request.StripeCustomerId, ct);
 
         var result = await apiKeyService.CreateAsync(
             ownerId, request.Name, tier, stripeCustomerId, stripeSubscriptionId, ct);
@@ -105,26 +106,51 @@ public class ApiKeyController(
     }
 
     private async Task<(SubscriptionTier tier, string? stripeCustomerId, string? stripeSubscriptionId)>
-        ResolveSubscriptionTierAsync(string clerkUserId, CancellationToken ct)
+        ResolveSubscriptionTierAsync(string clerkUserId, string? stripeCustomerId, CancellationToken ct)
     {
-        // The Clerk user's private metadata contains stripeCustomerId.
-        // Since we don't have a direct Clerk SDK dependency, the client app
-        // should pass the stripeCustomerId in the JWT custom claims, or we
-        // look it up from existing API keys for this user.
-        //
-        // For now, check if the user already has keys with a Stripe customer ID.
-        var existingKeys = await apiKeyService.GetByOwnerAsync(clerkUserId, ct);
-        var existingActive = existingKeys.FirstOrDefault(k => k.IsActive);
-        if (existingActive != null)
+        if (string.IsNullOrWhiteSpace(stripeCustomerId))
         {
-            // Use the same tier as their existing active key
-            return (existingActive.Tier, null, null);
+            logger.LogInformation("No Stripe customer ID provided for {UserId}; defaulting to StudentPilot", clerkUserId);
+            return (SubscriptionTier.StudentPilot, null, null);
         }
 
-        // Default to free tier — tier will be updated when Stripe webhook fires
-        // after the user subscribes
-        logger.LogInformation("No existing subscription found for user {UserId}, defaulting to StudentPilot",
-            clerkUserId);
-        return (SubscriptionTier.StudentPilot, null, null);
+        try
+        {
+            var subscriptionService = new SubscriptionService();
+            var subscriptions = await subscriptionService.ListAsync(
+                new SubscriptionListOptions
+                {
+                    Customer = stripeCustomerId,
+                    Status = "active",
+                    Limit = 1
+                },
+                cancellationToken: ct);
+
+            var activeSubscription = subscriptions.Data.FirstOrDefault();
+            if (activeSubscription == null)
+            {
+                logger.LogInformation("No active Stripe subscription for customer {CustomerId}; defaulting to StudentPilot",
+                    stripeCustomerId);
+                return (SubscriptionTier.StudentPilot, stripeCustomerId, null);
+            }
+
+            var priceId = activeSubscription.Items?.Data?.FirstOrDefault()?.Price?.Id;
+            if (string.IsNullOrEmpty(priceId)
+                || !stripeSettings.Value.PriceIdToTier.TryGetValue(priceId, out var tierName)
+                || !Enum.TryParse<SubscriptionTier>(tierName, out var tier))
+            {
+                logger.LogWarning("Unrecognized price {PriceId} on subscription {SubId}; defaulting to StudentPilot",
+                    priceId, activeSubscription.Id);
+                return (SubscriptionTier.StudentPilot, stripeCustomerId, activeSubscription.Id);
+            }
+
+            return (tier, stripeCustomerId, activeSubscription.Id);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogWarning(ex, "Stripe lookup failed for customer {CustomerId}; defaulting to StudentPilot",
+                stripeCustomerId);
+            return (SubscriptionTier.StudentPilot, stripeCustomerId, null);
+        }
     }
 }

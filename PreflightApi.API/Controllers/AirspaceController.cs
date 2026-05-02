@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.Domain.Exceptions;
 using PreflightApi.Infrastructure.Dtos;
@@ -17,6 +18,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/airspaces")]
 [Tags("Airspace")]
+[OutputCache(PolicyName = "StaticData")]
 public class AirspaceController(IAirspaceService airspaceService)
     : ControllerBase
 {

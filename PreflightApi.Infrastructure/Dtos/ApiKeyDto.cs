@@ -42,6 +42,13 @@ public record CreateApiKeyRequestDto
 {
     /// <summary>A label to help identify this key (e.g., "Production App", "Dev Testing").</summary>
     public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional Stripe customer ID. When provided, the API queries Stripe to determine
+    /// the user's active subscription and assigns the matching tier. When omitted, the key
+    /// is created at the StudentPilot (free) tier and may be upgraded later via Stripe webhook.
+    /// </summary>
+    public string? StripeCustomerId { get; init; }
 }
 
 /// <summary>

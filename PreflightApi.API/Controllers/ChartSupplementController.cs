@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Infrastructure.Dtos;
@@ -15,6 +16,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/chart-supplements")]
 [Tags("Chart Supplements")]
+[OutputCache(PolicyName = "PresignedUrls")]
 public class ChartSupplementController(IChartSupplementService chartSupplementService) : ControllerBase
 {
     /// <summary>

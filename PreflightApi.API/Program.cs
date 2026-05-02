@@ -146,6 +146,9 @@ builder.Services.Configure<SubscriptionTierSettings>(builder.Configuration.GetSe
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 builder.Services.Configure<ClerkSettings>(builder.Configuration.GetSection("ClerkSettings"));
 
+// Stripe SDK uses a process-wide ApiKey for server-side calls (subscription lookup, etc.).
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["StripeSettings:SecretKey"];
+
 // Build NpgsqlDataSource once as a singleton (connection-pooling object)
 builder.Services.AddSingleton(sp =>
 {
@@ -248,17 +251,18 @@ builder.Services.AddAuthentication()
     });
 builder.Services.AddAuthorization();
 
-// Rate Limiting — per API key, tier-based limits
+// Rate Limiting — per API key, tier-based limits applied globally.
+// Requests without an ApiKey in HttpContext.Items (exempt paths, dev bypass) bypass limiting.
 var tierSettings = builder.Configuration.GetSection("SubscriptionTiers").Get<SubscriptionTierSettings>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.AddPolicy("PerApiKey", context =>
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
         var apiKey = context.Items["ApiKey"] as PreflightApi.Domain.Entities.ApiKey;
         if (apiKey == null)
-            return RateLimitPartition.GetNoLimiter("anonymous");
+            return RateLimitPartition.GetNoLimiter("unauthenticated");
 
         var tierName = apiKey.Tier.ToString();
         var limit = tierSettings?.Tiers.TryGetValue(tierName, out var def) == true

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using PreflightApi.API.Models;
 using PreflightApi.API.Utilities;
 using PreflightApi.Domain.Enums;
@@ -20,6 +21,7 @@ namespace PreflightApi.API.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/g-airmets")]
 [Tags("Weather - G-AIRMETs")]
+[OutputCache(PolicyName = "RealTimeWeather")]
 public class GAirmetController(IGAirmetService gairmetService) : ControllerBase
 {
     /// <summary>
