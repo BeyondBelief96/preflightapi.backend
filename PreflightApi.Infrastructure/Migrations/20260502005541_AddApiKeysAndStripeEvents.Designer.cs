@@ -13,8 +13,8 @@ using PreflightApi.Infrastructure.Data;
 namespace PreflightApi.Infrastructure.Migrations
 {
     [DbContext(typeof(PreflightApiDbContext))]
-    [Migration("20260502002424_AddProcessedStripeEvents")]
-    partial class AddProcessedStripeEvents
+    [Migration("20260502005541_AddApiKeysAndStripeEvents")]
+    partial class AddApiKeysAndStripeEvents
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1914,6 +1914,12 @@ namespace PreflightApi.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("effective_start");
 
+                    b.Property<string>("Feature")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("feature")
+                        .HasComputedColumnSql("(feature_json->'properties'->'coreNOTAMData'->'notam'->>'feature')", true);
+
                     b.Property<string>("FeatureJson")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -1977,6 +1983,8 @@ namespace PreflightApi.Infrastructure.Migrations
 
                     b.HasIndex("EffectiveStart");
 
+                    b.HasIndex("Feature");
+
                     b.HasIndex("Geometry");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Geometry"), "gist");
@@ -1986,6 +1994,8 @@ namespace PreflightApi.Infrastructure.Migrations
                     b.HasIndex("LastUpdated");
 
                     b.HasIndex("Location");
+
+                    b.HasIndex("Classification", "EffectiveEnd");
 
                     b.HasIndex("NotamNumber", "NotamYear", "Series");
 
