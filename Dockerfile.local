@@ -9,6 +9,7 @@ COPY PreflightApi.Infrastructure/*.csproj ./PreflightApi.Infrastructure/
 COPY PreflightApi.API/*.csproj ./PreflightApi.API/
 COPY PreflightApi.Tests/*.csproj ./PreflightApi.Tests/
 COPY PreflightApi.Azure.Functions/*.csproj ./PreflightApi.Azure.Functions/
+COPY tools/PreflightApi.Tools.ApiKeyMigration/*.csproj ./tools/PreflightApi.Tools.ApiKeyMigration/
 RUN dotnet restore
 
 # Copy the rest of the code

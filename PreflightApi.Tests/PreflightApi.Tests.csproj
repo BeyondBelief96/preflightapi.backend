@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.8" />
     <PackageReference Include="FluentAssertions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
@@ -47,7 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PreflightApi.API\PreflightApi.API.csproj" />
+    <ProjectReference Include="..\PreflightApi.API\PreflightApi.API.csproj">
+      <Aliases>global,api</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\PreflightApi.Azure.Functions\PreflightApi.Azure.Functions.csproj" />
     <ProjectReference Include="..\PreflightApi.Domain\PreflightApi.Domain.csproj" />
     <ProjectReference Include="..\PreflightApi.Infrastructure\PreflightApi.Infrastructure.csproj" />

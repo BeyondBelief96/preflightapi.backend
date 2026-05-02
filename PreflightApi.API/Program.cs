@@ -444,3 +444,6 @@ app.MapGet("/health/data-currency", async (IDataSyncStatusService svc, Cancellat
 });
 
 await app.RunAsync();
+
+// Marker so WebApplicationFactory<Program> in the test project can resolve this entry point.
+public partial class Program;
