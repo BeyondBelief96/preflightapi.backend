@@ -56,10 +56,6 @@ param nmsClientSecret string
 @description('NOAA API key for weather data synchronization')
 param noaaApiKey string
 
-@secure()
-@description('APIM-to-API shared secret for gateway validation')
-param gatewaySecret string
-
 @description('Clerk JWT authority URL (leave empty to omit)')
 param clerkAuthority string = ''
 
@@ -215,10 +211,6 @@ var baseAppSettings = [
   {
     name: 'NOAASettings__NOAAApiKey'
     value: noaaApiKey
-  }
-  {
-    name: 'GatewaySecret'
-    value: gatewaySecret
   }
 ]
 

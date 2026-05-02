@@ -70,6 +70,21 @@ param stripePriceIdCommercialPilot string = ''
 @description('Clerk JWT authority URL')
 param clerkAuthority string = ''
 
+// ─── Custom Domain ──────────────────────────────────────────────────────────
+// All optional. When customDomainHostName is empty the App Service runs only on
+// its default *.azurewebsites.net hostname. When provided, an SNI SSL binding
+// is created using the cert in Key Vault. DNS must already validate (CNAME or
+// asuid TXT) before deploying with customDomainHostName set.
+
+@description('Custom domain hostname (e.g., api.preflightapi.io). Leave empty to skip the binding.')
+param customDomainHostName string = ''
+
+@description('Key Vault resource ID for custom domain SSL cert lookup.')
+param keyVaultId string = ''
+
+@description('Name of the cert/secret in Key Vault for the custom domain. Leave empty to skip.')
+param keyVaultCertificateName string = ''
+
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: planName
@@ -211,3 +226,27 @@ output webAppId string = webApp.id
 
 @description('App Service Plan name')
 output appServicePlanName string = appServicePlan.name
+
+// ─── Custom Domain Binding (optional) ───────────────────────────────────────
+
+var customDomainEnabled = !empty(customDomainHostName) && !empty(keyVaultCertificateName) && !empty(keyVaultId)
+
+resource customDomainCert 'Microsoft.Web/certificates@2023-12-01' = if (customDomainEnabled) {
+  name: keyVaultCertificateName
+  location: location
+  properties: {
+    keyVaultId: keyVaultId
+    keyVaultSecretName: keyVaultCertificateName
+    serverFarmId: appServicePlan.id
+  }
+}
+
+resource customDomainBinding 'Microsoft.Web/sites/hostNameBindings@2023-12-01' = if (customDomainEnabled) {
+  parent: webApp
+  name: customDomainHostName
+  properties: {
+    siteName: webApp.name
+    sslState: 'SniEnabled'
+    thumbprint: customDomainCert!.properties.thumbprint
+  }
+}

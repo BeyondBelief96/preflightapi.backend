@@ -22,7 +22,6 @@ param functionsPlanName = 'ASP-rgeastuspreflightapiprd-82d5'
 param functionAppName = 'function-app-eastus-preflightapi-prd'
 param functionsStorageName = 'rgeastuspreflightapb08e' // PRD uses a separate storage account for functions
 param keyVaultName = 'KeyVaultPreflightApiPrd'
-param apimServiceName = 'apim-eastus-preflightapi-prd'
 
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
 
@@ -43,18 +42,23 @@ param storageSkuName = 'Standard_RAGRS'
 param apiSkuName = 'B2'
 param apiSkuTier = 'Basic'
 
-// ─── APIM ────────────────────────────────────────────────────────────────────
+// ─── Custom Domain (App Service) ────────────────────────────────────────────
+// Both values left empty intentionally. Fill in AFTER the DNS CNAME for
+// api.preflightapi.io is flipped from APIM to the App Service default
+// hostname (was-eastus-preflightapi-prd.azurewebsites.net) — Azure validates
+// DNS before creating the binding, so this only deploys cleanly once DNS
+// resolves to the App Service.
+//
+// To enable:
+//   param customDomainHostName = 'api.preflightapi.io'
+//   param keyVaultCertificateName = 'api-preflightapi-io'
 
-param apimPublisherEmail = readEnvironmentVariable('APIM_PUBLISHER_EMAIL')
-param apimSkuName = 'BasicV2'
-param apimSkuCapacity = 1
-param apimCustomDomainHostName = 'api.preflightapi.io'
-param apimKeyVaultCertificateName = 'api-preflightapi-io'
+param customDomainHostName = ''
+param keyVaultCertificateName = ''
 
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 param noaaApiKey = readEnvironmentVariable('NOAA_API_KEY')
-param gatewaySecret = readEnvironmentVariable('GATEWAY_SECRET')
 
 // ─── NMS Settings (production endpoints) ─────────────────────────────────────
 
@@ -97,9 +101,3 @@ param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')
 // GitHub Actions OIDC. Provides Contributor RBAC on the resource group.
 
 param githubDeploymentPrincipalId = readEnvironmentVariable('GITHUB_DEPLOYMENT_PRINCIPAL_ID', '')
-
-// ─── APIM Service Principal ─────────────────────────────────────────────────
-// Object ID of the APIM management SP used by the frontend for subscription
-// management and analytics.
-
-param apimServicePrincipalId = readEnvironmentVariable('APIM_SERVICE_PRINCIPAL_ID', '')

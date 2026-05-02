@@ -16,18 +16,6 @@ param keyVaultName string
 @description('PostgreSQL server name for RBAC assignments')
 param postgresServerName string
 
-@description('APIM service name for RBAC assignments')
-param apimName string
-
-@description('Log Analytics workspace name for RBAC assignments')
-param logAnalyticsWorkspaceName string
-
-@description('APIM service principal ID for frontend management (optional)')
-param apimServicePrincipalId string = ''
-
-@description('APIM system-assigned managed identity principal ID (for Key Vault certificate access). Leave empty to skip.')
-param apimPrincipalId string = ''
-
 // ─── Built-in Role Definition IDs ───────────────────────────────────────────
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
 
@@ -35,8 +23,6 @@ var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var keyVaultCertificatesOfficerRoleId = 'a4417e6f-fecd-4de8-b567-7b0420556985'
-var apiManagementServiceContributorRoleId = '312a565d-c81f-4fd8-895a-4e21e48d571c'
-var logAnalyticsReaderRoleId = '73c42c96-874c-492b-b04d-ab87d138a893'
 
 // ─── Existing Resource References ───────────────────────────────────────────
 
@@ -50,14 +36,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' existing = {
   name: postgresServerName
-}
-
-resource apim 'Microsoft.ApiManagement/service@2024-05-01' existing = {
-  name: apimName
-}
-
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logAnalyticsWorkspaceName
 }
 
 // ─── Storage Blob Data Contributor ──────────────────────────────────────────
@@ -97,6 +75,17 @@ resource functionAppKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-0
   }
 }
 
+// Web App → Key Vault Secrets User (for pulling custom-domain cert from Key Vault)
+resource webAppKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, webAppPrincipalId, keyVaultSecretsUserRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: webAppPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ─── Key Vault Certificates Officer ──────────────────────────────────────────
 
 // Function App → Key Vault Certificates Officer (for certificate renewal: get + import)
@@ -106,17 +95,6 @@ resource functionAppKeyVaultCertRole 'Microsoft.Authorization/roleAssignments@20
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificatesOfficerRoleId)
     principalId: functionAppPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// APIM Managed Identity → Key Vault Secrets User (for custom domain certificate)
-resource apimKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apimPrincipalId)) {
-  name: guid(keyVault.id, apimPrincipalId, keyVaultSecretsUserRoleId)
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: apimPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -140,41 +118,6 @@ resource githubPostgresContributor 'Microsoft.Authorization/roleAssignments@2022
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: githubDeploymentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// API Management Service Contributor on APIM (for CI/CD policy deployment)
-resource githubApimContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(githubDeploymentPrincipalId)) {
-  name: guid(apim.id, githubDeploymentPrincipalId, apiManagementServiceContributorRoleId)
-  scope: apim
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', apiManagementServiceContributorRoleId)
-    principalId: githubDeploymentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// ─── APIM Service Principal (frontend management) ──────────────────────────
-
-// API Management Service Contributor on APIM
-resource apimSpContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apimServicePrincipalId)) {
-  name: guid(apim.id, apimServicePrincipalId, apiManagementServiceContributorRoleId)
-  scope: apim
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', apiManagementServiceContributorRoleId)
-    principalId: apimServicePrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Log Analytics Reader on Log Analytics workspace
-resource apimSpLogAnalyticsReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apimServicePrincipalId)) {
-  name: guid(logAnalyticsWorkspace.id, apimServicePrincipalId, logAnalyticsReaderRoleId)
-  scope: logAnalyticsWorkspace
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', logAnalyticsReaderRoleId)
-    principalId: apimServicePrincipalId
     principalType: 'ServicePrincipal'
   }
 }

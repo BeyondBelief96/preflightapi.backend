@@ -66,9 +66,6 @@ param functionsStorageName string = ''
 @description('Key Vault name')
 param keyVaultName string
 
-@description('API Management service name')
-param apimServiceName string
-
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
 
 @description('PostgreSQL administrator login')
@@ -106,32 +103,19 @@ param apiSkuName string = 'B1'
 @description('App Service Plan SKU tier')
 param apiSkuTier string = 'Basic'
 
-// ─── APIM ────────────────────────────────────────────────────────────────────
+// ─── Custom Domain (App Service) ────────────────────────────────────────────
 
-@description('APIM publisher email')
-param apimPublisherEmail string
+@description('Custom domain hostname for the App Service (e.g., api.preflightapi.io). Leave empty to skip.')
+param customDomainHostName string = ''
 
-@description('APIM SKU name (Developer, BasicV2, StandardV2, etc.)')
-param apimSkuName string = 'BasicV2'
-
-@description('APIM SKU capacity')
-param apimSkuCapacity int = 1
-
-@description('Custom domain hostname for APIM gateway (e.g., api.preflightapi.io). Leave empty to skip.')
-param apimCustomDomainHostName string = ''
-
-@description('Certificate name in Key Vault for APIM custom domain SSL. Leave empty to skip.')
-param apimKeyVaultCertificateName string = ''
+@description('Certificate name in Key Vault for the App Service custom domain. Leave empty to skip.')
+param keyVaultCertificateName string = ''
 
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 @secure()
 @description('NOAA API key for weather data (used by API and Functions)')
 param noaaApiKey string
-
-@secure()
-@description('APIM-to-API shared secret for gateway validation (legacy — used by Functions only during transition)')
-param gatewaySecret string
 
 // ─── Stripe Settings ────────────────────────────────────────────────────────
 
@@ -238,13 +222,6 @@ param alertEmail string = ''
 @description('Object ID of the GitHub deployment service principal')
 param githubDeploymentPrincipalId string = ''
 
-// ─── APIM Service Principal (optional) ──────────────────────────────────────
-// Object ID of the APIM management service principal used by the frontend.
-// Used for APIM Contributor and Log Analytics Reader RBAC. Leave empty to skip.
-
-@description('Object ID of the APIM management service principal')
-param apimServicePrincipalId string = ''
-
 // ─── Resource Group ──────────────────────────────────────────────────────────
 
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
@@ -329,6 +306,9 @@ module appService 'modules/app-service.bicep' = {
     stripePriceIdPrivatePilot: stripePriceIdPrivatePilot
     stripePriceIdCommercialPilot: stripePriceIdCommercialPilot
     clerkAuthority: clerkAuthority
+    customDomainHostName: customDomainHostName
+    keyVaultId: keyVault.outputs.keyVaultId
+    keyVaultCertificateName: keyVaultCertificateName
   }
 }
 
@@ -354,7 +334,6 @@ module functionApp 'modules/function-app.bicep' = {
     nmsClientId: nmsClientId
     nmsClientSecret: nmsClientSecret
     noaaApiKey: noaaApiKey
-    gatewaySecret: gatewaySecret
     clerkAuthority: clerkAuthority
     clerkSecretKey: clerkSecretKey
     certificateAcmeEmail: certificateAcmeEmail
@@ -375,22 +354,6 @@ module functionApp 'modules/function-app.bicep' = {
   }
 }
 
-module apim 'modules/apim.bicep' = {
-  name: 'apim-${environment}'
-  scope: rg
-  params: {
-    location: location
-    apimName: apimServiceName
-    publisherEmail: apimPublisherEmail
-    skuName: apimSkuName
-    skuCapacity: apimSkuCapacity
-    backendWebAppHostName: appService.outputs.webAppHostName
-    gatewaySecret: gatewaySecret
-    apimCustomDomainHostName: apimCustomDomainHostName
-    keyVaultCertificateUri: !empty(apimKeyVaultCertificateName) ? '${keyVault.outputs.keyVaultUri}secrets/${apimKeyVaultCertificateName}' : ''
-  }
-}
-
 module roleAssignments 'modules/role-assignments.bicep' = {
   name: 'role-assignments-${environment}'
   scope: rg
@@ -401,10 +364,6 @@ module roleAssignments 'modules/role-assignments.bicep' = {
     githubDeploymentPrincipalId: githubDeploymentPrincipalId
     keyVaultName: keyVault.outputs.keyVaultName
     postgresServerName: postgresql.outputs.serverName
-    apimName: apim.outputs.apimName
-    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
-    apimServicePrincipalId: apimServicePrincipalId
-    apimPrincipalId: apim.outputs.apimPrincipalId
   }
 }
 
@@ -447,12 +406,6 @@ output storageAccountName string = storage.outputs.storageAccountName
 
 @description('Functions storage account name')
 output functionsStorageAccountName string = storage.outputs.functionsStorageAccountName
-
-@description('APIM gateway URL')
-output apimGatewayUrl string = apim.outputs.apimGatewayUrl
-
-@description('APIM service name')
-output apimServiceName string = apim.outputs.apimName
 
 @description('API Application Insights connection string')
 output apiAppInsightsConnectionString string = monitoring.outputs.apiAppInsightsConnectionString

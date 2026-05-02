@@ -22,7 +22,6 @@ param functionsPlanName = 'asp-preflightapi-func-sandbox'
 param functionAppName = 'preflightapi-func-sandbox'
 param functionsStorageName = '' // Shared storage account (same as TST)
 param keyVaultName = 'kv-preflightapi-sandbox'
-param apimServiceName = 'apim-preflightapi-sandbox'
 
 // ─── PostgreSQL ──────────────────────────────────────────────────────────────
 
@@ -43,18 +42,15 @@ param storageSkuName = 'Standard_RAGRS'
 param apiSkuName = 'F1'
 param apiSkuTier = 'Free'
 
-// ─── APIM ────────────────────────────────────────────────────────────────────
+// ─── Custom Domain (App Service) ────────────────────────────────────────────
+// Sandbox uses the default *.azurewebsites.net hostname; no binding.
 
-param apimPublisherEmail = readEnvironmentVariable('APIM_PUBLISHER_EMAIL')
-param apimSkuName = 'Developer'
-param apimSkuCapacity = 1
-param apimCustomDomainHostName = ''
-param apimKeyVaultCertificateName = ''
+param customDomainHostName = ''
+param keyVaultCertificateName = ''
 
 // ─── Secrets ─────────────────────────────────────────────────────────────────
 
 param noaaApiKey = readEnvironmentVariable('NOAA_API_KEY')
-param gatewaySecret = readEnvironmentVariable('GATEWAY_SECRET')
 
 // ─── NMS Settings (staging endpoints) ────────────────────────────────────────
 
@@ -90,7 +86,3 @@ param resendTopicAlertsId = readEnvironmentVariable('RESEND_TOPIC_ALERTS_ID', ''
 // ─── GitHub Deployment Identity ──────────────────────────────────────────────
 
 param githubDeploymentPrincipalId = readEnvironmentVariable('GITHUB_DEPLOYMENT_PRINCIPAL_ID', '')
-
-// ─── APIM Service Principal (optional) ───────────────────────────────────────
-
-param apimServicePrincipalId = readEnvironmentVariable('APIM_SERVICE_PRINCIPAL_ID', '')
